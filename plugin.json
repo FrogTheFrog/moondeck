@@ -1,0 +1,10 @@
+{
+  "name": "MoonDeck",
+  "author": "FrogTheFrog",
+  "flags": [],
+  "publish": {
+    "tags": ["gamestream", "moonlight", "moondeck", "streaming"],
+    "description": "MoonDeck is an automation tool that will simplify launching your Steam games via the Moonlight client for streaming.",
+    "image": "https://github.com/FrogTheFrog/moondeck/raw/main/.github/assets/quickmenu.png"
+  }
+}

@@ -1,0 +1,25 @@
+name: Build
+on: [push]
+jobs:
+  Linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+
+      - name: Install PNPM
+        run: npm install -g pnpm
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      
+      - name: Install packages
+        run: pnpm install
+
+      - name: Build package
+        run: pnpm run build
+
+      - name: Run tests
+        run: pnpm run test

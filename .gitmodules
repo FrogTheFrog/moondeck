@@ -1,0 +1,3 @@
+[submodule "defaults/python/ssl"]
+	path = defaults/python/ssl
+	url = https://github.com/FrogTheFrog/moondeck-keys.git

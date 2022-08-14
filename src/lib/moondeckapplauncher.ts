@@ -1,0 +1,266 @@
+import { AppDetails, ServerAPI } from "decky-frontend-lib";
+import { E_ALREADY_LOCKED, Mutex, tryAcquire } from "async-mutex";
+import { Subscription, pairwise } from "rxjs";
+import { getAppDetails, getMoonDeckAppIdMark, getSystemNetworkStore, launchApp, registerForGameLifetime, registerForSuspendNotifictions, setAppHiddenState, setAppLaunchOptions, setShortcutName, waitForNetworkConnection } from "./steamutils";
+import { CommandProxy } from "./commandproxy";
+import { MoonDeckAppProxy } from "./moondeckapp";
+import { SettingsManager } from "./settingsmanager";
+import { ShortcutManager } from "./shortcutmanager";
+import { logger } from "./logger";
+
+async function getMoonDeckRunPath(serverAPI: ServerAPI): Promise<string | null> {
+  try {
+    const resp = await serverAPI.callPluginMethod<unknown, string>("get_moondeckrun_path", {});
+    if (resp.success) {
+      return resp.result;
+    } else {
+      logger.error(`Error while getting moondeckrun.sh path: ${resp.result}`);
+    }
+  } catch (message) {
+    logger.critical(message);
+  }
+
+  return null;
+}
+
+async function getRunnerResult(serverAPI: ServerAPI): Promise<string | null> {
+  try {
+    const resp = await serverAPI.callPluginMethod<unknown, string | null>("get_runner_result", {});
+    if (resp.success) {
+      return resp.result;
+    } else {
+      logger.error(`Error while fetching runner result: ${resp.result}`);
+    }
+  } catch (message) {
+    logger.critical(message);
+  }
+
+  return "Error while fetching runner result!";
+}
+
+export class MoonDeckAppLauncher {
+  private unregisterLifetime: (() => void) | null = null;
+  private unregisterSuspension: (() => void) | null = null;
+  private moonDeckRunPath: string | null = null;
+  private subscription: Subscription | null = null;
+  private someAppIsRunning = false;
+  private readonly launchMutex = new Mutex();
+  readonly moonDeckApp: MoonDeckAppProxy;
+
+  private async ensureAppDetails(steamAppId: number, execPath: string, appName: string): Promise<AppDetails | null> {
+    let appId = this.shortcutManager.getId(steamAppId);
+    let details = appId === null ? null : await getAppDetails(appId);
+
+    // Probably the cache is outdated
+    if (details === null && appId !== null) {
+      await this.shortcutManager.removeShortcut(appId);
+      appId = null;
+    }
+
+    if (appId === null) {
+      appId = await this.shortcutManager.addShortcut(steamAppId, appName, execPath);
+      if (appId === null) {
+        return null;
+      }
+    }
+
+    if (!await setAppHiddenState(appId, true)) {
+      logger.error(`Failed to hide app ${appId}!`);
+      await this.shortcutManager.removeShortcut(appId);
+      return null;
+    }
+
+    details = await getAppDetails(appId);
+    if (details === null) {
+      logger.error(`Failed to get app details for ${appId}!`);
+    }
+
+    return details;
+  }
+
+  private initLifetime(): void {
+    this.someAppIsRunning = false;
+    this.unregisterLifetime = registerForGameLifetime((data) => {
+      this.someAppIsRunning = data.bRunning;
+
+      if (!this.someAppIsRunning) {
+        getRunnerResult(this.serverAPI).then(async (result) => {
+          if (this.moonDeckApp.value === null) {
+            // Some other app was terminated
+            return;
+          }
+
+          if (result !== null && !this.moonDeckApp.value.beingSuspended && !this.moonDeckApp.value.beingKilled) {
+            logger.toast(result, { output: "warn" });
+          }
+          if (!this.moonDeckApp.value.beingSuspended) {
+            await this.moonDeckApp.clearApp();
+          }
+        }).catch((e) => logger.critical(e));
+      } else {
+        // Discarding any leftover results
+        getRunnerResult(this.serverAPI).catch((e) => logger.critical(e));
+      }
+    });
+  }
+
+  private initSuspension(): void {
+    this.unregisterSuspension = registerForSuspendNotifictions((info) => {
+      // This the earliest state or smt
+      if (info.state === 1 && this.moonDeckApp.value !== null) {
+        this.moonDeckApp.suspendApp().catch((e) => logger.critical(e));
+      }
+    }, (info) => {
+      // This the latest state or smt
+      if (info.state === 1) {
+        const resumeAfterSuspend = this.settingsManager.settings.value?.gameSession.resumeAfterSuspend ?? false;
+        if (!resumeAfterSuspend) {
+          this.moonDeckApp.clearApp().catch((e) => logger.critical(e));
+          return;
+        }
+
+        waitForNetworkConnection().then((result) => {
+          if (this.moonDeckApp.value === null) {
+            return;
+          }
+
+          if (result) {
+            logger.log(`Relaunching app ${this.moonDeckApp.value.steamAppId} after suspend.`);
+            this.launchApp(this.moonDeckApp.value.steamAppId, this.moonDeckApp.value.name).catch((e) => logger.critical(e));
+          } else {
+            logger.toast("Not resuming session - no network connection!", { output: "warn" });
+            this.moonDeckApp.clearApp().catch((e) => logger.critical(e));
+          }
+        }).catch((e) => logger.critical(e));
+      }
+    });
+  }
+
+  private initMoonDeckAppTimestampUpdater(): void {
+    this.subscription = new Subscription();
+    this.subscription.add(this.moonDeckApp.asObservable().pipe(pairwise()).subscribe(([prev, next]) => {
+      if (prev !== null && next === null) {
+        this.shortcutManager.updateAppLaunchTimestamp(prev.steamAppId);
+      }
+    }));
+  }
+
+  private async getMoonDeckRunPath(): Promise<string | null> {
+    if (this.moonDeckRunPath === null) {
+      this.moonDeckRunPath = await getMoonDeckRunPath(this.serverAPI);
+    }
+
+    return this.moonDeckRunPath;
+  }
+
+  constructor(
+    private readonly serverAPI: ServerAPI,
+    private readonly settingsManager: SettingsManager,
+    private readonly shortcutManager: ShortcutManager,
+    commandProxy: CommandProxy
+  ) {
+    this.moonDeckApp = new MoonDeckAppProxy(serverAPI, commandProxy);
+  }
+
+  init(): void {
+    this.initLifetime();
+    this.initSuspension();
+    this.initMoonDeckAppTimestampUpdater();
+  }
+
+  deinit(): void {
+    if (this.unregisterLifetime !== null) {
+      this.unregisterLifetime();
+      this.unregisterLifetime = null;
+    }
+    if (this.unregisterSuspension !== null) {
+      this.unregisterSuspension();
+      this.unregisterSuspension = null;
+    }
+    if (this.subscription !== null) {
+      this.subscription.unsubscribe();
+      this.subscription = null;
+    }
+  }
+
+  async launchApp(appId: number, appName: string): Promise<void> {
+    if (!this.shortcutManager.readyState.value) {
+      logger.toast("Plugin is still initializing...");
+      return;
+    }
+
+    const settings = this.settingsManager.settings.value?.gameSession ?? null;
+    if (settings === null) {
+      logger.toast("Host is not selected!");
+      return;
+    }
+
+    if (this.someAppIsRunning) {
+      logger.toast("Some app is already running!");
+      return;
+    }
+
+    const hasNetworkConnection = getSystemNetworkStore()?.hasNetworkConnection ?? false;
+    if (!hasNetworkConnection) {
+      logger.toast("No network connection!");
+      return;
+    }
+
+    try {
+      tryAcquire(this.launchMutex);
+      try {
+        logger.log(`Preparing to launch ${appName}.`);
+
+        const execPath = await this.getMoonDeckRunPath();
+        if (execPath === null) {
+          logger.toast("Failed to get moondeckrun.sh path!", { output: "error" });
+          return;
+        }
+
+        const details = await this.ensureAppDetails(appId, execPath, appName);
+        if (details === null) {
+          logger.toast("Failed to create shortcut (needs restart?)!", { output: "error" });
+          return;
+        }
+
+        if (!await setShortcutName(details.unAppID, appName)) {
+          logger.toast("Failed to update shortcut name (needs restart?)!", { output: "error" });
+          return;
+        }
+
+        const launchOptions = `${getMoonDeckAppIdMark(appId)} %command%`;
+        if (!await setAppLaunchOptions(details.unAppID, launchOptions)) {
+          logger.toast("Failed to update shortcut launch options (needs restart?)!", { output: "error" });
+          return;
+        }
+
+        let sessionOptions = this.moonDeckApp.value?.sessionOptions ?? null;
+        if (sessionOptions === null) {
+          sessionOptions = {
+            nameSetToAppId: settings.autoApplyAppId
+          };
+        }
+
+        this.moonDeckApp.setApp(appId, details.unAppID, appName, sessionOptions);
+        if (!await launchApp(details.unAppID, 5000)) {
+          logger.toast("Failed to launch shortcut!", { output: "error" });
+          await this.moonDeckApp.killApp();
+          await this.moonDeckApp.clearApp();
+          return;
+        }
+
+        await this.moonDeckApp.applySessionOptions();
+      } catch (error) {
+        logger.toast("Exception while trying to launch shortcut!", { output: null });
+        logger.critical(error);
+      } finally {
+        this.launchMutex.release();
+      }
+    } catch (error) {
+      if (error !== E_ALREADY_LOCKED) {
+        logger.toast("Exception while trying to launch shortcut!", { output: null });
+        logger.critical(error);
+      }
+    }
+  }
+}
