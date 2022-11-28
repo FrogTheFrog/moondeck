@@ -191,6 +191,11 @@ export class MoonDeckAppLauncher {
 
     const settings = this.settingsManager.settings.value?.gameSession ?? null;
     if (settings === null) {
+      logger.toast("Settings are not available!", { output: "error" });
+      return;
+    }
+
+    if (this.settingsManager.hostSettings === null) {
       logger.toast("Host is not selected!");
       return;
     }

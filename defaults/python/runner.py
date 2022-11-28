@@ -1,3 +1,18 @@
+# autopep8: off
+def get_plugin_dir():
+    from pathlib import Path
+    return Path(__file__).parent.resolve()
+
+def add_plugin_to_path():
+    import sys
+
+    plugin_dir = get_plugin_dir()
+    directories = [["./"], ["lib"], ["externals"]]
+    for dir in directories:
+        sys.path.append(str(plugin_dir.joinpath(*dir)))
+
+add_plugin_to_path()
+
 from enum import Enum
 from typing import Optional
 from lib.moonlightproxy import MoonlightProxy
@@ -11,6 +26,7 @@ import lib.constants as constants
 import lib.hostinfo as hostinfo
 import lib.inmsgs as inmsgs
 import lib.runnerresult as runnerresult
+# autopep8: on
 
 set_log_filename(constants.RUNNER_LOG_FILE)
 
