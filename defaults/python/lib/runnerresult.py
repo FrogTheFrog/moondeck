@@ -12,8 +12,6 @@ class Result(Enum):
     HostNotSelected = "Host is not selected!"
     Exception = "Unhandled exception!"
     GameStreamDead = "GameStream service not responsing!"
-    GameStreamBusy = "GameStream is already streaming!"
-    SteamLaunchFailed = "Could not launch Steam!"
     AnotherSteamAppIsRunning = "Another Steam App is running!"
     AppLaunchFailed = "Failed to launch app in time!"
     MoonlightClosed = "Moonlight has been closed!"

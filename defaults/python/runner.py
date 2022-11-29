@@ -85,7 +85,7 @@ async def wait_for_app_launch(client: SteamBuddyClient, app_id: int):
 
 
 async def wait_for_steam_to_be_ready(client: SteamBuddyClient, app_id: int):
-    initial_retry_count = 15
+    initial_retry_count = 30
     obj = {"retries": initial_retry_count, "counter": 0}
 
     async def wait_till_ready(status: inmsgs.SteamStatus):
@@ -106,7 +106,7 @@ async def wait_for_steam_to_be_ready(client: SteamBuddyClient, app_id: int):
                 return False
 
         # NULL id means that the steam is still launching so lets be more lenient
-        obj["retries"] -= 1 * (0.25 if constants.NULL_STEAM_APP_ID else 1)
+        obj["retries"] -= 1 * (0.25 if constants.NULL_STEAM_APP_ID or not status.steam_is_running else 1)
         obj["counter"] = 0
         if obj["retries"] > 0:
             await asyncio.sleep(1)
@@ -118,22 +118,6 @@ async def wait_for_steam_to_be_ready(client: SteamBuddyClient, app_id: int):
 
 
 async def launch_app_and_wait(client: SteamBuddyClient, app_id: int):
-    logger.info("Waiting for GameStream to start streaming Steam")
-    retries = 30
-    while retries:
-        server_info = await hostinfo.get_server_info(client.address, timeout=constants.DEFAULT_TIMEOUT)
-        if not server_info:
-            return runnerresult.Result.GameStreamDead
-
-        if server_info["currentGame"] == constants.GAMESTREAM_STEAM_ID:
-            break
-
-        retries -= 1
-        await asyncio.sleep(0 if not retries else 1)
-
-    if not retries:
-        return runnerresult.Result.SteamLaunchFailed
-
     logger.info("Waiting for Steam to be ready to launch games")
     result = await wait_for_steam_to_be_ready(client, app_id)
     if result:
@@ -188,17 +172,10 @@ async def establish_connection(client: SteamBuddyClient):
     if resp:
         return resp
 
-    logger.info("Quering GameStream for running games")
+    logger.info("Checking if GameStream service is running")
     server_info = await hostinfo.get_server_info(client.address, timeout=constants.DEFAULT_TIMEOUT)
     if not server_info:
         return runnerresult.Result.GameStreamDead
-
-    if server_info["currentGame"] not in [constants.GAMESTREAM_STEAM_ID, constants.GAMESTREAM_IDLE_ID]:
-        return runnerresult.Result.GameStreamBusy
-
-    is_steam_running = server_info["currentGame"] == constants.GAMESTREAM_STEAM_ID
-    if is_steam_running:
-        logger.info("Steam is already being streamed...")
 
     return None
 

@@ -16,7 +16,6 @@ class GameStreamHost(TypedDict):
     hostName: str
     mac: str
     uniqueId: str
-    currentGame: int
 
 
 def __getHostIdFromXml(data: str):
@@ -35,12 +34,6 @@ def __getMacFromXml(data: str):
     if data:
         result = re.search("<mac>(.*?)</mac>", data)
         return str(result.group(1)) if result else None
-
-
-def __getCurrentGameFromXml(data: str):
-    if data:
-        result = re.search("<currentgame>(.*?)</currentgame>", data)
-        return int(result.group(1)) if result else None
 
 
 async def __getter_timeout(cancel_condition: asyncio.Condition, timeout: float):
@@ -146,15 +139,13 @@ async def get_server_info(address: str, timeout: Optional[float]):
                 hostname = __getHostNameFromXml(data)
                 mac = __getMacFromXml(data)
                 unique_id = __getHostIdFromXml(data)
-                current_game = __getCurrentGameFromXml(data)
 
-                if all(v is not None for v in [hostname, mac, unique_id, current_game]):
+                if all(v is not None for v in [hostname, mac, unique_id]):
                     return utils.from_dict(GameStreamHost, {
                         "address": address,
                         "hostName": hostname,
                         "mac": mac,
-                        "uniqueId": unique_id,
-                        "currentGame": current_game})
+                        "uniqueId": unique_id})
 
 
 async def scan_for_hosts(timeout: float = 5):

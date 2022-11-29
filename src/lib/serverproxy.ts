@@ -11,7 +11,6 @@ export interface GameStreamHost {
   hostName: string;
   mac: string;
   uniqueId: string;
-  currentGame: number;
 }
 
 export type ServerStatus = "Offline" | "Online";
