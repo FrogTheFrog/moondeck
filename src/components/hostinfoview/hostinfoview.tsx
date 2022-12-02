@@ -1,9 +1,8 @@
 import { DialogBody, DialogControlsSection, Field } from "decky-frontend-lib";
-import { VFC, useEffect, useState } from "react";
-import { BuddyPortInput } from "./buddyportinput";
+import { LabelWithIcon, NumbericTextInput } from "../shared";
 import { HostOff } from "../icons";
-import { LabelWithIcon } from "../shared";
 import { SettingsManager } from "../../lib";
+import { VFC } from "react";
 import { useCurrentHostSettings } from "../../hooks";
 
 interface Props {
@@ -11,16 +10,8 @@ interface Props {
 }
 
 export const HostInfoView: VFC<Props> = ({ settingsManager }) => {
-  const currentHostSettings = useCurrentHostSettings(settingsManager);
-  const [portValue, setPortValue] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (portValue === null && currentHostSettings !== null) {
-      setPortValue(`${currentHostSettings.buddyPort}`);
-    }
-  }, [currentHostSettings]);
-
-  if (currentHostSettings === null) {
+  const hostSettings = useCurrentHostSettings(settingsManager);
+  if (hostSettings === null) {
     return (
       <DialogBody>
         <DialogControlsSection>
@@ -37,22 +28,27 @@ export const HostInfoView: VFC<Props> = ({ settingsManager }) => {
     <DialogBody>
       <DialogControlsSection>
         <Field label="MoonDeck client ID">
-          {currentHostSettings.clientId}
+          {hostSettings.clientId}
         </Field>
         <Field label="GameStream client ID">
-          {currentHostSettings.currentHostId}
+          {hostSettings.currentHostId}
         </Field>
         <Field label="Hostname">
-          {currentHostSettings.hostName}
+          {hostSettings.hostName}
         </Field>
         <Field label="MAC address">
-          {currentHostSettings.mac}
+          {hostSettings.mac}
         </Field>
         <Field label="IP address">
-          {currentHostSettings.address}
+          {hostSettings.address}
         </Field>
-        <Field label="Buddy port">
-          <BuddyPortInput currentHostSettings={currentHostSettings} settingsManager={settingsManager}/>
+        <Field label="Buddy port" childrenContainerWidth="fixed">
+          <NumbericTextInput
+            min={1}
+            max={65535}
+            value={hostSettings.buddyPort}
+            setValue={(value) => { settingsManager.updateHost((hostSettings) => { hostSettings.buddyPort = value; }); }}
+          />
         </Field>
       </DialogControlsSection>
     </DialogBody>

@@ -2,7 +2,7 @@ import { BuddyStatusField, ServerStatusField, SettingsLoadingField } from "../sh
 import { ConnectivityManager, SettingsManager } from "../../lib";
 import { DialogBody, DialogControlsSection, DialogControlsSectionHeader, Field } from "decky-frontend-lib";
 import { VFC, useState } from "react";
-import { useBuddyStatus, useCurrentSettings, useExistingHostNames, useServerStatus } from "../../hooks";
+import { useBuddyStatus, useCurrentSettings, useServerStatus } from "../../hooks";
 import { BuddyPairButton } from "./buddypairbutton";
 import { HostForgetButton } from "./hostforgetbutton";
 import { HostScanButton } from "./hostscanbutton";
@@ -17,10 +17,9 @@ export const HostSelectionView: VFC<Props> = ({ connectivityManager, settingsMan
   const [isScanning, setIsScanning] = useState(false);
   const [serverStatus, serverRefreshStatus] = useServerStatus(connectivityManager);
   const [buddyStatus, buddyRefreshStatus] = useBuddyStatus(connectivityManager);
-  const hostNames = useExistingHostNames(settingsManager);
-  const isReady = useCurrentSettings(settingsManager) !== null;
+  const settings = useCurrentSettings(settingsManager);
 
-  if (!isReady) {
+  if (settings === null) {
     return <SettingsLoadingField />;
   }
 
@@ -36,8 +35,9 @@ export const HostSelectionView: VFC<Props> = ({ connectivityManager, settingsMan
         >
           <HostSelectionDropdown
             disabled={isScanning}
-            hostNames={hostNames}
-            settingsManager={settingsManager} />
+            currentSettings={settings}
+            setHost={(value) => { settingsManager.update((settings) => { settings.currentHostId = value; }); }}
+          />
         </Field>
         <Field
           label="Scan local network"
@@ -48,16 +48,24 @@ export const HostSelectionView: VFC<Props> = ({ connectivityManager, settingsMan
             disabled={isScanning}
             isScanning={isScanning}
             setIsScanning={setIsScanning}
-            connectivityManager={connectivityManager} />
+            connectivityManager={connectivityManager}
+          />
         </Field>
         <Field
           label="Forget current host"
           childrenContainerWidth="fixed"
         >
           <HostForgetButton
-            disabled={isScanning || (hostNames?.currentId ?? null) === null}
-            hostNames={hostNames}
-            settingsManager={settingsManager} />
+            disabled={isScanning || settings.currentHostId === null}
+            currentHost={settings.currentHostId}
+            onForget={(value) => {
+              settingsManager.update((settings) => {
+                // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+                delete settings.hostSettings[value];
+                settings.currentHostId = null;
+              });
+            }}
+          />
         </Field>
       </DialogControlsSection>
       <DialogControlsSection>

@@ -21,11 +21,26 @@ class GameSessionSettings(TypedDict):
     resumeAfterSuspend: bool
 
 
+class ButtonPositionSettings(TypedDict):
+    horizontalAlignment: Literal["top", "bottom"]
+    verticalAlignment: Literal["left", "right"]
+    offsetX: str
+    offsetY: str
+    offsetForHltb: bool
+
+
+class ButtonStyleSettings(TypedDict):
+    showFocusRing: bool
+    theme: Literal["HighContrast", "Clean"]
+
+
 class UserSettings(TypedDict):
     version: Literal[1]
     clientId: str
     currentHostId: Optional[str]
     gameSession: GameSessionSettings
+    buttonPosition: ButtonPositionSettings
+    buttonStyle: ButtonStyleSettings
     hostSettings: Dict[str, HostSettings]
 
 
@@ -57,6 +72,17 @@ class SettingsManager:
                 "gameSession": {
                     "autoApplyAppId": False,
                     "resumeAfterSuspend": False
+                },
+                "buttonPosition": {
+                    "horizontalAlignment": "bottom",
+                    "verticalAlignment": "right",
+                    "offsetX": "",
+                    "offsetY": "",
+                    "offsetForHltb": False
+                },
+                "buttonStyle": {
+                    "showFocusRing": True,
+                    "theme": "HighContrast"
                 },
                 "hostSettings": {}}))
 

@@ -1,7 +1,10 @@
 import { Button, appDetailsClasses, appDetailsHeaderClasses, joinClassNames, playSectionClasses, sleep } from "decky-frontend-lib";
 import { CSSProperties, VFC, useEffect, useRef, useState } from "react";
-import { SettingsManager, isAppTypeSupported, logger } from "../../lib";
+import { OffsetStyle, achorPositionName } from "./offsetstyle";
+import { SettingsManager, UserSettings, isAppTypeSupported, logger } from "../../lib";
 import { useCurrentSettings, useMoonDeckAppData } from "../../hooks";
+import { ButtonStyle } from "./buttonstyle";
+import { ContainerStyle } from "./containerstyle";
 import { MoonDeckAppLauncher } from "../../lib/moondeckapplauncher";
 import { MoonDeckMain } from "../icons";
 
@@ -14,11 +17,12 @@ interface Props {
 }
 
 interface ShellProps {
-  style?: CSSProperties;
+  buttonPosition?: UserSettings["buttonPosition"];
+  buttonStyle: UserSettings["buttonStyle"];
   onClick?: () => Promise<void>;
 }
 
-export const MoonDeckLaunchButtonShell: VFC<ShellProps> = ({ onClick, style }) => {
+export const MoonDeckLaunchButtonShell: VFC<ShellProps> = ({ onClick, buttonPosition, buttonStyle }) => {
   const [clickPending, setClickPending] = useState(false);
   const handleClick = onClick
     ? () => {
@@ -28,29 +32,13 @@ export const MoonDeckLaunchButtonShell: VFC<ShellProps> = ({ onClick, style }) =
     : undefined;
 
   return (
-    <div style={style}>
-      <style>
-        {`
-          .moondeck-button {
-            background: #222;
-          }
-          
-          .moondeck-button:hover {
-            background-color: #50555D;
-          }
-          
-          .moondeck-button:focus {
-            background-color: #fff;
-          }
-          
-          .moondeck-button:focus > svg {
-            fill: #000;
-          }
-        `}
-      </style>
+    <div className="moondeck-container">
+      <OffsetStyle buttonPosition={buttonPosition} />
+      <ContainerStyle buttonPosition={buttonPosition} />
+      <ButtonStyle theme={buttonStyle.theme} />
       <Button
         disabled={clickPending}
-        noFocusRing={false}
+        noFocusRing={!buttonStyle.showFocusRing}
         className={joinClassNames(playSectionClasses.MenuButton, "moondeck-button")}
         onClick={handleClick}
       >
@@ -61,8 +49,8 @@ export const MoonDeckLaunchButtonShell: VFC<ShellProps> = ({ onClick, style }) =
 };
 
 const MoonDeckLaunchButton: VFC<Props> = ({ appId, appName, appType, moonDeckAppLauncher, settingsManager }) => {
-  const settings = useCurrentSettings(settingsManager);
   const appData = useMoonDeckAppData(moonDeckAppLauncher);
+  const settings = useCurrentSettings(settingsManager);
 
   if (!isAppTypeSupported(appType) || settings === null || appData?.beingSuspended) {
     return null;
@@ -70,11 +58,13 @@ const MoonDeckLaunchButton: VFC<Props> = ({ appId, appName, appType, moonDeckApp
 
   return (
     <MoonDeckLaunchButtonShell
-      style={{ position: "absolute", right: "2.8vw", bottom: "16px" }}
+      buttonPosition={settings.buttonPosition}
+      buttonStyle={settings.buttonStyle}
       onClick={async (): Promise<void> => {
         await moonDeckAppLauncher.launchApp(appId, appName);
         await sleep(1000);
-      }} />
+      }}
+    />
   );
 };
 
@@ -133,7 +123,7 @@ export const MoonDeckLaunchButtonAnchor: VFC<Props> = (props) => {
   }, []);
 
   return (
-    <div id="moondeck" ref={ref} style={{ position: "relative", height: 0 }}>
+    <div id="moondeck" ref={ref} style={{ position: `var(${achorPositionName}, relative)` as CSSProperties["position"], height: 0 }}>
       {show &&
         <MoonDeckLaunchButton {...props} />
       }

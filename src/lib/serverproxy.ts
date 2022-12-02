@@ -81,24 +81,19 @@ export class ServerProxy {
   readonly status = new ReadonlySubject(this.statusSubject);
   readonly refreshing = new ReadonlySubject(this.refreshingSubject);
 
-  private async updateHostSettingsUnlocked(host: GameStreamHost, selectHost: boolean): Promise<void> {
-    const settings = this.settingsManager.cloneSettings();
-    if (settings === null) {
-      return;
-    }
+  private updateHostSettingsUnlocked(host: GameStreamHost, selectHost: boolean): void {
+    this.settingsManager.update((settings) => {
+      const currentSettings = settings.hostSettings[host.uniqueId] ?? null;
+      const hostSettings: HostSettings = {
+        buddyPort: currentSettings?.buddyPort ?? 59999,
+        address: host.address,
+        hostName: host.hostName,
+        mac: host.mac
+      };
 
-    const currentSettings = settings.hostSettings[host.uniqueId] ?? null;
-    const hostSettings: HostSettings = {
-      buddyPort: currentSettings?.buddyPort ?? 59999,
-      address: host.address,
-      hostName: host.hostName,
-      mac: host.mac
-    };
-
-    settings.currentHostId = selectHost ? host.uniqueId : settings.currentHostId;
-    settings.hostSettings[host.uniqueId] = hostSettings;
-
-    await this.settingsManager.set(settings);
+      settings.currentHostId = selectHost ? host.uniqueId : settings.currentHostId;
+      settings.hostSettings[host.uniqueId] = hostSettings;
+    });
   }
 
   private updateStatus(newStatus: ServerStatus): void {
@@ -136,7 +131,7 @@ export class ServerProxy {
       }
 
       if (result !== null) {
-        await this.updateHostSettingsUnlocked(result, false);
+        this.updateHostSettingsUnlocked(result, false);
       }
     } finally {
       this.refreshingSubject.next(false);
@@ -182,7 +177,7 @@ export class ServerProxy {
   async updateHostSettings(host: GameStreamHost, selectHost: boolean): Promise<void> {
     const release = await this.mutex.acquire();
     try {
-      await this.updateHostSettingsUnlocked(host, selectHost);
+      this.updateHostSettingsUnlocked(host, selectHost);
     } finally {
       release();
     }

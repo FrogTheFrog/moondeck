@@ -1,11 +1,22 @@
+import { BuddyStatusField, SettingsLoadingField } from "../shared";
 import { DialogBody, DialogButton, DialogControlsSection, DialogControlsSectionHeader, Field, Router } from "decky-frontend-lib";
-import { BuddyStatusField } from "../shared";
 import { MoonDeckLaunchButtonShell } from "../moondecklaunchbutton";
+import { SettingsManager } from "../../lib";
 import { VFC } from "react";
+import { useCurrentSettings } from "../../hooks";
 
 const moondeckBuddyLink = "https://github.com/FrogTheFrog/moondeck-buddy";
 
-export const SetupGuideView: VFC<unknown> = () => {
+interface Props {
+  settingsManager: SettingsManager;
+}
+
+export const SetupGuideView: VFC<Props> = ({ settingsManager }) => {
+  const settings = useCurrentSettings(settingsManager);
+  if (settings === null) {
+    return <SettingsLoadingField />;
+  }
+
   return (
     <DialogBody>
       <DialogControlsSection>
@@ -44,7 +55,7 @@ export const SetupGuideView: VFC<unknown> = () => {
           description="Go to any of your owned games and click the button with the MoonDeck icon!"
           focusable={true}
         >
-          <MoonDeckLaunchButtonShell />
+          <MoonDeckLaunchButtonShell buttonStyle={settings.buttonStyle} />
         </Field>
       </DialogControlsSection>
     </DialogBody>

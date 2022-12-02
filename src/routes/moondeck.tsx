@@ -1,6 +1,7 @@
 import { ConnectivityManager, SettingsManager, ShortcutManager } from "../lib";
 import { ServerAPI, SidebarNavigation } from "decky-frontend-lib";
 import { AboutView } from "../components/aboutview";
+import { ButtonStyleView } from "../components/buttonstyleview";
 import { GameSessionView } from "../components/gamesessionview";
 import { HostInfoView } from "../components/hostinfoview";
 import { HostSelectionView } from "../components/hostselectionview";
@@ -24,7 +25,7 @@ const MoonDeckRouter: VFC<Props> = ({ connectivityManager, settingsManager, shor
       pages={[
         {
           title: "Setup Guide",
-          content: <SetupGuideView />,
+          content: <SetupGuideView settingsManager={settingsManager} />,
           route: "/moondeck/setup-guide"
         },
         {
@@ -51,6 +52,11 @@ const MoonDeckRouter: VFC<Props> = ({ connectivityManager, settingsManager, shor
           title: "Shortcuts",
           content: <ShortcutsView shortcutManager={shortcutManager} />,
           route: "/moondeck/shortcuts"
+        },
+        {
+          title: "Button Style",
+          content: <ButtonStyleView settingsManager={settingsManager} />,
+          route: "/moondeck/button-style"
         },
         {
           title: "About",

@@ -1,7 +1,7 @@
-import { DialogBody, DialogControlsSection, Field, ToggleField, sleep } from "decky-frontend-lib";
-import { GameSessionSettings, SettingsManager, logger } from "../../lib";
-import { VFC, useState } from "react";
-import { SettingsLoadingField } from "../shared";
+import { DialogBody, DialogControlsSection, Field } from "decky-frontend-lib";
+import { SettingsLoadingField, ToggleField } from "../shared";
+import { SettingsManager } from "../../lib";
+import { VFC } from "react";
 import { useCurrentSettings } from "../../hooks";
 
 interface Props {
@@ -10,25 +10,9 @@ interface Props {
 
 export const GameSessionView: VFC<Props> = ({ settingsManager }) => {
   const settings = useCurrentSettings(settingsManager);
-  const [isDisabled, setIsDisabled] = useState<boolean>(false);
-
   if (settings === null) {
     return <SettingsLoadingField />;
   }
-
-  const updateSettings = <K extends keyof GameSessionSettings>(key: K, value: GameSessionSettings[K]): void => {
-    const settings = settingsManager.cloneSettings();
-    if (settings === null) {
-      return;
-    }
-
-    setIsDisabled(true);
-    settings.gameSession[key] = value;
-    settingsManager.set(settings)
-      .catch((e) => logger.critical(e))
-      .then(async () => await sleep(500))
-      .finally(() => setIsDisabled(false));
-  };
 
   return (
     <DialogBody>
@@ -45,9 +29,9 @@ export const GameSessionView: VFC<Props> = ({ settingsManager }) => {
               <div>While the AppId is set, you can't close the game via left panel's exit button. Use the right panel instead to stop streaming abruptly.</div>
             </>
           }
-          disabled={isDisabled}
-          checked={settings.gameSession.autoApplyAppId}
-          onChange={() => updateSettings("autoApplyAppId", !settings.gameSession.autoApplyAppId)} />
+          value={settings.gameSession.autoApplyAppId}
+          setValue={(value) => settingsManager.update((settings) => { settings.gameSession.autoApplyAppId = value; })}
+        />
         <ToggleField
           label="Resume game session after system suspension"
           description={
@@ -57,9 +41,9 @@ export const GameSessionView: VFC<Props> = ({ settingsManager }) => {
               <div>If the internet connection is not restored within 5 seconds, the session will not be resumed.</div>
             </>
           }
-          disabled={isDisabled}
-          checked={settings.gameSession.resumeAfterSuspend}
-          onChange={() => updateSettings("resumeAfterSuspend", !settings.gameSession.resumeAfterSuspend)} />
+          value={settings.gameSession.resumeAfterSuspend}
+          setValue={(value) => settingsManager.update((settings) => { settings.gameSession.resumeAfterSuspend = value; })}
+        />
       </DialogControlsSection>
     </DialogBody>
   );

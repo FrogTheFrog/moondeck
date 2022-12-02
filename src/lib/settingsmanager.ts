@@ -1,9 +1,13 @@
-import { cloneDeep, isEqual } from "lodash";
+import { cloneDeep, isEqual, throttle } from "lodash";
 import { BehaviorSubject } from "rxjs";
 import { Mutex } from "async-mutex";
 import { ReadonlySubject } from "./readonlysubject";
 import { ServerAPI } from "decky-frontend-lib";
 import { logger } from "./logger";
+
+export const buttonStyles = ["HighContrast", "Clean"] as const;
+export const horizontalAlignmentValues = ["top", "bottom"] as const;
+export const verticalAlignmentValues = ["left", "right"] as const;
 
 export interface HostSettings {
   buddyPort: number;
@@ -17,11 +21,26 @@ export interface GameSessionSettings {
   resumeAfterSuspend: boolean;
 }
 
+export interface ButtonPositionSettings {
+  horizontalAlignment: typeof horizontalAlignmentValues[number];
+  verticalAlignment: typeof verticalAlignmentValues[number];
+  offsetX: string;
+  offsetY: string;
+  offsetForHltb: boolean;
+}
+
+export interface ButtonStyleSettings {
+  showFocusRing: boolean;
+  theme: typeof buttonStyles[number];
+}
+
 export interface UserSettings {
   version: number;
   clientId: string;
   currentHostId: string | null;
   gameSession: GameSessionSettings;
+  buttonPosition: ButtonPositionSettings;
+  buttonStyle: ButtonStyleSettings;
   hostSettings: { [key: string]: HostSettings };
 }
 
@@ -50,19 +69,39 @@ async function setUserSettings(serverAPI: ServerAPI, settings: UserSettings): Pr
   }
 }
 
-function cloneSettings<T>(settings: Readonly<T> | null): T | null {
-  return cloneDeep(settings);
-}
-
 export class SettingsManager {
   private readonly serverAPI: ServerAPI;
   private readonly refreshMutex = new Mutex();
-  private readonly setterMutex = new Mutex();
   private readonly refreshInProgressSubject = new BehaviorSubject<boolean>(false);
   private readonly settingsSubject = new BehaviorSubject<UserSettings | null>(null);
+  private readonly setUserSettingsThrottled = throttle((settings: UserSettings) => { setUserSettings(this.serverAPI, settings).catch((e) => logger.critical(e)); }, 1000);
 
   readonly refreshInProgress = new ReadonlySubject(this.refreshInProgressSubject);
   readonly settings = new ReadonlySubject(this.settingsSubject);
+
+  private async refresh(): Promise<void> {
+    const release = await this.refreshMutex.acquire();
+    try {
+      this.refreshInProgressSubject.next(true);
+
+      const settings = await getUserSettings(this.serverAPI);
+      if (!isEqual(this.settings.value, settings)) {
+        this.settingsSubject.next(settings);
+      }
+    } finally {
+      this.refreshInProgressSubject.next(false);
+      release();
+    }
+  }
+
+  private set(settings: UserSettings): void {
+    if (isEqual(this.settings.value, settings)) {
+      return;
+    }
+
+    this.settingsSubject.next(settings);
+    this.setUserSettingsThrottled(settings);
+  }
 
   constructor(serverAPI: ServerAPI) {
     this.serverAPI = serverAPI;
@@ -86,39 +125,43 @@ export class SettingsManager {
   }
 
   deinit(): void {
+    this.setUserSettingsThrottled.flush();
     this.refreshInProgressSubject.next(false);
     this.settingsSubject.next(null);
   }
 
-  cloneSettings(): UserSettings | null {
-    return cloneSettings(this.settings.value);
+  update(callback: (settings: UserSettings) => void): void {
+    if (this.settings.value === null) {
+      logger.error("Settings are not ready to be updated yet");
+      return;
+    }
+
+    const settings = cloneDeep(this.settings.value);
+    callback(settings);
+    this.set(settings);
   }
 
-  async refresh(): Promise<void> {
-    const release = await this.refreshMutex.acquire();
-    try {
-      this.refreshInProgressSubject.next(true);
-
-      const settings = await getUserSettings(this.serverAPI);
-
-      if (!isEqual(this.settings.value, settings)) {
-        this.settingsSubject.next(settings);
-      }
-    } finally {
-      this.refreshInProgressSubject.next(false);
-      release();
+  updateHost(callback: (settings: HostSettings) => void): void {
+    if (this.settings.value === null) {
+      logger.error("Settings are not ready to be updated yet");
+      return;
     }
-  }
 
-  async set(settings: UserSettings): Promise<void> {
-    const release = await this.setterMutex.acquire();
-    try {
-      if (!isEqual(this.settings.value, settings)) {
-        await setUserSettings(this.serverAPI, settings);
-        await this.refresh();
-      }
-    } finally {
-      release();
+    if (this.settings.value.currentHostId === null) {
+      logger.error("Host is not selected and thus cannot be updated");
+      return;
     }
+
+    const settings = cloneDeep(this.settings.value);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const hostSettings = settings.hostSettings[settings.currentHostId!];
+    if (hostSettings === undefined) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      logger.error(`Host (${settings.currentHostId!}) settings are missing!`);
+      return;
+    }
+
+    callback(hostSettings);
+    this.set(settings);
   }
 }

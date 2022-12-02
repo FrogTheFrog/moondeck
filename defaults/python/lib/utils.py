@@ -27,15 +27,14 @@ def from_dict(output_type: Type[T], data: Dict[str, Any]) -> T:
             raise ValueError(f"Key \"{key}\" is not available in {data}.")
 
         actual_type = get_args(key_type) or key_type
-        print(f"{actual_type}")
         if is_dict_like(data[key]):
             verified_data[key] = from_dict(actual_type, data[key])
             continue
 
         if is_literal_like(key_type):
-            if data[key] != actual_type[0]:
+            if data[key] not in actual_type:
                 raise TypeError(
-                    f"Value {data[key]} of \"{key}\" does not match the valid literal value {actual_type[0]}")
+                    f"Value {data[key]} of \"{key}\" does not match the valid literal value(-s) {actual_type}")
         elif not isinstance(data[key], actual_type):
             raise TypeError(
                 f"\"{key}\" value {data[key]} is not of valid type(-s) {actual_type}")

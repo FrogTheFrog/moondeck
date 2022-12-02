@@ -1,27 +1,22 @@
 import { ConfirmModal, DialogButton, showModal } from "decky-frontend-lib";
-import { SettingsManager, logger } from "../../lib";
-import { HostNames } from "../../hooks";
+import { UserSettings, logger } from "../../lib";
 import { VFC } from "react";
 
 interface Props {
   disabled: boolean;
-  hostNames: HostNames;
-  settingsManager: SettingsManager;
+  currentHost: UserSettings["currentHostId"];
+  onForget: (value: Exclude< UserSettings["currentHostId"], null>) => void;
 }
 
-export const HostForgetButton: VFC<Props> = ({ disabled, hostNames, settingsManager }) => {
-  const handleClick = (hostId: string | null): void => {
+export const HostForgetButton: VFC<Props> = ({ disabled, currentHost, onForget }) => {
+  const handleClick = (): void => {
     showModal(
       <ConfirmModal
         strTitle="Are you sure you want to forget?"
         strDescription="This action cannot be undone."
         onOK={() => {
-          const settings = settingsManager.cloneSettings();
-          if (hostId !== null && settings !== null) {
-            settings.currentHostId = null;
-            // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-            delete settings.hostSettings[hostId];
-            settingsManager.set(settings).catch((e) => logger.critical(e));
+          if (currentHost !== null) {
+            onForget(currentHost);
           }
         }}
       />
@@ -29,7 +24,7 @@ export const HostForgetButton: VFC<Props> = ({ disabled, hostNames, settingsMana
   };
 
   return (
-    <DialogButton disabled={disabled} onClick={() => handleClick(hostNames?.currentId ?? null)}>
+    <DialogButton disabled={disabled} onClick={handleClick}>
       Forget
     </DialogButton>
   );

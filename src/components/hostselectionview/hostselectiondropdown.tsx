@@ -1,48 +1,36 @@
-import { Dropdown, DropdownOption } from "decky-frontend-lib";
-import { SettingsManager, logger } from "../../lib";
 import { VFC, useEffect, useState } from "react";
-import { HostNames } from "../../hooks";
+import { ListDropdown } from "../shared";
+import { UserSettings } from "../../lib";
 
 interface Props {
   disabled: boolean;
-  hostNames: HostNames;
-  settingsManager: SettingsManager;
+  currentSettings: UserSettings;
+  setHost: (value: UserSettings["currentHostId"]) => void;
 }
 
-export const HostSelectionDropdown: VFC<Props> = ({ disabled, hostNames, settingsManager }) => {
-  const [hostOptions, setHostOptions] = useState<DropdownOption[]>([]);
-  const [selectedOption, setSelectedOption] = useState<string | null>(null);
-
-  const handleChange = (hostId: string | null): void => {
-    const settings = settingsManager.cloneSettings();
-    if (settings !== null) {
-      settings.currentHostId = hostId;
-      settingsManager.set(settings).catch((e) => logger.critical(e));
-    }
-  };
+export const HostSelectionDropdown: VFC<Props> = ({ disabled, currentSettings, setHost }) => {
+  const [currentHost, setCurrentHost] = useState<UserSettings["currentHostId"]>(null);
+  const [entries, setEntries] = useState<Array<{ id: typeof currentHost; label: string }>>([]);
 
   useEffect(() => {
-    if (hostNames !== null && hostNames.entries.length > 0) {
-      const dropdownOptions: DropdownOption[] = [{ data: null, label: "None" }];
-      for (const { id, name } of hostNames.entries) {
-        dropdownOptions.push({ data: id, label: name });
-      }
-      setHostOptions(dropdownOptions);
-      setSelectedOption(hostNames.currentId);
+    const hosts: typeof entries = Object.entries(currentSettings.hostSettings).map(([id, hostSettings]) => { return { id, label: hostSettings.hostName }; });
+    if (hosts.length > 0) {
+      hosts.push({ id: null, label: "None" });
+      setEntries(hosts);
+      setCurrentHost(currentSettings.currentHostId);
     } else {
-      setHostOptions([]);
-      setSelectedOption(null);
+      setEntries([]);
+      setCurrentHost(null);
     }
-  }, [hostNames]);
+  }, [currentSettings]);
 
   return (
-    <Dropdown
-      disabled={disabled || hostOptions.length === 0}
-      rgOptions={hostOptions}
-      strDefaultLabel="Select host"
-      selectedOption={selectedOption}
-      focusable={true}
-      onChange={(option) => handleChange((option as { data: string | null }).data)}
+    <ListDropdown<typeof currentHost>
+      disabled={disabled}
+      optionList={entries}
+      label="Select host"
+      value={currentHost}
+      setValue={setHost}
     />
   );
 };
