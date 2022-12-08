@@ -1,4 +1,4 @@
-import { SteamClientEx } from "./getAppDetails";
+import { SteamClientEx } from "./shared";
 
 /**
  * Invokes appropriate callback when user logs in or out.

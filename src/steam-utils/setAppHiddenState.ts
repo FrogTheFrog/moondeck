@@ -1,29 +1,6 @@
 import { getCollectionStore } from "./getCollectionStore";
-import { sleep } from "decky-frontend-lib";
 import { waitForAppOverview } from "./waitForAppOverview";
-
-async function waitForPredicate(retries: number, delay: number, predicate: () => (boolean | Promise<boolean>)): Promise<boolean> {
-  const waitImpl = async (): Promise<boolean> => {
-    try {
-      let tries = retries + 1;
-      while (tries-- !== 0) {
-        if (await predicate()) {
-          return true;
-        }
-
-        if (tries > 0) {
-          await sleep(delay);
-        }
-      }
-    } catch (error) {
-      console.error(error);
-    }
-
-    return false;
-  };
-
-  return await waitImpl();
-}
+import { waitForPredicate } from "./shared";
 
 /**
  *

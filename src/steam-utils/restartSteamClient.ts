@@ -1,4 +1,4 @@
-import { SteamClientEx } from "./getAppDetails";
+import { SteamClientEx } from "./shared";
 
 /**
  * Restarts the Steam client.

@@ -1,39 +1,8 @@
-import { ConnectivityManager, MoonDeckAppLauncher, SettingsManager, ShortcutManager, logger, registerForLoginStateChange } from "./lib";
-import { ServerAPI, definePlugin, findModuleChild, staticClasses } from "decky-frontend-lib";
+import { ConnectivityManager, MoonDeckAppLauncher, SettingsManager, ShortcutManager, logger, registerForLoginStateChange, waitForServicesInitialized } from "./lib";
+import { ServerAPI, definePlugin, staticClasses } from "decky-frontend-lib";
 import { MoonDeckMain } from "./components/icons";
 import { QuickSettingsView } from "./components/quicksettingsview/quicksettingsview";
 import { RouteManager } from "./routes";
-
-interface LibraryInitializer {
-  /**
-   * Returns the status whether all the libraries are initialized or not.
-   *
-   * @note the libraries are initialized when user logs in.
-   */
-  GetServicesInitialized: () => boolean;
-
-  /**
-   * Waits until the services are initialized.
-   *
-   * @see GetServicesInitialized
-   */
-  WaitForServicesInitialized: () => Promise<boolean>;
-}
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-const LibraryInitializer = findModuleChild((mod: { [key: string]: Partial<LibraryInitializer> }): unknown => {
-  if (typeof mod !== "object") {
-    return undefined;
-  }
-
-  for (const prop in mod) {
-    if (mod[prop]?.WaitForServicesInitialized) {
-      return mod[prop];
-    }
-  }
-
-  return undefined;
-}) as LibraryInitializer;
 
 export default definePlugin((serverAPI: ServerAPI) => {
   logger.init(serverAPI);
@@ -45,7 +14,7 @@ export default definePlugin((serverAPI: ServerAPI) => {
   const routeManager = new RouteManager(serverAPI, connectivityManager, settingsManager, shortcutManager, moonDeckAppLauncher);
 
   const initCallback = async (username: string): Promise<void> => {
-    if (await LibraryInitializer.WaitForServicesInitialized()) {
+    if (await waitForServicesInitialized()) {
       logger.log(`Initializing plugin for ${username}`);
       await shortcutManager.init();
       settingsManager.init();
@@ -53,7 +22,7 @@ export default definePlugin((serverAPI: ServerAPI) => {
       moonDeckAppLauncher.init();
       routeManager.init();
     } else {
-      logger.error(`Failed to initialize Steam lib for ${username}!`);
+      logger.toast(`Failed to initialize Steam lib for ${username}!`, { output: "error" });
     }
   };
   const deinitCallback = (): void => {

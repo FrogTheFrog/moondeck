@@ -1,4 +1,5 @@
-import { SteamClientEx, getAppDetails } from "./getAppDetails";
+import { SteamClientEx } from "./shared";
+import { getAppDetails } from "./getAppDetails";
 import { waitForAppDetails } from "./waitForAppDetails";
 
 /**

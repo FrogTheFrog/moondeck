@@ -1,4 +1,4 @@
-import { SteamClientEx } from "./getAppDetails";
+import { SteamClientEx } from "./shared";
 import { getGameId } from "./getGameId";
 import { waitForAppLifetimeNotification } from "./waitForAppLifetimeNotification";
 

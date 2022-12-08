@@ -1,4 +1,4 @@
-import { SteamClientEx, SystemResumeInfo, SystemSuspendInfo } from "./getAppDetails";
+import { SteamClientEx, SystemResumeInfo, SystemSuspendInfo } from "./shared";
 
 /**
  * Invokes appropriate callback when user suspends or unsuspends the deck.

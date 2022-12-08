@@ -1,29 +1,6 @@
 import { SteamAppOverview } from "./getAppStore";
 import { getAppOverview } from "./getAppOverview";
-import { sleep } from "decky-frontend-lib";
-
-async function waitForPredicate(retries: number, delay: number, predicate: () => (boolean | Promise<boolean>)): Promise<boolean> {
-  const waitImpl = async (): Promise<boolean> => {
-    try {
-      let tries = retries + 1;
-      while (tries-- !== 0) {
-        if (await predicate()) {
-          return true;
-        }
-
-        if (tries > 0) {
-          await sleep(delay);
-        }
-      }
-    } catch (error) {
-      console.error(error);
-    }
-
-    return false;
-  };
-
-  return await waitImpl();
-}
+import { waitForPredicate } from "./shared";
 
 export type OverviewPredicate = (overview: SteamAppOverview | null) => (boolean | Promise<boolean>);
 

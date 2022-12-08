@@ -1,5 +1,5 @@
 import { LifetimeNotification } from "decky-frontend-lib";
-import { SteamClientEx } from "./getAppDetails";
+import { SteamClientEx } from "./shared";
 
 export type AnyId = null;
 export type NotificationType = "start" | "end";
