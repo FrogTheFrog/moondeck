@@ -127,7 +127,7 @@ export class MoonDeckAppProxy extends ReadonlySubject<MoonDeckAppData | null> {
       await killRunner(this.serverAPI, this.subject.value.moonDeckAppId);
     }
 
-    // Reset the origical value
+    // Reset the original value
     if (nameSetToAppId) {
       const newValue = { ...this.subject.value, sessionOptions: { ...this.subject.value.sessionOptions, nameSetToAppId } };
       if (!isEqual(this.subject.value, newValue)) {
