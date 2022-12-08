@@ -1,4 +1,4 @@
-import { SteamClientEx } from "./getAppDetails";
+import { SteamClientEx } from "./shared";
 import { getAppOverview } from "./getAppOverview";
 import { removeShortcut } from "./removeShortcut";
 import { waitForAppOverview } from "./waitForAppOverview";
