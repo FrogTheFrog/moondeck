@@ -3,8 +3,8 @@ import { ServerAPI, SidebarNavigation } from "decky-frontend-lib";
 import { AboutView } from "../components/aboutview";
 import { ButtonStyleView } from "../components/buttonstyleview";
 import { GameSessionView } from "../components/gamesessionview";
-import { HostInfoView } from "../components/hostinfoview";
 import { HostSelectionView } from "../components/hostselectionview";
+import { HostSettingsView } from "../components/hostinfoview";
 import { SetupGuideView } from "../components/setupguideview";
 import { ShortcutsView } from "../components/shortcutsview";
 import { StatusIndicatorsView } from "../components/statusindicatorsview";
@@ -44,8 +44,8 @@ const MoonDeckRouter: VFC<Props> = ({ connectivityManager, settingsManager, shor
           route: "/moondeck/host-selection"
         },
         {
-          title: "Host Info",
-          content: <HostInfoView settingsManager={settingsManager} />,
+          title: "Host Settings",
+          content: <HostSettingsView settingsManager={settingsManager} />,
           route: "/moondeck/host-info"
         },
         {

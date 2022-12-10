@@ -88,7 +88,15 @@ export class ServerProxy {
         buddyPort: currentSettings?.buddyPort ?? 59999,
         address: host.address,
         hostName: host.hostName,
-        mac: host.mac
+        mac: host.mac,
+        resolution: {
+          automatic: currentSettings?.resolution.automatic ?? true,
+          earlyChangeEnabled: currentSettings?.resolution.earlyChangeEnabled ?? true,
+          passToMoonlight: currentSettings?.resolution.passToMoonlight ?? true,
+          useCustomDimensions: currentSettings?.resolution.useCustomDimensions ?? false,
+          customWidth: currentSettings?.resolution.customWidth ?? 1280,
+          customHeight: currentSettings?.resolution.customHeight ?? 800
+        }
       };
 
       settings.currentHostId = selectHost ? host.uniqueId : settings.currentHostId;

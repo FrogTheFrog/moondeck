@@ -9,11 +9,21 @@ export const buttonStyles = ["HighContrast", "Clean"] as const;
 export const horizontalAlignmentValues = ["top", "bottom"] as const;
 export const verticalAlignmentValues = ["left", "right"] as const;
 
+export interface HostResolution {
+  automatic: boolean;
+  earlyChangeEnabled: boolean;
+  passToMoonlight: boolean;
+  useCustomDimensions: boolean;
+  customWidth: number;
+  customHeight: number;
+}
+
 export interface HostSettings {
   buddyPort: number;
   address: string;
   hostName: string;
   mac: string;
+  resolution: HostResolution;
 }
 
 export interface GameSessionSettings {

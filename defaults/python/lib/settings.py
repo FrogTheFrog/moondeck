@@ -9,11 +9,21 @@ from typing import Any, Dict, Literal, Optional, TypedDict
 from .logger import logger
 
 
+class HostResolution(TypedDict):
+    automatic: bool
+    earlyChangeEnabled: bool
+    passToMoonlight: bool
+    useCustomDimensions: bool
+    customWidth: int
+    customHeight: int
+
+
 class HostSettings(TypedDict):
     buddyPort: int
     address: str
     hostName: str
     mac: str
+    resolution: HostResolution
 
 
 class GameSessionSettings(TypedDict):
@@ -35,7 +45,7 @@ class ButtonStyleSettings(TypedDict):
 
 
 class UserSettings(TypedDict):
-    version: Literal[1]
+    version: Literal[2]
     clientId: str
     currentHostId: Optional[str]
     gameSession: GameSessionSettings
@@ -53,8 +63,13 @@ class SettingsManager:
                 try:
                     settings = utils.from_dict(UserSettings, data)
                 except Exception:
-                    logger.exception("failed to parse user settings")
-                    settings = self._migrate_settings(data)
+                    try:
+                        if not settings:
+                            settings = utils.from_dict(UserSettings, self._migrate_settings(data))
+                            await self.set(settings)
+                    except Exception:
+                        logger.exception("failed to parse user settings")
+                        
 
         except FileNotFoundError:
             pass
@@ -101,9 +116,20 @@ class SettingsManager:
         return copy.deepcopy(self.__data)
 
     @staticmethod
-    def _migrate_settings(data: Dict[str, Any]) -> Optional[UserSettings]:
-        # To be implemented when such a need arises
-        return None
+    def _migrate_settings(data: Dict[str, Any]) -> Dict[str, Any]:
+        if data["version"] == 1:
+            data["version"] = 2
+            for host in data["hostSettings"].keys():
+                data["hostSettings"][host]["resolution"] = {
+                    "automatic": True,
+                    "earlyChangeEnabled": True,
+                    "passToMoonlight": True,
+                    "useCustomDimensions": False,
+                    "customWidth": 1280,
+                    "customHeight": 800
+                }
+
+        return data
 
 
 settings_manager = SettingsManager()

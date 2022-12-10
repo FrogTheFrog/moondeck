@@ -14,8 +14,8 @@ def add_plugin_to_path():
 add_plugin_to_path()
 
 from enum import Enum
-from typing import Optional
-from lib.moonlightproxy import MoonlightProxy
+from typing import Optional, TypedDict
+from lib.moonlightproxy import MoonlightProxy, ResolutionDimensions
 from lib.steambuddyclient import SteamBuddyClient
 from lib.logger import logger, set_log_filename
 from lib.settings import settings_manager
@@ -26,6 +26,7 @@ import lib.constants as constants
 import lib.hostinfo as hostinfo
 import lib.inmsgs as inmsgs
 import lib.runnerresult as runnerresult
+import externals.screeninfo as screeninfo
 # autopep8: on
 
 set_log_filename(constants.RUNNER_LOG_FILE)
@@ -33,6 +34,12 @@ set_log_filename(constants.RUNNER_LOG_FILE)
 
 class SpecialHandling(Enum):
     AppFinishedUpdating = "App is forever updating..."
+
+
+class ResolutionChange(TypedDict):
+    dimensions: ResolutionDimensions
+    earlyChangeEnabled: bool
+    passToMoonlight: bool
 
 
 async def pool_steam_status(client: SteamBuddyClient, predicate):
@@ -117,11 +124,18 @@ async def wait_for_steam_to_be_ready(client: SteamBuddyClient, app_id: int):
     return await pool_steam_status(client, wait_till_ready)
 
 
-async def launch_app_and_wait(client: SteamBuddyClient, app_id: int):
+async def launch_app_and_wait(res_change: Optional[ResolutionChange], client: SteamBuddyClient, app_id: int):
     logger.info("Waiting for Steam to be ready to launch games")
     result = await wait_for_steam_to_be_ready(client, app_id)
     if result:
         return result
+
+    if res_change:
+        logger.info("Notifying Buddy to change resolution")
+        resp = await client.change_resolution(res_change["dimensions"]["width"], res_change["dimensions"]["height"],
+                                              True, timeout=constants.DEFAULT_TIMEOUT)
+        if resp:
+            return resp
 
     retries = 5
     result = SpecialHandling.AppFinishedUpdating
@@ -166,11 +180,18 @@ async def start_moonlight(proxy: MoonlightProxy):
     await proxy.start()
 
 
-async def establish_connection(client: SteamBuddyClient):
+async def establish_connection(res_change: Optional[ResolutionChange], client: SteamBuddyClient):
     logger.info("Establishing connection to Buddy")
     resp = await client.login(timeout=constants.DEFAULT_TIMEOUT)
     if resp:
         return resp
+
+    if res_change and res_change["earlyChangeEnabled"]:
+        logger.info("Notifying Buddy to prepare for resolution override on first change detected")
+        resp = await client.change_resolution(res_change["dimensions"]["width"], res_change["dimensions"]["height"],
+                                              False, timeout=constants.DEFAULT_TIMEOUT)
+        if resp:
+            return resp
 
     logger.info("Checking if GameStream service is running")
     server_info = await hostinfo.get_server_info(client.address, timeout=constants.DEFAULT_TIMEOUT)
@@ -180,11 +201,11 @@ async def establish_connection(client: SteamBuddyClient):
     return None
 
 
-async def run_game(hostname: str, address: str, port: int, client_id: Optional[str], app_id: int):
-    proxy = MoonlightProxy(hostname)
+async def run_game(res_change: Optional[ResolutionChange], hostname: str, address: str, port: int, client_id: Optional[str], app_id: int):
+    proxy = MoonlightProxy(hostname, res_change["dimensions"] if (res_change and res_change["passToMoonlight"]) else None)
     client = SteamBuddyClient(address, port, client_id)
     try:
-        result = await establish_connection(client=client)
+        result = await establish_connection(res_change=res_change, client=client)
         if result:
             return result
 
@@ -194,7 +215,7 @@ async def run_game(hostname: str, address: str, port: int, client_id: Optional[s
 
         proxy_task = asyncio.create_task(proxy.wait())
         launch_task = asyncio.create_task(
-            launch_app_and_wait(client=client, app_id=app_id))
+            launch_app_and_wait(res_change=res_change, client=client, app_id=app_id))
 
         done, _ = await asyncio.wait({proxy_task, launch_task}, return_when=asyncio.FIRST_COMPLETED)
         if proxy_task in done:
@@ -257,8 +278,32 @@ async def main():
             runnerresult.set_result(runnerresult.Result.HostNotSelected)
             return
 
+        res_dimensions: Optional[ResolutionDimensions] = None
+        if host_settings["resolution"]["automatic"]:
+            monitors = screeninfo.get_monitors()
+            primary_monitor = next((monitor for monitor in monitors if monitor.is_primary), None)
+            if primary_monitor:
+                res_dimensions = { "width": primary_monitor.width, "height": primary_monitor.height }
+            elif len(monitors) == 1:
+                res_dimensions = { "width": monitors[0].width, "height": monitors[0].height }
+            else:
+                logger.warn(f"Cannot use automatic resolution. Have {len(monitors)} monitors. Still continuing...")
+        
+        if not res_dimensions and host_settings["resolution"]["useCustomDimensions"]:
+            res_dimensions = { "width": host_settings["resolution"]["customWidth"], "height": host_settings["resolution"]["customHeight"] }
+
+        res_change: Optional[ResolutionChange] = None
+        if res_dimensions:
+            logger.info(f"Will try to apply {res_dimensions['width']}x{res_dimensions['height']} resolution on host.")
+            res_change = { 
+                "dimensions": res_dimensions, 
+                "earlyChangeEnabled": host_settings["resolution"]["earlyChangeEnabled"],
+                "passToMoonlight": host_settings["resolution"]["passToMoonlight"]
+            }
+
         logger.info("Trying to run the game")
-        result = await run_game(host_settings["hostName"],
+        result = await run_game(res_change,
+                                host_settings["hostName"],
                                 host_settings["address"],
                                 host_settings["buddyPort"],
                                 user_settings["clientId"],

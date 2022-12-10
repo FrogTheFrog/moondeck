@@ -1,25 +1,34 @@
 import asyncio
 
-from typing import Optional
+from typing import Optional, TypedDict
 from asyncio.subprocess import Process
 from .logger import logger
+
+
+class ResolutionDimensions(TypedDict):
+    width: int
+    height: int
 
 
 class MoonlightProxy:
     program = "/usr/bin/flatpak"
     moonlight = "com.moonlight_stream.Moonlight"
 
-    def __init__(self, hostname) -> None: 
+    def __init__(self, hostname: str, resolution: Optional[ResolutionDimensions]) -> None: 
         self.hostname = hostname
+        self.resolution = resolution
         self.process: Optional[Process] = None
 
     async def start(self):
         if self.process:
             return
 
-        self.process = await asyncio.create_subprocess_exec(self.program, "run",
-                                                            "--branch=stable", "--arch=x86_64", "--command=moonlight",
-                                                            self.moonlight, "stream", self.hostname, "Steam",
+        args = ["run", "--branch=stable", "--arch=x86_64", "--command=moonlight", self.moonlight]
+        if self.resolution:
+            args += ["--resolution", f"{self.resolution['width']}x{self.resolution['height']}"]
+        args += ["stream", self.hostname, "Steam"]
+
+        self.process = await asyncio.create_subprocess_exec(self.program, *args,
                                                             stdout=asyncio.subprocess.DEVNULL,
                                                             stderr=asyncio.subprocess.STDOUT)
 

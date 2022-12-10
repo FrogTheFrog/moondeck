@@ -1,1 +1,1 @@
-export * from "./hostinfoview";
+export * from "./hostsettingsview";

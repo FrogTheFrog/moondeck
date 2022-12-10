@@ -1,13 +1,9 @@
-import { SettingsManager, UserSettings } from "../lib";
+import { HostSettings, SettingsManager, UserSettings } from "../lib";
 import { useEffect, useState } from "react";
 
-export interface CurrentHostSettings {
+export interface CurrentHostSettings extends HostSettings {
   clientId: string;
   currentHostId: string;
-  buddyPort: number;
-  address: string;
-  hostName: string;
-  mac: string;
 }
 
 function getCurrentHostSettings(settings: Readonly<UserSettings> | null): CurrentHostSettings | null {
@@ -20,14 +16,7 @@ function getCurrentHostSettings(settings: Readonly<UserSettings> | null): Curren
     return null;
   }
 
-  return {
-    clientId: settings.clientId,
-    currentHostId: settings.currentHostId,
-    buddyPort: hostSettings.buddyPort,
-    address: hostSettings.address,
-    hostName: hostSettings.hostName,
-    mac: hostSettings.mac
-  };
+  return { clientId: settings.clientId, currentHostId: settings.currentHostId, ...hostSettings };
 }
 
 export function useCurrentHostSettings(settingsManager: SettingsManager): CurrentHostSettings | null {

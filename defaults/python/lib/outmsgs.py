@@ -11,7 +11,7 @@ class ControlType(Enum):
 
 
 def HelloMsg():
-    return {"type": "HELLO", "version": constants.CURRENT_VERSION}
+    return {"type": "HELLO", "version": constants.MSG_VERSION}
 
 
 def LoginMsg(control_type: ControlType, client_id: str):
@@ -54,3 +54,7 @@ def ShutdownPcMsg(grace_period: int = 10):
 
 def CloseSteamMsg(grace_period: Optional[int] = None):
     return {"type": "CLOSE_STEAM", "grace_period": grace_period}
+
+
+def ChangeResolutionMsg(width: int, height: int, immediate: bool):
+    return {"type": "CHANGE_RESOLUTION", "width": width, "height": height, "immediate": immediate}

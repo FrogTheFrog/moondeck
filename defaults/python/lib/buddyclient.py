@@ -63,16 +63,18 @@ class BuddyClient(JsonClient):
     async def _try_request(self, request, fallback_value):
         try:
             return await request
-        except (asyncio.TimeoutError, ConnectionError):
-            logger.debug("Timeout or connection loss while executing request.")
+        except asyncio.TimeoutError:
+            logger.debug(f"Timeout while executing request")
+            return fallback_value
+        except ConnectionError as e:
+            logger.debug(f"Connection loss while executing request: {e}")
             return fallback_value
         except ssl.SSLCertVerificationError:
             logger.exception("Request failed: SSL Verification.")
             return HelloResult.SslVerificationFailed
         except inmsgs.UnexpectedMessage as e:
             msg = inmsgs.convertFromJson(resp=e.resp)
-            logger.error("Request failed {error}. Got {msg}.".format(
-                error=e.message, msg=msg or e.resp))
+            logger.error(f"Request failed {e.message}. Got {msg or e.resp}.")
             return fallback_value
         except Exception:
             logger.exception("Request failed: unknown expection raised.")
