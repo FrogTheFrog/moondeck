@@ -46,3 +46,4 @@ backend/out
 
 # Ignore python link
 python
+!*/python
