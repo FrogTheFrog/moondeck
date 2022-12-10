@@ -28,19 +28,19 @@ export const HostSettingsView: VFC<Props> = ({ settingsManager }) => {
     <DialogBody>
       <DialogControlsSection>
         <DialogControlsSectionHeader>General</DialogControlsSectionHeader>
-        <Field label="MoonDeck client ID">
+        <Field label="MoonDeck client ID" focusable={true}>
           {hostSettings.clientId}
         </Field>
-        <Field label="GameStream client ID">
+        <Field label="GameStream client ID" focusable={true}>
           {hostSettings.currentHostId}
         </Field>
-        <Field label="Hostname">
+        <Field label="Hostname" focusable={true}>
           {hostSettings.hostName}
         </Field>
-        <Field label="MAC address">
+        <Field label="MAC address" focusable={true}>
           {hostSettings.mac}
         </Field>
-        <Field label="IP address">
+        <Field label="IP address" focusable={true}>
           {hostSettings.address}
         </Field>
         <Field label="Buddy port" childrenContainerWidth="fixed">
@@ -64,6 +64,7 @@ export const HostSettingsView: VFC<Props> = ({ settingsManager }) => {
               <div>Works most of the time...</div>
             </>
           }
+          focusable={true}
         />
         <ToggleField
           label="Try to apply SteamDeck's resolution on host PC"
