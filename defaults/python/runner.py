@@ -113,7 +113,7 @@ async def wait_for_steam_to_be_ready(client: SteamBuddyClient, app_id: int):
                 return False
 
         # NULL id means that the steam is still launching so lets be more lenient
-        obj["retries"] -= 1 * (0.25 if constants.NULL_STEAM_APP_ID or not status.steam_is_running else 1)
+        obj["retries"] -= 1 * (0.25 if not status.steam_is_running else 1)
         obj["counter"] = 0
         if obj["retries"] > 0:
             await asyncio.sleep(1)

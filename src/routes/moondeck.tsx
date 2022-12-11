@@ -4,7 +4,7 @@ import { AboutView } from "../components/aboutview";
 import { ButtonStyleView } from "../components/buttonstyleview";
 import { GameSessionView } from "../components/gamesessionview";
 import { HostSelectionView } from "../components/hostselectionview";
-import { HostSettingsView } from "../components/hostinfoview";
+import { HostSettingsView } from "../components/hostsettingsview";
 import { SetupGuideView } from "../components/setupguideview";
 import { ShortcutsView } from "../components/shortcutsview";
 import { StatusIndicatorsView } from "../components/statusindicatorsview";
