@@ -5,7 +5,7 @@ import json
 from . import constants
 from . import utils
 
-from typing import Any, Dict, Literal, Optional, TypedDict
+from typing import Any, Dict, Literal, Optional, TypedDict, get_args
 from .logger import logger
 
 
@@ -45,7 +45,7 @@ class ButtonStyleSettings(TypedDict):
 
 
 class UserSettings(TypedDict):
-    version: constants.CONFIG_VERSION
+    version: constants.CONFIG_VERSION_LITERAL
     clientId: str
     currentHostId: Optional[str]
     gameSession: GameSessionSettings
@@ -81,7 +81,7 @@ class SettingsManager:
             return settings
         else:
             return await self.set(utils.from_dict(UserSettings, {
-                "version": constants.CONFIG_VERSION,
+                "version": get_args(constants.CONFIG_VERSION_LITERAL)[0],
                 "clientId": str(uuid.uuid4()),
                 "currentHostId": None,
                 "gameSession": {
