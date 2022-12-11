@@ -45,7 +45,7 @@ class ButtonStyleSettings(TypedDict):
 
 
 class UserSettings(TypedDict):
-    version: Literal[2]
+    version: constants.CONFIG_VERSION
     clientId: str
     currentHostId: Optional[str]
     gameSession: GameSessionSettings
@@ -81,7 +81,7 @@ class SettingsManager:
             return settings
         else:
             return await self.set(utils.from_dict(UserSettings, {
-                "version": 1,
+                "version": constants.CONFIG_VERSION,
                 "clientId": str(uuid.uuid4()),
                 "currentHostId": None,
                 "gameSession": {

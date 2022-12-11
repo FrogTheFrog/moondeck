@@ -14,6 +14,7 @@ def get_user():
 
 CURRENT_USER = get_user()
 MSG_VERSION = 2
+CONFIG_VERSION = 2
 CONFIG_DIR = str(pathlib.Path("/home", CURRENT_USER, ".config", "moondeck"))
 CONFIG_FILENAME = "settings.json"
 LOG_FILE = "/tmp/moondeck.log"
