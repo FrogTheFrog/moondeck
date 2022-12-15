@@ -21,6 +21,7 @@ export interface HostResolution {
 export interface HostSettings {
   buddyPort: number;
   address: string;
+  staticAddress: boolean;
   hostName: string;
   mac: string;
   resolution: HostResolution;
