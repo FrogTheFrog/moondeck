@@ -14,9 +14,10 @@ class MoonlightProxy:
     program = "/usr/bin/flatpak"
     moonlight = "com.moonlight_stream.Moonlight"
 
-    def __init__(self, hostname: str, resolution: Optional[ResolutionDimensions]) -> None: 
+    def __init__(self, hostname: str, resolution: Optional[ResolutionDimensions], stream_via_helper: bool) -> None: 
         self.hostname = hostname
         self.resolution = resolution
+        self.stream_via_helper = stream_via_helper
         self.process: Optional[Process] = None
 
     async def start(self):
@@ -26,7 +27,7 @@ class MoonlightProxy:
         args = ["run", "--branch=stable", "--arch=x86_64", "--command=moonlight", self.moonlight]
         if self.resolution:
             args += ["--resolution", f"{self.resolution['width']}x{self.resolution['height']}"]
-        args += ["stream", self.hostname, "Steam"]
+        args += ["stream", self.hostname, "MoonDeckStream" if self.stream_via_helper else "Steam"]
 
         self.process = await asyncio.create_subprocess_exec(self.program, *args,
                                                             stdout=asyncio.subprocess.DEVNULL,
