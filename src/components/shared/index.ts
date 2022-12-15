@@ -1,5 +1,6 @@
 export * from "./anytextinput";
 export * from "./buddystatusfield";
+export * from "./ipaddresstextinput";
 export * from "./labelwithicon";
 export * from "./listdropdown";
 export * from "./numerictextinput";

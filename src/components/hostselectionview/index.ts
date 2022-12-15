@@ -1,3 +1,4 @@
+export * from "./addhostbutton";
 export * from "./buddypairbutton";
 export * from "./hostforgetbutton";
 export * from "./hostscanbutton";

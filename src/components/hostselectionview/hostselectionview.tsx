@@ -3,6 +3,7 @@ import { ConnectivityManager, SettingsManager } from "../../lib";
 import { DialogBody, DialogControlsSection, DialogControlsSectionHeader, Field } from "decky-frontend-lib";
 import { VFC, useState } from "react";
 import { useBuddyStatus, useCurrentSettings, useServerStatus } from "../../hooks";
+import { AddHostButton } from "./addhostbutton";
 import { BuddyPairButton } from "./buddypairbutton";
 import { HostForgetButton } from "./hostforgetbutton";
 import { HostScanButton } from "./hostscanbutton";
@@ -48,6 +49,16 @@ export const HostSelectionView: VFC<Props> = ({ connectivityManager, settingsMan
             disabled={isScanning}
             isScanning={isScanning}
             setIsScanning={setIsScanning}
+            connectivityManager={connectivityManager}
+          />
+        </Field>
+        <Field
+          label="Add host manually"
+          description="Add host by specifying a static IPv4 address if it cannot be found via scanning."
+          childrenContainerWidth="fixed"
+        >
+          <AddHostButton
+            disabled={isScanning}
             connectivityManager={connectivityManager}
           />
         </Field>

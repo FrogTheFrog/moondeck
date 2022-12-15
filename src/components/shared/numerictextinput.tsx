@@ -7,9 +7,10 @@ interface Props {
   max?: number;
   value: number;
   setValue: (value: number) => void;
+  setIsValid?: (value: boolean) => void;
 }
 
-export const NumbericTextInput: VFC<Props> = ({ disabled, min, max, value, setValue }) => {
+export const NumbericTextInput: VFC<Props> = ({ disabled, min, max, value, setValue, setIsValid }) => {
   return (
     <TextInput<number>
       disabled={disabled}
@@ -36,6 +37,7 @@ export const NumbericTextInput: VFC<Props> = ({ disabled, min, max, value, setVa
 
         return { success: true, value: convertedValue };
       }}
+      setIsValid={setIsValid}
     />
   );
 };

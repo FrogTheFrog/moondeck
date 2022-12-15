@@ -12,7 +12,7 @@ specifiers:
   '@typescript-eslint/eslint-plugin': '>=5.31.0'
   '@typescript-eslint/parser': '>=5.31.0'
   async-mutex: ^0.4.0
-  decky-frontend-lib: ^3.11.0
+  decky-frontend-lib: ^3.18.3
   eslint: '>=8.0.0'
   eslint-config-standard-with-typescript: ^23.0.0
   eslint-plugin-import: ^2.25.2
@@ -21,6 +21,7 @@ specifiers:
   eslint-plugin-prefer-arrow: ^1.2.3
   eslint-plugin-promise: ^6.0.0
   eslint-plugin-react: ^7.31.10
+  ip-regex: ^5.0.0
   lodash: ^4.17.21
   mobx: '5'
   react-icons: ^4.4.0
@@ -34,7 +35,8 @@ specifiers:
 
 dependencies:
   async-mutex: 0.4.0
-  decky-frontend-lib: 3.11.0
+  decky-frontend-lib: 3.18.3
+  ip-regex: 5.0.0
   lodash: 4.17.21
   mobx: 5.15.7
   react-icons: 4.6.0
@@ -815,8 +817,8 @@ packages:
       ms: 2.1.2
     dev: true
 
-  /decky-frontend-lib/3.11.0:
-    resolution: {integrity: sha512-TyBE3jgwaOauh9BZ4I4GaPwNyFUr4ZTx+HIA3G6Z6txr9wE3JnNVauBHRlhCYo3eO/ewDIcQg44VV6YLgibq3A==}
+  /decky-frontend-lib/3.18.3:
+    resolution: {integrity: sha512-Byy7TFyYCIPRot/geNqXdAgWWPoyTlAv18IZE+KEBpRywRJSdjWTuOk7bu8WwF1b5aWh3ER+z0BfP9tuAIznfw==}
     dev: false
 
   /deep-is/0.1.4:
@@ -1510,6 +1512,11 @@ packages:
     resolution: {integrity: sha512-agE4QfB2Lkp9uICn7BAqoscw4SZP9kTE2hxiFI3jBPmXJfdqiahTbUuKGsMoN2GtqL9AxhYioAcVvgsb1HvRbA==}
     engines: {node: '>= 0.10'}
     dev: true
+
+  /ip-regex/5.0.0:
+    resolution: {integrity: sha512-fOCG6lhoKKakwv+C6KdsOnGvgXnmgfmp0myi3bcNwj3qfwPAxRKWEuFhvEFF7ceYIz6+1jRZ+yguLFAmUNPEfw==}
+    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
+    dev: false
 
   /is-bigint/1.0.4:
     resolution: {integrity: sha512-zB9CruMamjym81i2JZ3UMn54PKGsQzsJeo6xvN3HJJ4CAsQNB6iRutp2To77OfCNuoxspsIhzaPoO1zyCEhFOg==}

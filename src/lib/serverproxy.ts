@@ -36,6 +36,20 @@ async function findHost(serverAPI: ServerAPI, hostId: string, timeout: number): 
     if (resp.success) {
       return resp.result;
     } else {
+      logger.error("Error while finding host: " + resp.result);
+    }
+  } catch (message) {
+    logger.critical(message);
+  }
+  return null;
+}
+
+async function getServerInfo(serverAPI: ServerAPI, address: string, timeout: number): Promise<GameStreamHost | null> {
+  try {
+    const resp = await serverAPI.callPluginMethod<{ address: string; timeout: number }, GameStreamHost | null>("get_server_info", { address, timeout });
+    if (resp.success) {
+      return resp.result;
+    } else {
       logger.error("Error while getting server info: " + resp.result);
     }
   } catch (message) {
@@ -81,12 +95,13 @@ export class ServerProxy {
   readonly status = new ReadonlySubject(this.statusSubject);
   readonly refreshing = new ReadonlySubject(this.refreshingSubject);
 
-  private updateHostSettingsUnlocked(host: GameStreamHost, selectHost: boolean): void {
+  private updateHostSettingsUnlocked(host: GameStreamHost, selectHost: boolean, staticAddress: boolean | null): void {
     this.settingsManager.update((settings) => {
       const currentSettings = settings.hostSettings[host.uniqueId] ?? null;
       const hostSettings: HostSettings = {
         buddyPort: currentSettings?.buddyPort ?? 59999,
         address: host.address,
+        staticAddress: staticAddress ?? (currentSettings?.staticAddress ?? false),
         hostName: host.hostName,
         mac: host.mac,
         resolution: {
@@ -132,19 +147,30 @@ export class ServerProxy {
         return;
       }
 
-      const result = await findHost(this.serverAPI, hostId, 1);
+      let result: GameStreamHost | null = null;
+      const hostSettings = this.settingsManager.hostSettings;
+      if (hostSettings) {
+        result = hostSettings.staticAddress ? await getServerInfo(this.serverAPI, hostSettings.address, 1) : await findHost(this.serverAPI, hostId, 1);
+      } else {
+        result = await findHost(this.serverAPI, hostId, 1);
+      }
+
       if (this.settingsManager.settings.value?.currentHostId === hostId) {
         const newStatus = result === null ? "Offline" : "Online";
         this.updateStatus(newStatus);
       }
 
       if (result !== null) {
-        this.updateHostSettingsUnlocked(result, false);
+        this.updateHostSettingsUnlocked(result, false, null);
       }
     } finally {
       this.refreshingSubject.next(false);
       release();
     }
+  }
+
+  async getServerInfo(address: string): Promise<GameStreamHost | null> {
+    return await getServerInfo(this.serverAPI, address, 2);
   }
 
   async scanForHosts(): Promise<GameStreamHost[]> {
@@ -182,10 +208,10 @@ export class ServerProxy {
     await this.buddyProxy.refreshStatus();
   }
 
-  async updateHostSettings(host: GameStreamHost, selectHost: boolean): Promise<void> {
+  async updateHostSettings(host: GameStreamHost, selectHost: boolean, staticAddress: boolean): Promise<void> {
     const release = await this.mutex.acquire();
     try {
-      this.updateHostSettingsUnlocked(host, selectHost);
+      this.updateHostSettingsUnlocked(host, selectHost, staticAddress);
     } finally {
       release();
     }
