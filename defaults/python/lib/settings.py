@@ -130,6 +130,7 @@ class SettingsManager:
                     "customHeight": 800
                 }
         if data["version"] == 2:
+            data["version"] = 3
             for host in data["hostSettings"].keys():
                 data["hostSettings"][host]["staticAddress"] = False
 
