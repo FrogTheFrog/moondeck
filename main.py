@@ -64,6 +64,13 @@ class Plugin:
             logger.exception("Unhandled exception")
             return None
 
+    async def get_server_info(self, address: str, timeout: float):
+        try:
+            return await hostinfo.get_server_info(address, timeout=timeout)
+        except Exception:
+            logger.exception("Unhandled exception")
+            return None
+
     async def get_buddy_status(self, address: str, buddy_port: int, client_id: str, timeout: float):
         client = None
         try:

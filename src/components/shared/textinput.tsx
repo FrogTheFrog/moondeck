@@ -6,9 +6,10 @@ interface Props<T> {
   value: string;
   setValue: (value: T) => void;
   convert: (value: string) => { value: T; success: true } | { success: false; error: string };
+  setIsValid?: (value: boolean) => void;
 }
 
-export const TextInput: <T>(props: Props<T>) => ReactElement<Props<T>> = ({ disabled, value, setValue, convert }) => {
+export const TextInput: <T>(props: Props<T>) => ReactElement<Props<T>> = ({ disabled, value, setValue, convert, setIsValid }) => {
   const [cachedValue, setCachedValue] = useState<string>(value);
   const [error, setError] = useState<string>("");
 
@@ -22,12 +23,14 @@ export const TextInput: <T>(props: Props<T>) => ReactElement<Props<T>> = ({ disa
     } else {
       setError(converted.error);
     }
+    setIsValid?.(converted.success);
   };
 
   useEffect(() => {
     const converted = convert(value);
     if (!converted.success) {
       setError(converted.error);
+      setIsValid?.(false);
     }
   }, []);
 

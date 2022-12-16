@@ -11,7 +11,7 @@ interface Props {
 
 export const HostScanButton: VFC<Props> = ({ connectivityManager, disabled, isScanning, setIsScanning }) => {
   const addOrUpdateHost = (host: GameStreamHost): void => {
-    connectivityManager.serverProxy.updateHostSettings(host, true).catch((e) => logger.critical(e));
+    connectivityManager.serverProxy.updateHostSettings(host, true, false).catch((e) => logger.critical(e));
   };
 
   const handleClick = async (): Promise<void> => {

@@ -1,5 +1,5 @@
 import { MoonDeckAppLauncher, SettingsManager, logger } from "../lib";
-import { RoutePatch, Router, ServerAPI, afterPatch, appDetailsClasses, findInReactTree, wrapReactType } from "decky-frontend-lib";
+import { Navigation, RoutePatch, ServerAPI, afterPatch, appDetailsClasses, findInReactTree, wrapReactType } from "decky-frontend-lib";
 import { MoonDeckLaunchButtonAnchor } from "../components/moondecklaunchbutton";
 import { ReactElement } from "react";
 
@@ -65,15 +65,7 @@ function patchLibraryApp(route: string, { serverAPI, moonDeckAppLauncher, settin
             // We are suppressing the navigation to custom shortcut ONLY if this happens after
             // launch via the moondeck button and we MUST navigate back ONLY once
             if (moonDeckAppLauncher.moonDeckApp.canRedirect()) {
-              if (Router.NavigateBackOrOpenMenu) {
-                Router.NavigateBackOrOpenMenu();
-              // eslint-disable-next-line @typescript-eslint/brace-style
-              }
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
-              else if ((Router as any).WindowStore?.m_GamepadUIMainWindowInstance?.NavigateBack) {
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any
-                (Router as any).WindowStore.m_GamepadUIMainWindowInstance.NavigateBack();
-              }
+              Navigation.NavigateBack();
             }
 
             return null;

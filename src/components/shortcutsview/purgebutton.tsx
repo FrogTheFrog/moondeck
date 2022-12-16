@@ -15,7 +15,7 @@ export const PurgeButton: VFC<Props> = ({ disabled, shortcutManager }) => {
         strDescription="This action cannot be undone."
         onOK={() => { shortcutManager.purgeAllShortcuts().catch((e) => logger.critical(e)); }}
       />
-    ).catch((e) => logger.critical(e));
+    );
   };
 
   return (

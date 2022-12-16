@@ -22,7 +22,7 @@ export const BuddyPairButton: VFC<Props> = ({ connectivityManager, disabled }) =
       setModalIsOpen(false);
       return;
     }
-    await showModal(<PairingModal closeModal={() => setModalIsOpen(false)} connectivityManager={connectivityManager} pin={pin} />);
+    showModal(<PairingModal closeModal={() => setModalIsOpen(false)} connectivityManager={connectivityManager} pin={pin} />);
   };
 
   return (

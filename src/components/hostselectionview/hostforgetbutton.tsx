@@ -1,5 +1,5 @@
 import { ConfirmModal, DialogButton, showModal } from "decky-frontend-lib";
-import { UserSettings, logger } from "../../lib";
+import { UserSettings } from "../../lib";
 import { VFC } from "react";
 
 interface Props {
@@ -20,7 +20,7 @@ export const HostForgetButton: VFC<Props> = ({ disabled, currentHost, onForget }
           }
         }}
       />
-    ).catch((e) => logger.critical(e));
+    );
   };
 
   return (

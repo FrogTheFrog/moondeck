@@ -21,6 +21,7 @@ class HostResolution(TypedDict):
 class HostSettings(TypedDict):
     buddyPort: int
     address: str
+    staticAddress: bool
     hostName: str
     mac: str
     resolution: HostResolution
@@ -128,6 +129,9 @@ class SettingsManager:
                     "customWidth": 1280,
                     "customHeight": 800
                 }
+        if data["version"] == 2:
+            for host in data["hostSettings"].keys():
+                data["hostSettings"][host]["staticAddress"] = False
 
         return data
 
