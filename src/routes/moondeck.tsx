@@ -2,6 +2,7 @@ import { ConnectivityManager, SettingsManager, ShortcutManager } from "../lib";
 import { ServerAPI, SidebarNavigation } from "decky-frontend-lib";
 import { AboutView } from "../components/aboutview";
 import { ButtonStyleView } from "../components/buttonstyleview";
+import { ChangelogView } from "../components/changelogview";
 import { GameSessionView } from "../components/gamesessionview";
 import { HostSelectionView } from "../components/hostselectionview";
 import { HostSettingsView } from "../components/hostsettingsview";
@@ -27,6 +28,11 @@ const MoonDeckRouter: VFC<Props> = ({ connectivityManager, settingsManager, shor
           title: "Setup Guide",
           content: <SetupGuideView settingsManager={settingsManager} />,
           route: "/moondeck/setup-guide"
+        },
+        {
+          title: "Changelog",
+          content: <ChangelogView />,
+          route: "/moondeck/changelog"
         },
         {
           title: "Status Indicators",

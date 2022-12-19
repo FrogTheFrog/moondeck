@@ -1,3 +1,3 @@
-import { SiNvidia } from "react-icons/si";
+import { GiBoomerangSun } from "react-icons/gi";
 
-export const GameSteamMain = SiNvidia;
+export const GameSteamMain = GiBoomerangSun;
