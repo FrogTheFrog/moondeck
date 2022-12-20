@@ -69,18 +69,29 @@ class VersionMismatch(BaseIncommingMessage):
 
 
 class SteamStatus(BaseIncommingMessage):
-    def __init__(self, running_app_id: int, steam_is_running: bool, last_launched_app_is_updating: Optional[int]) -> None:
+    possible_stream_states = ["NotStreaming", "Streaming", "StreamEnding"]
+
+    def __init__(self, running_app_id: int, steam_is_running: bool, last_launched_app_is_updating: Optional[int], stream_state: Literal["NotStreaming", "Streaming", "StreamEnding"]) -> None:
         self.running_app_id = running_app_id
         self.steam_is_running = steam_is_running
         self.last_launched_app_is_updating = last_launched_app_is_updating
+        self.stream_state = stream_state
 
     def __repr__(self) -> str:
-        return f"{type(self).__name__}(running_app_id={self.running_app_id}, steam_is_running={self.steam_is_running}, last_launched_app_is_updating={self.last_launched_app_is_updating})"
+        return f"{type(self).__name__}(running_app_id={self.running_app_id}, steam_is_running={self.steam_is_running}, last_launched_app_is_updating={self.last_launched_app_is_updating}, stream_state={self.stream_state})"
 
     @staticmethod
     def from_json(resp: Dict[str, Any]):
-        if resp.get("type") == "STEAM_STATUS" and "running_app_id" in resp and "steam_is_running" in resp and "last_launched_app_is_updating" in resp:
-            return SteamStatus(running_app_id=resp.get("running_app_id"), steam_is_running=resp.get("steam_is_running"), last_launched_app_is_updating=resp.get("last_launched_app_is_updating"))
+        if resp.get("type") == "STEAM_STATUS" \
+            and "running_app_id" in resp \
+            and "steam_is_running" in resp \
+            and "last_launched_app_is_updating" in resp \
+            and "stream_state" in resp and resp.get("stream_state") in SteamStatus.possible_stream_states:
+            
+            return SteamStatus(running_app_id=resp.get("running_app_id"), 
+                               steam_is_running=resp.get("steam_is_running"),
+                               last_launched_app_is_updating=resp.get("last_launched_app_is_updating"), 
+                               stream_state=resp.get("stream_state"))
 
 
 class PcState(BaseIncommingMessage):

@@ -22,8 +22,8 @@ export const SetupGuideView: VFC<Props> = ({ settingsManager }) => {
       <DialogControlsSection>
         <DialogControlsSectionHeader>How to get this plugin working?</DialogControlsSectionHeader>
         <Field
-          label="Step 1 - Configure Moonlight client"
-          description="Download the flatpak version (via Desktop) of the Moonlight client and make sure you can launch Steam from it."
+          label="Step 1 - Configure Moonlight client to work with Sunshine"
+          description="Download the flatpak version (via Desktop) of the Moonlight client and make sure it is configured."
           focusable={true} />
         <Field label="Step 2 - Download and setup Buddy on host PC">
           <DialogButton onClick={() => { Router.NavigateToExternalWeb(moondeckBuddyLink); }}>Click me!</DialogButton>

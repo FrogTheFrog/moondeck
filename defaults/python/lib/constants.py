@@ -14,7 +14,7 @@ def get_user():
 
 
 CURRENT_USER = get_user()
-MSG_VERSION = 2
+MSG_VERSION = 3
 CONFIG_VERSION_LITERAL = typing.Literal[3]
 CONFIG_DIR = str(pathlib.Path("/home", CURRENT_USER, ".config", "moondeck"))
 CONFIG_FILENAME = "settings.json"
@@ -24,4 +24,3 @@ RUNNER_RESULT_FILE = "/tmp/moondeck-runner.result"
 DEFAULT_TIMEOUT = 5
 GAMESTREAM_PORT = 47989
 NULL_STEAM_APP_ID = 0
-NVIDIA_STEAM_APP_ID = 236600

@@ -26,7 +26,7 @@ class MoonlightProxy:
         args = ["run", "--branch=stable", "--arch=x86_64", "--command=moonlight", self.moonlight]
         if self.resolution:
             args += ["--resolution", f"{self.resolution['width']}x{self.resolution['height']}"]
-        args += ["stream", self.hostname, "Steam"]
+        args += ["stream", self.hostname, "MoonDeckStream"]
 
         self.process = await asyncio.create_subprocess_exec(self.program, *args,
                                                             stdout=asyncio.subprocess.DEVNULL,

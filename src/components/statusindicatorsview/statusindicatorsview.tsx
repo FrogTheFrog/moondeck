@@ -18,7 +18,7 @@ export const StatusIndicatorsView: VFC<unknown> = () => {
         <DialogControlsSectionHeader>GameStream Service</DialogControlsSectionHeader>
         <Field
           label={stringifyServerStatus("Offline")}
-          description="The PC is offline or the gamestream service is reachable on the host PC. Sometimes the service fails to start due to various reason that need to be manually resolved (NVidia driver update caused this once). Also, the the host has VPN running, the service might not be visible."
+          description="The PC is offline or the gamestream service is unreachable on the host PC."
           focusable={true} />
         <Field
           label={stringifyServerStatus("Online")}
