@@ -5,7 +5,7 @@ import { ServerAPI } from "decky-frontend-lib";
 import { SettingsManager } from "./settingsmanager";
 import { logger } from "./logger";
 
-export type BuddyStatus = "VersionMismatch" | "Restarting" | "ShuttingDown" | "NoClientId" | "NotPaired" | "Pairing" | "SslVerificationFailed" | "Exception" | "Offline" | "Online";
+export type BuddyStatus = "VersionMismatch" | "Restarting" | "ShuttingDown" | "Suspending" | "NoClientId" | "NotPaired" | "Pairing" | "SslVerificationFailed" | "Exception" | "Offline" | "Online";
 
 async function getBuddyStatus(serverAPI: ServerAPI, address: string, buddyPort: number, clientId: string, timeout: number): Promise<BuddyStatus> {
   try {

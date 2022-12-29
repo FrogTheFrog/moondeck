@@ -19,11 +19,13 @@ class PcState(Enum):
     Normal = 0
     Restarting = 1
     ShuttingDown = 2
+    Suspending = 3
 
 
 class PcStateChange(Enum):
     Restart = 0
     Shutdown = 1
+    Suspend = 2
 
 
 class StreamState(Enum):

@@ -11,6 +11,7 @@ export const ChangelogView: VFC<unknown> = () => {
             <>
               <div>&bull; Changed the underlying communication protocol with Buddy to HTTPS (should have no user impact).</div>
               <div>&bull; Invalidated SSL keys to force update to the new Buddy version, since the legacy version check will not work.</div>
+              <div>&bull; Added an option to suspend (put to sleep) host PC.</div>
             </>
           }
           focusable={true}

@@ -7,7 +7,7 @@ import { ServerProxy } from "./serverproxy";
 import { SettingsManager } from "./settingsmanager";
 import { logger } from "./logger";
 
-type PcStateChange = "Restart" | "Shutdown";
+type PcStateChange = "Restart" | "Shutdown" | "Suspend";
 
 async function wakeOnLan(serverAPI: ServerAPI, address: string, mac: string): Promise<void> {
   try {
@@ -108,6 +108,10 @@ export class CommandProxy {
 
   async shutdownPC(): Promise<void> {
     await this.doChangePcState("Shutdown");
+  }
+
+  async suspendPC(): Promise<void> {
+    await this.doChangePcState("Suspend");
   }
 
   async closeSteam(triggerExecutionChange = true): Promise<void> {

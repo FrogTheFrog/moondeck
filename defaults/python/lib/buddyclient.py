@@ -15,6 +15,7 @@ class HelloResult(Enum):
     VersionMismatch = "MoonDeck/Buddy needs update!"
     Restarting = "Buddy is restarting the PC!"
     ShuttingDown = "Buddy is shutting down the PC!"
+    Suspending = "Buddy is suspending the PC!"
     Pairing = "MoonDeck/Buddy is pairing!"
     NotPaired = "MoonDeck/Buddy needs pairing!"
     Offline = "Buddy is offline!"
@@ -111,6 +112,8 @@ class BuddyClient(contextlib.AbstractAsyncContextManager):
                 return HelloResult.Restarting
             elif resp["state"] == PcState.ShuttingDown:
                 return HelloResult.ShuttingDown
+            elif resp["state"] == PcState.Suspending:
+                return HelloResult.Suspending
             
             return None
 
