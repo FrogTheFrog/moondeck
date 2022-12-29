@@ -1,4 +1,5 @@
 import asyncio
+import contextlib
 
 from typing import Optional, TypedDict
 from asyncio.subprocess import Process
@@ -10,7 +11,8 @@ class ResolutionDimensions(TypedDict):
     height: int
 
 
-class MoonlightProxy:
+class MoonlightProxy(contextlib.AbstractAsyncContextManager):
+
     program = "/usr/bin/flatpak"
     moonlight = "com.moonlight_stream.Moonlight"
 
@@ -18,6 +20,12 @@ class MoonlightProxy:
         self.hostname = hostname
         self.resolution = resolution
         self.process: Optional[Process] = None
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *args):
+        return await self.terminate()
 
     async def start(self):
         if self.process:

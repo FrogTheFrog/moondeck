@@ -18,7 +18,7 @@ export const BuddyPairButton: VFC<Props> = ({ connectivityManager, disabled }) =
 
     const result = await connectivityManager.serverProxy.startPairing(pin);
     if (result !== "PairingStarted") {
-      logger.toast(result, { output: "error" });
+      logger.toast(`Pairing refused due to error: ${result}.`, { output: "error" });
       setModalIsOpen(false);
       return;
     }

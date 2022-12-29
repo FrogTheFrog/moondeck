@@ -1,6 +1,9 @@
 import copy
+import inspect
 
+from enum import Enum
 from typing import Any, Dict, Literal, Type, TypeVar, get_args, get_origin
+
 
 T = TypeVar("T")
 def from_dict(output_type: Type[T], data: Dict[str, Any]) -> T:
@@ -9,6 +12,9 @@ def from_dict(output_type: Type[T], data: Dict[str, Any]) -> T:
 
     def is_dict_like(data):
         return is_typed_dict(data) or isinstance(data, dict)
+    
+    def is_enum_like(data_type):
+        return inspect.isclass(data_type) and issubclass(data_type, Enum)
 
     def is_literal_like(data_type):
         return get_origin(data_type) == Literal
@@ -30,14 +36,14 @@ def from_dict(output_type: Type[T], data: Dict[str, Any]) -> T:
         if is_dict_like(data[key]):
             verified_data[key] = from_dict(actual_type, data[key])
             continue
-
-        if is_literal_like(key_type):
+        elif is_literal_like(key_type):
             if data[key] not in actual_type:
-                raise TypeError(
-                    f"Value {data[key]} of \"{key}\" does not match the valid literal value(-s) {actual_type}")
+                raise TypeError(f"Value {data[key]} of \"{key}\" does not match the valid literal value(-s) {actual_type}")
+        elif is_enum_like(actual_type):
+            verified_data[key] = actual_type[data[key]]
+            continue
         elif not isinstance(data[key], actual_type):
-            raise TypeError(
-                f"\"{key}\" value {data[key]} is not of valid type(-s) {actual_type}")
+            raise TypeError(f"\"{key}\" value {data[key]} is not of valid type(-s) {actual_type}")
 
         verified_data[key] = copy.deepcopy(data[key])
 

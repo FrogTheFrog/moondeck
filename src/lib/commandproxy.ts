@@ -7,6 +7,8 @@ import { ServerProxy } from "./serverproxy";
 import { SettingsManager } from "./settingsmanager";
 import { logger } from "./logger";
 
+type PcStateChange = "Restart" | "Shutdown";
+
 async function wakeOnLan(serverAPI: ServerAPI, address: string, mac: string): Promise<void> {
   try {
     const resp = await serverAPI.callPluginMethod<{ address: string; mac: string }, null>("wake_on_lan", { address, mac });
@@ -18,22 +20,11 @@ async function wakeOnLan(serverAPI: ServerAPI, address: string, mac: string): Pr
   }
 }
 
-async function restartPC(serverAPI: ServerAPI, address: string, buddyPort: number, clientId: string, timeout: number): Promise<void> {
+async function changePcState(serverAPI: ServerAPI, address: string, buddyPort: number, clientId: string, state: PcStateChange, timeout: number): Promise<void> {
   try {
-    const resp = await serverAPI.callPluginMethod<{ address: string; buddy_port: number; client_id: string; timeout: number }, null>("restart_pc", { address, buddy_port: buddyPort, client_id: clientId, timeout });
+    const resp = await serverAPI.callPluginMethod<{ address: string; buddy_port: number; client_id: string; state: PcStateChange; timeout: number }, null>("change_pc_state", { address, buddy_port: buddyPort, client_id: clientId, state, timeout });
     if (!resp.success) {
-      logger.error("Error while restarting PC: " + resp.result);
-    }
-  } catch (message) {
-    logger.critical(message);
-  }
-}
-
-async function shutdownPC(serverAPI: ServerAPI, address: string, buddyPort: number, clientId: string, timeout: number): Promise<void> {
-  try {
-    const resp = await serverAPI.callPluginMethod<{ address: string; buddy_port: number; client_id: string; timeout: number }, null>("shutdown_pc", { address, buddy_port: buddyPort, client_id: clientId, timeout });
-    if (!resp.success) {
-      logger.error("Error while shutting down PC: " + resp.result);
+      logger.error("Error while changing PC state: " + resp.result);
     }
   } catch (message) {
     logger.critical(message);
@@ -62,7 +53,7 @@ export class CommandProxy {
 
   readonly executing = new ReadonlySubject(this.executingSubject);
 
-  async doRestartOrShutdownPC(restart: boolean): Promise<void> {
+  async doChangePcState(state: PcStateChange): Promise<void> {
     const release = await this.mutex.acquire();
     try {
       this.executingSubject.next(true);
@@ -73,11 +64,7 @@ export class CommandProxy {
         const clientId = this.settingsManager.settings.value?.clientId ?? null;
 
         if (address !== null && buddyPort !== null && clientId !== null) {
-          if (restart) {
-            await restartPC(this.serverAPI, address, buddyPort, clientId, 5);
-          } else {
-            await shutdownPC(this.serverAPI, address, buddyPort, clientId, 5);
-          }
+          await changePcState(this.serverAPI, address, buddyPort, clientId, state, 5);
           await sleep(2 * 1000);
           await this.buddyProxy.refreshStatus();
         }
@@ -116,11 +103,11 @@ export class CommandProxy {
   }
 
   async restartPC(): Promise<void> {
-    await this.doRestartOrShutdownPC(true);
+    await this.doChangePcState("Restart");
   }
 
   async shutdownPC(): Promise<void> {
-    await this.doRestartOrShutdownPC(false);
+    await this.doChangePcState("Shutdown");
   }
 
   async closeSteam(triggerExecutionChange = true): Promise<void> {

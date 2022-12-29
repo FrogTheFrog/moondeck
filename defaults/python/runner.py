@@ -16,7 +16,8 @@ add_plugin_to_path()
 from enum import Enum
 from typing import Optional, TypedDict
 from lib.moonlightproxy import MoonlightProxy, ResolutionDimensions
-from lib.steambuddyclient import SteamBuddyClient
+from lib.buddyrequests import HostInfoResponse, StreamState
+from lib.buddyclient import BuddyClient, ChangeResolutionResult
 from lib.logger import logger, set_log_filename
 from lib.settings import settings_manager
 
@@ -24,7 +25,6 @@ import os
 import asyncio
 import lib.constants as constants
 import lib.hostinfo as hostinfo
-import lib.inmsgs as inmsgs
 import lib.runnerresult as runnerresult
 import externals.screeninfo as screeninfo
 # autopep8: on
@@ -42,13 +42,13 @@ class ResolutionChange(TypedDict):
     passToMoonlight: bool
 
 
-async def pool_steam_status(client: SteamBuddyClient, predicate):
+async def pool_host_info(client: BuddyClient, predicate):
     while True:
-        status = await client.get_steam_status(timeout=constants.DEFAULT_TIMEOUT)
-        if not isinstance(status, inmsgs.SteamStatus):
-            return status
+        info = await client.get_host_info()
+        if not isinstance(info, dict):
+            return info
 
-        result = await predicate(status)
+        result = await predicate(info)
         if isinstance(result, bool) or result is None:
             if result:
                 return None
@@ -65,24 +65,24 @@ async def sleep_while_counting_down(object_ref, error: runnerresult.Result):
         return error
 
 
-async def wait_for_app_to_close(client: SteamBuddyClient, app_id: int):
-    async def wait_till_close(status: inmsgs.SteamStatus):
-        if status.running_app_id != app_id or not status.steam_is_running:
+async def wait_for_app_to_close(client: BuddyClient, app_id: int):
+    async def wait_till_close(info: HostInfoResponse):
+        if info["steamRunningAppId"] != app_id or not info["steamIsRunning"]:
             return True
 
         await asyncio.sleep(1)
 
-    return await pool_steam_status(client, wait_till_close)
+    return await pool_host_info(client, wait_till_close)
 
 
-async def wait_for_app_launch(client: SteamBuddyClient, app_id: int):
+async def wait_for_app_launch(client: BuddyClient, app_id: int):
     obj = {"retries": 30, "was_updating": False}
 
-    async def wait_till_launch(status: inmsgs.SteamStatus):
-        if status.steam_is_running:
-            if status.running_app_id == app_id:
+    async def wait_till_launch(info: HostInfoResponse):
+        if info["steamIsRunning"]:
+            if info["steamRunningAppId"] == app_id:
                 return True
-            if status.last_launched_app_is_updating == app_id:
+            if info["steamTrackedUpdatingAppId"] == app_id:
                 obj["was_updating"] = True
                 await asyncio.sleep(1)
                 return False
@@ -91,22 +91,22 @@ async def wait_for_app_launch(client: SteamBuddyClient, app_id: int):
 
         return await sleep_while_counting_down(obj, runnerresult.Result.AppLaunchFailed)
 
-    return await pool_steam_status(client, wait_till_launch)
+    return await pool_host_info(client, wait_till_launch)
 
 
-async def wait_for_steam_to_be_ready(client: SteamBuddyClient):
+async def wait_for_steam_to_be_ready(client: BuddyClient):
     obj = {"retries": 30}
 
-    async def wait_till_stream_is_ready(status: inmsgs.SteamStatus):
-        if status.stream_state == "Streaming":
+    async def wait_till_stream_is_ready(info: HostInfoResponse):
+        if info["streamState"] == StreamState.Streaming:
             return True
 
         return await sleep_while_counting_down(obj, runnerresult.Result.StreamFailedToStart)
 
-    return await pool_steam_status(client, wait_till_stream_is_ready)
+    return await pool_host_info(client, wait_till_stream_is_ready)
     
 
-async def launch_app_and_wait(res_change: Optional[ResolutionChange], client: SteamBuddyClient, app_id: int):
+async def launch_app_and_wait(res_change: Optional[ResolutionChange], client: BuddyClient, app_id: int):
     logger.info("Waiting for Steam to be ready to launch games")
     result = await wait_for_steam_to_be_ready(client)
     if result:
@@ -114,10 +114,12 @@ async def launch_app_and_wait(res_change: Optional[ResolutionChange], client: St
 
     if res_change:
         logger.info("Notifying Buddy to change resolution")
-        resp = await client.change_resolution(res_change["dimensions"]["width"], res_change["dimensions"]["height"],
-                                              True, timeout=constants.DEFAULT_TIMEOUT)
+        resp = await client.change_resolution(res_change["dimensions"]["width"], res_change["dimensions"]["height"], True)
         if resp:
-            return resp
+            if resp == ChangeResolutionResult.BuddyRefused:
+                logger.info("Buddy refused resolution change. If early change is enabled, this can be expected. Continuing...")
+            else:
+                return resp
 
     retries = 5
     result = SpecialHandling.AppFinishedUpdating
@@ -125,7 +127,7 @@ async def launch_app_and_wait(res_change: Optional[ResolutionChange], client: St
         retries -= 1
 
         logger.info(f"Sending request to launch app {app_id}")
-        result = await client.launch_app(app_id, timeout=constants.DEFAULT_TIMEOUT)
+        result = await client.launch_app(app_id)
         if result:
             return result
 
@@ -145,7 +147,7 @@ async def launch_app_and_wait(res_change: Optional[ResolutionChange], client: St
 
     logger.info(
         "App closed gracefully, asking to close Steam if it's still open")
-    result = await client.close_steam(timeout=constants.DEFAULT_TIMEOUT)
+    result = await client.close_steam(None)
     if result:
         return result
 
@@ -162,32 +164,32 @@ async def start_moonlight(proxy: MoonlightProxy):
     await proxy.start()
 
 
-async def wait_for_initial_host_conditions(res_change: Optional[ResolutionChange], client: SteamBuddyClient, app_id: int):
+async def wait_for_initial_host_conditions(res_change: Optional[ResolutionChange], client: BuddyClient, app_id: int):
     obj = {"retries": 30, "steam_close_request_sent": False}
 
-    async def wait_till_stream_to_be_ready(status: inmsgs.SteamStatus):
-        if status.stream_state == "StreamEnding":
+    async def wait_till_stream_to_be_ready(info: HostInfoResponse):
+        if info["streamState"] == StreamState.StreamEnding:
             return await sleep_while_counting_down(obj, runnerresult.Result.StreamDidNotEnd)
 
-        if status.stream_state == "Streaming":
-            if status.steam_is_running:
-                current_app_is_running = status.running_app_id == app_id
-                current_app_is_updating = status.last_launched_app_is_updating == app_id
+        if info["streamState"] == StreamState.Streaming:
+            if info["steamIsRunning"]:
+                current_app_is_running = info["steamRunningAppId"] == app_id
+                current_app_is_updating = info["steamTrackedUpdatingAppId"] == app_id
 
                 if current_app_is_running or current_app_is_updating:
                     return True
                 elif current_app_is_running == constants.NULL_STEAM_APP_ID:
                     if not obj["steam_close_request_sent"]:
-                        result = await client.close_steam(timeout=constants.DEFAULT_TIMEOUT)
+                        result = await client.close_steam(None)
                         if result:
                             return result
 
                 return await sleep_while_counting_down(obj, runnerresult.Result.StreamDidNotEndAndOtherGameIsRunning)
 
-        if status.stream_state == "NotStreaming":
-            if status.steam_is_running:
+        if info["streamState"] == StreamState.NotStreaming:
+            if info["steamIsRunning"]:
                 if not obj["steam_close_request_sent"]:
-                    result = await client.close_steam(timeout=constants.DEFAULT_TIMEOUT)
+                    result = await client.close_steam(None)
                     if result:
                         return result
 
@@ -196,23 +198,25 @@ async def wait_for_initial_host_conditions(res_change: Optional[ResolutionChange
         return True
 
     logger.info("Waiting for a initial stream conditions to be satisfied")
-    result = await pool_steam_status(client, wait_till_stream_to_be_ready)
+    result = await pool_host_info(client, wait_till_stream_to_be_ready)
     if result:
         return result
 
     if res_change and res_change["earlyChangeEnabled"]:
         logger.info("Notifying Buddy to prepare for resolution override on first change detected")
-        resp = await client.change_resolution(res_change["dimensions"]["width"], res_change["dimensions"]["height"],
-                                              False, timeout=constants.DEFAULT_TIMEOUT)
+        resp = await client.change_resolution(res_change["dimensions"]["width"], res_change["dimensions"]["height"], False)
         if resp:
-            return resp
+            if resp == ChangeResolutionResult.BuddyRefused:
+                logger.info("Buddy refused early resolution change. Continuing...")
+            else:
+                return resp
 
     return None
 
 
-async def establish_connection(client: SteamBuddyClient):
+async def establish_connection(client: BuddyClient):
     logger.info("Establishing connection to Buddy")
-    resp = await client.login(timeout=constants.DEFAULT_TIMEOUT)
+    resp = await client.say_hello()
     if resp:
         return resp
 
@@ -225,50 +229,44 @@ async def establish_connection(client: SteamBuddyClient):
 
 
 async def run_game(res_change: Optional[ResolutionChange], hostname: str, address: str, port: int, client_id: Optional[str], app_id: int):
-    proxy = MoonlightProxy(hostname, res_change["dimensions"] if (res_change and res_change["passToMoonlight"]) else None)
-    client = SteamBuddyClient(address, port, client_id)
     try:
-        result = await establish_connection(client=client)
-        if result:
-            return result
+        async with BuddyClient(address, port, client_id, constants.DEFAULT_TIMEOUT) as client, \
+                   MoonlightProxy(hostname, res_change["dimensions"] if (res_change and res_change["passToMoonlight"]) else None) as proxy:
+            result = await establish_connection(client=client)
+            if result:
+                return result
 
-        result = await wait_for_initial_host_conditions(res_change=res_change, client=client, app_id=app_id)
-        if result:
-            return result
+            result = await wait_for_initial_host_conditions(res_change=res_change, client=client, app_id=app_id)
+            if result:
+                return result
 
-        result = await start_moonlight(proxy=proxy)
-        if result:
-            return result
+            result = await start_moonlight(proxy=proxy)
+            if result:
+                return result
 
-        proxy_task = asyncio.create_task(proxy.wait())
-        launch_task = asyncio.create_task(launch_app_and_wait(res_change=res_change, client=client, app_id=app_id))
+            proxy_task = asyncio.create_task(proxy.wait())
+            launch_task = asyncio.create_task(launch_app_and_wait(res_change=res_change, client=client, app_id=app_id))
 
-        done, _ = await asyncio.wait({proxy_task, launch_task}, return_when=asyncio.FIRST_COMPLETED)
-        if proxy_task in done:
-            done, _ = await asyncio.wait({launch_task}, timeout=2)
-            if launch_task in done:
+            done, _ = await asyncio.wait({proxy_task, launch_task}, return_when=asyncio.FIRST_COMPLETED)
+            if proxy_task in done:
+                done, _ = await asyncio.wait({launch_task}, timeout=2)
+                if launch_task in done:
+                    result = launch_task.result()
+                    if result:
+                        return result
+                else:
+                    launch_task.cancel()
+                    await asyncio.wait({launch_task}, timeout=2)
+                    return runnerresult.Result.MoonlightClosed
+            else:
+                assert launch_task in done, "Launch task is not done?!"
                 result = launch_task.result()
                 if result:
                     return result
-            else:
-                launch_task.cancel()
-                await asyncio.wait({launch_task}, timeout=2)
-                return runnerresult.Result.MoonlightClosed
-        else:
-            assert launch_task in done, "Launch task is not done?!"
-            result = launch_task.result()
-            if result:
-                return result
 
     except Exception:
         logger.exception("Unhandled exception")
         return runnerresult.Result.Exception
-
-    finally:
-        if proxy:
-            await proxy.terminate()
-        if client:
-            await client.disconnect()
 
 
 def get_app_id() -> Optional[int]:
