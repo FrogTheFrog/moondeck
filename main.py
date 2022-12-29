@@ -22,8 +22,7 @@ import python.lib.utils as utils
 from typing import Any, Dict
 from python.lib.settings import settings_manager, UserSettings
 from python.lib.logger import logger, set_log_filename
-from python.lib.buddyclient import BuddyClient, HelloResult
-from python.lib.commandbuddyclient import CommandBuddyClient
+from python.lib.buddyclient import BuddyClient, HelloResult, PcStateChange
 from python.externals.wakeonlan import send_magic_packet
 # autopep8: on
 
@@ -72,61 +71,40 @@ class Plugin:
             return None
 
     async def get_buddy_status(self, address: str, buddy_port: int, client_id: str, timeout: float):
-        client = None
         try:
-            client = BuddyClient(address,
-                                 buddy_port,
-                                 client_id)
-            status = await client.say_hello(timeout=timeout)
-            if status:
-                return status.name
+            async with BuddyClient(address, buddy_port, client_id, timeout) as client:
+                status = await client.say_hello()
+                if status:
+                    return status.name
 
-            return "Online"
+                return "Online"
 
         except Exception:
             logger.exception("Unhandled exception")
             return HelloResult.Exception.name
-
-        finally:
-            if client:
-                await client.disconnect()
 
     async def start_pairing(self, address: str, buddy_port: int, client_id: str, pin: int, timeout: float):
-        client = None
         try:
-            client = BuddyClient(address,
-                                 buddy_port,
-                                 client_id)
-            status = await client.start_pairing(pin, timeout=timeout)
-            if status:
-                return status.name
+            async with BuddyClient(address, buddy_port, client_id, timeout) as client:
+                status = await client.start_pairing(pin)
+                if status:
+                    return status.name
 
-            return "PairingStarted"
+                return "PairingStarted"
 
         except Exception:
             logger.exception("Unhandled exception")
             return HelloResult.Exception.name
 
-        finally:
-            if client:
-                await client.disconnect()
-
     async def abort_pairing(self, address: str, buddy_port: int, client_id: str, timeout: float):
-        client = None
         try:
-            client = BuddyClient(address,
-                                 buddy_port,
-                                 client_id)
-            status = await client.abort_pairing(timeout=timeout)
-            if status:
-                logger.error(f"While aborting pairing: {status}")
+            async with BuddyClient(address, buddy_port, client_id, timeout) as client:
+                status = await client.abort_pairing()
+                if status:
+                    logger.error(f"While aborting pairing: {status}")
 
         except Exception:
             logger.exception("Unhandled exception")
-
-        finally:
-            if client:
-                await client.disconnect()
 
     async def wake_on_lan(self, address: str, mac: str):
         try:
@@ -136,39 +114,16 @@ class Plugin:
         except Exception:
             logger.exception("Unhandled exception")
 
-    async def restart_pc(self, address: str, buddy_port: int, client_id: str, timeout: float):
-        client = None
+    async def change_pc_state(self, address: str, buddy_port: int, client_id: str, state: str, timeout: float):
         try:
-            client = CommandBuddyClient(address,
-                                        buddy_port,
-                                        client_id)
-            status = await client.restart_pc(timeout=timeout)
-            if status:
-                logger.error(f"While restarting PC: {status}")
+            state_enum = PcStateChange[state]
+            async with BuddyClient(address, buddy_port, client_id, timeout) as client:
+                status = await client.change_pc_state(state_enum, 10)
+                if status:
+                    logger.error(f"While changing PC state to {state}: {status}")
 
         except Exception:
             logger.exception("Unhandled exception")
-
-        finally:
-            if client:
-                await client.disconnect()
-
-    async def shutdown_pc(self, address: str, buddy_port: int, client_id: str, timeout: float):
-        client = None
-        try:
-            client = CommandBuddyClient(address,
-                                        buddy_port,
-                                        client_id)
-            status = await client.shutdown_pc(timeout=timeout)
-            if status:
-                logger.error(f"While shuting down PC: {status}")
-
-        except Exception:
-            logger.exception("Unhandled exception")
-
-        finally:
-            if client:
-                await client.disconnect()
 
     async def get_moondeckrun_path(self):
         try:
@@ -189,18 +144,11 @@ class Plugin:
             logger.exception("Unhandled exception")
 
     async def close_steam(self, address: str, buddy_port: int, client_id: str, timeout: float):
-        client = None
         try:
-            client = CommandBuddyClient(address,
-                                        buddy_port,
-                                        client_id)
-            status = await client.close_steam(timeout=timeout)
-            if status:
-                logger.error(f"While closing Steam on host PC: {status}")
+            async with BuddyClient(address, buddy_port, client_id, timeout) as client:
+                status = await client.close_steam(None)
+                if status:
+                    logger.error(f"While closing Steam on host PC: {status}")
 
         except Exception:
             logger.exception("Unhandled exception")
-
-        finally:
-            if client:
-                await client.disconnect()

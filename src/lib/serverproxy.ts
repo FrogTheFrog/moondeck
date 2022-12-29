@@ -14,7 +14,7 @@ export interface GameStreamHost {
 }
 
 export type ServerStatus = "Offline" | "Online";
-export type PairingStartStatus = "AlreadyPaired" | "VersionMismatch" | "NoClientId" | "Pairing" | "Offline" | "Failed" | "PairingStarted";
+export type PairingStartStatus = "AlreadyPaired" | "VersionMismatch" | "NoClientId" | "Pairing" | "Offline" | "BuddyRefused" | "Failed" | "PairingStarted";
 
 async function scanForHosts(serverAPI: ServerAPI, timeout: number): Promise<GameStreamHost[]> {
   try {

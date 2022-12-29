@@ -6,6 +6,16 @@ export const ChangelogView: VFC<unknown> = () => {
     <DialogBody>
       <DialogControlsSection>
         <Field
+          label="1.4.0"
+          description={
+            <>
+              <div>&bull; Changed the underlying communication protocol with Buddy to HTTPS (should have no user impact).</div>
+              <div>&bull; Invalidated SSL keys to force update to the new Buddy version, since the legacy version check will not work.</div>
+            </>
+          }
+          focusable={true}
+        />
+        <Field
           label="1.3.0"
           description={
             <>
