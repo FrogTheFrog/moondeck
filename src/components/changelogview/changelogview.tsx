@@ -22,7 +22,7 @@ export const ChangelogView: VFC<unknown> = () => {
             <>
               <div>&bull; Added this changelog page.</div>
               <div>&bull; Discontinued support for NVidia's Gamestream service.</div>
-              <div>&bull; Added support for Sunshine's Gamestream service.</div>
+              <div>&bull; Added support for Sunshine's Gamestream service. New instructions need to be followed to setup Buddy again!</div>
             </>
           }
           focusable={true}

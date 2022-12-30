@@ -25,7 +25,10 @@ export const SetupGuideView: VFC<Props> = ({ settingsManager }) => {
           label="Step 1 - Configure Moonlight client to work with Sunshine"
           description="Download the flatpak version (via Desktop) of the Moonlight client and make sure it is configured."
           focusable={true} />
-        <Field label="Step 2 - Download and setup Buddy on host PC">
+        <Field
+          label="Step 2 - Download and setup Buddy on host PC"
+          description="Requires Buddy v1.3.0 and above."
+        >
           <DialogButton onClick={() => { Router.NavigateToExternalWeb(moondeckBuddyLink); }}>Click me!</DialogButton>
         </Field>
         <Field
