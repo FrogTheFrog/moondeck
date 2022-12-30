@@ -37,6 +37,7 @@ export const HostCommandPanel: VFC<Props> = ({ connectivityManager, serverStatus
       <PanelSectionRow>
         <ButtonItem
           layout="below"
+          bottomSeparator="none"
           disabled={executionStatus || buddyStatus !== "Online"}
           onClick={() => { connectivityManager.commandProxy.shutdownPC().catch((e) => logger.critical(e)); }}
         >
@@ -46,7 +47,6 @@ export const HostCommandPanel: VFC<Props> = ({ connectivityManager, serverStatus
       <PanelSectionRow>
         <ButtonItem
           layout="below"
-          bottomSeparator="none"
           disabled={executionStatus || buddyStatus !== "Online"}
           onClick={() => { connectivityManager.commandProxy.suspendPC().catch((e) => logger.critical(e)); }}
         >
