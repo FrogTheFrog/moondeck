@@ -82,12 +82,12 @@ class BuddyClient(contextlib.AbstractAsyncContextManager):
         except asyncio.TimeoutError as e:
             logger.debug(f"Timeout while executing request: {e}")
             return fallback_value
-        except aiohttp.ServerDisconnectedError as e:
-            logger.debug(f"Connection error while executing request: {e}")
-            return fallback_value
         except aiohttp.ClientSSLError as e:
             logger.debug(f"Request failed: SSL Verification: {e}")
             return HelloResult.SslVerificationFailed
+        except (aiohttp.ServerConnectionError, aiohttp.ClientConnectorError) as e:
+            logger.debug(f"Connection error while executing request: {e}")
+            return fallback_value
         except aiohttp.ClientError as e:
             logger.exception(f"Client error while executing request")
             return HelloResult.Exception
