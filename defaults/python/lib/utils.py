@@ -2,14 +2,14 @@ import copy
 import inspect
 
 from enum import Enum
-from typing import Any, Dict, List, Literal, Type, TypeVar, get_args, get_origin
+from typing import Any, Dict, List, Literal, Type, TypeVar, get_args, get_origin, is_typeddict
 
 
 T = TypeVar("T")
 
 
 def is_typed_dict(data_type):
-    return hasattr(data_type, "__annotations__")
+    return is_typeddict(data_type)
 
 
 def is_dict_like(data_type):
