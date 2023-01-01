@@ -12,6 +12,9 @@ export const ChangelogView: VFC<unknown> = () => {
               <div>&bull; Changed the underlying communication protocol with Buddy to HTTPS (should have no user impact).</div>
               <div>&bull; Invalidated SSL keys to force update to the new Buddy version, since the legacy version check will not work.</div>
               <div>&bull; Added an option to suspend (put to sleep) host PC.</div>
+              <div>&bull; Custom resolution now takes priority over automatic one since it detects native resolution mostly. Very useful for external displays.</div>
+              <div>&bull; Multiple custom resolutions can be saved now per host.</div>
+              <div>&bull; Custom resolution can now be toggled and selected in quick access menu.</div>
             </>
           }
           focusable={true}

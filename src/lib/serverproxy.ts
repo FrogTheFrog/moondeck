@@ -109,8 +109,8 @@ export class ServerProxy {
           earlyChangeEnabled: currentSettings?.resolution.earlyChangeEnabled ?? true,
           passToMoonlight: currentSettings?.resolution.passToMoonlight ?? true,
           useCustomDimensions: currentSettings?.resolution.useCustomDimensions ?? false,
-          customWidth: currentSettings?.resolution.customWidth ?? 1280,
-          customHeight: currentSettings?.resolution.customHeight ?? 800
+          selectedDimensionIndex: currentSettings?.resolution.selectedDimensionIndex ?? -1,
+          dimensions: currentSettings?.resolution.dimensions ?? []
         }
       };
 

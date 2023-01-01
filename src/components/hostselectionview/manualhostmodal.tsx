@@ -1,5 +1,5 @@
 import { ConnectivityManager, GameStreamHost, logger } from "../../lib";
-import { DialogButton, ModalRoot, sleep } from "decky-frontend-lib";
+import { DialogButton, Field, ModalRoot, sleep } from "decky-frontend-lib";
 import { VFC, useState } from "react";
 import { IpAddressTextInput } from "../shared";
 
@@ -51,9 +51,15 @@ export const ManualHostModal: VFC<Props> = ({ closeModal, connectivityManager })
         setValue={(value) => { setVerifiedHost(null); setAddress(value); }}
         setIsValid={setIsValidAddress}
       />
-      <DialogButton disabled={isVerifying || !isValidAddress} style={{ marginTop: "1em" }} onClick={handleClick}>
-        {verifiedHost ? "Add host" : "Check connectivity"}
-      </DialogButton>
+      <Field
+        childrenLayout="below"
+        childrenContainerWidth="max"
+        bottomSeparator="none"
+      >
+        <DialogButton disabled={isVerifying || !isValidAddress} onClick={handleClick}>
+          {verifiedHost ? "Add host" : "Check connectivity"}
+        </DialogButton>
+      </Field>
     </ModalRoot>
   );
 };

@@ -5,8 +5,13 @@ import json
 from . import constants
 from . import utils
 
-from typing import Any, Dict, Literal, Optional, TypedDict, get_args
+from typing import Any, Dict, List, Literal, Optional, TypedDict, get_args
 from .logger import logger
+
+
+class Dimension(TypedDict):
+    width: int
+    height: int
 
 
 class HostResolution(TypedDict):
@@ -14,8 +19,8 @@ class HostResolution(TypedDict):
     earlyChangeEnabled: bool
     passToMoonlight: bool
     useCustomDimensions: bool
-    customWidth: int
-    customHeight: int
+    selectedDimensionIndex: int
+    dimensions: List[Dimension]
 
 
 class HostSettings(TypedDict):
@@ -133,6 +138,13 @@ class SettingsManager:
             data["version"] = 3
             for host in data["hostSettings"].keys():
                 data["hostSettings"][host]["staticAddress"] = False
+        if data["version"] == 3:
+            data["version"] = 4
+            for host in data["hostSettings"].keys():
+                del data["hostSettings"][host]["resolution"]["customWidth"]
+                del data["hostSettings"][host]["resolution"]["customHeight"]
+                data["hostSettings"][host]["resolution"]["selectedDimensionIndex"] = -1
+                data["hostSettings"][host]["resolution"]["dimensions"] = []
 
         return data
 

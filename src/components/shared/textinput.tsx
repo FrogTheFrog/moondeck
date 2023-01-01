@@ -29,7 +29,10 @@ export const TextInput: <T>(props: Props<T>) => ReactElement<Props<T>> = ({ disa
   useEffect(() => {
     const converted = convert(value);
     if (!converted.success) {
-      setError(converted.error);
+      // First error message suppressed on purpose
+      if (value !== "") {
+        setError(converted.error);
+      }
       setIsValid?.(false);
     }
   }, []);

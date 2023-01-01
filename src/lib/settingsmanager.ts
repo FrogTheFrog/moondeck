@@ -9,13 +9,18 @@ export const buttonStyles = ["HighContrast", "Clean"] as const;
 export const horizontalAlignmentValues = ["top", "bottom"] as const;
 export const verticalAlignmentValues = ["left", "right"] as const;
 
+export interface Dimension {
+  width: number;
+  height: number;
+}
+
 export interface HostResolution {
   automatic: boolean;
   earlyChangeEnabled: boolean;
   passToMoonlight: boolean;
   useCustomDimensions: boolean;
-  customWidth: number;
-  customHeight: number;
+  selectedDimensionIndex: number;
+  dimensions: Dimension[];
 }
 
 export interface HostSettings {

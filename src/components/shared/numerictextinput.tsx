@@ -5,20 +5,20 @@ interface Props {
   disabled?: boolean;
   min?: number;
   max?: number;
-  value: number;
+  value: number | null;
   setValue: (value: number) => void;
   setIsValid?: (value: boolean) => void;
 }
 
-export const NumbericTextInput: VFC<Props> = ({ disabled, min, max, value, setValue, setIsValid }) => {
+export const NumericTextInput: VFC<Props> = ({ disabled, min, max, value, setValue, setIsValid }) => {
   return (
     <TextInput<number>
       disabled={disabled}
-      value={`${value}`}
+      value={`${value ?? ""}`}
       setValue={setValue}
       convert={(value) => {
         const convertedValue = Number(value);
-        if (isNaN(convertedValue)) {
+        if (isNaN(convertedValue) || value === "") {
           return { success: false, error: "Input must be a number!" };
         }
 

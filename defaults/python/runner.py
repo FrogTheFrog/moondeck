@@ -312,9 +312,18 @@ async def main():
             return
 
         res_dimensions: Optional[ResolutionDimensions] = None
-        if host_settings["resolution"]["automatic"]:
+        dimension_list = host_settings["resolution"]["dimensions"]
+        if host_settings["resolution"]["useCustomDimensions"] and len(dimension_list) > 0:
+            index = host_settings["resolution"]["selectedDimensionIndex"]
+            if index >= 0 and index < len(dimension_list):
+                res_dimensions = dimension_list[index]
+            else:
+                logger.warn(f"Dimension index ({index}) out of range ([0;{len(dimension_list)}]). Still continuing...")
+
+        if not res_dimensions and host_settings["resolution"]["automatic"]:
             monitors = screeninfo.get_monitors()
             primary_monitor = next((monitor for monitor in monitors if monitor.is_primary), None)
+            logger.info(f"Monitors: {monitors}")
             if primary_monitor:
                 res_dimensions = { "width": primary_monitor.width, "height": primary_monitor.height }
             elif len(monitors) == 1:
@@ -322,9 +331,6 @@ async def main():
             else:
                 logger.warn(f"Cannot use automatic resolution. Have {len(monitors)} monitors. Still continuing...")
         
-        if not res_dimensions and host_settings["resolution"]["useCustomDimensions"]:
-            res_dimensions = { "width": host_settings["resolution"]["customWidth"], "height": host_settings["resolution"]["customHeight"] }
-
         res_change: Optional[ResolutionChange] = None
         if res_dimensions:
             logger.info(f"Will try to apply {res_dimensions['width']}x{res_dimensions['height']} resolution on host.")

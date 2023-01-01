@@ -1,6 +1,8 @@
 import { DialogBody, DialogControlsSection, DialogControlsSectionHeader, Field } from "decky-frontend-lib";
-import { LabelWithIcon, NumbericTextInput, ToggleField } from "../shared";
+import { LabelWithIcon, NumericTextInput, ResolutionSelectionDropdown, ToggleField } from "../shared";
+import { AddResolutionButton } from "./addresolutionbutton";
 import { HostOff } from "../icons";
+import { ResolutionForgetButton } from "./resolutionforgetbutton";
 import { SettingsManager } from "../../lib";
 import { VFC } from "react";
 import { useCurrentHostSettings } from "../../hooks";
@@ -47,7 +49,7 @@ export const HostSettingsView: VFC<Props> = ({ settingsManager }) => {
           {hostSettings.staticAddress ? "Static" : "Dynamic"}
         </Field>
         <Field label="Buddy port" childrenContainerWidth="fixed">
-          <NumbericTextInput
+          <NumericTextInput
             min={1}
             max={65535}
             value={hostSettings.buddyPort}
@@ -60,7 +62,7 @@ export const HostSettingsView: VFC<Props> = ({ settingsManager }) => {
         <Field
           description={
             <>
-              <div>GameStream can refuse Moonlight's request for a specific resolution when streaming Steam, but with Buddy we can try to change it ourselves!</div>
+              <div>GameStream can refuse Moonlight's request for a specific resolution when streaming, but with Buddy we can try to change it ourselves!</div>
               <br />
               <div>The host PC must support the resolution, otherwise nothing will happen and whatever resolution is set by GameStream will be used.</div>
               <br />
@@ -68,12 +70,6 @@ export const HostSettingsView: VFC<Props> = ({ settingsManager }) => {
             </>
           }
           focusable={true}
-        />
-        <ToggleField
-          label="Try to apply SteamDeck's resolution on host PC"
-          description="If for some reason SteamDeck's resolution info could not be acquired, will use custom resolution as fallback (if enabled)."
-          value={hostSettings.resolution.automatic}
-          setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.resolution.automatic = value; })}
         />
         <ToggleField
           label="Ask Buddy to change resolution ASAP"
@@ -88,22 +84,55 @@ export const HostSettingsView: VFC<Props> = ({ settingsManager }) => {
           setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.resolution.passToMoonlight = value; })}
         />
         <ToggleField
+          label="Try to apply SteamDeck's resolution on host PC"
+          description="If custom resolution is disabled, will try to get SteamDeck's internal resolution."
+          value={hostSettings.resolution.automatic}
+          setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.resolution.automatic = value; })}
+        />
+        <ToggleField
           label="Try to apply custom resolution on host PC"
+          description="This setting has no effect if the custom resolution list is empty."
           value={hostSettings.resolution.useCustomDimensions}
           setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.resolution.useCustomDimensions = value; })}
         />
-        <Field label="Custom width" childrenContainerWidth="fixed">
-          <NumbericTextInput
-            min={0}
-            value={hostSettings.resolution.customWidth}
-            setValue={(value) => { settingsManager.updateHost((hostSettings) => { hostSettings.resolution.customWidth = value; }); }}
+        <Field
+          label="Selected resolution"
+          childrenContainerWidth="fixed"
+          description="Select the custom resolution to use."
+        >
+          <ResolutionSelectionDropdown
+            currentIndex={hostSettings.resolution.selectedDimensionIndex}
+            currentList={hostSettings.resolution.dimensions}
+            setIndex={(value) => { settingsManager.updateHost((hostSettings) => { hostSettings.resolution.selectedDimensionIndex = value; }); }}
           />
         </Field>
-        <Field label="Custom height" childrenContainerWidth="fixed">
-          <NumbericTextInput
-            min={0}
-            value={hostSettings.resolution.customHeight}
-            setValue={(value) => { settingsManager.updateHost((hostSettings) => { hostSettings.resolution.customHeight = value; }); }}
+        <Field
+          label="Forget selected resolution"
+          childrenContainerWidth="fixed"
+        >
+          <ResolutionForgetButton
+            currentIndex={hostSettings.resolution.selectedDimensionIndex}
+            currentList={hostSettings.resolution.dimensions}
+            updateResolution={(list, index) => {
+              settingsManager.updateHost((hostSettings) => {
+                hostSettings.resolution.dimensions = list;
+                hostSettings.resolution.selectedDimensionIndex = index;
+              });
+            }}
+          />
+        </Field>
+        <Field
+          label="Add custom resolution"
+          childrenContainerWidth="fixed"
+        >
+          <AddResolutionButton
+            currentList={hostSettings.resolution.dimensions}
+            updateResolution={(list, index) => {
+              settingsManager.updateHost((hostSettings) => {
+                hostSettings.resolution.dimensions = list;
+                hostSettings.resolution.selectedDimensionIndex = index;
+              });
+            }}
           />
         </Field>
       </DialogControlsSection>
