@@ -10,7 +10,7 @@ interface Props {
 }
 
 export const ResolutionPanel: VFC<Props> = ({ currentHostSettings, settingsManager }) => {
-  if (currentHostSettings === null) {
+  if (currentHostSettings === null || currentHostSettings.resolution.dimensions.length === 0) {
     return null;
   }
 

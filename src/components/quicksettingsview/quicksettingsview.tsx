@@ -6,6 +6,7 @@ import { HostCommandPanel } from "./hostcommandpanel";
 import { HostStatusPanel } from "./hoststatuspanel";
 import { ResolutionPanel } from "./resolutionpanel";
 import { VFC } from "react";
+import { useQuickAccessVisible } from "decky-frontend-lib";
 
 interface Props {
   connectivityManager: ConnectivityManager;
@@ -14,8 +15,9 @@ interface Props {
 }
 
 export const QuickSettingsView: VFC<Props> = ({ connectivityManager, settingsManager, moonDeckAppLauncher }) => {
-  const [serverStatus, serverRefreshStatus] = useServerStatus(connectivityManager);
-  const [buddyStatus, buddyRefreshStatus] = useBuddyStatus(connectivityManager);
+  const isVisible = useQuickAccessVisible();
+  const [serverStatus, serverRefreshStatus] = useServerStatus(connectivityManager, isVisible);
+  const [buddyStatus, buddyRefreshStatus] = useBuddyStatus(connectivityManager, isVisible);
   const currentHostSettings = useCurrentHostSettings(settingsManager);
   const appData = useMoonDeckAppData(moonDeckAppLauncher);
 

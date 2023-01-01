@@ -32,7 +32,7 @@ function patchLibraryApp(route: string, { serverAPI, moonDeckAppLauncher, settin
       afterPatch(
         routeProps.children.props,
         "renderFunc",
-        (_1: Array<Record<string, unknown>>, ret1: FirstElement): FirstElement | null => {
+        (_1: Array<Record<string, unknown>>, ret1?: FirstElement): FirstElement | undefined | null => {
           const ret1Children = ret1?.props?.children;
           if (typeof ret1Children !== "object") {
             logger.debug(`Failed to patch ${route}, ret1#children!`);
@@ -75,7 +75,7 @@ function patchLibraryApp(route: string, { serverAPI, moonDeckAppLauncher, settin
           afterPatch(
             ret1Children.type,
             "type",
-            (_2: Array<Record<string, unknown>>, ret2: ReactElement): ReactElement => {
+            (_2: Array<Record<string, unknown>>, ret2?: ReactElement): ReactElement | undefined => {
               type ParentElement = ReactElement<{ children: Array<ReactElement<{ id?: string }>>; className: string }>;
               const parent = findInReactTree(ret2, (x: ParentElement) => Array.isArray(x?.props?.children) && x?.props?.className?.includes(appDetailsClasses.InnerContainer)) as ParentElement;
               if (typeof parent !== "object") {

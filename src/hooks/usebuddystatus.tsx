@@ -2,11 +2,15 @@ import { BuddyStatus, ConnectivityManager, logger } from "../lib";
 import { Subscription, debounceTime } from "rxjs";
 import { useEffect, useState } from "react";
 
-export function useBuddyStatus(connectivityManager: ConnectivityManager): [BuddyStatus, boolean] {
+export function useBuddyStatus(connectivityManager: ConnectivityManager, observe?: boolean): [BuddyStatus, boolean] {
   const [buddyStatus, setBuddyStatus] = useState(connectivityManager.buddyProxy.status.value);
   const [refreshStatus, setRefreshStatus] = useState(connectivityManager.buddyProxy.refreshing.value);
 
   useEffect(() => {
+    if (observe === false) {
+      return;
+    }
+
     const sub = new Subscription();
 
     sub.add(connectivityManager.buddyProxy.status.asObservable().subscribe((status) => setBuddyStatus(status)));
@@ -17,7 +21,7 @@ export function useBuddyStatus(connectivityManager: ConnectivityManager): [Buddy
       connectivityManager.buddyAutoRefresh.stop().catch((e) => logger.critical(e));
       sub.unsubscribe();
     };
-  }, []);
+  }, typeof observe === "boolean" ? [observe] : []);
 
   return [buddyStatus, refreshStatus];
 }

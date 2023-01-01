@@ -42,6 +42,7 @@ export default definePlugin((serverAPI: ServerAPI) => {
     title: <div className={staticClasses.Title}>MoonDeck</div>,
     content: <QuickSettingsView connectivityManager={connectivityManager} settingsManager={settingsManager} moonDeckAppLauncher={moonDeckAppLauncher}/>,
     icon: <MoonDeckMain />,
+    alwaysRender: true,
     onDismount() {
       unregister();
       deinitCallback();
