@@ -106,7 +106,6 @@ export class ServerProxy {
         mac: host.mac,
         resolution: {
           automatic: currentSettings?.resolution.automatic ?? true,
-          earlyChangeEnabled: currentSettings?.resolution.earlyChangeEnabled ?? true,
           passToMoonlight: currentSettings?.resolution.passToMoonlight ?? true,
           useCustomDimensions: currentSettings?.resolution.useCustomDimensions ?? false,
           selectedDimensionIndex: currentSettings?.resolution.selectedDimensionIndex ?? -1,

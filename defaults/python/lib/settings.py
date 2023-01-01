@@ -16,7 +16,6 @@ class Dimension(TypedDict):
 
 class HostResolution(TypedDict):
     automatic: bool
-    earlyChangeEnabled: bool
     passToMoonlight: bool
     useCustomDimensions: bool
     selectedDimensionIndex: int
@@ -145,6 +144,10 @@ class SettingsManager:
                 del data["hostSettings"][host]["resolution"]["customHeight"]
                 data["hostSettings"][host]["resolution"]["selectedDimensionIndex"] = -1
                 data["hostSettings"][host]["resolution"]["dimensions"] = []
+        if data["version"] == 4:
+            data["version"] = 5
+            for host in data["hostSettings"].keys():
+                del data["hostSettings"][host]["resolution"]["earlyChangeEnabled"]
 
         return data
 

@@ -150,11 +150,10 @@ class BuddyRequests(contextlib.AbstractAsyncContextManager):
             data = await resp.json(encoding="utf-8")
             return utils.from_dict(ResultLikeResponse, data)
 
-    async def post_change_resolution(self, width: int, height: int, immediate: bool):
+    async def post_change_resolution(self, width: int, height: int):
         data = {
             "width": width,
-            "height": height,
-            "immediate": immediate
+            "height": height
         }
 
         async with self.__session.post(f"{self.base_url}/changeResolution", json=data) as resp:

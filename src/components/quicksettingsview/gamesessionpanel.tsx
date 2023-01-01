@@ -55,6 +55,7 @@ export const GameSessionPanel: VFC<Props> = ({ appData, moonDeckAppLauncher }) =
           <ButtonItem
             disabled={isDisabled}
             layout="below"
+            bottomSeparator="none"
             onClick={() => handleTermination()}
           >
             Exit MoonDeck runner
@@ -64,7 +65,6 @@ export const GameSessionPanel: VFC<Props> = ({ appData, moonDeckAppLauncher }) =
           <ButtonItem
             disabled={isDisabled}
             layout="below"
-            bottomSeparator="none"
             onClick={() => handleSteamClose()}
           >
             Close Steam on host

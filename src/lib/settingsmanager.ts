@@ -16,7 +16,6 @@ export interface Dimension {
 
 export interface HostResolution {
   automatic: boolean;
-  earlyChangeEnabled: boolean;
   passToMoonlight: boolean;
   useCustomDimensions: boolean;
   selectedDimensionIndex: number;

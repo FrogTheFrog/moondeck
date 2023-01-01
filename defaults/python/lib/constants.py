@@ -15,7 +15,7 @@ def get_user():
 
 CURRENT_USER = get_user()
 BUDDY_API_VERSION = 1
-CONFIG_VERSION_LITERAL = typing.Literal[4]
+CONFIG_VERSION_LITERAL = typing.Literal[5]
 CONFIG_DIR = str(pathlib.Path("/home", CURRENT_USER, ".config", "moondeck"))
 CONFIG_FILENAME = "settings.json"
 LOG_FILE = "/tmp/moondeck.log"

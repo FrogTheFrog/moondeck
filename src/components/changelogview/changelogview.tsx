@@ -14,7 +14,8 @@ export const ChangelogView: VFC<unknown> = () => {
               <div>&bull; Added an option to suspend (put to sleep) host PC.</div>
               <div>&bull; Custom resolution now takes priority over automatic one since it mostly detects native resolution even with external display.</div>
               <div>&bull; Multiple custom resolutions can be saved now per host.</div>
-              <div>&bull; Custom resolution can now be toggled and selected in quick access menu.</div>
+              <div>&bull; Custom resolution can now be toggled and selected in quick access menu (if there is at least 1 list entry).</div>
+              <div>&bull; Removed early resolution change option as it is a leftover from NVidia times.</div>
             </>
           }
           focusable={true}

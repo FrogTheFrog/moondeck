@@ -72,12 +72,6 @@ export const HostSettingsView: VFC<Props> = ({ settingsManager }) => {
           focusable={true}
         />
         <ToggleField
-          label="Ask Buddy to change resolution ASAP"
-          description="Depending on various conditions, Buddy may ignore the request. In such cases, the Steam window on host may look stretched out."
-          value={hostSettings.resolution.earlyChangeEnabled}
-          setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.resolution.earlyChangeEnabled = value; })}
-        />
-        <ToggleField
           label="Pass the resolution to Moonlight to use instead of default"
           description="I honestly don't know why I added option to disable this. Might be useful to someone... It's your choice :)"
           value={hostSettings.resolution.passToMoonlight}

@@ -38,7 +38,6 @@ class SpecialHandling(Enum):
 
 class ResolutionChange(TypedDict):
     dimensions: ResolutionDimensions
-    earlyChangeEnabled: bool
     passToMoonlight: bool
 
 
@@ -114,10 +113,10 @@ async def launch_app_and_wait(res_change: Optional[ResolutionChange], client: Bu
 
     if res_change:
         logger.info("Notifying Buddy to change resolution")
-        resp = await client.change_resolution(res_change["dimensions"]["width"], res_change["dimensions"]["height"], True)
+        resp = await client.change_resolution(res_change["dimensions"]["width"], res_change["dimensions"]["height"])
         if resp:
             if resp == ChangeResolutionResult.BuddyRefused:
-                logger.info("Buddy refused resolution change. If early change is enabled, this can be expected. Continuing...")
+                logger.info("Buddy refused resolution change. Continuing...")
             else:
                 return resp
 
@@ -201,15 +200,6 @@ async def wait_for_initial_host_conditions(res_change: Optional[ResolutionChange
     result = await pool_host_info(client, wait_till_stream_to_be_ready)
     if result:
         return result
-
-    if res_change and res_change["earlyChangeEnabled"]:
-        logger.info("Notifying Buddy to prepare for resolution override on first change detected")
-        resp = await client.change_resolution(res_change["dimensions"]["width"], res_change["dimensions"]["height"], False)
-        if resp:
-            if resp == ChangeResolutionResult.BuddyRefused:
-                logger.info("Buddy refused early resolution change. Continuing...")
-            else:
-                return resp
 
     return None
 
@@ -335,8 +325,7 @@ async def main():
         if res_dimensions:
             logger.info(f"Will try to apply {res_dimensions['width']}x{res_dimensions['height']} resolution on host.")
             res_change = { 
-                "dimensions": res_dimensions, 
-                "earlyChangeEnabled": host_settings["resolution"]["earlyChangeEnabled"],
+                "dimensions": res_dimensions,
                 "passToMoonlight": host_settings["resolution"]["passToMoonlight"]
             }
 
