@@ -6,6 +6,11 @@ export const ChangelogView: VFC<unknown> = () => {
     <DialogBody>
       <DialogControlsSection>
         <Field
+          label="1.4.1"
+          description="Fixed an issue where valid expections are treated as invalid. As a result the log file would grow big."
+          focusable={true}
+        />
+        <Field
           label="1.4.0"
           description={
             <>
