@@ -122,7 +122,7 @@ async def __find_hosts(predicate: Optional[Callable[[GameStreamHost], bool]], ti
         flat_results = [
             result for subresults in results for result in subresults]
 
-    except Exception as e:
+    except Exception:
         logger.exception("Unhandled exception")
         pass
 
@@ -132,20 +132,27 @@ async def __find_hosts(predicate: Optional[Callable[[GameStreamHost], bool]], ti
 
 
 async def get_server_info(address: str, timeout: Optional[float]):
-    async with async_timeout.timeout(timeout):
-        async with aiohttp.ClientSession() as session:
-            async with session.get(f"http://{address}:{constants.GAMESTREAM_PORT}/serverinfo") as resp:
-                data = await resp.text(encoding="utf-8")
-                hostname = __getHostNameFromXml(data)
-                mac = __getMacFromXml(data)
-                unique_id = __getHostIdFromXml(data)
+    try:
+        async with async_timeout.timeout(timeout):
+            async with aiohttp.ClientSession() as session:
+                async with session.get(f"http://{address}:{constants.GAMESTREAM_PORT}/serverinfo") as resp:
+                    data = await resp.text(encoding="utf-8")
+                    hostname = __getHostNameFromXml(data)
+                    mac = __getMacFromXml(data)
+                    unique_id = __getHostIdFromXml(data)
 
-                if all(v is not None for v in [hostname, mac, unique_id]):
-                    return utils.from_dict(GameStreamHost, {
-                        "address": address,
-                        "hostName": hostname,
-                        "mac": mac,
-                        "uniqueId": unique_id})
+                    if all(v is not None for v in [hostname, mac, unique_id]):
+                        return utils.from_dict(GameStreamHost, {
+                            "address": address,
+                            "hostName": hostname,
+                            "mac": mac,
+                            "uniqueId": unique_id})
+    except (asyncio.TimeoutError, aiohttp.ClientError) as e:
+        logger.debug(f"Timeout or client error while executing request: {e}")
+        return None
+    except Exception as e:
+        logger.exception("Unhandled expection raised.")
+        return None
 
 
 async def scan_for_hosts(timeout: float = 5):
