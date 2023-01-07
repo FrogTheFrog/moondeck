@@ -8,13 +8,43 @@ import { logger } from "./logger";
 
 async function killRunner(serverAPI: ServerAPI, appId: number): Promise<void> {
   try {
-    const resp = await serverAPI.callPluginMethod<{ app_id: number }, string>("kill_runner", { app_id: appId });
+    const resp = await serverAPI.callPluginMethod<{ app_id: number }, null>("kill_runner", { app_id: appId });
     if (!resp.success) {
       logger.error(`Error while killing runner script: ${resp.result}`);
     }
   } catch (message) {
     logger.critical(message);
   }
+}
+
+async function isRunnerActive(serverAPI: ServerAPI, appId: number): Promise<boolean> {
+  try {
+    const resp = await serverAPI.callPluginMethod<{ app_id: number }, boolean>("is_runner_active", { app_id: appId });
+    if (resp.success) {
+      return resp.result;
+    } else {
+      logger.error(`Error while getting runner status: ${resp.result}`);
+    }
+  } catch (message) {
+    logger.critical(message);
+  }
+
+  return false;
+}
+
+async function getRunnerResult(serverAPI: ServerAPI): Promise<string | null> {
+  try {
+    const resp = await serverAPI.callPluginMethod<unknown, string | null>("get_runner_result", {});
+    if (resp.success) {
+      return resp.result;
+    } else {
+      logger.error(`Error while fetching runner result: ${resp.result}`);
+    }
+  } catch (message) {
+    logger.critical(message);
+  }
+
+  return "Error while fetching runner result!";
 }
 
 export interface SessionOptions {
@@ -143,5 +173,22 @@ export class MoonDeckAppProxy extends ReadonlySubject<MoonDeckAppData | null> {
 
     this.subject.next({ ...this.subject.value, beingSuspended: true });
     await this.killApp();
+  }
+
+  async getRunnerResult(): Promise<string | null> {
+    return await getRunnerResult(this.serverAPI);
+  }
+
+  async clearRunnerResult(): Promise<void> {
+    // Getting the result clears it automatically
+    await this.getRunnerResult();
+  }
+
+  async isStillRunning(): Promise<boolean> {
+    if (this.subject.value === null) {
+      return false;
+    }
+
+    return await isRunnerActive(this.serverAPI, this.subject.value.moonDeckAppId);
   }
 }

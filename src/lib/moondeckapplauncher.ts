@@ -23,27 +23,11 @@ async function getMoonDeckRunPath(serverAPI: ServerAPI): Promise<string | null> 
   return null;
 }
 
-async function getRunnerResult(serverAPI: ServerAPI): Promise<string | null> {
-  try {
-    const resp = await serverAPI.callPluginMethod<unknown, string | null>("get_runner_result", {});
-    if (resp.success) {
-      return resp.result;
-    } else {
-      logger.error(`Error while fetching runner result: ${resp.result}`);
-    }
-  } catch (message) {
-    logger.critical(message);
-  }
-
-  return "Error while fetching runner result!";
-}
-
 export class MoonDeckAppLauncher {
   private unregisterLifetime: (() => void) | null = null;
   private unregisterSuspension: (() => void) | null = null;
   private moonDeckRunPath: string | null = null;
   private subscription: Subscription | null = null;
-  private someAppIsRunning = false;
   private readonly launchMutex = new Mutex();
   readonly moonDeckApp: MoonDeckAppProxy;
 
@@ -79,28 +63,26 @@ export class MoonDeckAppLauncher {
   }
 
   private initLifetime(): void {
-    this.someAppIsRunning = false;
     this.unregisterLifetime = registerForGameLifetime((data) => {
-      this.someAppIsRunning = data.bRunning;
-
-      if (!this.someAppIsRunning) {
-        getRunnerResult(this.serverAPI).then(async (result) => {
-          if (this.moonDeckApp.value === null) {
-            // Some other app was terminated
-            return;
-          }
-
-          if (result !== null && !this.moonDeckApp.value.beingSuspended && !this.moonDeckApp.value.beingKilled) {
-            logger.toast(result, { output: "warn" });
-          }
-          if (!this.moonDeckApp.value.beingSuspended) {
-            await this.moonDeckApp.clearApp();
-          }
-        }).catch((e) => logger.critical(e));
-      } else {
-        // Discarding any leftover results
-        getRunnerResult(this.serverAPI).catch((e) => logger.critical(e));
+      if (data.bRunning) {
+        return;
       }
+
+      Promise.resolve().then(async () => {
+        if (this.moonDeckApp.value === null || await this.moonDeckApp.isStillRunning()) {
+          // Some other app was terminated
+          return;
+        }
+
+        const result = await this.moonDeckApp.getRunnerResult();
+        if (result !== null && !this.moonDeckApp.value.beingSuspended && !this.moonDeckApp.value.beingKilled) {
+          logger.toast(result, { output: "warn" });
+        }
+
+        if (!this.moonDeckApp.value.beingSuspended) {
+          await this.moonDeckApp.clearApp();
+        }
+      }).catch((e) => logger.critical(e));
     });
   }
 
@@ -200,8 +182,8 @@ export class MoonDeckAppLauncher {
       return;
     }
 
-    if (this.someAppIsRunning) {
-      logger.toast("Some app is already running!");
+    if (await this.moonDeckApp.isStillRunning()) {
+      logger.toast("Some MoonDeck app is already running!");
       return;
     }
 
@@ -247,6 +229,7 @@ export class MoonDeckAppLauncher {
         }
 
         this.moonDeckApp.setApp(appId, details.unAppID, appName, sessionOptions);
+        await this.moonDeckApp.clearRunnerResult();
         if (!await launchApp(details.unAppID, 5000)) {
           logger.toast("Failed to launch shortcut!", { output: "error" });
           await this.moonDeckApp.killApp();

@@ -143,6 +143,17 @@ class Plugin:
         except Exception:
             logger.exception("Unhandled exception")
 
+    async def is_runner_active(self, app_id: int):
+        try:
+            kill_proc = await asyncio.create_subprocess_shell(f"pgrep -f \"AppId={app_id}\"",
+                                                              stdout=asyncio.subprocess.PIPE,
+                                                              stderr=asyncio.subprocess.DEVNULL)
+            output, _ = await kill_proc.communicate()
+            return any(chr.isdigit() for chr in output.decode("utf-8"))
+
+        except Exception:
+            logger.exception("Unhandled exception")
+
     async def close_steam(self, address: str, buddy_port: int, client_id: str, timeout: float):
         try:
             async with BuddyClient(address, buddy_port, client_id, timeout) as client:
