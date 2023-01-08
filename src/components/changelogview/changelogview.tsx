@@ -6,6 +6,16 @@ export const ChangelogView: VFC<unknown> = () => {
     <DialogBody>
       <DialogControlsSection>
         <Field
+          label="1.5.0"
+          description={
+            <>
+              <div>&bull; MoonDeck app can now run alongside other apps. Might be useful with the new multitasking support/bugfix on Steam.</div>
+              <div>&bull; Added an option (enabled by default) not to close the Steam once the gaming session ends successfully.</div>
+            </>
+          }
+          focusable={true}
+        />
+        <Field
           label="1.4.1"
           description="Fixed an issue where valid expections are treated as invalid. As a result the log file would grow big."
           focusable={true}
