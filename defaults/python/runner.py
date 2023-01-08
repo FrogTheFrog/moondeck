@@ -105,7 +105,7 @@ async def wait_for_steam_to_be_ready(client: BuddyClient):
     return await pool_host_info(client, wait_till_stream_is_ready)
     
 
-async def launch_app_and_wait(res_change: Optional[ResolutionChange], client: BuddyClient, app_id: int):
+async def launch_app_and_wait(res_change: Optional[ResolutionChange], client: BuddyClient, close_steam: bool, app_id: int):
     logger.info("Waiting for Steam to be ready to launch games")
     result = await wait_for_steam_to_be_ready(client)
     if result:
@@ -144,11 +144,16 @@ async def launch_app_and_wait(res_change: Optional[ResolutionChange], client: Bu
     if result:
         return result
 
-    logger.info(
-        "App closed gracefully, asking to close Steam if it's still open")
-    result = await client.close_steam(None)
-    if result:
-        return result
+    if close_steam:
+        logger.info("App closed gracefully, asking to close Steam if it's still open")
+        result = await client.close_steam(None)
+        if result:
+            return result
+    else:
+        logger.info("App closed gracefully, ending stream if it's still open")
+        result = await client.end_stream()
+        if result:
+            return result
 
 
 async def start_moonlight(proxy: MoonlightProxy):
@@ -164,13 +169,13 @@ async def start_moonlight(proxy: MoonlightProxy):
 
 
 async def wait_for_initial_host_conditions(res_change: Optional[ResolutionChange], client: BuddyClient, app_id: int):
-    obj = {"retries": 30, "steam_close_request_sent": False}
+    obj = {"retries": 30}
 
     async def wait_till_stream_to_be_ready(info: HostInfoResponse):
         if info["streamState"] == StreamState.StreamEnding:
             return await sleep_while_counting_down(obj, runnerresult.Result.StreamDidNotEnd)
 
-        if info["streamState"] == StreamState.Streaming:
+        if info["streamState"] in [StreamState.Streaming, StreamState.NotStreaming]:
             if info["steamIsRunning"]:
                 current_app_is_running = info["steamRunningAppId"] == app_id
                 current_app_is_updating = info["steamTrackedUpdatingAppId"] == app_id
@@ -178,21 +183,9 @@ async def wait_for_initial_host_conditions(res_change: Optional[ResolutionChange
                 if current_app_is_running or current_app_is_updating:
                     return True
                 elif current_app_is_running == constants.NULL_STEAM_APP_ID:
-                    if not obj["steam_close_request_sent"]:
-                        result = await client.close_steam(None)
-                        if result:
-                            return result
+                    return True
 
-                return await sleep_while_counting_down(obj, runnerresult.Result.StreamDidNotEndAndOtherGameIsRunning)
-
-        if info["streamState"] == StreamState.NotStreaming:
-            if info["steamIsRunning"]:
-                if not obj["steam_close_request_sent"]:
-                    result = await client.close_steam(None)
-                    if result:
-                        return result
-
-                return await sleep_while_counting_down(obj, runnerresult.Result.SteamDidNotCloseInTime)
+                return await sleep_while_counting_down(obj, runnerresult.Result.AnotherSteamAppIsRunning)
 
         return True
 
@@ -227,7 +220,7 @@ async def establish_connection(client: BuddyClient):
     return None
 
 
-async def run_game(res_change: Optional[ResolutionChange], hostname: str, address: str, port: int, client_id: Optional[str], app_id: int):
+async def run_game(res_change: Optional[ResolutionChange], hostname: str, address: str, port: int, client_id: Optional[str], close_steam: bool, app_id: int):
     try:
         async with BuddyClient(address, port, client_id, constants.DEFAULT_TIMEOUT) as client, \
                    MoonlightProxy(hostname, res_change["dimensions"] if (res_change and res_change["passToMoonlight"]) else None) as proxy:
@@ -244,7 +237,7 @@ async def run_game(res_change: Optional[ResolutionChange], hostname: str, addres
                 return result
 
             proxy_task = asyncio.create_task(proxy.wait())
-            launch_task = asyncio.create_task(launch_app_and_wait(res_change=res_change, client=client, app_id=app_id))
+            launch_task = asyncio.create_task(launch_app_and_wait(res_change=res_change, client=client, close_steam=close_steam, app_id=app_id))
 
             done, _ = await asyncio.wait({proxy_task, launch_task}, return_when=asyncio.FIRST_COMPLETED)
             if proxy_task in done:
@@ -335,6 +328,7 @@ async def main():
                                 host_settings["address"],
                                 host_settings["buddyPort"],
                                 user_settings["clientId"],
+                                host_settings["closeSteamOnceSessionEnds"],
                                 app_id)
         runnerresult.set_result(result)
 

@@ -28,6 +28,7 @@ export interface HostSettings {
   staticAddress: boolean;
   hostName: string;
   mac: string;
+  closeSteamOnceSessionEnds: boolean;
   resolution: HostResolution;
 }
 

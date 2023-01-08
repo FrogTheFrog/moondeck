@@ -28,6 +28,7 @@ class HostSettings(TypedDict):
     staticAddress: bool
     hostName: str
     mac: str
+    closeSteamOnceSessionEnds: bool
     resolution: HostResolution
 
 
@@ -148,6 +149,10 @@ class SettingsManager:
             data["version"] = 5
             for host in data["hostSettings"].keys():
                 del data["hostSettings"][host]["resolution"]["earlyChangeEnabled"]
+        if data["version"] == 5:
+            data["version"] = 6
+            for host in data["hostSettings"].keys():
+                data["hostSettings"][host]["closeSteamOnceSessionEnds"] = False
 
         return data
 

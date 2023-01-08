@@ -104,6 +104,7 @@ export class ServerProxy {
         staticAddress: staticAddress ?? (currentSettings?.staticAddress ?? false),
         hostName: host.hostName,
         mac: host.mac,
+        closeSteamOnceSessionEnds: currentSettings?.closeSteamOnceSessionEnds ?? false,
         resolution: {
           automatic: currentSettings?.resolution.automatic ?? true,
           passToMoonlight: currentSettings?.resolution.passToMoonlight ?? true,

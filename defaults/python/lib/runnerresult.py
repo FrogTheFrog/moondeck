@@ -15,8 +15,6 @@ class Result(Enum):
     AnotherSteamAppIsRunning = "Another Steam App is running!"
     StreamFailedToStart = "Stream failed to start!"
     StreamDidNotEnd = "Stream did not end in time!"
-    StreamDidNotEndAndOtherGameIsRunning = "Stream did not end in time! Other game is running!"
-    SteamDidNotCloseInTime = "Steam did not close in time!"
     AppLaunchFailed = "Failed to launch app in time!"
     MoonlightClosed = "Moonlight has been closed!"
     MoonlightIsNotInstalled = "Moonlight's flatpak is not installed!"

@@ -164,3 +164,8 @@ class BuddyRequests(contextlib.AbstractAsyncContextManager):
         async with self.__session.get(f"{self.base_url}/hostInfo") as resp:
             data = await resp.json(encoding="utf-8")
             return utils.from_dict(HostInfoResponse, data)
+
+    async def post_end_stream(self):
+        async with self.__session.post(f"{self.base_url}/endStream") as resp:
+            data = await resp.json(encoding="utf-8")
+            return utils.from_dict(ResultLikeResponse, data)

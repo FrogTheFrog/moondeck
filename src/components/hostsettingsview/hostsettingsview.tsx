@@ -56,6 +56,18 @@ export const HostSettingsView: VFC<Props> = ({ settingsManager }) => {
             setValue={(value) => { settingsManager.updateHost((hostSettings) => { hostSettings.buddyPort = value; }); }}
           />
         </Field>
+        <ToggleField
+          label="Automatically close Steam on host when gaming session ends"
+          description={
+            <>
+              <div>If disabled, Steam will remain open in bigpicture mode (no way to leave bigpicture without closing Steam without using the UI).</div>
+              <br />
+              <div>Note: Nvidia Gamestream somehow closes the OLD bigpicture mode. Seems to be a bug.</div>
+            </>
+          }
+          value={hostSettings.closeSteamOnceSessionEnds}
+          setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.closeSteamOnceSessionEnds = value; })}
+        />
       </DialogControlsSection>
       <DialogControlsSection>
       <DialogControlsSectionHeader>Resolution</DialogControlsSectionHeader>
