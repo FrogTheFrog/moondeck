@@ -6,6 +6,11 @@ export const ChangelogView: VFC<unknown> = () => {
     <DialogBody>
       <DialogControlsSection>
         <Field
+          label="1.5.1"
+          description="Bumped DFL version to fix incomming breaking changes from Valve."
+          focusable={true}
+        />
+        <Field
           label="1.5.0"
           description={
             <>
