@@ -6,6 +6,11 @@ export const ChangelogView: VFC<unknown> = () => {
     <DialogBody>
       <DialogControlsSection>
         <Field
+          label="1.5.2"
+          description="Resolution change (if any) is now done before the gamestream is started for more stability."
+          focusable={true}
+        />
+        <Field
           label="1.5.1"
           description="Bumped DFL version to fix incomming breaking changes from Valve."
           focusable={true}

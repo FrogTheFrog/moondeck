@@ -105,20 +105,11 @@ async def wait_for_steam_to_be_ready(client: BuddyClient):
     return await pool_host_info(client, wait_till_stream_is_ready)
     
 
-async def launch_app_and_wait(res_change: Optional[ResolutionChange], client: BuddyClient, close_steam: bool, app_id: int):
+async def launch_app_and_wait(client: BuddyClient, close_steam: bool, app_id: int):
     logger.info("Waiting for Steam to be ready to launch games")
     result = await wait_for_steam_to_be_ready(client)
     if result:
         return result
-
-    if res_change:
-        logger.info("Notifying Buddy to change resolution")
-        resp = await client.change_resolution(res_change["dimensions"]["width"], res_change["dimensions"]["height"])
-        if resp:
-            if resp == ChangeResolutionResult.BuddyRefused:
-                logger.info("Buddy refused resolution change. Continuing...")
-            else:
-                return resp
 
     retries = 5
     result = SpecialHandling.AppFinishedUpdating
@@ -194,6 +185,15 @@ async def wait_for_initial_host_conditions(res_change: Optional[ResolutionChange
     if result:
         return result
 
+    if res_change:
+        logger.info("Notifying Buddy to change resolution")
+        resp = await client.change_resolution(res_change["dimensions"]["width"], res_change["dimensions"]["height"])
+        if resp:
+            if resp == ChangeResolutionResult.BuddyRefused:
+                logger.info("Buddy refused resolution change. Continuing...")
+            else:
+                return resp
+
     return None
 
 
@@ -237,7 +237,7 @@ async def run_game(res_change: Optional[ResolutionChange], hostname: str, addres
                 return result
 
             proxy_task = asyncio.create_task(proxy.wait())
-            launch_task = asyncio.create_task(launch_app_and_wait(res_change=res_change, client=client, close_steam=close_steam, app_id=app_id))
+            launch_task = asyncio.create_task(launch_app_and_wait(client=client, close_steam=close_steam, app_id=app_id))
 
             done, _ = await asyncio.wait({proxy_task, launch_task}, return_when=asyncio.FIRST_COMPLETED)
             if proxy_task in done:
