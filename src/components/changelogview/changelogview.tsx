@@ -12,7 +12,7 @@ export const ChangelogView: VFC<unknown> = () => {
         />
         <Field
           label="1.5.1"
-          description="Bumped DFL version to fix incomming breaking changes from Valve."
+          description="Bumped DFL version to fix incoming breaking changes from Valve."
           focusable={true}
         />
         <Field
