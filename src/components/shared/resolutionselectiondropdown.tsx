@@ -1,5 +1,5 @@
+import { HostResolution, stringifyDimension } from "../../lib";
 import { VFC, useEffect, useState } from "react";
-import { HostResolution } from "../../lib";
 import { ListDropdown } from "./listdropdown";
 
 interface Props {
@@ -17,7 +17,7 @@ export const ResolutionSelectionDropdown: VFC<Props> = ({ currentIndex, currentL
   const [entries, setEntries] = useState<Array<{ id: number | null; label: string }>>([]);
 
   useEffect(() => {
-    const items: typeof entries = currentList.map(({ width, height }, index) => { return { id: index, label: `${width}x${height}` }; });
+    const items: typeof entries = currentList.map((value, index) => { return { id: index, label: stringifyDimension(value) }; });
     if (currentList.length > 0) {
       setEntries(items);
       setCurrentEntry(isValidIndex(currentIndex, currentList.length) ? currentIndex : null);

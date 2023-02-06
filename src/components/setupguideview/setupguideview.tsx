@@ -6,6 +6,7 @@ import { VFC } from "react";
 import { useCurrentSettings } from "../../hooks";
 
 const moondeckBuddyLink = "https://github.com/FrogTheFrog/moondeck-buddy";
+const moondeckWikiLink = "https://github.com/FrogTheFrog/moondeck/wiki";
 
 interface Props {
   settingsManager: SettingsManager;
@@ -59,6 +60,12 @@ export const SetupGuideView: VFC<Props> = ({ settingsManager }) => {
           focusable={true}
         >
           <MoonDeckLaunchButtonShell buttonStyle={settings.buttonStyle} />
+        </Field>
+      </DialogControlsSection>
+      <DialogControlsSection>
+        <DialogControlsSectionHeader>Troubleshooting</DialogControlsSectionHeader>
+        <Field label="If you encounter any issues, be sure to check this page first!">
+          <DialogButton onClick={() => { Router.NavigateToExternalWeb(moondeckWikiLink); }}>Click me!</DialogButton>
         </Field>
       </DialogControlsSection>
     </DialogBody>

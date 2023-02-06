@@ -1,6 +1,6 @@
 import { DialogButton, Field, ModalRoot } from "decky-frontend-lib";
+import { Dimension, HostResolution, maxBitrate, minBitrate, stringifyDimension } from "../../lib";
 import { VFC, useEffect, useState } from "react";
-import { HostResolution } from "../../lib";
 import { NumericTextInput } from "../shared";
 
 interface Props {
@@ -12,28 +12,30 @@ interface Props {
 export const AddResolutionModal: VFC<Props> = ({ closeModal, currentList, updateResolution }) => {
   const [width, setWidth] = useState<number | null>(null);
   const [height, setHeight] = useState<number | null>(null);
+  const [bitrate, setBitrate] = useState<number | null>(null);
   const [widthIsValid, setWidthIsValid] = useState<boolean>(false);
   const [heightIsValid, setHeightIsValid] = useState<boolean>(false);
+  const [bitrateIsValid, setBitrateIsValid] = useState<boolean>(false);
   const [resolution, setResolution] = useState<HostResolution["dimensions"][number] | null>(null);
 
   useEffect(() => {
-    console.log(width, height, widthIsValid, heightIsValid);
-    if (typeof width === "number" && typeof height === "number") {
-      setResolution({ width, height });
+    if (typeof width === "number" && typeof height === "number" && (typeof bitrate === "number" || bitrate === null)) {
+      setResolution({ width, height, bitrate });
     } else {
       setResolution(null);
     }
-  }, [width, height]);
+  }, [width, height, bitrate]);
 
   const handleClick = (): void => {
     if (resolution !== null) {
-      const alreadyInList = currentList.findIndex((item) => item.height === height && item.width === width) !== -1;
+      const compareWithListItems = (item: Dimension): boolean => item.height === height && item.width === width && item.bitrate === bitrate;
+      const alreadyInList = currentList.findIndex(compareWithListItems) !== -1;
       let list = currentList;
       if (!alreadyInList) {
         const newList = [...currentList, resolution];
         newList.sort((a, b) => {
-          const nameA = `${a.width}x${a.height}`;
-          const nameB = `${b.width}x${b.height}`;
+          const nameA = stringifyDimension(a);
+          const nameB = stringifyDimension(b);
           if (nameA < nameB) {
             return -1;
           }
@@ -46,7 +48,7 @@ export const AddResolutionModal: VFC<Props> = ({ closeModal, currentList, update
         list = newList;
       }
 
-      const index = list.findIndex((item) => item.height === resolution.height && item.width === resolution.width);
+      const index = list.findIndex(compareWithListItems);
       updateResolution(list, index);
     }
     setResolution(null);
@@ -71,7 +73,6 @@ export const AddResolutionModal: VFC<Props> = ({ closeModal, currentList, update
       <Field
         label="Height"
         childrenContainerWidth="fixed"
-        bottomSeparator="none"
       >
         <NumericTextInput
           value={height}
@@ -80,11 +81,25 @@ export const AddResolutionModal: VFC<Props> = ({ closeModal, currentList, update
         />
       </Field>
       <Field
+        label="Bitrate in kbps (optional)"
+        childrenContainerWidth="fixed"
+        bottomSeparator="none"
+      >
+        <NumericTextInput
+          min={minBitrate}
+          max={maxBitrate}
+          optional={true}
+          value={bitrate}
+          setValue={setBitrate}
+          setIsValid={setBitrateIsValid}
+        />
+      </Field>
+      <Field
         childrenLayout="below"
         childrenContainerWidth="max"
         bottomSeparator="none"
       >
-        <DialogButton disabled={!widthIsValid || !heightIsValid || resolution === null} onClick={handleClick}>
+        <DialogButton disabled={!widthIsValid || !heightIsValid || !bitrateIsValid || resolution === null} onClick={handleClick}>
           Save resolution
         </DialogButton>
       </Field>

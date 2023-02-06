@@ -110,6 +110,7 @@ export class ServerProxy {
           passToMoonlight: currentSettings?.resolution.passToMoonlight ?? true,
           useCustomDimensions: currentSettings?.resolution.useCustomDimensions ?? false,
           selectedDimensionIndex: currentSettings?.resolution.selectedDimensionIndex ?? -1,
+          defaultBitrate: currentSettings?.resolution.defaultBitrate ?? null,
           dimensions: currentSettings?.resolution.dimensions ?? []
         }
       };

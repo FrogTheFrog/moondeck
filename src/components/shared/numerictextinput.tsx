@@ -1,24 +1,39 @@
 import { TextInput } from "./textinput";
 import { VFC } from "react";
 
-interface Props {
+interface CommonProps {
   disabled?: boolean;
   min?: number;
   max?: number;
   value: number | null;
-  setValue: (value: number) => void;
   setIsValid?: (value: boolean) => void;
 }
 
-export const NumericTextInput: VFC<Props> = ({ disabled, min, max, value, setValue, setIsValid }) => {
+interface NonOptionalProps extends CommonProps {
+  optional?: false;
+  setValue: (value: number) => void;
+}
+
+interface OptionalProps extends CommonProps {
+  optional: true;
+  setValue: (value: number | null) => void;
+}
+
+type Props = NonOptionalProps | OptionalProps;
+
+export const NumericTextInput: VFC<Props> = ({ disabled, min, max, optional, value, setValue, setIsValid }) => {
   return (
-    <TextInput<number>
+    <TextInput<number | null>
       disabled={disabled}
       value={`${value ?? ""}`}
-      setValue={setValue}
+      setValue={setValue as OptionalProps["setValue"]}
       convert={(value) => {
         const convertedValue = Number(value);
-        if (isNaN(convertedValue) || value === "") {
+        const isEmptyValue = value === "";
+        if (isNaN(convertedValue) || isEmptyValue) {
+          if (isEmptyValue && optional === true) {
+            return { success: true, value: null };
+          }
           return { success: false, error: "Input must be a number!" };
         }
 

@@ -9,6 +9,7 @@ from .logger import logger
 class ResolutionDimensions(TypedDict):
     width: int
     height: int
+    bitrate: Optional[int]
 
 
 class MoonlightProxy(contextlib.AbstractAsyncContextManager):
@@ -34,6 +35,8 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
         args = ["run", "--branch=stable", "--arch=x86_64", "--command=moonlight", self.moonlight]
         if self.resolution:
             args += ["--resolution", f"{self.resolution['width']}x{self.resolution['height']}"]
+            if self.resolution["bitrate"] is not None:
+                args += ["--bitrate", f"{self.resolution['bitrate']}"]
         args += ["stream", self.hostname, "MoonDeckStream"]
 
         self.process = await asyncio.create_subprocess_exec(self.program, *args,

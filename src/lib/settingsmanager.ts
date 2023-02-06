@@ -8,10 +8,13 @@ import { logger } from "./logger";
 export const buttonStyles = ["HighContrast", "Clean"] as const;
 export const horizontalAlignmentValues = ["top", "bottom"] as const;
 export const verticalAlignmentValues = ["left", "right"] as const;
+export const minBitrate = 500 as const;
+export const maxBitrate = 150000 as const;
 
 export interface Dimension {
   width: number;
   height: number;
+  bitrate: number | null;
 }
 
 export interface HostResolution {
@@ -19,6 +22,7 @@ export interface HostResolution {
   passToMoonlight: boolean;
   useCustomDimensions: boolean;
   selectedDimensionIndex: number;
+  defaultBitrate: number | null;
   dimensions: Dimension[];
 }
 
@@ -58,6 +62,13 @@ export interface UserSettings {
   buttonPosition: ButtonPositionSettings;
   buttonStyle: ButtonStyleSettings;
   hostSettings: { [key: string]: HostSettings };
+}
+
+export function stringifyDimension(value: Dimension): string {
+  if (value.bitrate === null) {
+    return `${value.width}x${value.height}`;
+  }
+  return `${value.width}x${value.height} (${value.bitrate} kbps)`;
 }
 
 async function getUserSettings(serverAPI: ServerAPI): Promise<UserSettings | null> {

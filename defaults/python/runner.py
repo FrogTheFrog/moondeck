@@ -190,7 +190,7 @@ async def wait_for_initial_host_conditions(res_change: Optional[ResolutionChange
         resp = await client.change_resolution(res_change["dimensions"]["width"], res_change["dimensions"]["height"])
         if resp:
             if resp == ChangeResolutionResult.BuddyRefused:
-                logger.info("Buddy refused resolution change. Continuing...")
+                logger.warn("Buddy refused resolution change. Continuing...")
             else:
                 return resp
 
@@ -300,23 +300,27 @@ async def main():
             index = host_settings["resolution"]["selectedDimensionIndex"]
             if index >= 0 and index < len(dimension_list):
                 res_dimensions = dimension_list[index]
+                if res_dimensions["bitrate"] is None:
+                    res_dimensions["bitrate"] = host_settings["resolution"]["defaultBitrate"]
             else:
                 logger.warn(f"Dimension index ({index}) out of range ([0;{len(dimension_list)}]). Still continuing...")
 
         if not res_dimensions and host_settings["resolution"]["automatic"]:
             monitors = screeninfo.get_monitors()
             primary_monitor = next((monitor for monitor in monitors if monitor.is_primary), None)
+            bitrate = host_settings["resolution"]["defaultBitrate"]
             logger.info(f"Monitors: {monitors}")
             if primary_monitor:
-                res_dimensions = { "width": primary_monitor.width, "height": primary_monitor.height }
+                res_dimensions = { "width": primary_monitor.width, "height": primary_monitor.height, "bitrate": bitrate }
             elif len(monitors) == 1:
-                res_dimensions = { "width": monitors[0].width, "height": monitors[0].height }
+                res_dimensions = { "width": monitors[0].width, "height": monitors[0].height, "bitrate": bitrate }
             else:
                 logger.warn(f"Cannot use automatic resolution. Have {len(monitors)} monitors. Still continuing...")
         
         res_change: Optional[ResolutionChange] = None
         if res_dimensions:
-            logger.info(f"Will try to apply {res_dimensions['width']}x{res_dimensions['height']} resolution on host.")
+            bitrate_entry = f" ({res_dimensions['bitrate']} kbps)" if res_dimensions['bitrate'] is not None else ""
+            logger.info(f"Will try to apply {res_dimensions['width']}x{res_dimensions['height']}{bitrate_entry} resolution on host.")
             res_change = { 
                 "dimensions": res_dimensions,
                 "passToMoonlight": host_settings["resolution"]["passToMoonlight"]

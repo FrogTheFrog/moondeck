@@ -12,6 +12,7 @@ from .logger import logger
 class Dimension(TypedDict):
     width: int
     height: int
+    bitrate: Optional[int]
 
 
 class HostResolution(TypedDict):
@@ -19,6 +20,7 @@ class HostResolution(TypedDict):
     passToMoonlight: bool
     useCustomDimensions: bool
     selectedDimensionIndex: int
+    defaultBitrate: Optional[int]
     dimensions: List[Dimension]
 
 
@@ -153,6 +155,12 @@ class SettingsManager:
             data["version"] = 6
             for host in data["hostSettings"].keys():
                 data["hostSettings"][host]["closeSteamOnceSessionEnds"] = False
+        if data["version"] == 6:
+            data["version"] = 7
+            for host in data["hostSettings"].keys():
+                data["hostSettings"][host]["resolution"]["defaultBitrate"] = None
+                for i in range(len(data["hostSettings"][host]["resolution"]["dimensions"])):
+                    data["hostSettings"][host]["resolution"]["dimensions"][i]["bitrate"] = None
 
         return data
 

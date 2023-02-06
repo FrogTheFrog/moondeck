@@ -1,9 +1,9 @@
 import { DialogBody, DialogControlsSection, DialogControlsSectionHeader, Field } from "decky-frontend-lib";
 import { LabelWithIcon, NumericTextInput, ResolutionSelectionDropdown, ToggleField } from "../shared";
+import { SettingsManager, maxBitrate, minBitrate } from "../../lib";
 import { AddResolutionButton } from "./addresolutionbutton";
 import { HostOff } from "../icons";
 import { ResolutionForgetButton } from "./resolutionforgetbutton";
-import { SettingsManager } from "../../lib";
 import { VFC } from "react";
 import { useCurrentHostSettings } from "../../hooks";
 
@@ -84,11 +84,25 @@ export const HostSettingsView: VFC<Props> = ({ settingsManager }) => {
           focusable={true}
         />
         <ToggleField
-          label="Pass the resolution to Moonlight to use instead of default"
+          label="Pass the resolution and bitrate options to Moonlight to use instead of default ones"
           description="I honestly don't know why I added option to disable this. Might be useful to someone... It's your choice :)"
           value={hostSettings.resolution.passToMoonlight}
           setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.resolution.passToMoonlight = value; })}
         />
+        <Field
+          label="Bitrate in kbps (optional)"
+          description="Bitrate to be applied when starting stream. Will be overridden by the one from custom resolution if provided."
+          childrenContainerWidth="fixed"
+          bottomSeparator="none"
+        >
+          <NumericTextInput
+            min={minBitrate}
+            max={maxBitrate}
+            optional={true}
+            value={hostSettings.resolution.defaultBitrate}
+            setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.resolution.defaultBitrate = value; })}
+          />
+        </Field>
         <ToggleField
           label="Try to apply SteamDeck's resolution on host PC"
           description="If custom resolution is disabled, will try to get SteamDeck's internal resolution."
