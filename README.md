@@ -24,6 +24,7 @@ This plugin stores data in the following directories:
 * Settings - `/home/$USER/.config/moondeck/settings.json`
 * Backend logs - `/tmp/moondeck.log`
 * Runner logs - `/tmp/moondeck-runner.log`
+* Moonlight logs - `/tmp/moondeck-runner-moonlight.log`
 
 Additional frontend logs are written to the `web console`.
 

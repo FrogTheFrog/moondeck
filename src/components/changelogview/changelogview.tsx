@@ -7,7 +7,12 @@ export const ChangelogView: VFC<unknown> = () => {
       <DialogControlsSection>
         <Field
           label="1.5.4"
-          description="Enabled saving of Moonlight output for easier debugging."
+          description={
+            <>
+              <div>&bull; Enabled saving of Moonlight output for easier debugging.</div>
+              <div>&bull; Branch will no longer be specified for Moonlight. The default one (stable or beta) will be selected by flatpak.</div>
+            </>
+          }
           focusable={true}
         />
         <Field

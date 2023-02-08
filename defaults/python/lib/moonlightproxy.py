@@ -33,7 +33,7 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
         if self.process:
             return
 
-        args = ["run", "--branch=stable", "--arch=x86_64", "--command=moonlight", self.moonlight]
+        args = ["run", "--arch=x86_64", "--command=moonlight", self.moonlight]
         if self.resolution:
             args += ["--resolution", f"{self.resolution['width']}x{self.resolution['height']}"]
             if self.resolution["bitrate"] is not None:
