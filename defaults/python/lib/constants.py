@@ -20,6 +20,7 @@ CONFIG_DIR = str(pathlib.Path("/home", CURRENT_USER, ".config", "moondeck"))
 CONFIG_FILENAME = "settings.json"
 LOG_FILE = "/tmp/moondeck.log"
 RUNNER_LOG_FILE = "/tmp/moondeck-runner.log"
+MOONLIGHT_LOG_FILE = "/tmp/moondeck-runner-moonlight.log"
 RUNNER_RESULT_FILE = "/tmp/moondeck-runner.result"
 DEFAULT_TIMEOUT = 5
 GAMESTREAM_PORT = 47989
