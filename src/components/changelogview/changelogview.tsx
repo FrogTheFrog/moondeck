@@ -6,6 +6,11 @@ export const ChangelogView: VFC<unknown> = () => {
     <DialogBody>
       <DialogControlsSection>
         <Field
+          label="1.5.4"
+          description="Enabled saving of Moonlight output for easier debugging."
+          focusable={true}
+        />
+        <Field
           label="1.5.3"
           description={
             <>
