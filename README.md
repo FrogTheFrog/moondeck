@@ -1,4 +1,4 @@
-# MoonDeck ![Status](https://github.com/FrogTheFrog/moondeck/actions/workflows/build.yaml/badge.svg) [![Chat](https://img.shields.io/badge/chat-on%20discord-7289da.svg)](https://discord.gg/ZU74G2NJzk)
+# MoonDeck ![Status](https://github.com/FrogTheFrog/moondeck/actions/workflows/build.yaml/badge.svg) [![Chat](https://img.shields.io/badge/chat-on%20discord-7289da.svg)](https://discord.com/invite/U88fbeHyzt)
 
 A plugin that makes it easier to manage your gamestream sessions from the SteamDeck.
 
