@@ -1,5 +1,6 @@
 import { SteamClientEx } from "./shared";
 import { getGameId } from "./getGameId";
+import { logger } from "../lib/logger";
 import { waitForAppLifetimeNotification } from "./waitForAppLifetimeNotification";
 
 /**
@@ -10,10 +11,11 @@ import { waitForAppLifetimeNotification } from "./waitForAppLifetimeNotification
  * @returns True if the app was terminated and notification received, false otherwise.
  */
 export async function terminateApp(appId: number, timeout: number): Promise<boolean> {
-  console.log(`Trying to terminate app ${appId}.`);
+  logger.log(`Trying to terminate app ${appId}.`);
   const gameId = await getGameId(appId);
 
   if (gameId === null) {
+    logger.error(`App's (${appId}) game id is null!`);
     return false;
   }
 
@@ -23,7 +25,7 @@ export async function terminateApp(appId: number, timeout: number): Promise<bool
     (SteamClient as SteamClientEx).Apps.TerminateApp(gameId, false);
     return await startNotification;
   } catch (error) {
-    console.error(error);
+    logger.critical(error);
     return false;
   }
 }

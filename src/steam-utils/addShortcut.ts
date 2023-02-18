@@ -1,5 +1,6 @@
 import { SteamClientEx } from "./shared";
 import { getAppOverview } from "./getAppOverview";
+import { logger } from "../lib/logger";
 import { removeShortcut } from "./removeShortcut";
 import { waitForAppOverview } from "./waitForAppOverview";
 
@@ -15,7 +16,7 @@ import { waitForAppOverview } from "./waitForAppOverview";
  * @returns AppId if succeeded or null otherwise.
  */
 export async function addShortcut(appName: string, execPath: string): Promise<number | null> {
-  console.log(`Adding shortcut for ${appName}.`);
+  logger.log(`Adding shortcut for ${appName}.`);
 
   const appId = await (SteamClient as SteamClientEx).Apps.AddShortcut(appName, execPath);
   if (typeof appId === "number") {
@@ -33,6 +34,6 @@ export async function addShortcut(appName: string, execPath: string): Promise<nu
     await removeShortcut(appId);
   }
 
-  console.log(`Could not add shortcut for ${appName}!`);
+  logger.log(`Could not add shortcut for ${appName}!`);
   return null;
 }

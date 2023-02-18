@@ -1,5 +1,6 @@
 import { AppDetails } from "decky-frontend-lib";
 import { SteamClientEx } from "./shared";
+import { logger } from "../lib/logger";
 
 /**
  * Tries to retrieve the app details from Steam.
@@ -23,7 +24,7 @@ export async function getAppDetails(appId: number): Promise<AppDetails | null> {
       }, 1000);
     } catch (error) {
       clearTimeout(timeoutId);
-      console.error(error);
+      logger.critical(error);
       resolve(null);
     }
   });

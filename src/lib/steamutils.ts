@@ -1,5 +1,6 @@
-import { AppDetails, LifetimeNotification, SteamShortcut } from "decky-frontend-lib";
+import { AppDetails, LifetimeNotification } from "decky-frontend-lib";
 import { SteamClientEx, getAppDetails } from "../steam-utils";
+import { getAllNonSteamAppIds } from "../steam-utils/getAllNonSteamAppIds";
 export * from "../steam-utils";
 
 export function registerForGameLifetime(callback: (data: LifetimeNotification) => void): () => void {
@@ -36,26 +37,13 @@ export function getAppIdFromShortcut(value: string): number | null {
   return steamAppId;
 }
 
-export async function getAllMoonDeckShortcuts(): Promise<SteamShortcut[]> {
-  const moonDeckShortcuts: SteamShortcut[] = [];
-
-  const shortcuts = await (SteamClient as SteamClientEx).Apps.GetAllShortcuts();
-  for (const shortcut of shortcuts) {
-    if (shortcut.data.strExePath.includes("moondeckrun.sh")) {
-      moonDeckShortcuts.push(shortcut);
-    }
-  }
-
-  return moonDeckShortcuts;
-}
-
 export async function getAllMoonDeckAppDetails(): Promise<AppDetails[]> {
   const moonDeckApps: AppDetails[] = [];
 
-  const shortcuts = await getAllMoonDeckShortcuts();
-  for (const shortcut of shortcuts) {
-    const details = await getAppDetails(shortcut.appid);
-    if (details != null) {
+  const appids = await getAllNonSteamAppIds();
+  for (const appid of appids) {
+    const details = await getAppDetails(appid);
+    if (details?.strShortcutExe.includes("moondeckrun.sh")) {
       moonDeckApps.push(details);
     }
   }

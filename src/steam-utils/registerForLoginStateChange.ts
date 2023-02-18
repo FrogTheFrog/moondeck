@@ -1,4 +1,5 @@
 import { SteamClientEx } from "./shared";
+import { logger } from "../lib/logger";
 
 /**
  * Invokes appropriate callback when user logs in or out.
@@ -24,7 +25,7 @@ export function registerForLoginStateChange(onLogin: (username: string) => void,
       }
     }).unregister;
   } catch (error) {
-    console.error(error);
+    logger.critical(error);
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     return () => { };
   }

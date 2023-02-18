@@ -1,5 +1,6 @@
 import { LifetimeNotification } from "decky-frontend-lib";
 import { SteamClientEx } from "./shared";
+import { logger } from "../lib/logger";
 
 export type AnyId = null;
 export type NotificationType = "start" | "end";
@@ -34,7 +35,7 @@ export async function waitForAppLifetimeNotification(appId: number | AnyId, type
       }, timeout);
     } catch (error) {
       clearTimeout(timeoutId);
-      console.error(error);
+      logger.critical(error);
       resolve(false);
     }
   });

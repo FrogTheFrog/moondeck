@@ -1,4 +1,5 @@
 import { SteamAppOverview, getAppStore } from "./getAppStore";
+import { logger } from "../lib/logger";
 
 /**
  * Tries to retrieve the app overview from the app store.
@@ -9,14 +10,14 @@ import { SteamAppOverview, getAppStore } from "./getAppStore";
 export async function getAppOverview(appId: number): Promise<SteamAppOverview | null> {
   const appStore = getAppStore();
   if (appStore === null) {
-    console.log("Could not get app overview - null appStore!");
+    logger.error("Could not get app overview - null appStore!");
     return null;
   }
 
   try {
     return (await appStore.GetAppOverviewByAppID(appId)) ?? null;
   } catch (error) {
-    console.error(error);
+    logger.critical(error);
     return null;
   }
 }

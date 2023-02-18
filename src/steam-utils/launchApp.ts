@@ -1,5 +1,6 @@
 import { SteamClientEx } from "./shared";
 import { getGameId } from "./getGameId";
+import { logger } from "../lib/logger";
 import { waitForAppLifetimeNotification } from "./waitForAppLifetimeNotification";
 
 /**
@@ -10,7 +11,7 @@ import { waitForAppLifetimeNotification } from "./waitForAppLifetimeNotification
  * @returns True if the app was launched and notification received, false otherwise.
  */
 export async function launchApp(appId: number, timeout: number): Promise<boolean> {
-  console.log(`Trying to launch app ${appId}.`);
+  logger.log(`Trying to launch app ${appId}.`);
   const gameId = await getGameId(appId);
 
   if (gameId === null) {
@@ -23,7 +24,7 @@ export async function launchApp(appId: number, timeout: number): Promise<boolean
     (SteamClient as SteamClientEx).Apps.RunGame(gameId, "", -1, 100);
     return await startNotification;
   } catch (error) {
-    console.error(error);
+    logger.critical(error);
     return false;
   }
 }

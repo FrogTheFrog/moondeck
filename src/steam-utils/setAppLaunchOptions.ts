@@ -1,5 +1,6 @@
 import { SteamClientEx } from "./shared";
 import { getAppDetails } from "./getAppDetails";
+import { logger } from "../lib/logger";
 import { waitForAppDetails } from "./waitForAppDetails";
 
 /**
@@ -12,7 +13,7 @@ import { waitForAppDetails } from "./waitForAppDetails";
 export async function setAppLaunchOptions(appId: number, value: string): Promise<boolean> {
   const details = await waitForAppDetails(appId, (details) => details !== null) ? await getAppDetails(appId) : null;
   if (details == null) {
-    console.log(`Could not set app launch options for ${appId} - does not exist!`);
+    logger.log(`Could not set app launch options for ${appId} - does not exist!`);
     return false;
   }
 
@@ -23,12 +24,12 @@ export async function setAppLaunchOptions(appId: number, value: string): Promise
   try {
     (SteamClient as SteamClientEx).Apps.SetAppLaunchOptions(appId, value);
     if (!await waitForAppDetails(appId, (details) => details !== null && details.strLaunchOptions === value)) {
-      console.error(`Could not set app launch options for ${appId}!`);
+      logger.error(`Could not set app launch options for ${appId}!`);
       return false;
     }
     return true;
   } catch (error) {
-    console.error(error);
+    logger.critical(error);
     return false;
   }
 }

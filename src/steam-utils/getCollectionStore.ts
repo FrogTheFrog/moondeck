@@ -5,12 +5,14 @@ export interface Collection {
     RemoveApps: (overviews: SteamAppOverview[]) => void;
   };
   apps: {
+    keys: () => number[];
     has: (appId: number) => boolean;
   };
   bAllowsDragAndDrop: boolean;
 }
 
 export interface CollectionStore {
+  deckDesktopApps: Collection;
   userCollections: Collection[];
   BIsHidden: (appId: number) => boolean;
   SetAppsAsHidden: (appIds: number[], hide: boolean) => void;

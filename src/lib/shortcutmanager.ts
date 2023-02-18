@@ -1,4 +1,4 @@
-import { addShortcut, getAllMoonDeckAppDetails, getAllMoonDeckShortcuts, getAppIdFromShortcut, getAppStore, removeShortcut, restartSteamClient } from "./steamutils";
+import { addShortcut, getAllMoonDeckAppDetails, getAppIdFromShortcut, getAppStore, removeShortcut, restartSteamClient } from "./steamutils";
 import { AppDetailsPatcher } from "./appdetailspatcher";
 import { BehaviorSubject } from "rxjs";
 import BiMap from "ts-bidirectional-map";
@@ -131,15 +131,15 @@ export class ShortcutManager {
     this.moondeckPurge = true;
     this.updateReadyState();
 
-    const shortcuts = await getAllMoonDeckShortcuts();
-    for (const shortcut of shortcuts) {
-      await this.removeShortcut(shortcut.appid);
+    const details = await getAllMoonDeckAppDetails();
+    for (const detail of details) {
+      await this.removeShortcut(detail.unAppID);
     }
 
     this.moondeckPurge = false;
     this.updateReadyState();
 
-    if (shortcuts.length > 0) {
+    if (details.length > 0) {
       restartSteamClient();
     }
   }

@@ -1,4 +1,4 @@
-import { ButtonItem, Field, PanelSection, PanelSectionRow, Router, ToggleField } from "decky-frontend-lib";
+import { ButtonItem, Field, Navigation, PanelSection, PanelSectionRow, ToggleField } from "decky-frontend-lib";
 import { MoonDeckAppData, MoonDeckAppLauncher, logger } from "../../lib";
 import { VFC, useState } from "react";
 
@@ -20,7 +20,7 @@ export const GameSessionPanel: VFC<Props> = ({ appData, moonDeckAppLauncher }) =
 
   const handleTermination = (): void => {
     setIsDisabled(true);
-    Router.CloseSideMenus();
+    Navigation.CloseSideMenus();
     moonDeckAppLauncher.moonDeckApp.killApp()
       .catch((e) => logger.critical(e))
       .finally(() => setIsDisabled(false));
@@ -28,7 +28,7 @@ export const GameSessionPanel: VFC<Props> = ({ appData, moonDeckAppLauncher }) =
 
   const handleSteamClose = (): void => {
     setIsDisabled(true);
-    Router.CloseSideMenus();
+    Navigation.CloseSideMenus();
     moonDeckAppLauncher.moonDeckApp.closeSteamOnHost()
       .catch((e) => logger.critical(e))
       .finally(() => setIsDisabled(false));

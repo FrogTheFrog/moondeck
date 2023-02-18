@@ -1,6 +1,6 @@
-import { DialogBody, DialogButton, DialogControlsSection, DialogControlsSectionHeader, Field, Router, SteamShortcut } from "decky-frontend-lib";
+import { AppDetails, DialogBody, DialogButton, DialogControlsSection, DialogControlsSectionHeader, Field, Navigation } from "decky-frontend-lib";
 import { ReactNode, VFC, useEffect, useState } from "react";
-import { ShortcutManager, getAllMoonDeckShortcuts, logger } from "../../lib";
+import { ShortcutManager, getAllMoonDeckAppDetails, logger } from "../../lib";
 import { PurgeButton } from "./purgebutton";
 import { useShortcutManagerState } from "../../hooks";
 
@@ -10,13 +10,13 @@ interface Props {
 
 export const ShortcutsView: VFC<Props> = ({ shortcutManager }) => {
   const isReady = useShortcutManagerState(shortcutManager);
-  const [shortcuts, setShortcuts] = useState<SteamShortcut[]>([]);
+  const [shortcuts, setShortcuts] = useState<AppDetails[]>([]);
 
   useEffect(() => {
     if (isReady) {
       (async () => {
-        let data = await getAllMoonDeckShortcuts();
-        data = data.sort((a, b) => a.data.strAppName < b.data.strAppName ? -1 : a.data.strAppName > b.data.strAppName ? 1 : 0);
+        let data = await getAllMoonDeckAppDetails();
+        data = data.sort((a, b) => a.strDisplayName < b.strDisplayName ? -1 : a.strDisplayName > b.strDisplayName ? 1 : 0);
         setShortcuts(data);
       })().catch((e) => logger.critical(e));
     } else {
@@ -33,11 +33,11 @@ export const ShortcutsView: VFC<Props> = ({ shortcutManager }) => {
         {shortcuts.map((shortcut) => {
           return (
             <Field
-              key={shortcut.appid}
-              label={shortcut.data.strAppName}
+              key={shortcut.unAppID}
+              label={shortcut.strDisplayName}
               childrenContainerWidth="min"
             >
-              <DialogButton onClick={() => Router.Navigate(`/library/app/${shortcut.appid}`)}>
+              <DialogButton onClick={() => Navigation.Navigate(`/library/app/${shortcut.unAppID}`)}>
                 Open
               </DialogButton>
             </Field>

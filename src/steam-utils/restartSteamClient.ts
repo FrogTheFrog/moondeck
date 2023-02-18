@@ -1,4 +1,5 @@
 import { SteamClientEx } from "./shared";
+import { logger } from "../lib/logger";
 
 /**
  * Restarts the Steam client.
@@ -12,6 +13,6 @@ export function restartSteamClient(): void {
   try {
     (SteamClient as SteamClientEx).User.StartRestart();
   } catch (error) {
-    console.error(error);
+    logger.critical(error);
   }
 }

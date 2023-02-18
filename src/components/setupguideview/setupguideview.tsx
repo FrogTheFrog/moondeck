@@ -1,5 +1,5 @@
 import { BuddyStatusField, SettingsLoadingField } from "../shared";
-import { DialogBody, DialogButton, DialogControlsSection, DialogControlsSectionHeader, Field, Router } from "decky-frontend-lib";
+import { DialogBody, DialogButton, DialogControlsSection, DialogControlsSectionHeader, Field, Navigation } from "decky-frontend-lib";
 import { MoonDeckLaunchButtonShell } from "../moondecklaunchbutton";
 import { SettingsManager } from "../../lib";
 import { VFC } from "react";
@@ -30,7 +30,7 @@ export const SetupGuideView: VFC<Props> = ({ settingsManager }) => {
           label="Step 2 - Download and setup Buddy on host PC"
           description="Requires Buddy v1.4.0 or above."
         >
-          <DialogButton onClick={() => { Router.NavigateToExternalWeb(moondeckBuddyLink); }}>Click me!</DialogButton>
+          <DialogButton onClick={() => { Navigation.NavigateToExternalWeb(moondeckBuddyLink); }}>Click me!</DialogButton>
         </Field>
         <Field
           label="Step 3 - Scan for the host PC on the local network"
@@ -65,7 +65,7 @@ export const SetupGuideView: VFC<Props> = ({ settingsManager }) => {
       <DialogControlsSection>
         <DialogControlsSectionHeader>Troubleshooting</DialogControlsSectionHeader>
         <Field label="If you encounter any issues, be sure to check this page first!">
-          <DialogButton onClick={() => { Router.NavigateToExternalWeb(moondeckWikiLink); }}>Click me!</DialogButton>
+          <DialogButton onClick={() => { Navigation.NavigateToExternalWeb(moondeckWikiLink); }}>Click me!</DialogButton>
         </Field>
       </DialogControlsSection>
     </DialogBody>

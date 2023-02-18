@@ -1,4 +1,5 @@
 import { SteamClientEx, SystemResumeInfo, SystemSuspendInfo } from "./shared";
+import { logger } from "../lib/logger";
 
 /**
  * Invokes appropriate callback when user suspends or unsuspends the deck.
@@ -12,7 +13,7 @@ export function registerForSuspendNotifictions(onSuspend: (info: SystemSuspendIn
       unregisterOnResume();
     };
   } catch (error) {
-    console.error(error);
+    logger.critical(error);
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     return () => { };
   }
