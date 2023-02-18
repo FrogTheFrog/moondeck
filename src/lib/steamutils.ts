@@ -43,7 +43,7 @@ export async function getAllMoonDeckAppDetails(): Promise<AppDetails[]> {
   try {
     const moonDeckApps: AppDetails[] = [];
 
-    const appids = await getAllNonSteamAppIds();
+    const appids = getAllNonSteamAppIds();
     // eslint-disable-next-line @typescript-eslint/promise-function-async
     const tasks = appids.map((appid) => () => getAppDetails(appid));
     const allDetails = await throttleAll(100, tasks);
