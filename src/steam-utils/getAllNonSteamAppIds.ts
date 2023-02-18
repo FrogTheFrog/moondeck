@@ -24,7 +24,7 @@ export async function getAllNonSteamAppIds(): Promise<number[]> {
       return [];
     }
 
-    return collectionStore.deckDesktopApps.apps.keys();
+    return Array.from(collectionStore.deckDesktopApps.apps.keys());
   } catch (error) {
     logger.critical(error);
     return [];

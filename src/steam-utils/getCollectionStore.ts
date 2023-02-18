@@ -5,7 +5,7 @@ export interface Collection {
     RemoveApps: (overviews: SteamAppOverview[]) => void;
   };
   apps: {
-    keys: () => number[];
+    keys: () => IterableIterator<number>;
     has: (appId: number) => boolean;
   };
   bAllowsDragAndDrop: boolean;

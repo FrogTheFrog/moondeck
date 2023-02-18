@@ -24,6 +24,7 @@ specifiers:
   ip-regex: ^5.0.0
   lodash: ^4.17.21
   mobx: '5'
+  promise-throttle-all: ^1.1.1
   react-icons: ^4.4.0
   rollup: ^2.77.1
   rollup-plugin-import-assets: ^1.1.1
@@ -39,6 +40,7 @@ dependencies:
   ip-regex: 5.0.0
   lodash: 4.17.21
   mobx: 5.15.7
+  promise-throttle-all: 1.1.1
   react-icons: 4.6.0
   rxjs: 7.5.7
   ts-bidirectional-map: 1.0.2
@@ -1935,6 +1937,11 @@ packages:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
     engines: {node: '>= 0.8.0'}
     dev: true
+
+  /promise-throttle-all/1.1.1:
+    resolution: {integrity: sha512-AvTiJleGQaL5dw9Sq92gltktlhdSLj/Hs1LN1D2OxJNfiuZv5l4HfC3RhWMUneUu2eXergw3MBHo5Fd8ZZo7lg==}
+    engines: {node: '>=12'}
+    dev: false
 
   /prop-types/15.8.1:
     resolution: {integrity: sha512-oj87CgZICdulUohogVAR7AjlC0327U4el4L6eAvOqCeudMDVU0NThNaV+b9Df4dXgSP1gXMTnPdhfe/2qDH5cg==}

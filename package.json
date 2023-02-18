@@ -58,6 +58,7 @@
     "ip-regex": "^5.0.0",
     "lodash": "^4.17.21",
     "mobx": "5",
+    "promise-throttle-all": "^1.1.1",
     "react-icons": "^4.4.0",
     "rxjs": "^7.5.6",
     "ts-bidirectional-map": "^1.0.2"

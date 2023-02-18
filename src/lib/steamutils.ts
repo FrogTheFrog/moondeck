@@ -1,6 +1,8 @@
 import { AppDetails, LifetimeNotification } from "decky-frontend-lib";
 import { SteamClientEx, getAppDetails } from "../steam-utils";
 import { getAllNonSteamAppIds } from "../steam-utils/getAllNonSteamAppIds";
+import { logger } from "./logger";
+import { throttleAll } from "promise-throttle-all";
 export * from "../steam-utils";
 
 export function registerForGameLifetime(callback: (data: LifetimeNotification) => void): () => void {
@@ -38,17 +40,25 @@ export function getAppIdFromShortcut(value: string): number | null {
 }
 
 export async function getAllMoonDeckAppDetails(): Promise<AppDetails[]> {
-  const moonDeckApps: AppDetails[] = [];
+  try {
+    const moonDeckApps: AppDetails[] = [];
 
-  const appids = await getAllNonSteamAppIds();
-  for (const appid of appids) {
-    const details = await getAppDetails(appid);
-    if (details?.strShortcutExe.includes("moondeckrun.sh")) {
-      moonDeckApps.push(details);
+    const appids = await getAllNonSteamAppIds();
+    // eslint-disable-next-line @typescript-eslint/promise-function-async
+    const tasks = appids.map((appid) => () => getAppDetails(appid));
+    const allDetails = await throttleAll(100, tasks);
+
+    for (const details of allDetails) {
+      if (details?.strShortcutExe.includes("moondeckrun.sh")) {
+        moonDeckApps.push(details);
+      }
     }
-  }
 
-  return moonDeckApps;
+    return moonDeckApps;
+  } catch (error) {
+    logger.critical(error);
+    return [];
+  }
 }
 
 export function isAppTypeSupported(appType: number): boolean {
