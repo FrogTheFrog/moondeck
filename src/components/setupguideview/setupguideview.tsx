@@ -64,7 +64,7 @@ export const SetupGuideView: VFC<Props> = ({ settingsManager }) => {
       </DialogControlsSection>
       <DialogControlsSection>
         <DialogControlsSectionHeader>Troubleshooting</DialogControlsSectionHeader>
-        <Field label="If you encounter any issues, be sure to check this page first!">
+        <Field label="If you encounter any issues, be sure to check this!">
           <DialogButton onClick={() => { Navigation.NavigateToExternalWeb(moondeckWikiLink); }}>Click me!</DialogButton>
         </Field>
       </DialogControlsSection>
