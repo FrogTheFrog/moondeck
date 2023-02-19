@@ -1,6 +1,5 @@
 import { AppDetails, LifetimeNotification } from "decky-frontend-lib";
-import { SteamClientEx, getAppDetails } from "../steam-utils";
-import { getAllNonSteamAppIds } from "../steam-utils/getAllNonSteamAppIds";
+import { SteamClientEx, getAllNonSteamAppIds, getAppDetails } from "../steam-utils";
 import { logger } from "./logger";
 import { throttleAll } from "promise-throttle-all";
 export * from "../steam-utils";

@@ -1,4 +1,5 @@
 export * from "./addShortcut";
+export * from "./getAllNonSteamAppIds";
 export * from "./getAppDetails";
 export * from "./getAppOverview";
 export * from "./getAppStore";
