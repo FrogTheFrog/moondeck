@@ -1,6 +1,6 @@
 {
   "name": "moondeck",
-  "version": "1.5.5",
+  "version": "1.5.6",
   "description": "MoonDeck is an automation tool that will simplify launching your Steam games via the Moonlight client for streaming.",
   "scripts": {
     "build": "shx rm -rf dist && pnpm run unlink-python && rollup -c",
@@ -54,7 +54,7 @@
   },
   "dependencies": {
     "async-mutex": "^0.4.0",
-    "decky-frontend-lib": "^3.18.11",
+    "decky-frontend-lib": "^3.19.1",
     "ip-regex": "^5.0.0",
     "lodash": "^4.17.21",
     "mobx": "5",

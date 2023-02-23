@@ -6,6 +6,11 @@ export const ChangelogView: VFC<unknown> = () => {
     <DialogBody>
       <DialogControlsSection>
         <Field
+          label="1.5.6"
+          description="Updated dependency to Decky's Frontend Library."
+          focusable={true}
+        />
+        <Field
           label="1.5.5"
           description="Fixed breaking changes from Valve."
           focusable={true}
