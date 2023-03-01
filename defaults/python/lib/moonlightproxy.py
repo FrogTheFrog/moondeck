@@ -18,9 +18,10 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
     program = "/usr/bin/flatpak"
     moonlight = "com.moonlight_stream.Moonlight"
 
-    def __init__(self, hostname: str, resolution: Optional[ResolutionDimensions]) -> None: 
+    def __init__(self, hostname: str, host_app: str, resolution: Optional[ResolutionDimensions]) -> None: 
         self.hostname = hostname
         self.resolution = resolution
+        self.host_app = host_app
         self.process: Optional[Process] = None
 
     async def __aenter__(self):
@@ -38,7 +39,7 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
             args += ["--resolution", f"{self.resolution['width']}x{self.resolution['height']}"]
             if self.resolution["bitrate"] is not None:
                 args += ["--bitrate", f"{self.resolution['bitrate']}"]
-        args += ["stream", self.hostname, "MoonDeckStream"]
+        args += ["stream", self.hostname, self.host_app]
 
         self.process = await asyncio.create_subprocess_exec(self.program, *args,
                                                             stdout=asyncio.subprocess.PIPE,

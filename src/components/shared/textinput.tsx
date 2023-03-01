@@ -34,6 +34,8 @@ export const TextInput: <T>(props: Props<T>) => ReactElement<Props<T>> = ({ disa
         setError(converted.error);
       }
       setIsValid?.(false);
+    } else {
+      setIsValid?.(true);
     }
   }, []);
 

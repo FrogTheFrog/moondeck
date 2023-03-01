@@ -6,6 +6,16 @@ export const ChangelogView: VFC<unknown> = () => {
     <DialogBody>
       <DialogControlsSection>
         <Field
+          label="1.5.7"
+          description={
+            <>
+              <div>&bull; Fixed some UI bugs when modifying host settings.</div>
+              <div>&bull; Added an option in the host settings to use custom app name for gamestream.</div>
+            </>
+          }
+          focusable={true}
+        />
+        <Field
           label="1.5.6"
           description="Updated dependency to Decky's Frontend Library."
           focusable={true}

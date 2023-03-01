@@ -11,6 +11,11 @@ export const verticalAlignmentValues = ["left", "right"] as const;
 export const minBitrate = 500 as const;
 export const maxBitrate = 150000 as const;
 
+export interface HostApp {
+  selectedAppIndex: number;
+  apps: string[];
+}
+
 export interface Dimension {
   width: number;
   height: number;
@@ -34,6 +39,7 @@ export interface HostSettings {
   mac: string;
   closeSteamOnceSessionEnds: boolean;
   resolution: HostResolution;
+  hostApp: HostApp;
 }
 
 export interface GameSessionSettings {

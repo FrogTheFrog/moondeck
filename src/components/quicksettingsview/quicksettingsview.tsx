@@ -2,6 +2,7 @@ import { ConnectivityManager, MoonDeckAppLauncher, SettingsManager } from "../..
 import { useBuddyStatus, useCurrentHostSettings, useMoonDeckAppData, useServerStatus } from "../../hooks";
 import { GameSessionPanel } from "./gamesessionpanel";
 import { GoToSettingsPanel } from "./gotosettingspanel";
+import { HostAppPanel } from "./hostapppanel";
 import { HostCommandPanel } from "./hostcommandpanel";
 import { HostStatusPanel } from "./hoststatuspanel";
 import { ResolutionPanel } from "./resolutionpanel";
@@ -28,6 +29,7 @@ export const QuickSettingsView: VFC<Props> = ({ connectivityManager, settingsMan
         ? <GameSessionPanel appData={appData} moonDeckAppLauncher={moonDeckAppLauncher} />
         : <>
             <HostStatusPanel currentHostSettings={currentHostSettings} serverStatus={serverStatus} serverRefreshStatus={serverRefreshStatus} buddyStatus={buddyStatus} buddyRefreshStatus={buddyRefreshStatus} />
+            <HostAppPanel currentHostSettings={currentHostSettings} settingsManager={settingsManager} />
             <ResolutionPanel currentHostSettings={currentHostSettings} settingsManager={settingsManager} />
           </>
       }

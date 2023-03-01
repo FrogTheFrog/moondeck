@@ -220,10 +220,10 @@ async def establish_connection(client: BuddyClient):
     return None
 
 
-async def run_game(res_change: Optional[ResolutionChange], hostname: str, address: str, port: int, client_id: Optional[str], close_steam: bool, app_id: int):
+async def run_game(res_change: Optional[ResolutionChange], host_app: str, hostname: str, address: str, port: int, client_id: Optional[str], close_steam: bool, app_id: int):
     try:
         async with BuddyClient(address, port, client_id, constants.DEFAULT_TIMEOUT) as client, \
-                   MoonlightProxy(hostname, res_change["dimensions"] if (res_change and res_change["passToMoonlight"]) else None) as proxy:
+                   MoonlightProxy(hostname, host_app, res_change["dimensions"] if (res_change and res_change["passToMoonlight"]) else None) as proxy:
             result = await establish_connection(client=client)
             if result:
                 return result
@@ -326,8 +326,18 @@ async def main():
                 "passToMoonlight": host_settings["resolution"]["passToMoonlight"]
             }
 
-        logger.info("Trying to run the game")
+        host_app: str = "MoonDeckStream"
+        app_list = host_settings["hostApp"]["apps"]
+        if len(app_list) > 0:
+            index = host_settings["hostApp"]["selectedAppIndex"]
+            if index >= 0 and index < len(app_list):
+                host_app = app_list[index]
+            else:
+                logger.warn(f"Host app index ({index}) out of range ([0;{len(app_list)}]). Still continuing...")
+
+        logger.info(f"Trying to run the game using the app {host_app}")
         result = await run_game(res_change,
+                                host_app,
                                 host_settings["hostName"],
                                 host_settings["address"],
                                 host_settings["buddyPort"],

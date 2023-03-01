@@ -1,9 +1,10 @@
-import { DialogBody, DialogControlsSection, DialogControlsSectionHeader, Field } from "decky-frontend-lib";
-import { LabelWithIcon, NumericTextInput, ResolutionSelectionDropdown, ToggleField } from "../shared";
+import { DialogBody, DialogControlsSection, DialogControlsSectionHeader, Field, Focusable } from "decky-frontend-lib";
+import { HostAppSelectionDropdown, LabelWithIcon, NumericTextInput, ResolutionSelectionDropdown, ToggleField } from "../shared";
+import { ModifyListButton, RemoveListEntryButton } from "../shared/indexedlist";
 import { SettingsManager, maxBitrate, minBitrate } from "../../lib";
-import { AddResolutionButton } from "./addresolutionbutton";
 import { HostOff } from "../icons";
-import { ResolutionForgetButton } from "./resolutionforgetbutton";
+import { ModifyHostAppModal } from "./modifyhostappmodal";
+import { ModifyResolutionModal } from "./modifyresolutionmodal";
 import { VFC } from "react";
 import { useCurrentHostSettings } from "../../hooks";
 
@@ -70,7 +71,72 @@ export const HostSettingsView: VFC<Props> = ({ settingsManager }) => {
         />
       </DialogControlsSection>
       <DialogControlsSection>
-      <DialogControlsSectionHeader>Resolution</DialogControlsSectionHeader>
+        <DialogControlsSectionHeader>Gamestream App</DialogControlsSectionHeader>
+        <Field
+          description={
+            <>
+              <div>This is the app that will be used by MoonDeck when starting gamestream.</div>
+              <br />
+              <div>Can be customized to have some specific "do/undo" logic on the host.</div>
+              <br />
+              <div>If the list is empty, the MoonDeckStream name is used by default.</div>
+            </>
+          }
+          focusable={true}
+        />
+        <Field
+          label="Selected app name"
+          childrenContainerWidth="fixed"
+          bottomSeparator="none"
+        >
+          <HostAppSelectionDropdown
+            currentIndex={hostSettings.hostApp.selectedAppIndex}
+            currentList={hostSettings.hostApp.apps}
+            setIndex={(value) => { settingsManager.updateHost((hostSettings) => { hostSettings.hostApp.selectedAppIndex = value; }); }}
+          />
+        </Field>
+        <Field
+          childrenContainerWidth="fixed"
+          childrenLayout="below"
+        >
+          <Focusable style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+            <ModifyListButton
+              modal={ModifyHostAppModal}
+              currentList={hostSettings.hostApp.apps}
+              currentIndex={null}
+              updateList={(list, index) => {
+                settingsManager.updateHost((hostSettings) => {
+                  hostSettings.hostApp.apps = list;
+                  hostSettings.hostApp.selectedAppIndex = index;
+                });
+              }}
+            />
+            <ModifyListButton
+              modal={ModifyHostAppModal}
+              currentList={hostSettings.hostApp.apps}
+              currentIndex={hostSettings.hostApp.selectedAppIndex}
+              updateList={(list, index) => {
+                settingsManager.updateHost((hostSettings) => {
+                  hostSettings.hostApp.apps = list;
+                  hostSettings.hostApp.selectedAppIndex = index;
+                });
+              }}
+            />
+            <RemoveListEntryButton
+              currentList={hostSettings.hostApp.apps}
+              currentIndex={hostSettings.hostApp.selectedAppIndex}
+              updateList={(list, index) => {
+                settingsManager.updateHost((hostSettings) => {
+                  hostSettings.hostApp.apps = list;
+                  hostSettings.hostApp.selectedAppIndex = index;
+                });
+              }}
+            />
+          </Focusable>
+        </Field>
+      </DialogControlsSection>
+      <DialogControlsSection>
+        <DialogControlsSectionHeader>Resolution</DialogControlsSectionHeader>
         <Field
           description={
             <>
@@ -116,9 +182,9 @@ export const HostSettingsView: VFC<Props> = ({ settingsManager }) => {
           setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.resolution.useCustomDimensions = value; })}
         />
         <Field
-          label="Selected resolution"
+          label="Selected custom resolution"
           childrenContainerWidth="fixed"
-          description="Select the custom resolution to use."
+          bottomSeparator="none"
         >
           <ResolutionSelectionDropdown
             currentIndex={hostSettings.resolution.selectedDimensionIndex}
@@ -127,33 +193,43 @@ export const HostSettingsView: VFC<Props> = ({ settingsManager }) => {
           />
         </Field>
         <Field
-          label="Forget selected resolution"
           childrenContainerWidth="fixed"
+          childrenLayout="below"
         >
-          <ResolutionForgetButton
-            currentIndex={hostSettings.resolution.selectedDimensionIndex}
-            currentList={hostSettings.resolution.dimensions}
-            updateResolution={(list, index) => {
-              settingsManager.updateHost((hostSettings) => {
-                hostSettings.resolution.dimensions = list;
-                hostSettings.resolution.selectedDimensionIndex = index;
-              });
-            }}
-          />
-        </Field>
-        <Field
-          label="Add custom resolution"
-          childrenContainerWidth="fixed"
-        >
-          <AddResolutionButton
-            currentList={hostSettings.resolution.dimensions}
-            updateResolution={(list, index) => {
-              settingsManager.updateHost((hostSettings) => {
-                hostSettings.resolution.dimensions = list;
-                hostSettings.resolution.selectedDimensionIndex = index;
-              });
-            }}
-          />
+          <Focusable style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+            <ModifyListButton
+              modal={ModifyResolutionModal}
+              currentList={hostSettings.resolution.dimensions}
+              currentIndex={null}
+              updateList={(list, index) => {
+                settingsManager.updateHost((hostSettings) => {
+                  hostSettings.resolution.dimensions = list;
+                  hostSettings.resolution.selectedDimensionIndex = index;
+                });
+              }}
+            />
+            <ModifyListButton
+              modal={ModifyResolutionModal}
+              currentList={hostSettings.resolution.dimensions}
+              currentIndex={hostSettings.resolution.selectedDimensionIndex}
+              updateList={(list, index) => {
+                settingsManager.updateHost((hostSettings) => {
+                  hostSettings.resolution.dimensions = list;
+                  hostSettings.resolution.selectedDimensionIndex = index;
+                });
+              }}
+            />
+            <RemoveListEntryButton
+              currentList={hostSettings.resolution.dimensions}
+              currentIndex={hostSettings.resolution.selectedDimensionIndex}
+              updateList={(list, index) => {
+                settingsManager.updateHost((hostSettings) => {
+                  hostSettings.resolution.dimensions = list;
+                  hostSettings.resolution.selectedDimensionIndex = index;
+                });
+              }}
+            />
+          </Focusable>
         </Field>
       </DialogControlsSection>
     </DialogBody>

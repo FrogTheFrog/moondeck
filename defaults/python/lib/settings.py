@@ -9,6 +9,11 @@ from typing import Any, Dict, List, Literal, Optional, TypedDict, get_args
 from .logger import logger
 
 
+class HostApp(TypedDict):
+    selectedAppIndex: int
+    apps: List[str]
+
+
 class Dimension(TypedDict):
     width: int
     height: int
@@ -32,6 +37,7 @@ class HostSettings(TypedDict):
     mac: str
     closeSteamOnceSessionEnds: bool
     resolution: HostResolution
+    hostApp: HostApp
 
 
 class GameSessionSettings(TypedDict):
@@ -161,6 +167,10 @@ class SettingsManager:
                 data["hostSettings"][host]["resolution"]["defaultBitrate"] = None
                 for i in range(len(data["hostSettings"][host]["resolution"]["dimensions"])):
                     data["hostSettings"][host]["resolution"]["dimensions"][i]["bitrate"] = None
+        if data["version"] == 7:
+            data["version"] = 8
+            for host in data["hostSettings"].keys():
+                data["hostSettings"][host]["hostApp"] = { "selectedAppIndex": -1, "apps": [] }
 
         return data
 

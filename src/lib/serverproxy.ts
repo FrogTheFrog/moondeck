@@ -112,6 +112,10 @@ export class ServerProxy {
           selectedDimensionIndex: currentSettings?.resolution.selectedDimensionIndex ?? -1,
           defaultBitrate: currentSettings?.resolution.defaultBitrate ?? null,
           dimensions: currentSettings?.resolution.dimensions ?? []
+        },
+        hostApp: {
+          selectedAppIndex: currentSettings?.hostApp.selectedAppIndex ?? -1,
+          apps: currentSettings?.hostApp.apps ?? []
         }
       };
 

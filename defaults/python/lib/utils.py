@@ -36,8 +36,12 @@ def from_list(item_type: Type[T], data: List[Any]) -> List[T]:
         if is_list_like(item_type):
             actual_type = get_args(item_type)
             verified_item = from_list(actual_type[0], item)
-        else:
+        elif is_dict_like(item_type):
             verified_item = from_dict(item_type, item)
+        else:
+            assert isinstance(item, item_type)
+            verified_item = item
+            
         verified_data.append(verified_item)
     return verified_data
 

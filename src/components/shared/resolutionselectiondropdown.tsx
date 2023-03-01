@@ -1,39 +1,21 @@
 import { HostResolution, stringifyDimension } from "../../lib";
-import { VFC, useEffect, useState } from "react";
-import { ListDropdown } from "./listdropdown";
+import { IndexedListDropdown } from "./indexedlist";
+import { VFC } from "react";
 
 interface Props {
-  currentIndex: HostResolution["selectedDimensionIndex"];
+  currentIndex: number;
   currentList: HostResolution["dimensions"];
-  setIndex: (value: HostResolution["selectedDimensionIndex"]) => void;
-}
-
-function isValidIndex(index: number, listSize: number): boolean {
-  return index >= 0 && index < listSize;
+  setIndex: (value: number) => void;
 }
 
 export const ResolutionSelectionDropdown: VFC<Props> = ({ currentIndex, currentList, setIndex }) => {
-  const [currentEntry, setCurrentEntry] = useState<typeof currentIndex | null>(null);
-  const [entries, setEntries] = useState<Array<{ id: number | null; label: string }>>([]);
-
-  useEffect(() => {
-    const items: typeof entries = currentList.map((value, index) => { return { id: index, label: stringifyDimension(value) }; });
-    if (currentList.length > 0) {
-      setEntries(items);
-      setCurrentEntry(isValidIndex(currentIndex, currentList.length) ? currentIndex : null);
-    } else {
-      setEntries([]);
-      setCurrentEntry(null);
-    }
-  }, [currentList, currentIndex]);
-
   return (
-    <ListDropdown<typeof currentEntry>
-      disabled={currentList.length === 0}
-      optionList={entries}
+    <IndexedListDropdown<HostResolution["dimensions"][number]>
       label="Resolution"
-      value={currentEntry}
-      setValue={(value) => setIndex(value === null || !isValidIndex(value, currentList.length) ? -1 : value)}
+      currentIndex={currentIndex}
+      currentList={currentList}
+      setIndex={setIndex}
+      stringifier={stringifyDimension}
     />
   );
 };

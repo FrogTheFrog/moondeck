@@ -1,18 +1,19 @@
 import { DialogButton, Field, ModalRoot } from "decky-frontend-lib";
 import { Dimension, HostResolution, maxBitrate, minBitrate, stringifyDimension } from "../../lib";
-import { VFC, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { IndexedListModal } from "../shared/indexedlist";
 import { NumericTextInput } from "../shared";
 
-interface Props {
-  closeModal: () => void;
-  currentList: HostResolution["dimensions"];
-  updateResolution: (list: HostResolution["dimensions"], index: HostResolution["selectedDimensionIndex"]) => void;
+function isValidIndex(index: number | null, listSize: number): boolean {
+  return index !== null && index >= 0 && index < listSize;
 }
 
-export const AddResolutionModal: VFC<Props> = ({ closeModal, currentList, updateResolution }) => {
-  const [width, setWidth] = useState<number | null>(null);
-  const [height, setHeight] = useState<number | null>(null);
-  const [bitrate, setBitrate] = useState<number | null>(null);
+export const ModifyResolutionModal: IndexedListModal<HostResolution["dimensions"][number]> = ({ closeModal, currentList, currentIndex, updateList }) => {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const initialValue = isValidIndex(currentIndex, currentList.length) ? currentList[currentIndex!] : null;
+  const [width, setWidth] = useState<number | null>(initialValue?.width ?? null);
+  const [height, setHeight] = useState<number | null>(initialValue?.height ?? null);
+  const [bitrate, setBitrate] = useState<number | null>(initialValue?.bitrate ?? null);
   const [widthIsValid, setWidthIsValid] = useState<boolean>(false);
   const [heightIsValid, setHeightIsValid] = useState<boolean>(false);
   const [bitrateIsValid, setBitrateIsValid] = useState<boolean>(false);
@@ -28,11 +29,17 @@ export const AddResolutionModal: VFC<Props> = ({ closeModal, currentList, update
 
   const handleClick = (): void => {
     if (resolution !== null) {
-      const compareWithListItems = (item: Dimension): boolean => item.height === height && item.width === width && item.bitrate === bitrate;
-      const alreadyInList = currentList.findIndex(compareWithListItems) !== -1;
-      let list = currentList;
+      const compareWithListItems = (target: Dimension) => (item: Dimension): boolean => item.height === target.height && item.width === target.width && item.bitrate === target.bitrate;
+      const newList = [...currentList];
+
+      if (initialValue != null) {
+        const index = newList.findIndex(compareWithListItems(initialValue));
+        newList.splice(index, 1);
+      }
+
+      const alreadyInList = newList.findIndex(compareWithListItems(resolution)) !== -1;
       if (!alreadyInList) {
-        const newList = [...currentList, resolution];
+        newList.push(resolution);
         newList.sort((a, b) => {
           const nameA = stringifyDimension(a);
           const nameB = stringifyDimension(b);
@@ -44,12 +51,10 @@ export const AddResolutionModal: VFC<Props> = ({ closeModal, currentList, update
           }
           return 0;
         });
-
-        list = newList;
       }
 
-      const index = list.findIndex(compareWithListItems);
-      updateResolution(list, index);
+      const index = newList.findIndex(compareWithListItems(resolution));
+      updateList(newList, index);
     }
     setResolution(null);
     closeModal();
