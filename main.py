@@ -163,3 +163,19 @@ class Plugin:
 
         except Exception:
             logger.exception("Unhandled exception")
+
+    async def get_gamestream_app_names(self, address: str, buddy_port: int, client_id: str, timeout: float):
+        try:
+            async with BuddyClient(address, buddy_port, client_id, timeout) as client:
+                names_or_status = await client.get_gamestream_app_names()
+                if names_or_status and not isinstance(names_or_status, list):
+                    logger.error(f"While retrieving gamestream app names: {names_or_status}")
+                    return None
+
+                logger.info(names_or_status)
+                return None
+                #return names_or_status
+
+        except Exception:
+            logger.exception("Unhandled exception")
+            return None

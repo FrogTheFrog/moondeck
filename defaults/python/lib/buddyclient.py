@@ -52,6 +52,11 @@ class ChangeResolutionResult(Enum):
     Failed = "Failed to change resolution via Buddy!"
 
 
+class RestoreResolutionResult(Enum):
+    BuddyRefused = "Buddy refused to restore resolution. Check the logs on host!"
+    Failed = "Failed to restore resolution via Buddy!"
+
+
 class GetHostInfoResult(Enum):
     Failed = "Failed to get host info via Buddy!"
 
@@ -59,6 +64,10 @@ class GetHostInfoResult(Enum):
 class EndStreamResult(Enum):
     BuddyRefused = "Buddy refused to end stream. Check the logs on host!"
     Failed = "Failed to end stream via Buddy!"
+
+
+class GetGamestreamAppNamesResult(Enum):
+    Failed = "Failed to get gamestream app names via Buddy!"
 
 
 class BuddyClient(contextlib.AbstractAsyncContextManager):
@@ -205,19 +214,33 @@ class BuddyClient(contextlib.AbstractAsyncContextManager):
 
         return await self._try_request(request(), ChangePcStateResult.Failed)
 
-    async def change_resolution(self, width: int, height: int):
+    async def change_resolution(self, width: int, height: int, manual: bool):
         async def request():
             result = await self.say_hello()
             if result:
                 return result
 
-            resp = await self.__requests.post_change_resolution(width, height)
+            resp = await self.__requests.post_change_resolution(width, height, manual)
             if not resp["result"]:
                 return ChangeResolutionResult.BuddyRefused
 
             return None
 
         return await self._try_request(request(), ChangeResolutionResult.Failed)
+    
+    async def restore_resolution(self, manual: bool):
+        async def request():
+            result = await self.say_hello()
+            if result:
+                return result
+
+            resp = await self.__requests.post_restore_resolution(manual)
+            if not resp["result"]:
+                return RestoreResolutionResult.BuddyRefused
+
+            return None
+
+        return await self._try_request(request(), RestoreResolutionResult.Failed)
 
     async def get_host_info(self):
         async def request():
@@ -242,3 +265,14 @@ class BuddyClient(contextlib.AbstractAsyncContextManager):
             return None
 
         return await self._try_request(request(), EndStreamResult.Failed)
+
+    async def get_gamestream_app_names(self):
+        async def request():
+            result = await self.say_hello()
+            if result:
+                return result
+
+            resp = await self.__requests.get_gamestream_app_names()
+            return resp["appNames"]
+
+        return await self._try_request(request(), GetGamestreamAppNamesResult.Failed)

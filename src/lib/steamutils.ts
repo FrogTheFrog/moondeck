@@ -74,6 +74,28 @@ export async function getAllMoonDeckAppDetails(): Promise<AppDetails[]> {
   }
 }
 
+export async function getAllExternalAppDetails(): Promise<AppDetails[]> {
+  try {
+    const externalApps: AppDetails[] = [];
+
+    const appids = getAllNonSteamAppIds();
+    // eslint-disable-next-line @typescript-eslint/promise-function-async
+    const tasks = appids.map((appid) => () => getAppDetails(appid));
+    const allDetails = await throttleAll(100, tasks);
+
+    for (const details of allDetails) {
+      if (details?.strShortcutLaunchOptions.includes("MOONDECK_MANAGED=1")) {
+        externalApps.push(details);
+      }
+    }
+
+    return externalApps;
+  } catch (error) {
+    logger.critical(error);
+    return [];
+  }
+}
+
 export function isAppTypeSupported(appType: number): boolean {
   // Only steam games are supported.
   return appType === 1;
