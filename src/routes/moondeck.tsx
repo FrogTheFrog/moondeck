@@ -1,6 +1,5 @@
 import { ConnectivityManager, SettingsManager, ShortcutManager } from "../lib";
 import { ServerAPI, SidebarNavigation } from "decky-frontend-lib";
-import { AboutView } from "../components/aboutview";
 import { ButtonStyleView } from "../components/buttonstyleview";
 import { ChangelogView } from "../components/changelogview";
 import { ExternalShortcutsView } from "../components/externalshortcutsview";
@@ -69,11 +68,6 @@ const MoonDeckRouter: VFC<Props> = ({ connectivityManager, settingsManager, shor
           title: "Button Style",
           content: <ButtonStyleView settingsManager={settingsManager} />,
           route: "/moondeck/button-style"
-        },
-        {
-          title: "About",
-          content: <AboutView />,
-          route: "/moondeck/about"
         }
       ]}
     />
