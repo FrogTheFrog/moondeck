@@ -1,7 +1,7 @@
 import { AppDetails, ServerAPI } from "decky-frontend-lib";
 import { E_ALREADY_LOCKED, Mutex, tryAcquire } from "async-mutex";
 import { Subscription, pairwise } from "rxjs";
-import { getAppDetails, getMoonDeckAppIdMark, getSystemNetworkStore, launchApp, registerForGameLifetime, registerForSuspendNotifictions, setAppHiddenState, setAppLaunchOptions, setShortcutName, waitForNetworkConnection } from "./steamutils";
+import { getAppDetails, getMoonDeckAppIdMark, getSystemNetworkStore, launchApp, registerForGameLifetime, registerForSuspendNotifictions, setAppHiddenState, setAppLaunchOptions, setAppResolutionOverride, setShortcutName, waitForNetworkConnection } from "./steamutils";
 import { CommandProxy } from "./commandproxy";
 import { MoonDeckAppProxy } from "./moondeckapp";
 import { SettingsManager } from "./settingsmanager";
@@ -212,6 +212,11 @@ export class MoonDeckAppLauncher {
 
         if (!await setShortcutName(details.unAppID, appName)) {
           logger.toast("Failed to update shortcut name (needs restart?)!", { output: "error" });
+          return;
+        }
+
+        if (!await setAppResolutionOverride(details.unAppID, "Native")) {
+          logger.toast("Failed to set app resolution override to Native (needs restart?)!", { output: "error" });
           return;
         }
 

@@ -9,14 +9,18 @@ export interface SystemResumeInfo {
   bGameSuspended: boolean;
 }
 
+export type AppResolutionOverrideConstants = "Default" | "Native";
+
 export interface SteamClientEx {
   Apps: {
     AddShortcut: (appName: string, execPath: string) => Promise<number | undefined | null>;
     GetAllShortcuts: () => Promise<SteamShortcut[]>;
+    GetResolutionOverrideForApp: (appId: number) => Promise<AppResolutionOverrideConstants | string>;
     RegisterForAppDetails: (appId: number, callback: (details: AppDetails) => void) => { unregister: () => void };
     RemoveShortcut: (appId: number) => void;
     RunGame: (gameId: string, _1: string, _2: number, _3: number) => void;
     SetAppLaunchOptions: (appId: number, options: string) => void;
+    SetAppResolutionOverride: (appId: number, resolution: AppResolutionOverrideConstants | string) => void;
     SetShortcutName: (appId: number, name: string) => void;
     TerminateApp: (gameId: string, _1: boolean) => void;
   };
