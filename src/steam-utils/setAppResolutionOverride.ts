@@ -1,6 +1,6 @@
 import { SteamClientEx } from "./shared";
 import { getAppResolutionOverride } from "./getAppResolutionOverride";
-import { logger } from "../lib";
+import { logger } from "../lib/logger";
 import { waitForAppResolutionOverride } from "./waitForAppResolutionOverride";
 
 /**

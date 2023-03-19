@@ -1,5 +1,5 @@
 import { AppResolutionOverrideConstants, SteamClientEx } from "./shared";
-import { logger } from "../lib";
+import { logger } from "../lib/logger";
 
 /**
  * @returns The current resolution override for the app.
