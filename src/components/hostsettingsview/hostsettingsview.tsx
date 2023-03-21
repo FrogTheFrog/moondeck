@@ -2,6 +2,7 @@ import { DialogBody, DialogControlsSection, DialogControlsSectionHeader, Field, 
 import { HostAppSelectionDropdown, LabelWithIcon, NumericTextInput, ResolutionSelectionDropdown, ToggleField } from "../shared";
 import { ModifyListButton, RemoveListEntryButton } from "../shared/indexedlist";
 import { SettingsManager, maxBitrate, minBitrate } from "../../lib";
+import { AppResolutionOverrideDropdown } from "./appresolutionoverridedropdown";
 import { HostOff } from "../icons";
 import { ModifyHostAppModal } from "./modifyhostappmodal";
 import { ModifyResolutionModal } from "./modifyresolutionmodal";
@@ -170,7 +171,7 @@ export const HostSettingsView: VFC<Props> = ({ settingsManager }) => {
           />
         </Field>
         <ToggleField
-          label="Try to apply SteamDeck's resolution on host PC"
+          label="Try to apply SteamDeck's current resolution on host PC"
           description="If custom resolution is disabled, will try to get SteamDeck's internal resolution."
           value={hostSettings.resolution.automatic}
           setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.resolution.automatic = value; })}
@@ -230,6 +231,44 @@ export const HostSettingsView: VFC<Props> = ({ settingsManager }) => {
               }}
             />
           </Focusable>
+        </Field>
+      </DialogControlsSection>
+      <DialogControlsSection>
+        <DialogControlsSectionHeader>App Resolution Override</DialogControlsSectionHeader>
+        <Field
+          description={
+            <>
+              <div>Sets the app shortcut resolution property which informs the Gamescope on how to perform scaling.</div>
+              <br />
+              <div>Note: this applies ONLY for the external displays (technically you can enable it for internal display too, but we don't do it).</div>
+            </>
+          }
+          bottomSeparator="none"
+          focusable={true}
+        />
+        <Field
+          description={
+            <>
+              <div>The following options are available:</div>
+              <div>&bull; "Custom Resolution" (MoonDeck's default) - if custom resolution is enabled and selected, it will be used for scaling.</div>
+              <div>&bull; "Display Resolution" - will use the resolution of the primary display for scaling.</div>
+              <div>&bull; "Native" - technically should be the same as "Display Resolution", however one user reported that it still performs some unnecessary scaling once the stream starts.</div>
+              <div>&bull; "Default" - this is the Valve's default scaling option. It is just bad...</div>
+              <br />
+              <div>If for whatever reason MoonDeck fails to retrieve either a custom resolution (because it's disabled) or the display resolution, the following fallback chain will ensure that at least something is set:</div>
+              <div>"Custom Resolution" -&gt; "Display Resolution" -&gt; "Native"</div>
+            </>
+          }
+          focusable={true}
+        />
+        <Field
+          label="Selected override"
+          childrenContainerWidth="fixed"
+        >
+          <AppResolutionOverrideDropdown
+            currentOverride={hostSettings.resolution.appResolutionOverride}
+            setOverride={(value) => { settingsManager.updateHost((hostSettings) => { hostSettings.resolution.appResolutionOverride = value; }); }}
+          />
         </Field>
       </DialogControlsSection>
     </DialogBody>

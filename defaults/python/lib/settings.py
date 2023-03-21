@@ -22,6 +22,7 @@ class Dimension(TypedDict):
 
 class HostResolution(TypedDict):
     automatic: bool
+    appResolutionOverride: Literal["CustomResolution", "DisplayResolution", "Native", "Default"]
     passToMoonlight: bool
     useCustomDimensions: bool
     selectedDimensionIndex: int
@@ -171,6 +172,10 @@ class SettingsManager:
             data["version"] = 8
             for host in data["hostSettings"].keys():
                 data["hostSettings"][host]["hostApp"] = { "selectedAppIndex": -1, "apps": [] }
+        if data["version"] == 8:
+            data["version"] = 9
+            for host in data["hostSettings"].keys():
+                data["hostSettings"][host]["resolution"]["appResolutionOverride"] = "CustomResolution"
 
         return data
 

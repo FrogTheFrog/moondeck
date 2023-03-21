@@ -107,6 +107,7 @@ export class ServerProxy {
         closeSteamOnceSessionEnds: currentSettings?.closeSteamOnceSessionEnds ?? false,
         resolution: {
           automatic: currentSettings?.resolution.automatic ?? true,
+          appResolutionOverride: currentSettings?.resolution.appResolutionOverride ?? "CustomResolution",
           passToMoonlight: currentSettings?.resolution.passToMoonlight ?? true,
           useCustomDimensions: currentSettings?.resolution.useCustomDimensions ?? false,
           selectedDimensionIndex: currentSettings?.resolution.selectedDimensionIndex ?? -1,

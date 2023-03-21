@@ -26,7 +26,6 @@ import asyncio
 import lib.constants as constants
 import lib.hostinfo as hostinfo
 import lib.runnerresult as runnerresult
-import externals.screeninfo as screeninfo
 # autopep8: on
 
 set_log_filename(constants.RUNNER_LOG_FILE)
@@ -39,6 +38,11 @@ class SpecialHandling(Enum):
 class ResolutionChange(TypedDict):
     dimensions: ResolutionDimensions
     passToMoonlight: bool
+
+
+class MoonDeckResolution(TypedDict):
+    width: int
+    height: int
 
 
 async def pool_host_info(client: BuddyClient, predicate):
@@ -261,6 +265,19 @@ async def run_game(res_change: Optional[ResolutionChange], host_app: str, hostna
         return runnerresult.Result.Exception
 
 
+def get_auto_resolution() -> Optional[MoonDeckResolution]:
+    value = os.environ.get("MOONDECK_AUTO_RES")
+    try:
+        if value is None:
+            return None
+        
+        value = str(value).split("x")
+        return { "width": int(value[0]), "height": int(value[1]) }
+    except:
+        logger.exception("While getting auto resolution")
+        return None
+
+
 def get_app_id() -> Optional[int]:
     app_id = os.environ.get("MOONDECK_STEAM_APP_ID")
     try:
@@ -306,16 +323,13 @@ async def main():
                 logger.warn(f"Dimension index ({index}) out of range ([0;{len(dimension_list)}]). Still continuing...")
 
         if not res_dimensions and host_settings["resolution"]["automatic"]:
-            monitors = screeninfo.get_monitors()
-            primary_monitor = next((monitor for monitor in monitors if monitor.is_primary), None)
+            auto_resolution = get_auto_resolution()
             bitrate = host_settings["resolution"]["defaultBitrate"]
-            logger.info(f"Monitors: {monitors}")
-            if primary_monitor:
-                res_dimensions = { "width": primary_monitor.width, "height": primary_monitor.height, "bitrate": bitrate }
-            elif len(monitors) == 1:
-                res_dimensions = { "width": monitors[0].width, "height": monitors[0].height, "bitrate": bitrate }
+            logger.info(f"Auto resolution from MoonDeck: {auto_resolution}")
+            if auto_resolution:
+                res_dimensions = { "width": auto_resolution["width"], "height": auto_resolution["height"], "bitrate": bitrate }
             else:
-                logger.warn(f"Cannot use automatic resolution. Have {len(monitors)} monitors. Still continuing...")
+                logger.warn(f"Cannot use automatic resolution! MoonDeck did not pass resolution. Still continuing...")
         
         res_change: Optional[ResolutionChange] = None
         if res_dimensions:

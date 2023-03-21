@@ -1,5 +1,5 @@
 import { AppDetails, LifetimeNotification } from "decky-frontend-lib";
-import { SteamClientEx, getAllNonSteamAppIds, getAppDetails } from "../steam-utils";
+import { SteamClientEx, getAllNonSteamAppIds, getAppDetails, getCurrentDisplayMode } from "../steam-utils";
 import { logger } from "./logger";
 import { throttleAll } from "promise-throttle-all";
 export * from "../steam-utils";
@@ -7,6 +7,20 @@ export * from "../steam-utils";
 export function registerForGameLifetime(callback: (data: LifetimeNotification) => void): () => void {
   const { unregister } = (SteamClient as SteamClientEx).GameSessions.RegisterForAppLifetimeNotifications(callback);
   return unregister;
+}
+
+export async function getCurrentDisplayModeString(): Promise<string | null> {
+  const currentMode = await getCurrentDisplayMode();
+  return currentMode ? `${currentMode.width}x${currentMode.height}` : null;
+}
+
+export function getMoonDeckResMark(mode: string | null, useAutoResolution: boolean): string {
+  const mark = "MOONDECK_AUTO_RES";
+  if (mode === null || !useAutoResolution) {
+    return "";
+  }
+
+  return ` ${mark}=${mode}`;
 }
 
 export function getMoonDeckAppIdMark(appId: number | null): string {

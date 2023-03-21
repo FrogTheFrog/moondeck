@@ -5,6 +5,7 @@ import { ReadonlySubject } from "./readonlysubject";
 import { ServerAPI } from "decky-frontend-lib";
 import { logger } from "./logger";
 
+export const appResolutionOverrideValues = ["CustomResolution", "DisplayResolution", "Native", "Default"] as const;
 export const buttonStyles = ["HighContrast", "Clean"] as const;
 export const horizontalAlignmentValues = ["top", "bottom"] as const;
 export const verticalAlignmentValues = ["left", "right"] as const;
@@ -24,6 +25,7 @@ export interface Dimension {
 
 export interface HostResolution {
   automatic: boolean;
+  appResolutionOverride: typeof appResolutionOverrideValues[number];
   passToMoonlight: boolean;
   useCustomDimensions: boolean;
   selectedDimensionIndex: number;

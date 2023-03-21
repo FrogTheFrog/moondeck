@@ -7,7 +7,7 @@ export const ChangelogView: VFC<unknown> = () => {
       <DialogControlsSection>
         <Field
           label="1.5.8"
-          description="Force MoonDeck shortcuts to use Native game resolution. Otherwise the Moonlight client may run at whatever resolution on an external display."
+          description="Added app resolution override handling feature. Options can be found in host settings."
           focusable={true}
         />
         <Field

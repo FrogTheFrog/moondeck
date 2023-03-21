@@ -1,10 +1,10 @@
 import { AppDetails, ServerAPI } from "decky-frontend-lib";
 import { E_ALREADY_LOCKED, Mutex, tryAcquire } from "async-mutex";
+import { HostResolution, HostSettings, SettingsManager } from "./settingsmanager";
 import { Subscription, pairwise } from "rxjs";
-import { getAppDetails, getMoonDeckAppIdMark, getSystemNetworkStore, launchApp, registerForGameLifetime, registerForSuspendNotifictions, setAppHiddenState, setAppLaunchOptions, setAppResolutionOverride, setShortcutName, waitForNetworkConnection } from "./steamutils";
+import { getAppDetails, getCurrentDisplayModeString, getMoonDeckAppIdMark, getMoonDeckResMark, getSystemNetworkStore, launchApp, registerForGameLifetime, registerForSuspendNotifictions, setAppHiddenState, setAppLaunchOptions, setAppResolutionOverride, setShortcutName, waitForNetworkConnection } from "./steamutils";
 import { CommandProxy } from "./commandproxy";
 import { MoonDeckAppProxy } from "./moondeckapp";
-import { SettingsManager } from "./settingsmanager";
 import { ShortcutManager } from "./shortcutmanager";
 import { logger } from "./logger";
 
@@ -21,6 +21,39 @@ async function getMoonDeckRunPath(serverAPI: ServerAPI): Promise<string | null> 
   }
 
   return null;
+}
+
+function getCustomDimension(hostResolution: Readonly<HostResolution>): string | null {
+  if (hostResolution.useCustomDimensions) {
+    const dimensions = hostResolution.dimensions;
+    const index = hostResolution.selectedDimensionIndex;
+    if (index >= 0 && index < dimensions.length) {
+      const dimension = dimensions[index];
+      return `${dimension.width}x${dimension.height}`;
+    }
+    logger.error("Dimension index out of range!");
+  }
+  return null;
+}
+
+function getSelectedAppResolution(mode: string | null, hostSettings: Readonly<HostSettings>): string {
+  const customDimension = getCustomDimension(hostSettings.resolution);
+  switch (hostSettings.resolution.appResolutionOverride) {
+    case "CustomResolution":
+      if (customDimension) {
+        return customDimension;
+      }
+    // fallthrough
+    case "DisplayResolution":
+      if (mode) {
+        return mode;
+      }
+    // fallthrough
+    case "Native":
+      return "Native";
+    default:
+      return "Default";
+  }
 }
 
 export class MoonDeckAppLauncher {
@@ -177,7 +210,8 @@ export class MoonDeckAppLauncher {
       return;
     }
 
-    if (this.settingsManager.hostSettings === null) {
+    const hostSettings = this.settingsManager.hostSettings;
+    if (hostSettings === null) {
       logger.toast("Host is not selected!");
       return;
     }
@@ -215,12 +249,13 @@ export class MoonDeckAppLauncher {
           return;
         }
 
-        if (!await setAppResolutionOverride(details.unAppID, "Native")) {
+        const mode = await getCurrentDisplayModeString();
+        if (!await setAppResolutionOverride(details.unAppID, getSelectedAppResolution(mode, hostSettings))) {
           logger.toast("Failed to set app resolution override to Native (needs restart?)!", { output: "error" });
           return;
         }
 
-        const launchOptions = `${getMoonDeckAppIdMark(appId)} %command%`;
+        const launchOptions = `${getMoonDeckAppIdMark(appId)}${getMoonDeckResMark(mode, hostSettings.resolution.automatic)} %command%`;
         if (!await setAppLaunchOptions(details.unAppID, launchOptions)) {
           logger.toast("Failed to update shortcut launch options (needs restart?)!", { output: "error" });
           return;
