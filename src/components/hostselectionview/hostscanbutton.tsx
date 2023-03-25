@@ -32,7 +32,7 @@ export const HostScanButton: VFC<Props> = ({ connectivityManager, disabled, isSc
 
   return (
     <DialogButton disabled={disabled} onClick={() => { handleClick().catch((e) => logger.critical(e)); }}>
-      {isScanning ? "Scaning..." : "Scan"}
+      {isScanning ? "Scanning..." : "Scan"}
     </DialogButton>
   );
 };
