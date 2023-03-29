@@ -8,7 +8,9 @@ jobs:
         uses: actions/setup-node@v3
 
       - name: Install PNPM
-        run: npm install -g pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: latest
 
       - name: Checkout
         uses: actions/checkout@v3
