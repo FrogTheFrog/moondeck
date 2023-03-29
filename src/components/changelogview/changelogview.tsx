@@ -6,6 +6,16 @@ export const ChangelogView: VFC<unknown> = () => {
     <DialogBody>
       <DialogControlsSection>
         <Field
+          label="1.5.9"
+          description={
+            <>
+              <div>&bull; Separated resolution options into separate sections.</div>
+              <div>&bull; Added an option not to pass the resolution to Buddy in case you want to use do/undo in Sunshine for changing resolution.</div>
+            </>
+          }
+          focusable={true}
+        />
+        <Field
           label="1.5.8"
           description="Added app resolution override handling feature. Options can be found in host settings."
           focusable={true}

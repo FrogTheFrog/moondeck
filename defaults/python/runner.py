@@ -37,6 +37,7 @@ class SpecialHandling(Enum):
 
 class ResolutionChange(TypedDict):
     dimensions: ResolutionDimensions
+    passToBuddy: bool
     passToMoonlight: bool
 
 
@@ -189,7 +190,7 @@ async def wait_for_initial_host_conditions(res_change: Optional[ResolutionChange
     if result:
         return result
 
-    if res_change:
+    if res_change and res_change["passToBuddy"]:
         logger.info("Notifying Buddy to change resolution")
         resp = await client.change_resolution(res_change["dimensions"]["width"], res_change["dimensions"]["height"])
         if resp:
@@ -337,6 +338,7 @@ async def main():
             logger.info(f"Will try to apply {res_dimensions['width']}x{res_dimensions['height']}{bitrate_entry} resolution on host.")
             res_change = { 
                 "dimensions": res_dimensions,
+                "passToBuddy": host_settings["resolution"]["passToBuddy"],
                 "passToMoonlight": host_settings["resolution"]["passToMoonlight"]
             }
 

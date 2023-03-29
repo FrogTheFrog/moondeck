@@ -26,6 +26,7 @@ export interface Dimension {
 export interface HostResolution {
   automatic: boolean;
   appResolutionOverride: typeof appResolutionOverrideValues[number];
+  passToBuddy: boolean;
   passToMoonlight: boolean;
   useCustomDimensions: boolean;
   selectedDimensionIndex: number;

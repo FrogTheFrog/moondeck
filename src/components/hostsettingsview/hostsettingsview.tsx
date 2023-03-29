@@ -137,27 +137,31 @@ export const HostSettingsView: VFC<Props> = ({ settingsManager }) => {
         </Field>
       </DialogControlsSection>
       <DialogControlsSection>
-        <DialogControlsSectionHeader>Resolution</DialogControlsSectionHeader>
+        <DialogControlsSectionHeader>Custom Resolution</DialogControlsSectionHeader>
         <Field
           description={
             <>
-              <div>GameStream can refuse Moonlight's request for a specific resolution when streaming, but with Buddy we can try to change it ourselves!</div>
+              <div>Here you can define custom resolution which is used by MoonDeck to enhance gaming experience.</div>
               <br />
-              <div>The host PC must support the resolution, otherwise nothing will happen and whatever resolution is set by GameStream will be used.</div>
-              <br />
-              <div>Works most of the time...</div>
+              <div>See the sections below this one for more information for where it can be used.</div>
             </>
           }
           focusable={true}
         />
         <ToggleField
-          label="Pass the resolution and bitrate options to Moonlight to use instead of default ones"
-          description="I honestly don't know why I added option to disable this. Might be useful to someone... It's your choice :)"
-          value={hostSettings.resolution.passToMoonlight}
-          setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.resolution.passToMoonlight = value; })}
+          label="Use SteamDeck's primary resolution as fallback"
+          description="If custom resolution is disabled, SteamDeck's primary resolution will be used - that of internal or external display."
+          value={hostSettings.resolution.automatic}
+          setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.resolution.automatic = value; })}
+        />
+        <ToggleField
+          label="Use custom resolution from the list"
+          description="This setting has no effect if the custom resolution list is empty."
+          value={hostSettings.resolution.useCustomDimensions}
+          setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.resolution.useCustomDimensions = value; })}
         />
         <Field
-          label="Bitrate in kbps (optional)"
+          label="Default bitrate in kbps (optional)"
           description="Bitrate to be applied when starting stream. Will be overridden by the one from custom resolution if provided."
           childrenContainerWidth="fixed"
           bottomSeparator="none"
@@ -170,18 +174,6 @@ export const HostSettingsView: VFC<Props> = ({ settingsManager }) => {
             setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.resolution.defaultBitrate = value; })}
           />
         </Field>
-        <ToggleField
-          label="Try to apply SteamDeck's current resolution on host PC"
-          description="If custom resolution is disabled, will try to get SteamDeck's internal resolution."
-          value={hostSettings.resolution.automatic}
-          setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.resolution.automatic = value; })}
-        />
-        <ToggleField
-          label="Try to apply custom resolution on host PC"
-          description="This setting has no effect if the custom resolution list is empty."
-          value={hostSettings.resolution.useCustomDimensions}
-          setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.resolution.useCustomDimensions = value; })}
-        />
         <Field
           label="Selected custom resolution"
           childrenContainerWidth="fixed"
@@ -232,6 +224,25 @@ export const HostSettingsView: VFC<Props> = ({ settingsManager }) => {
             />
           </Focusable>
         </Field>
+      </DialogControlsSection>
+      <DialogControlsSection>
+        <DialogControlsSectionHeader>Gamestream Resolution</DialogControlsSectionHeader>
+        <Field
+          description="Here you can specify how to use custom resolution for the gamestream."
+          focusable={true}
+        />
+        <ToggleField
+          label="Pass the resolution option to Buddy to change resolution on host PC"
+          description="Disable this if you want to use do/undo commands for changing resolution"
+          value={hostSettings.resolution.passToBuddy}
+          setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.resolution.passToBuddy = value; })}
+        />
+        <ToggleField
+          label="Pass the resolution and bitrate options to Moonlight to use instead of default ones"
+          description="I honestly don't know why I added option to disable this. Might be useful to someone... It's your choice :)"
+          value={hostSettings.resolution.passToMoonlight}
+          setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.resolution.passToMoonlight = value; })}
+        />
       </DialogControlsSection>
       <DialogControlsSection>
         <DialogControlsSectionHeader>App Resolution Override</DialogControlsSectionHeader>
