@@ -12,6 +12,8 @@ export const ChangelogView: VFC<unknown> = () => {
               <div>&bull; Added a new feature to sync Sunshine apps with MoonDeck (breaking change).</div>
               <div>&bull; Updated decky's frontend lib version.</div>
               <div>&bull; Fixed some typos and descriptions.</div>
+              <div>&bull; Added better logging on python backend.</div>
+              <div>&bull; Added "pass to Moonlight" option in in QAM.</div>
             </>
           }
           focusable={true}
