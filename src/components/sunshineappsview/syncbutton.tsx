@@ -1,5 +1,5 @@
 import { AppDetails, ConfirmModal, DialogButton, showModal } from "decky-frontend-lib";
-import { BuddyProxy, addShortcut, logger, removeShortcut, restartSteamClient, setAppLaunchOptions } from "../../lib";
+import { BuddyProxy, addShortcut, getMoonDeckManagedMark, logger, removeShortcut, restartSteamClient, setAppLaunchOptions } from "../../lib";
 import { VFC } from "react";
 
 interface Props {
@@ -7,6 +7,7 @@ interface Props {
   moonDeckHostApps: string[];
   hostName: string;
   buddyProxy: BuddyProxy;
+  refreshApps: () => void;
 }
 
 async function addExternalShortcut(appName: string): Promise<number | null> {
@@ -20,7 +21,7 @@ async function addExternalShortcut(appName: string): Promise<number | null> {
 }
 
 function makeLaunchOptions(appName: string, hostName: string): string {
-  return `run com.moonlight_stream.Moonlight stream ${hostName} "${appName}" MOONDECK_MANAGED=1`;
+  return `${getMoonDeckManagedMark()} %command% run com.moonlight_stream.Moonlight stream ${hostName} "${appName}"`;
 }
 
 async function updateLaunchOptions(appId: number, appName: string, hostName: string): Promise<void> {
@@ -29,7 +30,7 @@ async function updateLaunchOptions(appId: number, appName: string, hostName: str
   }
 }
 
-async function syncShortcuts(shortcuts: AppDetails[], moonDeckHostApps: string[], hostName: string, buddyProxy: BuddyProxy): Promise<void> {
+async function syncShortcuts(shortcuts: AppDetails[], moonDeckHostApps: string[], hostName: string, buddyProxy: BuddyProxy, refreshApps: () => void): Promise<void> {
   let sunshineApps = await buddyProxy.getGamestreamAppNames();
   if (sunshineApps === null) {
     logger.toast("Failed to get Gamestream app list!", { output: "error" });
@@ -43,17 +44,18 @@ async function syncShortcuts(shortcuts: AppDetails[], moonDeckHostApps: string[]
   // Filter out the custom MoonDeck host apps
   sunshineApps = sunshineApps.filter(app => !moonDeckHostApps.includes(app));
 
-  const mappedDetails = new Map<string, AppDetails>();
+  const existingApps = new Map<string, AppDetails>();
   for (const shortcut of shortcuts) {
-    mappedDetails.set(shortcut.strDisplayName, shortcut);
+    existingApps.set(shortcut.strDisplayName, shortcut);
   }
 
   const appsToAdd = new Set<string>();
   const appsToUpdate: AppDetails[] = [];
   const appsToRemove: AppDetails[] = [];
 
+  // Check which apps need to be added or updated
   for (const sunshineApp of sunshineApps) {
-    const details = mappedDetails.get(sunshineApp);
+    const details = existingApps.get(sunshineApp);
     if (!details) {
       appsToAdd.add(sunshineApp);
     } else if (details.strShortcutLaunchOptions !== makeLaunchOptions(sunshineApp, hostName)) {
@@ -61,12 +63,14 @@ async function syncShortcuts(shortcuts: AppDetails[], moonDeckHostApps: string[]
     }
   }
 
-  for (const [name, details] of mappedDetails) {
+  // Check which ones are no longer in the list and needs to be returned
+  for (const [name, details] of existingApps) {
     if (!sunshineApps.includes(name)) {
       appsToRemove.push(details);
     }
   }
 
+  // Actually generate shortcuts
   for (const app of appsToAdd) {
     const appId = await addExternalShortcut(app);
     if (appId !== null) {
@@ -74,28 +78,35 @@ async function syncShortcuts(shortcuts: AppDetails[], moonDeckHostApps: string[]
     }
   }
 
+  // Update the launch options only
   for (const details of appsToUpdate) {
     await updateLaunchOptions(details.unAppID, details.strDisplayName, hostName);
   }
 
+  // Remove them bastards!
   for (const details of appsToRemove) {
     await removeShortcut(details.unAppID);
   }
 
   if (appsToAdd.size > 0 || appsToUpdate.length > 0 || appsToRemove.length > 0) {
-    restartSteamClient();
+    if (appsToRemove.length > 0) {
+      restartSteamClient();
+    } else {
+      refreshApps();
+      logger.toast(`${appsToAdd.size + appsToUpdate.length} apps were synced."`, { output: "log" });
+    }
   } else {
     logger.toast("Apps are in sync.", { output: "log" });
   }
 }
 
-export const SyncButton: VFC<Props> = ({ shortcuts, moonDeckHostApps, hostName, buddyProxy }) => {
+export const SyncButton: VFC<Props> = ({ shortcuts, moonDeckHostApps, hostName, buddyProxy, refreshApps }) => {
   const handleClick = (): void => {
     showModal(
       <ConfirmModal
         strTitle="Are you sure you want to sync?"
         strDescription="This action cannot be undone."
-        onOK={() => { syncShortcuts(shortcuts, moonDeckHostApps, hostName, buddyProxy).catch((e) => logger.critical(e)); }}
+        onOK={() => { syncShortcuts(shortcuts, moonDeckHostApps, hostName, buddyProxy, refreshApps).catch((e) => logger.critical(e)); }}
       />
     );
   };

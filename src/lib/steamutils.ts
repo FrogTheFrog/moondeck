@@ -14,6 +14,10 @@ export async function getCurrentDisplayModeString(): Promise<string | null> {
   return currentMode ? `${currentMode.width}x${currentMode.height}` : null;
 }
 
+export function getMoonDeckManagedMark(): string {
+  return "MOONDECK_MANAGED=1";
+}
+
 export function getMoonDeckResMark(mode: string | null, useAutoResolution: boolean): string {
   const mark = "MOONDECK_AUTO_RES";
   if (mode === null || !useAutoResolution) {
@@ -84,7 +88,7 @@ export async function getAllExternalAppDetails(): Promise<AppDetails[]> {
     const allDetails = await throttleAll(100, tasks);
 
     for (const details of allDetails) {
-      if (details?.strShortcutLaunchOptions.includes("MOONDECK_MANAGED=1")) {
+      if (details?.strShortcutLaunchOptions.includes(getMoonDeckManagedMark())) {
         externalApps.push(details);
       }
     }
