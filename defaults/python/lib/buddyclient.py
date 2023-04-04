@@ -61,6 +61,10 @@ class EndStreamResult(Enum):
     Failed = "Failed to end stream via Buddy!"
 
 
+class GetGamestreamAppNamesResult(Enum):
+    Failed = "Failed to get gamestream app names via Buddy!"
+
+
 class BuddyClient(contextlib.AbstractAsyncContextManager):
 
     def __init__(self, address: str, port: int, client_id: str, timeout: float) -> None:
@@ -242,3 +246,14 @@ class BuddyClient(contextlib.AbstractAsyncContextManager):
             return None
 
         return await self._try_request(request(), EndStreamResult.Failed)
+
+    async def get_gamestream_app_names(self):
+        async def request():
+            result = await self.say_hello()
+            if result:
+                return result
+
+            resp = await self.__requests.get_gamestream_app_names()
+            return resp["appNames"]
+
+        return await self._try_request(request(), GetGamestreamAppNamesResult.Failed)

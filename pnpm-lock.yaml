@@ -5,8 +5,8 @@ dependencies:
     specifier: ^0.4.0
     version: 0.4.0
   decky-frontend-lib:
-    specifier: ^3.19.1
-    version: 3.19.1
+    specifier: ^3.20.4
+    version: 3.20.4
   ip-regex:
     specifier: ^5.0.0
     version: 5.0.0
@@ -847,8 +847,8 @@ packages:
       ms: 2.1.2
     dev: true
 
-  /decky-frontend-lib@3.19.1:
-    resolution: {integrity: sha512-hU4+EFs74MGzUCv8l1AO2+EBj9RRbnpU19Crm4u+3lbLu6d63U2GsUeQ9ssmNRcOMY1OuVZkRoZBE58soOBJ3A==}
+  /decky-frontend-lib@3.20.4:
+    resolution: {integrity: sha512-DJgVonmk3lmRc/9w2FM/CE2WXlsl2E9bbEYl9FMtiptQmMJCkrBqoQM49J4QpEYdn9akHYYw/wcGa56/zJupOw==}
     dev: false
 
   /deep-is@0.1.4:
@@ -2375,6 +2375,7 @@ packages:
 
   /update-browserslist-db@1.0.10(browserslist@4.21.4):
     resolution: {integrity: sha512-OztqDenkfFkbSG+tRxBeAnCVPckDBcvibKd35yDONx6OU8N7sqgwc7rCbkJ/WcYtVRZ4ba68d6byhC21GFh7sQ==}
+    hasBin: true
     peerDependencies:
       browserslist: '>= 4.21.0'
     dependencies:
@@ -2409,6 +2410,7 @@ packages:
   /webpack@5.74.0:
     resolution: {integrity: sha512-A2InDwnhhGN4LYctJj6M1JEaGL7Luj6LOmyBHjcI8529cm5p6VXiTIW2sn6ffvEAKmveLzvu4jrihwXtPojlAA==}
     engines: {node: '>=10.13.0'}
+    hasBin: true
     peerDependencies:
       webpack-cli: '*'
     peerDependenciesMeta:

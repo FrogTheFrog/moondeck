@@ -5,7 +5,7 @@ import pathlib
 import ssl
 from . import utils
 
-from typing import Optional, TypedDict
+from typing import List, Optional, TypedDict
 from enum import Enum
 
 
@@ -48,6 +48,10 @@ class PcStateResponse(TypedDict):
 
 class ResultLikeResponse(TypedDict):
     result: bool
+
+
+class GamestreamAppNamesResponse(TypedDict):
+    appNames: Optional[List[str]]
 
 
 class HostInfoResponse(TypedDict):
@@ -169,3 +173,8 @@ class BuddyRequests(contextlib.AbstractAsyncContextManager):
         async with self.__session.post(f"{self.base_url}/endStream") as resp:
             data = await resp.json(encoding="utf-8")
             return utils.from_dict(ResultLikeResponse, data)
+
+    async def get_gamestream_app_names(self):
+        async with self.__session.get(f"{self.base_url}/gamestreamAppNames") as resp:
+            data = await resp.json(encoding="utf-8")
+            return utils.from_dict(GamestreamAppNamesResponse, data)

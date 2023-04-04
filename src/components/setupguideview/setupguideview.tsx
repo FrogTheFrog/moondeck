@@ -28,7 +28,7 @@ export const SetupGuideView: VFC<Props> = ({ settingsManager }) => {
           focusable={true} />
         <Field
           label="Step 2 - Download and setup Buddy on host PC"
-          description="Requires Buddy v1.4.0 or above."
+          description="Requires Buddy v1.5.0 or above."
         >
           <DialogButton onClick={() => { Navigation.NavigateToExternalWeb(moondeckBuddyLink); }}>Click me!</DialogButton>
         </Field>

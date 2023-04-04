@@ -1,6 +1,5 @@
 import { ConnectivityManager, SettingsManager, ShortcutManager } from "../lib";
 import { ServerAPI, SidebarNavigation } from "decky-frontend-lib";
-import { AboutView } from "../components/aboutview";
 import { ButtonStyleView } from "../components/buttonstyleview";
 import { ChangelogView } from "../components/changelogview";
 import { GameSessionView } from "../components/gamesessionview";
@@ -9,6 +8,7 @@ import { HostSettingsView } from "../components/hostsettingsview";
 import { SetupGuideView } from "../components/setupguideview";
 import { ShortcutsView } from "../components/shortcutsview";
 import { StatusIndicatorsView } from "../components/statusindicatorsview";
+import { SunshineAppsView } from "../components/sunshineappsview";
 import { VFC } from "react";
 
 interface Props {
@@ -33,6 +33,11 @@ const MoonDeckRouter: VFC<Props> = ({ connectivityManager, settingsManager, shor
           title: "Changelog",
           content: <ChangelogView />,
           route: "/moondeck/changelog"
+        },
+        {
+          title: "Sunshine Apps",
+          content: <SunshineAppsView settingsManager={settingsManager} buddyProxy={connectivityManager.buddyProxy} />,
+          route: "/moondeck/external-shortcuts"
         },
         {
           title: "Status Indicators",
@@ -63,11 +68,6 @@ const MoonDeckRouter: VFC<Props> = ({ connectivityManager, settingsManager, shor
           title: "Button Style",
           content: <ButtonStyleView settingsManager={settingsManager} />,
           route: "/moondeck/button-style"
-        },
-        {
-          title: "About",
-          content: <AboutView />,
-          route: "/moondeck/about"
         }
       ]}
     />

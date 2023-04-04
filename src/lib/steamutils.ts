@@ -14,6 +14,10 @@ export async function getCurrentDisplayModeString(): Promise<string | null> {
   return currentMode ? `${currentMode.width}x${currentMode.height}` : null;
 }
 
+export function getMoonDeckManagedMark(): string {
+  return "MOONDECK_MANAGED=1";
+}
+
 export function getMoonDeckResMark(mode: string | null, useAutoResolution: boolean): string {
   const mark = "MOONDECK_AUTO_RES";
   if (mode === null || !useAutoResolution) {
@@ -68,6 +72,28 @@ export async function getAllMoonDeckAppDetails(): Promise<AppDetails[]> {
     }
 
     return moonDeckApps;
+  } catch (error) {
+    logger.critical(error);
+    return [];
+  }
+}
+
+export async function getAllExternalAppDetails(): Promise<AppDetails[]> {
+  try {
+    const externalApps: AppDetails[] = [];
+
+    const appids = getAllNonSteamAppIds();
+    // eslint-disable-next-line @typescript-eslint/promise-function-async
+    const tasks = appids.map((appid) => () => getAppDetails(appid));
+    const allDetails = await throttleAll(100, tasks);
+
+    for (const details of allDetails) {
+      if (details?.strShortcutLaunchOptions.includes(getMoonDeckManagedMark())) {
+        externalApps.push(details);
+      }
+    }
+
+    return externalApps;
   } catch (error) {
     logger.critical(error);
     return [];

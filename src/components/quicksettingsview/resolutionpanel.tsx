@@ -10,15 +10,23 @@ interface Props {
 }
 
 export const ResolutionPanel: VFC<Props> = ({ currentHostSettings, settingsManager }) => {
-  if (currentHostSettings === null || currentHostSettings.resolution.dimensions.length === 0) {
+  if (currentHostSettings === null || (currentHostSettings.resolution.dimensions.length === 0 && !currentHostSettings.resolution.automatic)) {
     return null;
   }
 
   return (
-    <PanelSection title="CUSTOM RESOLUTION">
+    <PanelSection title="RESOLUTION">
       <PanelSectionRow>
         <ToggleField
-          label="Enable"
+          label="Pass to Moonlight"
+          bottomSeparator="none"
+          value={currentHostSettings.resolution.passToMoonlight}
+          setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.resolution.passToMoonlight = value; })}
+        />
+      </PanelSectionRow>
+      <PanelSectionRow>
+        <ToggleField
+          label="Enable custom resolution"
           bottomSeparator="none"
           value={currentHostSettings.resolution.useCustomDimensions}
           setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.resolution.useCustomDimensions = value; })}

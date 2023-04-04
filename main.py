@@ -26,16 +26,18 @@ from python.lib.buddyclient import BuddyClient, HelloResult, PcStateChange
 from python.externals.wakeonlan import send_magic_packet
 # autopep8: on
 
-set_log_filename(constants.LOG_FILE)
+set_log_filename(constants.LOG_FILE, rotate=True)
 
 
 class Plugin:
+    @utils.async_scope_log(logger.info)
     async def get_runner_result(self):
         result = runnerresult.get_result()
         # Cleanup is needed to differentiate between moondeck launches
         runnerresult.set_result(None)
         return result
 
+    @utils.async_scope_log(logger.info)
     async def get_user_settings(self):
         try:
             return await settings_manager.get()
@@ -43,12 +45,14 @@ class Plugin:
             logger.exception("Unhandled exception")
             return None
 
+    @utils.async_scope_log(logger.info)
     async def set_user_settings(self, data: Dict[str, Any]):
         try:
             await settings_manager.set(utils.from_dict(UserSettings, data))
         except Exception:
             logger.exception("Unhandled exception")
 
+    @utils.async_scope_log(logger.info)
     async def scan_for_hosts(self, timeout: float):
         try:
             return await hostinfo.scan_for_hosts(timeout=timeout)
@@ -56,6 +60,7 @@ class Plugin:
             logger.exception("Unhandled exception")
             return []
 
+    @utils.async_scope_log(logger.info)
     async def find_host(self, host_id: str, timeout: float):
         try:
             return await hostinfo.find_host(host_id, timeout=timeout)
@@ -63,6 +68,7 @@ class Plugin:
             logger.exception("Unhandled exception")
             return None
 
+    @utils.async_scope_log(logger.info)
     async def get_server_info(self, address: str, timeout: float):
         try:
             return await hostinfo.get_server_info(address, timeout=timeout)
@@ -70,6 +76,7 @@ class Plugin:
             logger.exception("Unhandled exception")
             return None
 
+    @utils.async_scope_log(logger.info)
     async def get_buddy_status(self, address: str, buddy_port: int, client_id: str, timeout: float):
         try:
             async with BuddyClient(address, buddy_port, client_id, timeout) as client:
@@ -83,6 +90,7 @@ class Plugin:
             logger.exception("Unhandled exception")
             return HelloResult.Exception.name
 
+    @utils.async_scope_log(logger.info)
     async def start_pairing(self, address: str, buddy_port: int, client_id: str, pin: int, timeout: float):
         try:
             async with BuddyClient(address, buddy_port, client_id, timeout) as client:
@@ -96,6 +104,7 @@ class Plugin:
             logger.exception("Unhandled exception")
             return HelloResult.Exception.name
 
+    @utils.async_scope_log(logger.info)
     async def abort_pairing(self, address: str, buddy_port: int, client_id: str, timeout: float):
         try:
             async with BuddyClient(address, buddy_port, client_id, timeout) as client:
@@ -106,6 +115,7 @@ class Plugin:
         except Exception:
             logger.exception("Unhandled exception")
 
+    @utils.async_scope_log(logger.info)
     async def wake_on_lan(self, address: str, mac: str):
         try:
             # Sending broadcast as well as directly to address
@@ -114,6 +124,7 @@ class Plugin:
         except Exception:
             logger.exception("Unhandled exception")
 
+    @utils.async_scope_log(logger.info)
     async def change_pc_state(self, address: str, buddy_port: int, client_id: str, state: str, timeout: float):
         try:
             state_enum = PcStateChange[state]
@@ -125,12 +136,14 @@ class Plugin:
         except Exception:
             logger.exception("Unhandled exception")
 
+    @utils.async_scope_log(logger.info)
     async def get_moondeckrun_path(self):
         try:
             return str(get_plugin_dir().joinpath("python", "moondeckrun.sh"))
         except Exception:
             logger.exception("Unhandled exception")
 
+    @utils.async_scope_log(logger.info)
     async def kill_runner(self, app_id: int):
         try:
             logger.info("Killing reaper and moonlight!")
@@ -143,6 +156,7 @@ class Plugin:
         except Exception:
             logger.exception("Unhandled exception")
 
+    @utils.async_scope_log(logger.info)
     async def is_runner_active(self, app_id: int):
         try:
             kill_proc = await asyncio.create_subprocess_shell(f"pgrep -f \"AppId={app_id}\"",
@@ -154,6 +168,7 @@ class Plugin:
         except Exception:
             logger.exception("Unhandled exception")
 
+    @utils.async_scope_log(logger.info)
     async def close_steam(self, address: str, buddy_port: int, client_id: str, timeout: float):
         try:
             async with BuddyClient(address, buddy_port, client_id, timeout) as client:
@@ -163,3 +178,18 @@ class Plugin:
 
         except Exception:
             logger.exception("Unhandled exception")
+
+    @utils.async_scope_log(logger.info)
+    async def get_gamestream_app_names(self, address: str, buddy_port: int, client_id: str, timeout: float):
+        try:
+            async with BuddyClient(address, buddy_port, client_id, timeout) as client:
+                names_or_status = await client.get_gamestream_app_names()
+                if names_or_status and not isinstance(names_or_status, list):
+                    logger.error(f"While retrieving gamestream app names: {names_or_status}")
+                    return None
+
+                return names_or_status
+
+        except Exception:
+            logger.exception("Unhandled exception")
+            return None
