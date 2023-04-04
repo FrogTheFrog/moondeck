@@ -2,7 +2,8 @@ import copy
 import inspect
 
 from enum import Enum
-from typing import Any, Dict, List, Literal, Type, TypeVar, get_args, get_origin, is_typeddict
+from functools import wraps
+from typing import Any, Dict, List, Literal, Type, Union, TypeVar, get_args, get_origin, is_typeddict
 
 
 T = TypeVar("T")
@@ -10,6 +11,11 @@ T = TypeVar("T")
 
 def is_typed_dict(data_type):
     return is_typeddict(data_type)
+
+
+def is_optional_like(data_type):
+    args = get_args(data_type)
+    return get_origin(data_type) == Union and len(args) == 2 and args[1] == type(None)
 
 
 def is_dict_like(data_type):
@@ -62,6 +68,13 @@ def from_dict(output_type: Type[T], data: Dict[str, Any]) -> T:
         if key not in data:
             raise ValueError(f"Key \"{key}\" is not available in {data}.")
 
+        if is_optional_like(key_type):
+            if data[key] is None:
+                verified_data[key] = None
+                continue
+            else:
+                key_type = get_args(key_type)[0]
+
         actual_type = get_args(key_type) or key_type
         if is_enum_like(actual_type):
             verified_data[key] = actual_type[data[key]]
@@ -81,3 +94,19 @@ def from_dict(output_type: Type[T], data: Dict[str, Any]) -> T:
         verified_data[key] = copy.deepcopy(data[key])
 
     return output_type(**verified_data) if is_typed_dict(output_type) else verified_data
+
+# Decorator for loging the entry/exit and the result
+def async_scope_log(log_fn):
+    def decorator(func):
+        @wraps(func)
+        async def impl(*args, **kwargs):
+            args_str = "" if len(args) == 0 else f"args={args}"
+            kwargs_str = "" if len(args) == 0 else f"kwargs={kwargs}"
+            sep_str = ", " if args_str and kwargs_str else ""
+            
+            log_fn(f"-> {func.__name__}({args_str}{sep_str}{kwargs_str})")
+            result = await func(*args, **kwargs)
+            log_fn(f"<- {func.__name__}(...): {result}")
+            return result
+        return impl
+    return decorator

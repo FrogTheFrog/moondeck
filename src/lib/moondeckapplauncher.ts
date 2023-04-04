@@ -251,7 +251,7 @@ export class MoonDeckAppLauncher {
 
         const mode = await getCurrentDisplayModeString();
         if (!await setAppResolutionOverride(details.unAppID, getSelectedAppResolution(mode, hostSettings))) {
-          logger.toast("Failed to set app resolution override to Native (needs restart?)!", { output: "error" });
+          logger.toast("Failed to set app resolution override (needs restart?)!", { output: "error" });
           return;
         }
 

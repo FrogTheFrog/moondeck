@@ -94,7 +94,7 @@ export const SunshineAppsView: VFC<Props> = ({ settingsManager, buddyProxy }) =>
       <DialogControlsSection>
         <DialogControlsSectionHeader>Cleanup</DialogControlsSectionHeader>
         <Field
-          label="Purge all ganerated shortcuts!"
+          label="Purge all generated shortcuts!"
           description="Steam client might be restarted afterwards!"
           childrenContainerWidth="fixed"
         >
