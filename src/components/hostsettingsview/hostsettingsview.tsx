@@ -239,7 +239,7 @@ export const HostSettingsView: VFC<Props> = ({ settingsManager }) => {
         />
         <ToggleField
           label="Pass the resolution and bitrate options to Moonlight to use instead of default ones"
-          description="I honestly don't know why I added option to disable this. Might be useful to someone... It's your choice :)"
+          description="Disable this if you want to use the settings from the Moonlight app itself"
           value={hostSettings.resolution.passToMoonlight}
           setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.resolution.passToMoonlight = value; })}
         />

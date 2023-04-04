@@ -6,6 +6,17 @@ export const ChangelogView: VFC<unknown> = () => {
     <DialogBody>
       <DialogControlsSection>
         <Field
+          label="1.6.0"
+          description={
+            <>
+              <div>&bull; Added a new feature to sync Sunshine apps with MoonDeck (breaking change).</div>
+              <div>&bull; Updated decky's frontend lib version.</div>
+              <div>&bull; Fixed some typos and descriptions.</div>
+            </>
+          }
+          focusable={true}
+        />
+        <Field
           label="1.5.9"
           description={
             <>
