@@ -19,6 +19,7 @@ export const ResolutionPanel: VFC<Props> = ({ currentHostSettings, settingsManag
       <PanelSectionRow>
         <ToggleField
           label="Pass to Moonlight"
+          bottomSeparator="none"
           value={currentHostSettings.resolution.passToMoonlight}
           setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.resolution.passToMoonlight = value; })}
         />
