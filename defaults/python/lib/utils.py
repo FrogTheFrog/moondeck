@@ -101,7 +101,7 @@ def async_scope_log(log_fn):
         @wraps(func)
         async def impl(*args, **kwargs):
             args_str = "" if len(args) == 0 else f"args={args}"
-            kwargs_str = "" if len(args) == 0 else f"kwargs={kwargs}"
+            kwargs_str = "" if len(kwargs) == 0 else f"kwargs={kwargs}"
             sep_str = ", " if args_str and kwargs_str else ""
             
             log_fn(f"-> {func.__name__}({args_str}{sep_str}{kwargs_str})")

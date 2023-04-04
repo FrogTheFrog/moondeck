@@ -28,7 +28,7 @@ import lib.hostinfo as hostinfo
 import lib.runnerresult as runnerresult
 # autopep8: on
 
-set_log_filename(constants.RUNNER_LOG_FILE)
+set_log_filename(constants.RUNNER_LOG_FILE, rotate=False)
 
 
 class SpecialHandling(Enum):

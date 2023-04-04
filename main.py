@@ -26,7 +26,7 @@ from python.lib.buddyclient import BuddyClient, HelloResult, PcStateChange
 from python.externals.wakeonlan import send_magic_packet
 # autopep8: on
 
-set_log_filename(constants.LOG_FILE)
+set_log_filename(constants.LOG_FILE, rotate=True)
 
 
 class Plugin:
