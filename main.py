@@ -172,9 +172,7 @@ class Plugin:
                     logger.error(f"While retrieving gamestream app names: {names_or_status}")
                     return None
 
-                logger.info(names_or_status)
-                return None
-                #return names_or_status
+                return names_or_status
 
         except Exception:
             logger.exception("Unhandled exception")

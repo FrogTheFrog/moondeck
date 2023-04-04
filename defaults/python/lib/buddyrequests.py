@@ -154,23 +154,13 @@ class BuddyRequests(contextlib.AbstractAsyncContextManager):
             data = await resp.json(encoding="utf-8")
             return utils.from_dict(ResultLikeResponse, data)
 
-    async def post_change_resolution(self, width: int, height: int, manual: bool):
+    async def post_change_resolution(self, width: int, height: int):
         data = {
             "width": width,
-            "height": height,
-            "manual": manual
+            "height": height
         }
 
         async with self.__session.post(f"{self.base_url}/changeResolution", json=data) as resp:
-            data = await resp.json(encoding="utf-8")
-            return utils.from_dict(ResultLikeResponse, data)
-        
-    async def post_restore_resolution(self, manual: bool):
-        data = {
-            "manual": manual
-        }
-
-        async with self.__session.post(f"{self.base_url}/restoreResolution", json=data) as resp:
             data = await resp.json(encoding="utf-8")
             return utils.from_dict(ResultLikeResponse, data)
 
