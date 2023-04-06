@@ -1,5 +1,5 @@
 import { AppDetails, ConfirmModal, DialogButton, showModal } from "decky-frontend-lib";
-import { BuddyProxy, addShortcut, getMoonDeckManagedMark, logger, removeShortcut, restartSteamClient, setAppLaunchOptions, setAppResolutionOverride } from "../../lib";
+import { BuddyProxy, addShortcut, getMoonDeckManagedMark, logger, removeShortcut, restartSteamClient, setAppLaunchOptions } from "../../lib";
 import { VFC } from "react";
 
 interface Props {
@@ -15,10 +15,6 @@ async function addExternalShortcut(appName: string): Promise<number | null> {
   if (appId == null) {
     logger.error(`Failed to add ${appName} shortcut!`);
     return null;
-  }
-
-  if (!await setAppResolutionOverride(appId, "Native")) {
-    logger.warn(`Failed to set app resolution override for ${appName} to Native! Still continuing...`);
   }
 
   return appId;
@@ -97,7 +93,7 @@ async function syncShortcuts(shortcuts: AppDetails[], moonDeckHostApps: string[]
       restartSteamClient();
     } else {
       refreshApps();
-      logger.toast(`${appsToAdd.size + appsToUpdate.length} app(s) were synced.`, { output: "log" });
+      logger.toast(`${appsToAdd.size + appsToUpdate.length}/${sunshineApps.length} app(s) were synced.`, { output: "log" });
     }
   } else {
     logger.toast("Apps are in sync.", { output: "log" });

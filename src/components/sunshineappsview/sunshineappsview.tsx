@@ -1,6 +1,7 @@
 import { AppDetails, DialogBody, DialogButton, DialogControlsSection, DialogControlsSectionHeader, Field, Navigation } from "decky-frontend-lib";
 import { BuddyProxy, SettingsManager, getAllExternalAppDetails, logger } from "../../lib";
 import { ReactNode, VFC, useEffect, useState } from "react";
+import { BatchResOverrideButton } from "./batchresoverridebutton";
 import { HostOff } from "../icons";
 import { LabelWithIcon } from "../shared";
 import { PurgeButton } from "./purgebutton";
@@ -71,6 +72,32 @@ export const SunshineAppsView: VFC<Props> = ({ settingsManager, buddyProxy }) =>
       </DialogControlsSection>;
   }
 
+  let batchResOverrideButton: ReactNode = null;
+  if (hostSettings && shortcuts.length > 0) {
+    batchResOverrideButton =
+      <DialogControlsSection>
+        <DialogControlsSectionHeader>App Resolution Override</DialogControlsSectionHeader>
+        <Field
+          description={
+            <>
+              <div>If you are planning on using external display, you probably need to use this.</div>
+              <div>Steam shortcut's resolution property needs to be set for all Sunshine apps to match the Moonlight client resolution.</div>
+              <div>Otherwise the gamescope may try to apply scaling and you might get a blurry text/image.</div>
+              <br />
+              <div>Note: this is already automatically done for MoonDeck-Steam apps, for MoonDeck-Sunshine apps you must do it manually.</div>
+            </>
+          }
+          focusable={true}
+        />
+        <Field
+          label="Select and apply resolution"
+          childrenContainerWidth="fixed"
+        >
+          <BatchResOverrideButton hostSettings={hostSettings} shortcuts={shortcuts} />
+        </Field>
+      </DialogControlsSection>;
+  }
+
   return (
     <DialogBody>
       <DialogControlsSection>
@@ -102,6 +129,7 @@ export const SunshineAppsView: VFC<Props> = ({ settingsManager, buddyProxy }) =>
         </Field>
       </DialogControlsSection>
       {syncButton}
+      {batchResOverrideButton}
       {shortcutsList}
     </DialogBody>
   );

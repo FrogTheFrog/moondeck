@@ -11,7 +11,7 @@ interface Props {
 export const ResolutionSelectionDropdown: VFC<Props> = ({ currentIndex, currentList, setIndex }) => {
   return (
     <IndexedListDropdown<HostResolution["dimensions"][number]>
-      label="Resolution"
+      label="Select resolution"
       currentIndex={currentIndex}
       currentList={currentList}
       setIndex={setIndex}
