@@ -46,6 +46,12 @@ class MoonDeckResolution(TypedDict):
     height: int
 
 
+async def sleep_before_return_if_false(value):
+    if value is False:
+        await asyncio.sleep(1)
+    return value
+
+
 async def pool_host_info(client: BuddyClient, predicate):
     while True:
         info = await client.get_host_info()
@@ -63,8 +69,7 @@ async def pool_host_info(client: BuddyClient, predicate):
 async def sleep_while_counting_down(object_ref, error: runnerresult.Result):
     object_ref["retries"] -= 1
     if object_ref["retries"] > 0:
-        await asyncio.sleep(1)
-        return False
+        return await sleep_before_return_if_false(False)
     else:
         return error
 
@@ -80,18 +85,31 @@ async def wait_for_app_to_close(client: BuddyClient, app_id: int):
 
 
 async def wait_for_app_launch(client: BuddyClient, app_id: int):
-    obj = {"retries": 30, "was_updating": False}
+    obj = {"retries": 30, "stability_counter": 15, "was_updating": False}
 
     async def wait_till_launch(info: HostInfoResponse):
         if info["steamIsRunning"]:
             if info["steamRunningAppId"] == app_id:
-                return True
-            if info["steamTrackedUpdatingAppId"] == app_id:
-                obj["was_updating"] = True
-                await asyncio.sleep(1)
-                return False
-            if obj["was_updating"]:
-                return SpecialHandling.AppFinishedUpdating
+                # Reset the retry counter to the initial value for even more stability...
+                obj["retries"] = 30
+
+                # Counter is needed for apps that come with brain-dead launcher (EALink for example)
+                obj["stability_counter"] -= 1
+
+                # Usual the Steam app state changes rapidly with launchers, so if it stays
+                # consistent for like 15s, it should be good enough for us
+                return await sleep_before_return_if_false(obj["stability_counter"] == 0)
+            else:
+                # See note above, we are want the app id to stay consistent for 10s
+                obj["stability_counter"] = 15
+
+                if info["steamTrackedUpdatingAppId"] == app_id:
+                    obj["was_updating"] = True
+                    return await sleep_before_return_if_false(False)
+                elif obj["was_updating"]:
+                    # If the app is no longer updating we need to re-launch it by
+                    # returning this special value
+                    return SpecialHandling.AppFinishedUpdating
 
         return await sleep_while_counting_down(obj, runnerresult.Result.AppLaunchFailed)
 

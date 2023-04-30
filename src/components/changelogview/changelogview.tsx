@@ -7,7 +7,12 @@ export const ChangelogView: VFC<unknown> = () => {
       <DialogControlsSection>
         <Field
           label="1.6.1"
-          description="Make the plugin more compatible with other plugins that inject into app page (no more 'null' error pages)."
+          description={
+            <>
+              <div>&bull; Make the plugin more compatible with other plugins that inject into app page (no more 'null' error pages).</div>
+              <div>&bull; Make MoonDeck more game-launcher friendly (like EALink).</div>
+            </>
+          }
           focusable={true}
         />
         <Field
