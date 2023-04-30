@@ -6,6 +6,11 @@ export const ChangelogView: VFC<unknown> = () => {
     <DialogBody>
       <DialogControlsSection>
         <Field
+          label="1.6.1"
+          description="Make the plugin more compatible with other plugins that inject into app page (no more 'null' error pages)."
+          focusable={true}
+        />
+        <Field
           label="1.6.0"
           description={
             <>
