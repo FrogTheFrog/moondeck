@@ -68,7 +68,7 @@ function patchLibraryApp(route: string, { serverAPI, moonDeckAppLauncher, settin
               Navigation.NavigateBack();
             }
 
-            return null;
+            return ret1;
           }
 
           wrapReactType(ret1Children);
