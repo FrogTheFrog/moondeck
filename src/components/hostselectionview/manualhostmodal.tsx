@@ -1,7 +1,7 @@
 import { ConnectivityManager, GameStreamHost, logger } from "../../lib";
 import { DialogButton, Field, ModalRoot, sleep } from "decky-frontend-lib";
+import { IpAddressTextInput, NumericTextInput } from "../shared";
 import { VFC, useState } from "react";
-import { IpAddressTextInput } from "../shared";
 
 interface Props {
   closeModal: () => void;
@@ -10,9 +10,11 @@ interface Props {
 
 export const ManualHostModal: VFC<Props> = ({ closeModal, connectivityManager }) => {
   const [address, setAddress] = useState("");
+  const [port, setPort] = useState(47989);
   const [verifiedHost, setVerifiedHost] = useState<GameStreamHost | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
   const [isValidAddress, setIsValidAddress] = useState(false);
+  const [isValidPort, setIsValidPort] = useState(false);
 
   const handleDismiss = (): void => {
     closeModal();
@@ -21,7 +23,7 @@ export const ManualHostModal: VFC<Props> = ({ closeModal, connectivityManager })
   const handleClick = (): void => {
     if (verifiedHost === null) {
       setIsVerifying(true);
-      connectivityManager.serverProxy.getServerInfo(address)
+      connectivityManager.serverProxy.getServerInfo(address, port)
         .then(async (host): Promise<void> => {
           // For user experience
           await sleep(1000);
@@ -42,21 +44,36 @@ export const ManualHostModal: VFC<Props> = ({ closeModal, connectivityManager })
 
   return (
     <ModalRoot closeModal={handleDismiss}>
-      <div style={{ fontWeight: "bolder", marginBottom: "1em" }}>
-        Enter IPv4 address
-      </div>
-      <IpAddressTextInput
-        disabled={isVerifying}
-        value={address}
-        setValue={(value) => { setVerifiedHost(null); setAddress(value); }}
-        setIsValid={setIsValidAddress}
-      />
+      <Field
+        label="IPv4 address"
+        childrenContainerWidth="fixed"
+      >
+        <IpAddressTextInput
+          disabled={isVerifying}
+          value={address}
+          setValue={(value) => { setVerifiedHost(null); setAddress(value); }}
+          setIsValid={setIsValidAddress}
+        />
+      </Field>
+      <Field
+        label="Port (the lower one)"
+        childrenContainerWidth="fixed"
+      >
+        <NumericTextInput
+          min={1}
+          max={65535}
+          disabled={isVerifying}
+          value={port}
+          setValue={(value) => { setVerifiedHost(null); setPort(value); }}
+          setIsValid={setIsValidPort}
+        />
+      </Field>
       <Field
         childrenLayout="below"
         childrenContainerWidth="max"
         bottomSeparator="none"
       >
-        <DialogButton disabled={isVerifying || !isValidAddress} onClick={handleClick}>
+        <DialogButton disabled={isVerifying || !isValidAddress || !isValidPort} onClick={handleClick}>
           {verifiedHost ? "Add host" : "Check connectivity"}
         </DialogButton>
       </Field>

@@ -32,6 +32,7 @@ class HostResolution(TypedDict):
 
 
 class HostSettings(TypedDict):
+    hostInfoPort: int
     buddyPort: int
     address: str
     staticAddress: bool
@@ -181,6 +182,10 @@ class SettingsManager:
             data["version"] = 10
             for host in data["hostSettings"].keys():
                 data["hostSettings"][host]["resolution"]["passToBuddy"] = True
+        if data["version"] == 10:
+            data["version"] = 11
+            for host in data["hostSettings"].keys():
+                data["hostSettings"][host]["hostInfoPort"] = 47989
 
         return data
 

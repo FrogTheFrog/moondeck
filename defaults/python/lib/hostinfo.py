@@ -13,6 +13,7 @@ from .logger import logger
 
 class GameStreamHost(TypedDict):
     address: str
+    port: int
     hostName: str
     mac: str
     uniqueId: str
@@ -56,9 +57,9 @@ async def __get_service_info(zeroconf: zc.Zeroconf, service_type: str, name: str
     try:
         info = aiozc.AsyncServiceInfo(service_type, name)
         info_result = await info.async_request(zeroconf, 3000)
-        if info_result and info.port == constants.GAMESTREAM_PORT:
+        if info_result and info.port is not None:
             for ip in info.parsed_scoped_addresses(version=zc.IPVersion.V4Only):
-                server_info = await get_server_info(ip, None)
+                server_info = await get_server_info(ip, info.port, None)
                 if server_info:
                     if predicate:
                         if predicate(server_info):
@@ -131,11 +132,11 @@ async def __find_hosts(predicate: Optional[Callable[[GameStreamHost], bool]], ti
         return flat_results
 
 
-async def get_server_info(address: str, timeout: Optional[float]):
+async def get_server_info(address: str, port: int, timeout: Optional[float]):
     try:
         async with async_timeout.timeout(timeout):
             async with aiohttp.ClientSession() as session:
-                async with session.get(f"http://{address}:{constants.GAMESTREAM_PORT}/serverinfo") as resp:
+                async with session.get(f"http://{address}:{port}/serverinfo") as resp:
                     data = await resp.text(encoding="utf-8")
                     hostname = __getHostNameFromXml(data)
                     mac = __getMacFromXml(data)
@@ -144,6 +145,7 @@ async def get_server_info(address: str, timeout: Optional[float]):
                     if all(v is not None for v in [hostname, mac, unique_id]):
                         return utils.from_dict(GameStreamHost, {
                             "address": address,
+                            "port": port,
                             "hostName": hostname,
                             "mac": mac,
                             "uniqueId": unique_id})

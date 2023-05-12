@@ -8,6 +8,7 @@ import { logger } from "./logger";
 
 export interface GameStreamHost {
   address: string;
+  port: number;
   hostName: string;
   mac: string;
   uniqueId: string;
@@ -44,9 +45,9 @@ async function findHost(serverAPI: ServerAPI, hostId: string, timeout: number): 
   return null;
 }
 
-async function getServerInfo(serverAPI: ServerAPI, address: string, timeout: number): Promise<GameStreamHost | null> {
+async function getServerInfo(serverAPI: ServerAPI, address: string, port: number, timeout: number): Promise<GameStreamHost | null> {
   try {
-    const resp = await serverAPI.callPluginMethod<{ address: string; timeout: number }, GameStreamHost | null>("get_server_info", { address, timeout });
+    const resp = await serverAPI.callPluginMethod<{ address: string; port: number; timeout: number }, GameStreamHost | null>("get_server_info", { address, port, timeout });
     if (resp.success) {
       return resp.result;
     } else {
@@ -99,6 +100,7 @@ export class ServerProxy {
     this.settingsManager.update((settings) => {
       const currentSettings = settings.hostSettings[host.uniqueId] ?? null;
       const hostSettings: HostSettings = {
+        hostInfoPort: host.port,
         buddyPort: currentSettings?.buddyPort ?? 59999,
         address: host.address,
         staticAddress: staticAddress ?? (currentSettings?.staticAddress ?? false),
@@ -157,7 +159,7 @@ export class ServerProxy {
       let result: GameStreamHost | null = null;
       const hostSettings = this.settingsManager.hostSettings;
       if (hostSettings) {
-        result = hostSettings.staticAddress ? await getServerInfo(this.serverAPI, hostSettings.address, 1) : await findHost(this.serverAPI, hostId, 1);
+        result = hostSettings.staticAddress ? await getServerInfo(this.serverAPI, hostSettings.address, hostSettings.hostInfoPort, 1) : await findHost(this.serverAPI, hostId, 1);
       } else {
         result = await findHost(this.serverAPI, hostId, 1);
       }
@@ -176,8 +178,8 @@ export class ServerProxy {
     }
   }
 
-  async getServerInfo(address: string): Promise<GameStreamHost | null> {
-    return await getServerInfo(this.serverAPI, address, 2);
+  async getServerInfo(address: string, port: number): Promise<GameStreamHost | null> {
+    return await getServerInfo(this.serverAPI, address, port, 2);
   }
 
   async scanForHosts(): Promise<GameStreamHost[]> {

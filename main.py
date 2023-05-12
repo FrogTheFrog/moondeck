@@ -69,9 +69,9 @@ class Plugin:
             return None
 
     @utils.async_scope_log(logger.info)
-    async def get_server_info(self, address: str, timeout: float):
+    async def get_server_info(self, address: str, port: int, timeout: float):
         try:
-            return await hostinfo.get_server_info(address, timeout=timeout)
+            return await hostinfo.get_server_info(address, port, timeout=timeout)
         except Exception:
             logger.exception("Unhandled exception")
             return None

@@ -35,6 +35,7 @@ export interface HostResolution {
 }
 
 export interface HostSettings {
+  hostInfoPort: number;
   buddyPort: number;
   address: string;
   staticAddress: boolean;

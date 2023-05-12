@@ -47,6 +47,9 @@ export const HostSettingsView: VFC<Props> = ({ settingsManager }) => {
         <Field label="IP address" focusable={true}>
           {hostSettings.address}
         </Field>
+        <Field label="Host info port" focusable={true}>
+          {hostSettings.hostInfoPort}
+        </Field>
         <Field label="IP address type" focusable={true}>
           {hostSettings.staticAddress ? "Static" : "Dynamic"}
         </Field>

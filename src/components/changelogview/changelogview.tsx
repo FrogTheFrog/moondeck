@@ -6,6 +6,16 @@ export const ChangelogView: VFC<unknown> = () => {
     <DialogBody>
       <DialogControlsSection>
         <Field
+          label="1.6.2"
+          description={
+            <>
+              <div>&bull; Gamestream server port is no longer hard-coded and will now be properly detected or can be entered when adding host manually.</div>
+              <div>&bull; Bumped DFL version.</div>
+            </>
+          }
+          focusable={true}
+        />
+        <Field
           label="1.6.1"
           description={
             <>

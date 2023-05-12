@@ -229,25 +229,25 @@ async def establish_connection(client: BuddyClient):
     return None
 
 
-async def establish_connection(client: BuddyClient):
+async def establish_connection(client: BuddyClient, hostInfoPort: int):
     logger.info("Establishing connection to Buddy")
     resp = await client.say_hello()
     if resp:
         return resp
 
     logger.info("Checking if GameStream service is running")
-    server_info = await hostinfo.get_server_info(client.address, timeout=constants.DEFAULT_TIMEOUT)
+    server_info = await hostinfo.get_server_info(client.address, hostInfoPort, timeout=constants.DEFAULT_TIMEOUT)
     if not server_info:
         return runnerresult.Result.GameStreamDead
 
     return None
 
 
-async def run_game(res_change: Optional[ResolutionChange], host_app: str, hostname: str, address: str, port: int, client_id: Optional[str], close_steam: bool, app_id: int):
+async def run_game(res_change: Optional[ResolutionChange], host_app: str, hostname: str, address: str, hostInfoPort:int, buddyPort: int, client_id: Optional[str], close_steam: bool, app_id: int):
     try:
-        async with BuddyClient(address, port, client_id, constants.DEFAULT_TIMEOUT) as client, \
+        async with BuddyClient(address, buddyPort, client_id, constants.DEFAULT_TIMEOUT) as client, \
                    MoonlightProxy(hostname, host_app, res_change["dimensions"] if (res_change and res_change["passToMoonlight"]) else None) as proxy:
-            result = await establish_connection(client=client)
+            result = await establish_connection(client=client, hostInfoPort=hostInfoPort)
             if result:
                 return result
 
@@ -374,6 +374,7 @@ async def main():
                                 host_app,
                                 host_settings["hostName"],
                                 host_settings["address"],
+                                host_settings["hostInfoPort"],
                                 host_settings["buddyPort"],
                                 user_settings["clientId"],
                                 host_settings["closeSteamOnceSessionEnds"],
