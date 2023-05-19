@@ -6,6 +6,11 @@ export const ChangelogView: VFC<unknown> = () => {
     <DialogBody>
       <DialogControlsSection>
         <Field
+          label="1.6.3"
+          description="Increase compatibility with other plugins, like Game Theme Music."
+          focusable={true}
+        />
+        <Field
           label="1.6.2"
           description={
             <>
