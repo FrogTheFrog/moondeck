@@ -44,6 +44,7 @@ export const BatchResOverrideModal: VFC<Props> = ({ hostSettings, onSelected, cl
         childrenContainerWidth="fixed"
       >
         <ResolutionSelectionDropdown
+          singleItemSelection={true}
           currentIndex={-1}
           currentList={hostSettings.resolution.dimensions}
           setIndex={(value) => {

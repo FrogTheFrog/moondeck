@@ -6,6 +6,7 @@ type Option<T> = T extends string ? (T | OptionWithLabel<T>) : OptionWithLabel<T
 
 interface Props<T> {
   disabled?: boolean;
+  singleItemSelection?: boolean;
   optionList: Readonly<Array<Option<T>>>;
   label: string;
   value: T;
@@ -17,7 +18,7 @@ function stringifyLabel(value: string): string {
   return separatedValue.charAt(0).toUpperCase() + separatedValue.slice(1);
 }
 
-export const ListDropdown: <T>(props: Props<T>) => ReactElement<Props<T>> = ({ disabled, optionList, label, value, setValue }) => {
+export const ListDropdown: <T>(props: Props<T>) => ReactElement<Props<T>> = ({ disabled, singleItemSelection, optionList, label, value, setValue }) => {
   const [options, setOptions] = useState<DropdownOption[]>([]);
 
   useEffect(() => {
@@ -39,7 +40,7 @@ export const ListDropdown: <T>(props: Props<T>) => ReactElement<Props<T>> = ({ d
 
   return (
     <Dropdown
-      disabled={(disabled ?? false) || options.length < 2}
+      disabled={(disabled ?? false) || options.length < ((singleItemSelection ?? false) ? 1 : 2 )}
       rgOptions={options}
       strDefaultLabel={label}
       selectedOption={value}

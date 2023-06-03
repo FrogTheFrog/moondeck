@@ -3,6 +3,7 @@ import { ListDropdown } from "../listdropdown";
 
 interface Props<ListElement> {
   label: string;
+  singleItemSelection?: boolean;
   currentIndex: number;
   currentList: ListElement[];
   setIndex: (value: number) => void;
@@ -13,7 +14,7 @@ function isValidIndex(index: number, listSize: number): boolean {
   return index >= 0 && index < listSize;
 }
 
-export const IndexedListDropdown: <ListElement>(props: Props<ListElement>) => ReactElement<Props<ListElement>> = ({ label, currentIndex, currentList, setIndex, stringifier }) => {
+export const IndexedListDropdown: <ListElement>(props: Props<ListElement>) => ReactElement<Props<ListElement>> = ({ label, singleItemSelection, currentIndex, currentList, setIndex, stringifier }) => {
   const [currentEntry, setCurrentEntry] = useState<number | null>(null);
   const [entries, setEntries] = useState<Array<{ id: number | null; label: string }>>([]);
 
@@ -31,6 +32,7 @@ export const IndexedListDropdown: <ListElement>(props: Props<ListElement>) => Re
   return (
     <ListDropdown<typeof currentEntry>
       disabled={currentList.length === 0}
+      singleItemSelection={singleItemSelection}
       optionList={entries}
       label={label}
       value={currentEntry}
