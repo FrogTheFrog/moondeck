@@ -94,7 +94,7 @@
             "group": "none",
             "dependsOn": [
                 "deploy",
-                "chmodfolders"
+                "restartloader"
             ],
             "problemMatcher": []
         },
