@@ -40,7 +40,7 @@ export const ListDropdown: <T>(props: Props<T>) => ReactElement<Props<T>> = ({ d
 
   return (
     <Dropdown
-      disabled={(disabled ?? false) || options.length < ((singleItemSelection ?? false) ? 1 : 2 )}
+      disabled={(disabled ?? false) || options.length < ((singleItemSelection ?? false) ? 1 : 2)}
       rgOptions={options}
       strDefaultLabel={label}
       selectedOption={value}
