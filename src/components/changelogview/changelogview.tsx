@@ -6,6 +6,11 @@ export const ChangelogView: VFC<unknown> = () => {
     <DialogBody>
       <DialogControlsSection>
         <Field
+          label="1.6.4"
+          description="Fixed a bug where you could not select custom resolution in Sunshine Apps page if there was only 1 resolution entry in the list."
+          focusable={true}
+        />
+        <Field
           label="1.6.3"
           description="Increase compatibility with other plugins, like Game Theme Music."
           focusable={true}
