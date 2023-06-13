@@ -6,6 +6,11 @@ export const ChangelogView: VFC<unknown> = () => {
     <DialogBody>
       <DialogControlsSection>
         <Field
+          label="1.6.5"
+          description="Fixed the breaking changes on beta (could not add new shortcuts)."
+          focusable={true}
+        />
+        <Field
           label="1.6.4"
           description="Fixed a bug where you could not select custom resolution in Sunshine Apps page if there was only 1 resolution entry in the list."
           focusable={true}

@@ -1,4 +1,4 @@
-import { AppDetails, LifetimeNotification, SteamShortcut, sleep } from "decky-frontend-lib";
+import { AppDetails, LifetimeNotification, sleep } from "decky-frontend-lib";
 
 export interface SystemSuspendInfo {
   state: number;
@@ -13,8 +13,7 @@ export type AppResolutionOverrideConstants = "Default" | "Native";
 
 export interface SteamClientEx {
   Apps: {
-    AddShortcut: (appName: string, execPath: string) => Promise<number | undefined | null>;
-    GetAllShortcuts: () => Promise<SteamShortcut[]>;
+    AddShortcut: (appName: string, execPath: string, args: string, cmdLine: string) => Promise<number | undefined | null>;
     GetResolutionOverrideForApp: (appId: number) => Promise<AppResolutionOverrideConstants | string>;
     RegisterForAppDetails: (appId: number, callback: (details: AppDetails) => void) => { unregister: () => void };
     RemoveShortcut: (appId: number) => void;
