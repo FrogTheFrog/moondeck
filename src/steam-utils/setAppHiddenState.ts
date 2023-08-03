@@ -26,12 +26,19 @@ export async function setAppHiddenState(appId: number, hide: boolean): Promise<b
   }
 
   try {
-    if (collectionStore.BIsHidden(appId) === hide) {
+    const hiddenCollection = collectionStore.GetCollection("hidden");
+    if (!hiddenCollection) {
+      logger.error(`Could not set hidden state for app ${appId} - undefined hiddenCollection!`);
+      return false;
+    }
+
+    const isAppHidden: () => boolean = () => { return hiddenCollection.apps.has(appId); };
+    if (isAppHidden() === hide) {
       return true;
     }
 
     collectionStore.SetAppsAsHidden([appId], hide);
-    if (!await waitForPredicate(3, 250, () => collectionStore.BIsHidden(appId) === hide)) {
+    if (!await waitForPredicate(3, 250, () => isAppHidden() === hide)) {
       logger.error(`Could not set hidden state for app ${appId} - state did not change!`);
       return false;
     }

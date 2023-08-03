@@ -6,6 +6,11 @@ export const ChangelogView: VFC<unknown> = () => {
     <DialogBody>
       <DialogControlsSection>
         <Field
+          label="1.6.6"
+          description="Fixed the breaking changes on stable (could not add new shortcuts once again)."
+          focusable={true}
+        />
+        <Field
           label="1.6.5"
           description="Fixed the breaking changes on beta (could not add new shortcuts)."
           focusable={true}

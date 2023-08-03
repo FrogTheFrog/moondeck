@@ -15,6 +15,7 @@ export interface CollectionStore {
   deckDesktopApps: Collection;
   userCollections: Collection[];
   BIsHidden: (appId: number) => boolean;
+  GetCollection: (collectionName: string) => Collection | undefined;
   SetAppsAsHidden: (appIds: number[], hide: boolean) => void;
 }
 
