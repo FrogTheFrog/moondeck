@@ -1,9 +1,9 @@
 import { SteamClientEx } from "./shared";
+import { collectionStoreInvalidation } from "./collectionStoreInvalidation";
 import { getAppOverview } from "./getAppOverview";
 import { getCollectionStore } from "./getCollectionStore";
 import { logger } from "../lib/logger";
 import { waitForAppOverview } from "./waitForAppOverview";
-import { collectionStoreInvalidation } from "./collectionStoreInvalidation";
 
 /**
  * Remove the shortcus for the app id.

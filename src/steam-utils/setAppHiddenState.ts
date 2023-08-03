@@ -1,8 +1,8 @@
+import { collectionStoreInvalidation } from "./collectionStoreInvalidation";
 import { getCollectionStore } from "./getCollectionStore";
 import { logger } from "../lib/logger";
 import { waitForAppOverview } from "./waitForAppOverview";
 import { waitForPredicate } from "./shared";
-import { collectionStoreInvalidation } from "./collectionStoreInvalidation";
 
 /**
  *

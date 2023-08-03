@@ -46,6 +46,7 @@
     "eslint-plugin-prefer-arrow": "^1.2.3",
     "eslint-plugin-promise": "^6.0.0",
     "eslint-plugin-react": "^7.31.10",
+    "npx": "^10.2.2",
     "rollup": "^2.77.1",
     "rollup-plugin-import-assets": "^1.1.1",
     "shx": "^0.3.4",

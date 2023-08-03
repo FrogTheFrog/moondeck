@@ -84,6 +84,9 @@ devDependencies:
   eslint-plugin-react:
     specifier: ^7.31.10
     version: 7.31.10(eslint@8.25.0)
+  npx:
+    specifier: ^10.2.2
+    version: 10.2.2
   rollup:
     specifier: ^2.77.1
     version: 2.79.1
@@ -1826,6 +1829,14 @@ packages:
   /node-releases@2.0.6:
     resolution: {integrity: sha512-PiVXnNuFm5+iYkLBNeq5211hvO38y63T0i2KKh2KnUs3RpzJ+JtODFjkD8yjLwnDkTYF1eKXheUwdssR+NRZdg==}
     dev: true
+
+  /npx@10.2.2:
+    resolution: {integrity: sha512-eImmySusyeWphzs5iNh791XbZnZG0FSNvM4KSah34pdQQIDsdTDhIwg1sjN3AIVcjGLpbQ/YcfqHPshKZQK1fA==}
+    hasBin: true
+    dev: true
+    bundledDependencies:
+      - npm
+      - libnpx
 
   /object-assign@4.1.1:
     resolution: {integrity: sha512-rJgTQnkUnH1sFw8yT6VSU3zD3sWmu6sZhIseY8VX+GRu3P6F7Fu+JNDoXfklElbLJSnc3FUQHVe4cU5hj+BcUg==}
