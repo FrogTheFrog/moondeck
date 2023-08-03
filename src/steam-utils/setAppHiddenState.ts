@@ -29,8 +29,7 @@ export async function setAppHiddenState(appId: number, hide: boolean): Promise<b
   try {
     collectionStoreInvalidation();
     if (collectionStore.BIsHidden(appId) === hide) {
-      logger.error(`Could not set hidden state for app ${appId} - undefined hiddenCollection!`);
-      return false;
+      return true;
     }
 
     collectionStore.SetAppsAsHidden([appId], hide);
