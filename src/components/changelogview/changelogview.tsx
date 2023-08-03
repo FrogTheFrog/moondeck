@@ -5,6 +5,11 @@ export const ChangelogView: VFC<unknown> = () => {
   return (
     <DialogBody>
       <DialogControlsSection>
+      <Field
+          label="1.6.7"
+          description="Remove the leftover error from 1.6.6 release."
+          focusable={true}
+        />
         <Field
           label="1.6.6"
           description="Fixed the breaking changes on stable (could not add new shortcuts once again)."
