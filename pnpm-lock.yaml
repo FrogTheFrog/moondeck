@@ -5,8 +5,8 @@ dependencies:
     specifier: ^0.4.0
     version: 0.4.0
   decky-frontend-lib:
-    specifier: ^3.21.1
-    version: 3.21.1
+    specifier: ^3.21.8
+    version: 3.21.8
   ip-regex:
     specifier: ^5.0.0
     version: 5.0.0
@@ -847,8 +847,8 @@ packages:
       ms: 2.1.2
     dev: true
 
-  /decky-frontend-lib@3.21.1:
-    resolution: {integrity: sha512-30605ET9qqZ6St6I9WmMmLGgSrTIdMwo7xy85+lRaF1miUd2icOGEJjwnbVcZDdkal+1fJ3tNEDXlchVfG4TrA==}
+  /decky-frontend-lib@3.21.8:
+    resolution: {integrity: sha512-I45KWzoTSakUcsN7drHhiOc+rYKYygIsuYTHqc8DbpPDJvUx6xlU4t7D2TMrj9o/xS/V3WY9N/pX8eF6AcGT1g==}
     dev: false
 
   /deep-is@0.1.4:
