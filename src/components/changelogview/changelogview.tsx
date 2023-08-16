@@ -5,7 +5,12 @@ export const ChangelogView: VFC<unknown> = () => {
   return (
     <DialogBody>
       <DialogControlsSection>
-      <Field
+        <Field
+          label="1.6.8"
+          description="Adding missing dependencies/handling some edge cases to make plugin more compatible with other linux distros."
+          focusable={true}
+        />
+        <Field
           label="1.6.7"
           description="Remove the leftover error from 1.6.6 release."
           focusable={true}
