@@ -21,8 +21,7 @@
 """
 
 import enum
-from typing import Any, Callable, List, TYPE_CHECKING
-
+from typing import TYPE_CHECKING, Any, Callable, List
 
 if TYPE_CHECKING:
     from .._core import Zeroconf
@@ -47,11 +46,13 @@ class ServiceListener:
 
 
 class Signal:
+    __slots__ = ('_handlers',)
+
     def __init__(self) -> None:
         self._handlers: List[Callable[..., None]] = []
 
     def fire(self, **kwargs: Any) -> None:
-        for h in list(self._handlers):
+        for h in self._handlers[:]:
             h(**kwargs)
 
     @property
@@ -60,6 +61,8 @@ class Signal:
 
 
 class SignalRegistrationInterface:
+    __slots__ = ('_handlers',)
+
     def __init__(self, handlers: List[Callable[..., None]]) -> None:
         self._handlers = handlers
 

@@ -3,7 +3,7 @@ import enum
 import sys
 import warnings
 from types import TracebackType
-from typing import Any, Optional, Type
+from typing import Optional, Type
 
 
 if sys.version_info >= (3, 8):
@@ -12,7 +12,18 @@ else:
     from typing_extensions import final
 
 
-__version__ = "4.0.2"
+if sys.version_info >= (3, 11):
+
+    def _uncancel_task(task: "asyncio.Task[object]") -> None:
+        task.uncancel()
+
+else:
+
+    def _uncancel_task(task: "asyncio.Task[object]") -> None:
+        pass
+
+
+__version__ = "4.0.3"
 
 
 __all__ = ("timeout", "timeout_at", "Timeout")
@@ -31,7 +42,7 @@ def timeout(delay: Optional[float]) -> "Timeout":
 
     delay - value in seconds or None to disable timeout logic
     """
-    loop = _get_running_loop()
+    loop = asyncio.get_running_loop()
     if delay is not None:
         deadline = loop.time() + delay  # type: Optional[float]
     else:
@@ -54,7 +65,7 @@ def timeout_at(deadline: Optional[float]) -> "Timeout":
 
 
     """
-    loop = _get_running_loop()
+    loop = asyncio.get_running_loop()
     return Timeout(deadline, loop)
 
 
@@ -79,12 +90,12 @@ class Timeout:
     #
     # This design allows to avoid many silly misusages.
     #
-    # TimeoutError is raised immadiatelly when scheduled
+    # TimeoutError is raised immediately when scheduled
     # if the deadline is passed.
-    # The purpose is to time out as sson as possible
+    # The purpose is to time out as soon as possible
     # without waiting for the next await expression.
 
-    __slots__ = ("_deadline", "_loop", "_state", "_timeout_handler")
+    __slots__ = ("_deadline", "_loop", "_state", "_timeout_handler", "_task")
 
     def __init__(
         self, deadline: Optional[float], loop: asyncio.AbstractEventLoop
@@ -92,6 +103,7 @@ class Timeout:
         self._loop = loop
         self._state = _State.INIT
 
+        self._task: Optional["asyncio.Task[object]"] = None
         self._timeout_handler = None  # type: Optional[asyncio.Handle]
         if deadline is None:
             self._deadline = None  # type: Optional[float]
@@ -147,6 +159,7 @@ class Timeout:
         self._reject()
 
     def _reject(self) -> None:
+        self._task = None
         if self._timeout_handler is not None:
             self._timeout_handler.cancel()
             self._timeout_handler = None
@@ -169,7 +182,7 @@ class Timeout:
         deadline argument points on the time in the same clock system
         as loop.time().
 
-        If new deadline is in the past the timeout is raised immediatelly.
+        If new deadline is in the past the timeout is raised immediately.
 
         Please note: it is not POSIX time but a time with
         undefined starting base, e.g. the time of the system power on.
@@ -194,11 +207,11 @@ class Timeout:
         if self._timeout_handler is not None:
             self._timeout_handler.cancel()
 
-        task = _current_task(self._loop)
+        self._task = asyncio.current_task()
         if deadline <= now:
-            self._timeout_handler = self._loop.call_soon(self._on_timeout, task)
+            self._timeout_handler = self._loop.call_soon(self._on_timeout)
         else:
-            self._timeout_handler = self._loop.call_at(deadline, self._on_timeout, task)
+            self._timeout_handler = self._loop.call_at(deadline, self._on_timeout)
 
     def _do_enter(self) -> None:
         if self._state != _State.INIT:
@@ -208,40 +221,19 @@ class Timeout:
 
     def _do_exit(self, exc_type: Optional[Type[BaseException]]) -> None:
         if exc_type is asyncio.CancelledError and self._state == _State.TIMEOUT:
+            assert self._task is not None
+            _uncancel_task(self._task)
             self._timeout_handler = None
+            self._task = None
             raise asyncio.TimeoutError
         # timeout has not expired
         self._state = _State.EXIT
         self._reject()
         return None
 
-    def _on_timeout(self, task: "asyncio.Task[None]") -> None:
-        task.cancel()
+    def _on_timeout(self) -> None:
+        assert self._task is not None
+        self._task.cancel()
         self._state = _State.TIMEOUT
         # drop the reference early
         self._timeout_handler = None
-
-
-if sys.version_info >= (3, 7):
-
-    def _current_task(loop: asyncio.AbstractEventLoop) -> "Optional[asyncio.Task[Any]]":
-        return asyncio.current_task(loop=loop)
-
-else:
-
-    def _current_task(loop: asyncio.AbstractEventLoop) -> "Optional[asyncio.Task[Any]]":
-        return asyncio.Task.current_task(loop=loop)
-
-
-if sys.version_info >= (3, 7):
-
-    def _get_running_loop() -> asyncio.AbstractEventLoop:
-        return asyncio.get_running_loop()
-
-else:
-
-    def _get_running_loop() -> asyncio.AbstractEventLoop:
-        loop = asyncio.get_event_loop()
-        if not loop.is_running():
-            raise RuntimeError("no running event loop")
-        return loop

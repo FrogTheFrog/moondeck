@@ -23,13 +23,17 @@
 import asyncio
 import concurrent.futures
 import contextlib
+import sys
 from typing import Any, Awaitable, Coroutine, Optional, Set
 
-import async_timeout
+if sys.version_info[:2] < (3, 11):
+    from async_timeout import timeout as asyncio_timeout
+else:
+    from asyncio import timeout as asyncio_timeout
 
-from .time import millis_to_seconds
 from .._exceptions import EventLoopBlocked
 from ..const import _LOADED_SYSTEM_TIMEOUT
+from .time import millis_to_seconds
 
 # The combined timeouts should be lower than _CLOSE_TIMEOUT + _WAIT_FOR_LOOP_TASKS_TIMEOUT
 _TASK_AWAIT_TIMEOUT = 1
@@ -37,10 +41,37 @@ _GET_ALL_TASKS_TIMEOUT = 3
 _WAIT_FOR_LOOP_TASKS_TIMEOUT = 3  # Must be larger than _TASK_AWAIT_TIMEOUT
 
 
+def _set_future_none_if_not_done(fut: asyncio.Future) -> None:
+    """Set a future to None if it is not done."""
+    if not fut.done():  # pragma: no branch
+        fut.set_result(None)
+
+
+def _resolve_all_futures_to_none(futures: Set[asyncio.Future]) -> None:
+    """Resolve all futures to None."""
+    for fut in futures:
+        _set_future_none_if_not_done(fut)
+    futures.clear()
+
+
+async def wait_for_future_set_or_timeout(
+    loop: asyncio.AbstractEventLoop, future_set: Set[asyncio.Future], timeout: float
+) -> None:
+    """Wait for a future or timeout (in milliseconds)."""
+    future = loop.create_future()
+    future_set.add(future)
+    handle = loop.call_later(millis_to_seconds(timeout), _set_future_none_if_not_done, future)
+    try:
+        await future
+    finally:
+        handle.cancel()
+        future_set.discard(future)
+
+
 async def wait_event_or_timeout(event: asyncio.Event, timeout: float) -> None:
     """Wait for an event or timeout."""
     with contextlib.suppress(asyncio.TimeoutError):
-        async with async_timeout.timeout(timeout):
+        async with asyncio_timeout(timeout):
             await event.wait()
 
 

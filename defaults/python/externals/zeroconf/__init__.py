@@ -31,10 +31,10 @@ from ._dns import (  # noqa # import needed for backwards compat
     DNSNsec,
     DNSPointer,
     DNSQuestion,
+    DNSQuestionType,
     DNSRecord,
     DNSService,
     DNSText,
-    DNSQuestionType,
 )
 from ._exceptions import (
     AbstractMethodException,
@@ -51,35 +51,40 @@ from ._logger import QuietLogger, log  # noqa # import needed for backwards comp
 from ._protocol.incoming import DNSIncoming  # noqa # import needed for backwards compat
 from ._protocol.outgoing import DNSOutgoing  # noqa # import needed for backwards compat
 from ._services import (  # noqa # import needed for backwards compat
-    Signal,
-    SignalRegistrationInterface,
     ServiceListener,
     ServiceStateChange,
+    Signal,
+    SignalRegistrationInterface,
 )
 from ._services.browser import ServiceBrowser
 from ._services.info import (  # noqa # import needed for backwards compat
-    instance_name_from_service_info,
     ServiceInfo,
+    instance_name_from_service_info,
 )
-from ._services.registry import ServiceRegistry  # noqa # import needed for backwards compat
+from ._services.registry import (  # noqa # import needed for backwards compat
+    ServiceRegistry,
+)
 from ._services.types import ZeroconfServiceTypes
 from ._updates import RecordUpdate, RecordUpdateListener
 from ._utils.name import service_type_name  # noqa # import needed for backwards compat
 from ._utils.net import (  # noqa # import needed for backwards compat
-    add_multicast_member,
-    autodetect_ip_version,
-    create_sockets,
-    get_all_addresses_v6,
     InterfaceChoice,
     InterfacesType,
     IPVersion,
+    add_multicast_member,
+    autodetect_ip_version,
+    create_sockets,
     get_all_addresses,
+    get_all_addresses_v6,
 )
-from ._utils.time import current_time_millis, millis_to_seconds  # noqa # import needed for backwards compat
+from ._utils.time import (  # noqa # import needed for backwards compat
+    current_time_millis,
+    millis_to_seconds,
+)
 
 __author__ = 'Paul Scott-Murphy, William McBrine'
 __maintainer__ = 'Jakub Stasiak <jakub@stasiak.at>'
-__version__ = '0.39.0'
+__version__ = '0.80.0'
 __license__ = 'LGPL'
 
 

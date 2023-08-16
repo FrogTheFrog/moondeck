@@ -25,10 +25,21 @@ import queue
 import random
 import threading
 import warnings
-from collections import OrderedDict
-from typing import Callable, Dict, Iterable, List, Optional, Set, TYPE_CHECKING, Tuple, Union, cast
+from abc import abstractmethod
+from typing import (
+    TYPE_CHECKING,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    Union,
+    cast,
+)
 
-from .._dns import DNSAddress, DNSPointer, DNSQuestion, DNSQuestionType, DNSRecord
+from .._dns import DNSPointer, DNSQuestion, DNSQuestionType, DNSRecord
 from .._logger import log
 from .._protocol.outgoing import DNSOutgoing
 from .._services import (
@@ -38,9 +49,10 @@ from .._services import (
     SignalRegistrationInterface,
 )
 from .._updates import RecordUpdate, RecordUpdateListener
-from .._utils.name import possible_types, service_type_name
+from .._utils.name import cached_possible_types, service_type_name
 from .._utils.time import current_time_millis, millis_to_seconds
 from ..const import (
+    _ADDRESS_RECORD_TYPES,
     _BROWSER_BACKOFF_LIMIT,
     _BROWSER_TIME,
     _CLASS_IN,
@@ -73,6 +85,8 @@ _QuestionWithKnownAnswers = Dict[DNSQuestion, Set[DNSPointer]]
 class _DNSPointerOutgoingBucket:
     """A DNSOutgoing bucket."""
 
+    __slots__ = ('now', 'out', 'bytes')
+
     def __init__(self, now: float, multicast: bool) -> None:
         """Create a bucke to wrap a DNSOutgoing."""
         self.now = now
@@ -104,7 +118,7 @@ def _group_ptr_queries_with_known_answers(
     # goal of this algorithm is to quickly bucket the query + known answers without
     # the overhead of actually constructing the packets.
     query_by_size: Dict[DNSQuestion, int] = {
-        question: (question.max_size + sum([answer.max_size_compressed for answer in known_answers]))
+        question: (question.max_size + sum(answer.max_size_compressed for answer in known_answers))
         for question, known_answers in question_with_known_answers.items()
     }
     max_bucket_size = _MAX_MSG_TYPICAL - _DNS_PACKET_HEADER_LEN
@@ -145,18 +159,20 @@ def generate_service_query(
         question = DNSQuestion(type_, _TYPE_PTR, _CLASS_IN)
         question.unicast = qu_question
         known_answers = {
-            cast(DNSPointer, record)
+            record
             for record in zc.cache.get_all_by_details(type_, _TYPE_PTR, _CLASS_IN)
             if not record.is_stale(now)
         }
-        if not qu_question and zc.question_history.suppresses(
-            question, now, cast(Set[DNSRecord], known_answers)
-        ):
+        if not qu_question and zc.question_history.suppresses(question, now, known_answers):
             log.debug("Asking %s was suppressed by the question history", question)
             continue
-        questions_with_known_answers[question] = known_answers
+        if TYPE_CHECKING:
+            pointer_known_answers = cast(Set[DNSPointer], known_answers)
+        else:
+            pointer_known_answers = known_answers
+        questions_with_known_answers[question] = pointer_known_answers
         if not qu_question:
-            zc.question_history.add_question_at_time(question, now, cast(Set[DNSRecord], known_answers))
+            zc.question_history.add_question_at_time(question, now, known_answers)
 
     return _group_ptr_queries_with_known_answers(now, multicast, questions_with_known_answers)
 
@@ -186,12 +202,14 @@ class QueryScheduler:
 
     """
 
+    __slots__ = ('_schedule_changed_event', '_types', '_next_time', '_first_random_delay_interval', '_delay')
+
     def __init__(
         self,
         types: Set[str],
         delay: int,
         first_random_delay_interval: Tuple[int, int],
-    ):
+    ) -> None:
         self._schedule_changed_event: Optional[asyncio.Event] = None
         self._types = types
         self._next_time: Dict[str, float] = {}
@@ -251,6 +269,22 @@ class QueryScheduler:
 class _ServiceBrowserBase(RecordUpdateListener):
     """Base class for ServiceBrowser."""
 
+    __slots__ = (
+        'types',
+        'zc',
+        'addr',
+        'port',
+        'multicast',
+        'question_type',
+        '_pending_handlers',
+        '_service_state_changed',
+        'query_scheduler',
+        'done',
+        '_first_request',
+        '_next_send_timer',
+        '_query_sender_task',
+    )
+
     def __init__(
         self,
         zc: 'Zeroconf',
@@ -289,13 +323,13 @@ class _ServiceBrowserBase(RecordUpdateListener):
         self.port = port
         self.multicast = self.addr in (None, _MDNS_ADDR, _MDNS_ADDR6)
         self.question_type = question_type
-        self._pending_handlers: OrderedDict[Tuple[str, str], ServiceStateChange] = OrderedDict()
+        self._pending_handlers: Dict[Tuple[str, str], ServiceStateChange] = {}
         self._service_state_changed = Signal()
         self.query_scheduler = QueryScheduler(self.types, delay, _FIRST_QUERY_DELAY_RANDOM_INTERVAL)
-        self.queue: Optional[queue.SimpleQueue] = None
         self.done = False
         self._first_request: bool = True
         self._next_send_timer: Optional[asyncio.TimerHandle] = None
+        self._query_sender_task: Optional[asyncio.Task] = None
 
         if hasattr(handlers, 'add_service'):
             listener = cast('ServiceListener', handlers)
@@ -318,7 +352,7 @@ class _ServiceBrowserBase(RecordUpdateListener):
         self.query_scheduler.start(current_time_millis())
         self.zc.async_add_listener(self, [DNSQuestion(type_, _TYPE_PTR, _CLASS_IN) for type_ in self.types])
         # Only start queries after the listener is installed
-        asyncio.ensure_future(self._async_start_query_sender())
+        self._query_sender_task = asyncio.ensure_future(self._async_start_query_sender())
 
     @property
     def service_state_changed(self) -> SignalRegistrationInterface:
@@ -326,7 +360,9 @@ class _ServiceBrowserBase(RecordUpdateListener):
 
     def _names_matching_types(self, names: Iterable[str]) -> List[Tuple[str, str]]:
         """Return the type and name for records matching the types we are browsing."""
-        return [(type_, name) for name in names for type_ in self.types.intersection(possible_types(name))]
+        return [
+            (type_, name) for name in names for type_ in self.types.intersection(cached_possible_types(name))
+        ]
 
     def _enqueue_callback(
         self,
@@ -351,8 +387,12 @@ class _ServiceBrowserBase(RecordUpdateListener):
         self, now: float, record: DNSRecord, old_record: Optional[DNSRecord]
     ) -> None:
         """Process a single record update from a batch of updates."""
-        if isinstance(record, DNSPointer):
-            for type_ in self.types.intersection(possible_types(record.name)):
+        record_type = record.type
+
+        if record_type is _TYPE_PTR:
+            if TYPE_CHECKING:
+                record = cast(DNSPointer, record)
+            for type_ in self.types.intersection(cached_possible_types(record.name)):
                 if old_record is None:
                     self._enqueue_callback(ServiceStateChange.Added, type_, record.alias)
                 elif record.is_expired(now):
@@ -365,7 +405,7 @@ class _ServiceBrowserBase(RecordUpdateListener):
         if old_record or record.is_expired(now):
             return
 
-        if isinstance(record, DNSAddress):
+        if record_type in _ADDRESS_RECORD_TYPES:
             # Iterate through the DNSCache and callback any services that use this address
             for type_, name in self._names_matching_types(
                 {service.name for service in self.zc.cache.async_entries_with_server(record.name)}
@@ -388,6 +428,7 @@ class _ServiceBrowserBase(RecordUpdateListener):
         for record in records:
             self._async_process_record_update(now, record[0], record[1])
 
+    @abstractmethod
     def async_update_records_complete(self) -> None:
         """Called when a record update has completed for all handlers.
 
@@ -395,14 +436,6 @@ class _ServiceBrowserBase(RecordUpdateListener):
 
         This method will be run in the event loop.
         """
-        while self._pending_handlers:
-            event = self._pending_handlers.popitem(False)
-            # If there is a queue running (ServiceBrowser)
-            # get fired in dedicated thread
-            if self.queue:
-                self.queue.put(event)
-            else:
-                self._fire_service_state_changed_event(event)
 
     def _fire_service_state_changed_event(self, event: Tuple[Tuple[str, str], ServiceStateChange]) -> None:
         """Fire a service state changed event.
@@ -425,6 +458,8 @@ class _ServiceBrowserBase(RecordUpdateListener):
         self.done = True
         self._cancel_send_timer()
         self.zc.async_remove_listener(self)
+        assert self._query_sender_task is not None, "Attempted to cancel a browser that was not started"
+        self._query_sender_task.cancel()
 
     def _generate_ready_queries(self, first_request: bool, now: float) -> List[DNSOutgoing]:
         """Generate the service browser query for any type that is due."""
@@ -449,13 +484,18 @@ class _ServiceBrowserBase(RecordUpdateListener):
         """Cancel the next send."""
         if self._next_send_timer:
             self._next_send_timer.cancel()
+            self._next_send_timer = None
 
     def reschedule_type(self, type_: str, now: float, next_time: float) -> None:
         """Reschedule a type to be refreshed in the future."""
         if self.query_scheduler.reschedule_type(type_, next_time):
+            # We need to send the queries before rescheduling the next one
+            # otherwise we may be scheduling a query to go out in the next
+            # iteration of the event loop which should be sent now.
+            if now >= next_time:
+                self._async_send_ready_queries(now)
             self._cancel_send_timer()
             self._async_schedule_next(now)
-        self._async_send_ready_queries(now)
 
     def _async_send_ready_queries(self, now: float) -> None:
         """Send any ready queries."""
@@ -506,7 +546,7 @@ class ServiceBrowser(_ServiceBrowserBase, threading.Thread):
         # Add the queue before the listener is installed in _setup
         # to ensure that events run in the dedicated thread and do
         # not block the event loop
-        self.queue = queue.SimpleQueue()
+        self.queue: queue.SimpleQueue = queue.SimpleQueue()
         self.daemon = True
         self.start()
         zc.loop.call_soon_threadsafe(self._async_start)
@@ -518,16 +558,25 @@ class ServiceBrowser(_ServiceBrowserBase, threading.Thread):
     def cancel(self) -> None:
         """Cancel the browser."""
         assert self.zc.loop is not None
-        assert self.queue is not None
         self.queue.put(None)
         self.zc.loop.call_soon_threadsafe(self._async_cancel)
         self.join()
 
     def run(self) -> None:
         """Run the browser thread."""
-        assert self.queue is not None
         while True:
             event = self.queue.get()
             if event is None:
                 return
             self._fire_service_state_changed_event(event)
+
+    def async_update_records_complete(self) -> None:
+        """Called when a record update has completed for all handlers.
+
+        At this point the cache will have the new records.
+
+        This method will be run in the event loop.
+        """
+        for pending in self._pending_handlers.items():
+            self.queue.put(pending)
+        self._pending_handlers.clear()

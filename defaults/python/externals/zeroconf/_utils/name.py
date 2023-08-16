@@ -20,12 +20,13 @@
     USA
 """
 
+from functools import lru_cache
 from typing import Set
 
 from .._exceptions import BadTypeInNameException
 from ..const import (
-    _HAS_ASCII_CONTROL_CHARS,
     _HAS_A_TO_Z,
+    _HAS_ASCII_CONTROL_CHARS,
     _HAS_ONLY_A_TO_Z_NUM_HYPHEN,
     _HAS_ONLY_A_TO_Z_NUM_HYPHEN_UNDERSCORE,
     _LOCAL_TRAILER,
@@ -34,6 +35,7 @@ from ..const import (
 )
 
 
+@lru_cache(maxsize=512)
 def service_type_name(type_: str, *, strict: bool = True) -> str:  # pylint: disable=too-many-branches
     """
     Validate a fully qualified service name, instance or subtype. [rfc6763]
@@ -170,3 +172,6 @@ def possible_types(name: str) -> Set[str]:
             break
         types.add('.'.join(parts))
     return types
+
+
+cached_possible_types = lru_cache(maxsize=256)(possible_types)

@@ -1,0 +1,11 @@
+../../bin/wakeonlan,sha256=qimnOhh6leoBgxUzdZwJLAgniA4sWJaN8UEWtaY97oo,207
+wakeonlan-3.0.0.dist-info/INSTALLER,sha256=zuuue4knoyJ-UwPPXg8fezS7VCrXJQrAP7zeNuwvFQg,4
+wakeonlan-3.0.0.dist-info/LICENSE.rst,sha256=JEcg4RIVHY-CDcrIDuM-M0iQyToGMQmFAbnHV11eoEk,1118
+wakeonlan-3.0.0.dist-info/METADATA,sha256=b--P9wykAcLuab3KhALDoRGOxurGyhEpSxWFuOMGQcg,4270
+wakeonlan-3.0.0.dist-info/RECORD,,
+wakeonlan-3.0.0.dist-info/REQUESTED,sha256=47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU,0
+wakeonlan-3.0.0.dist-info/WHEEL,sha256=vxFmldFsRN_Hx10GDvsdv1wroKq8r5Lzvjp6GZ4OO8c,88
+wakeonlan-3.0.0.dist-info/entry_points.txt,sha256=atYdSZ466xt7TcNn5XhOJDAK9_aup3aWyFzQRvZQAPg,44
+wakeonlan/__init__.py,sha256=4bjSvnR3w_xYQjlhRIlaCG0wySHLK-EstVLvbHNy1vg,3107
+wakeonlan/__pycache__/__init__.cpython-311.pyc,,
+wakeonlan/py.typed,sha256=47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU,0

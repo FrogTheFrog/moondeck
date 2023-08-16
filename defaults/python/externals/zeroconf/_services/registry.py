@@ -22,9 +22,8 @@
 
 from typing import Dict, List, Optional, Union
 
-
-from .info import ServiceInfo
 from .._exceptions import ServiceNameAlreadyRegistered
+from .info import ServiceInfo
 
 
 class ServiceRegistry:
@@ -33,6 +32,8 @@ class ServiceRegistry:
     The registry must only be accessed from
     the event loop as it is not thread safe.
     """
+
+    __slots__ = ("_services", "types", "servers")
 
     def __init__(
         self,
@@ -61,7 +62,7 @@ class ServiceRegistry:
 
     def async_get_info_name(self, name: str) -> Optional[ServiceInfo]:
         """Return all ServiceInfo for the name."""
-        return self._services.get(name.lower())
+        return self._services.get(name)
 
     def async_get_types(self) -> List[str]:
         """Return all types."""
@@ -77,10 +78,11 @@ class ServiceRegistry:
 
     def _async_get_by_index(self, records: Dict[str, List], key: str) -> List[ServiceInfo]:
         """Return all ServiceInfo matching the index."""
-        return [self._services[name] for name in records.get(key.lower(), [])]
+        return [self._services[name] for name in records.get(key, [])]
 
     def _add(self, info: ServiceInfo) -> None:
         """Add a new service under the lock."""
+        assert info.server_key is not None, "ServiceInfo must have a server"
         if info.key in self._services:
             raise ServiceNameAlreadyRegistered
 
@@ -94,6 +96,7 @@ class ServiceRegistry:
             if info.key not in self._services:
                 continue
             old_service_info = self._services[info.key]
+            assert old_service_info.server_key is not None
             self.types[old_service_info.type.lower()].remove(info.key)
             self.servers[old_service_info.server_key].remove(info.key)
             del self._services[info.key]
