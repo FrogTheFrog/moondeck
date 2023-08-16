@@ -18,7 +18,7 @@ export interface DisplayState {
 }
 
 export interface SystemDisplayManagerStore {
-  GetState: () => Promise<DisplayState>;
+  GetState: () => Promise<DisplayState | undefined | null>;
 }
 
 /**

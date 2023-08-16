@@ -14,7 +14,7 @@ export async function getCurrentDisplayMode(): Promise<DisplayMode | null> {
 
   try {
     const displayState = await displayStore.GetState();
-    if (displayState.displays.length === 0) {
+    if (!displayState || displayState.displays.length === 0) {
       logger.error("Failed to get current display mode - no displays are available!");
       return null;
     }
