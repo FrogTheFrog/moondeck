@@ -10,6 +10,7 @@ import { ShortcutsView } from "../components/shortcutsview";
 import { StatusIndicatorsView } from "../components/statusindicatorsview";
 import { SunshineAppsView } from "../components/sunshineappsview";
 import { VFC } from "react";
+import { ResolutionSettingsView } from "../components/resolutionsettingsview";
 
 interface Props {
   connectivityManager: ConnectivityManager;
@@ -30,25 +31,16 @@ const MoonDeckRouter: VFC<Props> = ({ connectivityManager, settingsManager, shor
           route: "/moondeck/setup-guide"
         },
         {
-          title: "Changelog",
-          content: <ChangelogView />,
-          route: "/moondeck/changelog"
-        },
-        {
-          title: "Sunshine Apps",
-          content: <SunshineAppsView settingsManager={settingsManager} buddyProxy={connectivityManager.buddyProxy} />,
-          route: "/moondeck/external-shortcuts"
-        },
-        {
           title: "Status Indicators",
           content: <StatusIndicatorsView />,
           route: "/moondeck/status-indicators"
         },
         {
-          title: "Game Session",
-          content: <GameSessionView settingsManager={settingsManager} />,
-          route: "/moondeck/game-session"
+          title: "Changelog",
+          content: <ChangelogView />,
+          route: "/moondeck/changelog"
         },
+        "separator",
         {
           title: "Host Selection",
           content: <HostSelectionView connectivityManager={connectivityManager} settingsManager={settingsManager} />,
@@ -57,12 +49,29 @@ const MoonDeckRouter: VFC<Props> = ({ connectivityManager, settingsManager, shor
         {
           title: "Host Settings",
           content: <HostSettingsView settingsManager={settingsManager} />,
-          route: "/moondeck/host-info"
+          route: "/moondeck/host-settings"
         },
         {
-          title: "Shortcuts",
+          title: "Resolution Settings",
+          content: <ResolutionSettingsView settingsManager={settingsManager} />,
+          route: "/moondeck/resolution-settings"
+        },
+        "separator",
+        {
+          title: "MoonDeck Shortcuts",
           content: <ShortcutsView shortcutManager={shortcutManager} />,
           route: "/moondeck/shortcuts"
+        },
+        {
+          title: "Sunshine Apps",
+          content: <SunshineAppsView settingsManager={settingsManager} buddyProxy={connectivityManager.buddyProxy} />,
+          route: "/moondeck/external-shortcuts"
+        },
+        "separator",
+        {
+          title: "Game Session",
+          content: <GameSessionView settingsManager={settingsManager} />,
+          route: "/moondeck/game-session"
         },
         {
           title: "Button Style",
