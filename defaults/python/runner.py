@@ -130,7 +130,7 @@ async def wait_for_stream_to_be_ready(client: BuddyClient, timeouts: RunnerTimeo
 
 async def launch_app_and_wait(client: BuddyClient, close_steam: bool, app_id: int, timeouts: RunnerTimeouts):
     logger.info("Waiting for Steam to be ready to launch games")
-    result = await wait_for_stream_to_be_ready(client)
+    result = await wait_for_stream_to_be_ready(client, timeouts)
     if result:
         return result
 
