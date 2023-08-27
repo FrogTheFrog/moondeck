@@ -1,5 +1,5 @@
 import { DialogButton, Field, ModalRoot } from "decky-frontend-lib";
-import { Dimension, HostResolution, maxBitrate, minBitrate, stringifyDimension } from "../../lib";
+import { Dimension, HostResolution, maxBitrate, maxFps, minBitrate, minFps, stringifyDimension } from "../../lib";
 import { useEffect, useState } from "react";
 import { IndexedListModal } from "../shared/indexedlist";
 import { NumericTextInput } from "../shared";
@@ -14,22 +14,24 @@ export const ModifyResolutionModal: IndexedListModal<HostResolution["dimensions"
   const [width, setWidth] = useState<number | null>(initialValue?.width ?? null);
   const [height, setHeight] = useState<number | null>(initialValue?.height ?? null);
   const [bitrate, setBitrate] = useState<number | null>(initialValue?.bitrate ?? null);
+  const [fps, setFps] = useState<number | null>(initialValue?.fps ?? null);
   const [widthIsValid, setWidthIsValid] = useState<boolean>(false);
   const [heightIsValid, setHeightIsValid] = useState<boolean>(false);
   const [bitrateIsValid, setBitrateIsValid] = useState<boolean>(false);
+  const [fpsIsValid, setFpsIsValid] = useState<boolean>(false);
   const [resolution, setResolution] = useState<HostResolution["dimensions"][number] | null>(null);
 
   useEffect(() => {
-    if (typeof width === "number" && typeof height === "number" && (typeof bitrate === "number" || bitrate === null)) {
-      setResolution({ width, height, bitrate });
+    if (typeof width === "number" && typeof height === "number" && (typeof bitrate === "number" || bitrate === null) && (typeof fps === "number" || fps === null)) {
+      setResolution({ width, height, bitrate, fps });
     } else {
       setResolution(null);
     }
-  }, [width, height, bitrate]);
+  }, [width, height, bitrate, fps]);
 
   const handleClick = (): void => {
     if (resolution !== null) {
-      const compareWithListItems = (target: Dimension) => (item: Dimension): boolean => item.height === target.height && item.width === target.width && item.bitrate === target.bitrate;
+      const compareWithListItems = (target: Dimension) => (item: Dimension): boolean => item.height === target.height && item.width === target.width && item.bitrate === target.bitrate && item.fps === target.fps;
       const newList = [...currentList];
 
       if (initialValue != null) {
@@ -88,7 +90,6 @@ export const ModifyResolutionModal: IndexedListModal<HostResolution["dimensions"
       <Field
         label="Bitrate in kbps (optional)"
         childrenContainerWidth="fixed"
-        bottomSeparator="none"
       >
         <NumericTextInput
           min={minBitrate}
@@ -100,11 +101,25 @@ export const ModifyResolutionModal: IndexedListModal<HostResolution["dimensions"
         />
       </Field>
       <Field
+        label="FPS (optional)"
+        childrenContainerWidth="fixed"
+        bottomSeparator="none"
+      >
+        <NumericTextInput
+          min={minFps}
+          max={maxFps}
+          optional={true}
+          value={fps}
+          setValue={setFps}
+          setIsValid={setFpsIsValid}
+        />
+      </Field>
+      <Field
         childrenLayout="below"
         childrenContainerWidth="max"
         bottomSeparator="none"
       >
-        <DialogButton disabled={!widthIsValid || !heightIsValid || !bitrateIsValid || resolution === null} onClick={handleClick}>
+        <DialogButton disabled={!widthIsValid || !heightIsValid || !bitrateIsValid || !fpsIsValid || resolution === null} onClick={handleClick}>
           Save resolution
         </DialogButton>
       </Field>

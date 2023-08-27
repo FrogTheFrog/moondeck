@@ -1,4 +1,4 @@
-import { HostSettings, SettingsManager } from "./settingsmanager";
+import { HostSettings, SettingsManager, appLaunchDefault, appLaunchStabilityDefault, appUpdateDefault, buddyRequestsDefault, initialConditionsDefault, servicePingDefault, streamReadinessDefault } from "./settingsmanager";
 import { BehaviorSubject } from "rxjs";
 import { BuddyProxy } from "./buddyproxy";
 import { Mutex } from "async-mutex";
@@ -115,12 +115,23 @@ export class ServerProxy {
           useCustomDimensions: currentSettings?.resolution.useCustomDimensions ?? false,
           selectedDimensionIndex: currentSettings?.resolution.selectedDimensionIndex ?? -1,
           defaultBitrate: currentSettings?.resolution.defaultBitrate ?? null,
+          defaultFps: currentSettings?.resolution.defaultFps ?? null,
           dimensions: currentSettings?.resolution.dimensions ?? []
         },
         hostApp: {
           selectedAppIndex: currentSettings?.hostApp.selectedAppIndex ?? -1,
           apps: currentSettings?.hostApp.apps ?? []
-        }
+        },
+        runnerTimeouts: {
+          buddyRequests: currentSettings?.runnerTimeouts.buddyRequests ?? buddyRequestsDefault,
+          servicePing: currentSettings?.runnerTimeouts.servicePing ?? servicePingDefault,
+          initialConditions: currentSettings?.runnerTimeouts.initialConditions ?? initialConditionsDefault,
+          streamReadiness: currentSettings?.runnerTimeouts.streamReadiness ?? streamReadinessDefault,
+          appLaunch: currentSettings?.runnerTimeouts.appLaunch ?? appLaunchDefault,
+          appLaunchStability: currentSettings?.runnerTimeouts.appLaunchStability ?? appLaunchStabilityDefault,
+          appUpdate: currentSettings?.runnerTimeouts.appUpdate ?? appUpdateDefault
+        },
+        runnerDebugLogs: currentSettings?.runnerDebugLogs ?? false
       };
 
       settings.currentHostId = selectHost ? host.uniqueId : settings.currentHostId;

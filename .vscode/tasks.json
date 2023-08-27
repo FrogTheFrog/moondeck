@@ -8,7 +8,12 @@
             "group": "none",
             "detail": "Check that settings.json has been created",
             "command": "bash -c ${workspaceFolder}/.vscode/config.sh",
-            "problemMatcher": []
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "silent",
+                "revealProblems": "onProblem",
+                "close": true
+            }
         },
         // BUILD
         {
@@ -17,7 +22,12 @@
             "group": "build",
             "detail": "Setup pnpm",
             "command": "pnpm i",
-            "problemMatcher": []
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "silent",
+                "revealProblems": "onProblem",
+                "close": true
+            }
         },
         {
             "label": "updatefrontendlib",
@@ -25,7 +35,12 @@
             "group": "build",
             "detail": "Update deck-frontend-lib",
             "command": "pnpm update decky-frontend-lib --latest",
-            "problemMatcher": []
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "silent",
+                "revealProblems": "onProblem",
+                "close": true
+            }
         },
         {
             "label": "build",
@@ -34,7 +49,12 @@
             "detail": "rollup -c",
             "script": "build",
             "path": "",
-            "problemMatcher": []
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "silent",
+                "revealProblems": "onProblem",
+                "close": true
+            }
         },
         {
             "label": "buildall",
@@ -45,7 +65,12 @@
                 "pnpmsetup",
                 "build"
             ],
-            "problemMatcher": []
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "silent",
+                "revealProblems": "onProblem",
+                "close": true
+            }
         },
         // DEPLOY
         {
@@ -57,7 +82,12 @@
                 "checkforsettings"
             ],
             "command": "ssh deck@${config:deckip} -p ${config:deckport} ${config:deckkey} 'mkdir -p ${config:deckdir}/homebrew/pluginloader && mkdir -p ${config:deckdir}/homebrew/plugins'",
-            "problemMatcher": []
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "silent",
+                "revealProblems": "onProblem",
+                "close": true
+            }
         },
         {
             "label": "deploy",
@@ -69,7 +99,12 @@
                 "chmodfolders"
             ],
             "command": "rsync -azp --delete --chmod=D0755,F0755 --rsh='ssh -p ${config:deckport} ${config:deckkey}' --exclude='.git/' --exclude='.github/' --exclude='.vscode/' --exclude='node_modules/' --exclude='src/' --exclude='*.log' --exclude='.gitignore' . deck@${config:deckip}:${config:deckdir}/homebrew/plugins/${workspaceFolderBasename}",
-            "problemMatcher": []
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "silent",
+                "revealProblems": "onProblem",
+                "close": true
+            }
         },
         {
             "label": "restartloader",
@@ -78,7 +113,12 @@
             "group": "none",
             "dependsOn": [],
             "command": "ssh deck@${config:deckip} -p ${config:deckport} ${config:deckkey} 'echo '${config:deckpass}' | sudo -S systemctl restart plugin_loader'",
-            "problemMatcher": []
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "silent",
+                "revealProblems": "onProblem",
+                "close": true
+            }
         },
         {
             "label": "chmodfolders",
@@ -86,7 +126,12 @@
             "type": "shell",
             "group": "none",
             "command": "ssh deck@${config:deckip} -p ${config:deckport} ${config:deckkey} 'echo '${config:deckpass}' | sudo -S chmod -R ug+rw ${config:deckdir}/homebrew/'",
-            "problemMatcher": []
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "silent",
+                "revealProblems": "onProblem",
+                "close": true
+            }
         },
         {
             "label": "deployall",
@@ -96,7 +141,12 @@
                 "deploy",
                 "restartloader"
             ],
-            "problemMatcher": []
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "silent",
+                "revealProblems": "onProblem",
+                "close": true
+            }
         },
         // ALL-IN-ONE
         {
@@ -110,7 +160,12 @@
                 // Uncomment this line if you'd like your python code reloaded after deployment (this will restart Steam)
                 // ,"restartloader"
             ],
-            "problemMatcher": []
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "silent",
+                "revealProblems": "onProblem",
+                "close": true
+            }
         }
     ]
 }

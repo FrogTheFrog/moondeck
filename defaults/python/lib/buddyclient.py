@@ -1,4 +1,4 @@
-import aiohttp
+import externals.aiohttp as aiohttp
 import asyncio
 import contextlib
 from . import constants

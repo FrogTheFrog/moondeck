@@ -9,6 +9,16 @@ from typing import Any, Dict, List, Literal, Optional, TypedDict, get_args
 from .logger import logger
 
 
+class RunnerTimeouts(TypedDict):
+    buddyRequests: int
+    servicePing: int
+    initialConditions: int
+    streamReadiness: int
+    appLaunch: int
+    appLaunchStability: int
+    appUpdate: int
+
+
 class HostApp(TypedDict):
     selectedAppIndex: int
     apps: List[str]
@@ -18,6 +28,7 @@ class Dimension(TypedDict):
     width: int
     height: int
     bitrate: Optional[int]
+    fps: Optional[int]
 
 
 class HostResolution(TypedDict):
@@ -28,6 +39,7 @@ class HostResolution(TypedDict):
     useCustomDimensions: bool
     selectedDimensionIndex: int
     defaultBitrate: Optional[int]
+    defaultFps: Optional[int]
     dimensions: List[Dimension]
 
 
@@ -41,6 +53,8 @@ class HostSettings(TypedDict):
     closeSteamOnceSessionEnds: bool
     resolution: HostResolution
     hostApp: HostApp
+    runnerTimeouts: RunnerTimeouts
+    runnerDebugLogs: bool
 
 
 class GameSessionSettings(TypedDict):
@@ -186,6 +200,15 @@ class SettingsManager:
             data["version"] = 11
             for host in data["hostSettings"].keys():
                 data["hostSettings"][host]["hostInfoPort"] = 47989
+        if data["version"] == 11:
+            data["version"] = 12
+            for host in data["hostSettings"].keys():
+                data["hostSettings"][host]["runnerTimeouts"] = { "buddyRequests": 5, "servicePing": 5, "initialConditions": 30, "streamReadiness": 30, "appLaunch": 30, "appLaunchStability": 15, "appUpdate": 5 }
+                data["hostSettings"][host]["runnerDebugLogs"] = False
+                data["hostSettings"][host]["resolution"]["defaultFps"] = None
+                for i in range(len(data["hostSettings"][host]["resolution"]["dimensions"])):
+                    data["hostSettings"][host]["resolution"]["dimensions"][i]["fps"] = None
+
 
         return data
 

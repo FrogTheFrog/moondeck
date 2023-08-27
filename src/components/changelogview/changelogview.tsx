@@ -6,6 +6,18 @@ export const ChangelogView: VFC<unknown> = () => {
     <DialogBody>
       <DialogControlsSection>
         <Field
+          label="1.6.9"
+          description={
+            <>
+              <div>&bull; Added options to override various timeouts in runner script and also to enable debug logs.</div>
+              <div>&bull; Added option to override FPS in Moonlight.</div>
+              <div>&bull; Grouped, split and renamed various MoonDeck configuration pages.</div>
+              <div>&bull; Bitrate (and FPS) can now be overridden without specifying custom resolution.</div>
+            </>
+          }
+          focusable={true}
+        />
+        <Field
           label="1.6.8"
           description="Adding missing dependencies/handling some edge cases to make plugin more compatible with other linux distros."
           focusable={true}

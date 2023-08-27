@@ -11,5 +11,8 @@ def set_log_filename(filename, rotate):
                         level=logging.INFO,
                         format='%(asctime)s %(levelname)s %(message)s',
                         force=True)
+    
+def enable_debug_level():
+    logging.getLogger().setLevel(logging.DEBUG)
 
 logger = logging.getLogger()

@@ -11,6 +11,26 @@ export const horizontalAlignmentValues = ["top", "bottom"] as const;
 export const verticalAlignmentValues = ["left", "right"] as const;
 export const minBitrate = 500 as const;
 export const maxBitrate = 150000 as const;
+export const minFps = 30 as const;
+export const maxFps = 240 as const;
+
+export const buddyRequestsDefault = 5 as const;
+export const servicePingDefault = 5 as const;
+export const initialConditionsDefault = 30 as const;
+export const streamReadinessDefault = 30 as const;
+export const appLaunchDefault = 30 as const;
+export const appLaunchStabilityDefault = 15 as const;
+export const appUpdateDefault = 15 as const;
+
+export interface RunnerTimeouts {
+  buddyRequests: number;
+  servicePing: number;
+  initialConditions: number;
+  streamReadiness: number;
+  appLaunch: number;
+  appLaunchStability: number;
+  appUpdate: number;
+}
 
 export interface HostApp {
   selectedAppIndex: number;
@@ -21,6 +41,7 @@ export interface Dimension {
   width: number;
   height: number;
   bitrate: number | null;
+  fps: number | null;
 }
 
 export interface HostResolution {
@@ -31,6 +52,7 @@ export interface HostResolution {
   useCustomDimensions: boolean;
   selectedDimensionIndex: number;
   defaultBitrate: number | null;
+  defaultFps: number | null;
   dimensions: Dimension[];
 }
 
@@ -44,6 +66,8 @@ export interface HostSettings {
   closeSteamOnceSessionEnds: boolean;
   resolution: HostResolution;
   hostApp: HostApp;
+  runnerTimeouts: RunnerTimeouts;
+  runnerDebugLogs: boolean;
 }
 
 export interface GameSessionSettings {
@@ -75,10 +99,9 @@ export interface UserSettings {
 }
 
 export function stringifyDimension(value: Dimension): string {
-  if (value.bitrate === null) {
-    return `${value.width}x${value.height}`;
-  }
-  return `${value.width}x${value.height} (${value.bitrate} kbps)`;
+  const fps = value.fps === null ? "" : `x${value.fps}`;
+  const bitrate = value.bitrate === null ? "" : ` (${value.bitrate} kbps)`;
+  return `${value.width}x${value.height}${fps}${bitrate}`;
 }
 
 async function getUserSettings(serverAPI: ServerAPI): Promise<UserSettings | null> {

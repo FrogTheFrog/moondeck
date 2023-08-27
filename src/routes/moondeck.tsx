@@ -5,6 +5,8 @@ import { ChangelogView } from "../components/changelogview";
 import { GameSessionView } from "../components/gamesessionview";
 import { HostSelectionView } from "../components/hostselectionview";
 import { HostSettingsView } from "../components/hostsettingsview";
+import { MoonlightSettingsView } from "../components/moonlightsettingsview";
+import { RunnerSettingsView } from "../components/runnersettingsview";
 import { SetupGuideView } from "../components/setupguideview";
 import { ShortcutsView } from "../components/shortcutsview";
 import { StatusIndicatorsView } from "../components/statusindicatorsview";
@@ -30,25 +32,16 @@ const MoonDeckRouter: VFC<Props> = ({ connectivityManager, settingsManager, shor
           route: "/moondeck/setup-guide"
         },
         {
-          title: "Changelog",
-          content: <ChangelogView />,
-          route: "/moondeck/changelog"
-        },
-        {
-          title: "Sunshine Apps",
-          content: <SunshineAppsView settingsManager={settingsManager} buddyProxy={connectivityManager.buddyProxy} />,
-          route: "/moondeck/external-shortcuts"
-        },
-        {
           title: "Status Indicators",
           content: <StatusIndicatorsView />,
           route: "/moondeck/status-indicators"
         },
         {
-          title: "Game Session",
-          content: <GameSessionView settingsManager={settingsManager} />,
-          route: "/moondeck/game-session"
+          title: "Changelog",
+          content: <ChangelogView />,
+          route: "/moondeck/changelog"
         },
+        "separator",
         {
           title: "Host Selection",
           content: <HostSelectionView connectivityManager={connectivityManager} settingsManager={settingsManager} />,
@@ -57,12 +50,34 @@ const MoonDeckRouter: VFC<Props> = ({ connectivityManager, settingsManager, shor
         {
           title: "Host Settings",
           content: <HostSettingsView settingsManager={settingsManager} />,
-          route: "/moondeck/host-info"
+          route: "/moondeck/host-settings"
         },
         {
-          title: "Shortcuts",
+          title: "Moonlight Settings",
+          content: <MoonlightSettingsView settingsManager={settingsManager} />,
+          route: "/moondeck/resolution-settings"
+        },
+        {
+          title: "Runner Settings",
+          content: <RunnerSettingsView settingsManager={settingsManager} />,
+          route: "/moondeck/runner-settings"
+        },
+        "separator",
+        {
+          title: "MoonDeck Shortcuts",
           content: <ShortcutsView shortcutManager={shortcutManager} />,
           route: "/moondeck/shortcuts"
+        },
+        {
+          title: "Sunshine Apps",
+          content: <SunshineAppsView settingsManager={settingsManager} buddyProxy={connectivityManager.buddyProxy} />,
+          route: "/moondeck/external-shortcuts"
+        },
+        "separator",
+        {
+          title: "Game Session",
+          content: <GameSessionView settingsManager={settingsManager} />,
+          route: "/moondeck/game-session"
         },
         {
           title: "Button Style",
