@@ -18,7 +18,7 @@ from typing import Optional, TypedDict
 from lib.moonlightproxy import MoonlightProxy, ResolutionDimensions
 from lib.buddyrequests import HostInfoResponse, StreamState
 from lib.buddyclient import BuddyClient, ChangeResolutionResult
-from lib.logger import logger, set_log_filename
+from lib.logger import logger, set_log_filename, enable_debug_level
 from lib.settings import settings_manager, RunnerTimeouts
 
 import os
@@ -329,6 +329,9 @@ async def main():
         if host_settings is None:
             runnerresult.set_result(runnerresult.Result.HostNotSelected)
             return
+        
+        if host_settings["runnerDebugLogs"]:
+            enable_debug_level()
 
         res_dimensions: Optional[ResolutionDimensions] = None
         dimension_list = host_settings["resolution"]["dimensions"]

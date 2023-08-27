@@ -129,7 +129,8 @@ export class ServerProxy {
           appLaunch: currentSettings?.runnerTimeouts.appLaunch ?? appLaunchDefault,
           appLaunchStability: currentSettings?.runnerTimeouts.appLaunchStability ?? appLaunchStabilityDefault,
           appUpdate: currentSettings?.runnerTimeouts.appUpdate ?? appUpdateDefault
-        }
+        },
+        runnerDebugLogs: currentSettings?.runnerDebugLogs ?? false
       };
 
       settings.currentHostId = selectHost ? host.uniqueId : settings.currentHostId;

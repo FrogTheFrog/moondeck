@@ -51,6 +51,7 @@ class HostSettings(TypedDict):
     resolution: HostResolution
     hostApp: HostApp
     runnerTimeouts: RunnerTimeouts
+    runnerDebugLogs: bool
 
 
 class GameSessionSettings(TypedDict):
@@ -200,6 +201,8 @@ class SettingsManager:
             data["version"] = 12
             for host in data["hostSettings"].keys():
                 data["hostSettings"][host]["runnerTimeouts"] = { "buddyRequests": 5, "servicePing": 5, "initialConditions": 30, "streamReadiness": 30, "appLaunch": 30, "appLaunchStability": 15, "appUpdate": 5 }
+                data["hostSettings"][host]["runnerDebugLogs"] = False
+
 
         return data
 

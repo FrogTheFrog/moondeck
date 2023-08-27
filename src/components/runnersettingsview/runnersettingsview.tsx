@@ -27,6 +27,14 @@ export const RunnerSettingsView: VFC<Props> = ({ settingsManager }) => {
   return (
     <DialogBody>
       <DialogControlsSection>
+        <DialogControlsSectionHeader>Debug logs</DialogControlsSectionHeader>
+        <ToggleField
+          label="Enabled"
+          value={hostSettings.runnerDebugLogs}
+          setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.runnerDebugLogs = value; })}
+        />
+      </DialogControlsSection>
+      <DialogControlsSection>
         <DialogControlsSectionHeader>Timeouts</DialogControlsSectionHeader>
         <Field
           description="Warning! Changing anything here to anything than the default values could easily break the runner!"

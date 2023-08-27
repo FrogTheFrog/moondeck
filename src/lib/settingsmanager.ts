@@ -63,6 +63,7 @@ export interface HostSettings {
   resolution: HostResolution;
   hostApp: HostApp;
   runnerTimeouts: RunnerTimeouts;
+  runnerDebugLogs: boolean;
 }
 
 export interface GameSessionSettings {
