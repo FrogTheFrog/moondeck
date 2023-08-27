@@ -1,4 +1,4 @@
-import aiohttp
+import externals.aiohttp as aiohttp
 import base64
 import contextlib
 import pathlib

@@ -1,10 +1,9 @@
 import asyncio
-import aiohttp
 import re
+import externals.aiohttp as aiohttp
 import externals.zeroconf as zc
 import externals.zeroconf.asyncio as aiozc
-import async_timeout
-from . import constants
+import externals.async_timeout as async_timeout
 from . import utils
 
 from typing import List, Optional, Callable, TypedDict
