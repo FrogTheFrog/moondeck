@@ -120,6 +120,15 @@ export class ServerProxy {
         hostApp: {
           selectedAppIndex: currentSettings?.hostApp.selectedAppIndex ?? -1,
           apps: currentSettings?.hostApp.apps ?? []
+        },
+        runnerTimeouts: {
+          buddyRequests: 5,
+          servicePing: 5,
+          initialConditions: 30,
+          streamReadiness: 30,
+          appLaunch: 30,
+          appLaunchStability: 15,
+          appUpdate: 5
         }
       };
 

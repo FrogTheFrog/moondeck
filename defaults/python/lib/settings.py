@@ -9,6 +9,15 @@ from typing import Any, Dict, List, Literal, Optional, TypedDict, get_args
 from .logger import logger
 
 
+class RunnerTimeouts(TypedDict):
+    buddyRequests: int
+    servicePing: int
+    initialConditions: int
+    streamReadiness: int
+    appLaunch: int
+    appLaunchStability: int
+    appUpdate: int
+
 class HostApp(TypedDict):
     selectedAppIndex: int
     apps: List[str]
@@ -41,6 +50,7 @@ class HostSettings(TypedDict):
     closeSteamOnceSessionEnds: bool
     resolution: HostResolution
     hostApp: HostApp
+    runnerTimeouts: RunnerTimeouts
 
 
 class GameSessionSettings(TypedDict):
@@ -186,6 +196,10 @@ class SettingsManager:
             data["version"] = 11
             for host in data["hostSettings"].keys():
                 data["hostSettings"][host]["hostInfoPort"] = 47989
+        if data["version"] == 11:
+            data["version"] = 12
+            for host in data["hostSettings"].keys():
+                data["hostSettings"][host]["runnerTimeouts"] = { "buddyRequests": 5, "servicePing": 5, "initialConditions": 30, "streamReadiness": 30, "appLaunch": 30, "appLaunchStability": 15, "appUpdate": 5 }
 
         return data
 

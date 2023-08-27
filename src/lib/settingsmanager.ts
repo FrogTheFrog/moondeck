@@ -12,6 +12,16 @@ export const verticalAlignmentValues = ["left", "right"] as const;
 export const minBitrate = 500 as const;
 export const maxBitrate = 150000 as const;
 
+export interface RunnerTimeouts {
+  buddyRequests: number;
+  servicePing: number;
+  initialConditions: number;
+  streamReadiness: number;
+  appLaunch: number;
+  appLaunchStability: number;
+  appUpdate: number;
+}
+
 export interface HostApp {
   selectedAppIndex: number;
   apps: string[];
@@ -44,6 +54,7 @@ export interface HostSettings {
   closeSteamOnceSessionEnds: boolean;
   resolution: HostResolution;
   hostApp: HostApp;
+  runnerTimeouts: RunnerTimeouts;
 }
 
 export interface GameSessionSettings {
