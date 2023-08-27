@@ -15,11 +15,11 @@ add_plugin_to_path()
 
 from enum import Enum
 from typing import Optional, TypedDict
-from lib.moonlightproxy import MoonlightProxy, ResolutionDimensions
+from lib.moonlightproxy import MoonlightProxy, ResolutionDimensions, ResolutionSize
 from lib.buddyrequests import HostInfoResponse, StreamState
 from lib.buddyclient import BuddyClient, ChangeResolutionResult
 from lib.logger import logger, set_log_filename, enable_debug_level
-from lib.settings import settings_manager, RunnerTimeouts
+from lib.settings import HostSettings, settings_manager, RunnerTimeouts
 
 import os
 import asyncio
@@ -182,7 +182,7 @@ async def start_moonlight(proxy: MoonlightProxy):
     await proxy.start()
 
 
-async def wait_for_initial_host_conditions(res_change: Optional[ResolutionChange], client: BuddyClient, app_id: int, timeouts: RunnerTimeouts):
+async def wait_for_initial_host_conditions(res_change: ResolutionChange, client: BuddyClient, app_id: int, timeouts: RunnerTimeouts):
     obj = {"retries": timeouts["initialConditions"]}
 
     async def wait_till_stream_to_be_ready(info: HostInfoResponse):
@@ -208,9 +208,9 @@ async def wait_for_initial_host_conditions(res_change: Optional[ResolutionChange
     if result:
         return result
 
-    if res_change and res_change["passToBuddy"]:
+    if res_change["dimensions"]["size"] and res_change["passToBuddy"]:
         logger.info("Notifying Buddy to change resolution")
-        resp = await client.change_resolution(res_change["dimensions"]["width"], res_change["dimensions"]["height"])
+        resp = await client.change_resolution(res_change["dimensions"]["size"]["width"], res_change["dimensions"]["size"]["height"])
         if resp:
             if resp == ChangeResolutionResult.BuddyRefused:
                 logger.warn("Buddy refused resolution change. Continuing...")
@@ -243,10 +243,10 @@ async def establish_connection(client: BuddyClient, hostInfoPort: int, timeouts:
     return None
 
 
-async def run_game(res_change: Optional[ResolutionChange], host_app: str, hostname: str, address: str, hostInfoPort:int, buddyPort: int, client_id: Optional[str], close_steam: bool, timeouts: RunnerTimeouts, app_id: int):
+async def run_game(res_change: ResolutionChange, host_app: str, hostname: str, address: str, hostInfoPort:int, buddyPort: int, client_id: Optional[str], close_steam: bool, timeouts: RunnerTimeouts, app_id: int):
     try:
         async with BuddyClient(address, buddyPort, client_id, timeouts["buddyRequests"]) as client, \
-                   MoonlightProxy(hostname, host_app, res_change["dimensions"] if (res_change and res_change["passToMoonlight"]) else None) as proxy:
+                   MoonlightProxy(hostname, host_app, res_change["dimensions"] if res_change["passToMoonlight"] else None) as proxy:
             result = await establish_connection(client=client, hostInfoPort=hostInfoPort, timeouts=timeouts)
             if result:
                 return result
@@ -297,6 +297,44 @@ def get_auto_resolution() -> Optional[MoonDeckResolution]:
         return None
 
 
+def get_resolution_change(host_settings: HostSettings) -> ResolutionChange:
+    size: Optional[ResolutionSize] = None
+    bitrate = host_settings["resolution"]["defaultBitrate"]
+    fps = host_settings["resolution"]["defaultFps"]
+
+    dimension_list = host_settings["resolution"]["dimensions"]
+    if host_settings["resolution"]["useCustomDimensions"] and len(dimension_list) > 0:
+        index = host_settings["resolution"]["selectedDimensionIndex"]
+        if index >= 0 and index < len(dimension_list):
+            res_dimensions = dimension_list[index]
+
+            size = { "width": res_dimensions["width"], "height": res_dimensions["height"] }
+            if res_dimensions["bitrate"] is not None:
+                bitrate = res_dimensions["bitrate"]
+            if res_dimensions["fps"] is not None:
+                fps = res_dimensions["fps"]
+        else:
+            logger.warn(f"Dimension index ({index}) out of range ([0;{len(dimension_list)}]). Still continuing...")
+
+    
+    if not size and host_settings["resolution"]["automatic"]:
+        auto_resolution = get_auto_resolution()
+            
+        logger.info(f"Auto resolution from MoonDeck: {auto_resolution}")
+        if auto_resolution:
+            size = { "width": auto_resolution["width"], "height": auto_resolution["height"] }
+        else:
+            logger.warn(f"Cannot use automatic resolution! MoonDeck did not pass resolution. Still continuing...")
+        
+    res_change: ResolutionChange = { 
+        "dimensions": { "size": size, "bitrate": bitrate, "fps": fps },
+        "passToBuddy": host_settings["resolution"]["passToBuddy"],
+        "passToMoonlight": host_settings["resolution"]["passToMoonlight"]
+    }
+    logger.info(f"Parsed resolution settings: {res_change}")
+    return res_change
+
+
 def get_app_id() -> Optional[int]:
     app_id = os.environ.get("MOONDECK_STEAM_APP_ID")
     try:
@@ -333,36 +371,7 @@ async def main():
         if host_settings["runnerDebugLogs"]:
             enable_debug_level()
 
-        res_dimensions: Optional[ResolutionDimensions] = None
-        dimension_list = host_settings["resolution"]["dimensions"]
-        if host_settings["resolution"]["useCustomDimensions"] and len(dimension_list) > 0:
-            index = host_settings["resolution"]["selectedDimensionIndex"]
-            if index >= 0 and index < len(dimension_list):
-                res_dimensions = dimension_list[index]
-                if res_dimensions["bitrate"] is None:
-                    res_dimensions["bitrate"] = host_settings["resolution"]["defaultBitrate"]
-            else:
-                logger.warn(f"Dimension index ({index}) out of range ([0;{len(dimension_list)}]). Still continuing...")
-
-        if not res_dimensions and host_settings["resolution"]["automatic"]:
-            auto_resolution = get_auto_resolution()
-            bitrate = host_settings["resolution"]["defaultBitrate"]
-            logger.info(f"Auto resolution from MoonDeck: {auto_resolution}")
-            if auto_resolution:
-                res_dimensions = { "width": auto_resolution["width"], "height": auto_resolution["height"], "bitrate": bitrate }
-            else:
-                logger.warn(f"Cannot use automatic resolution! MoonDeck did not pass resolution. Still continuing...")
-        
-        res_change: Optional[ResolutionChange] = None
-        if res_dimensions:
-            bitrate_entry = f" ({res_dimensions['bitrate']} kbps)" if res_dimensions['bitrate'] is not None else ""
-            logger.info(f"Will try to apply {res_dimensions['width']}x{res_dimensions['height']}{bitrate_entry} resolution on host.")
-            res_change = { 
-                "dimensions": res_dimensions,
-                "passToBuddy": host_settings["resolution"]["passToBuddy"],
-                "passToMoonlight": host_settings["resolution"]["passToMoonlight"]
-            }
-
+        res_change = get_resolution_change(host_settings=host_settings)
         host_app: str = "MoonDeckStream"
         app_list = host_settings["hostApp"]["apps"]
         if len(app_list) > 0:

@@ -7,10 +7,15 @@ from .logger import logger
 from . import constants
 
 
-class ResolutionDimensions(TypedDict):
+class ResolutionSize(TypedDict):
     width: int
     height: int
+
+
+class ResolutionDimensions(TypedDict):
+    size: Optional[ResolutionSize]
     bitrate: Optional[int]
+    fps: Optional[int]
 
 
 class MoonlightProxy(contextlib.AbstractAsyncContextManager):
@@ -36,8 +41,11 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
 
         args = ["run", "--arch=x86_64", "--command=moonlight", self.moonlight]
         if self.resolution:
-            args += ["--resolution", f"{self.resolution['width']}x{self.resolution['height']}"]
-            if self.resolution["bitrate"] is not None:
+            if self.resolution["size"]:
+                args += ["--resolution", f"{self.resolution['size']['width']}x{self.resolution['size']['height']}"]
+            if self.resolution["fps"]:
+                args += ["--fps", f"{self.resolution['fps']}"]
+            if self.resolution["bitrate"]:
                 args += ["--bitrate", f"{self.resolution['bitrate']}"]
         args += ["stream", self.hostname, self.host_app]
 

@@ -1,7 +1,7 @@
 import { DialogBody, DialogControlsSection, DialogControlsSectionHeader, Field, Focusable } from "decky-frontend-lib";
 import { LabelWithIcon, NumericTextInput, ResolutionSelectionDropdown, ToggleField } from "../shared";
 import { ModifyListButton, RemoveListEntryButton } from "../shared/indexedlist";
-import { SettingsManager, maxBitrate, minBitrate } from "../../lib";
+import { SettingsManager, maxBitrate, maxFps, minBitrate, minFps } from "../../lib";
 import { AppResolutionOverrideDropdown } from "./appresolutionoverridedropdown";
 import { HostOff } from "../icons";
 import { ModifyResolutionModal } from "./modifyresolutionmodal";
@@ -12,7 +12,7 @@ interface Props {
   settingsManager: SettingsManager;
 }
 
-export const ResolutionSettingsView: VFC<Props> = ({ settingsManager }) => {
+export const MoonlightSettingsView: VFC<Props> = ({ settingsManager }) => {
   const hostSettings = useCurrentHostSettings(settingsManager);
   if (hostSettings === null) {
     return (
@@ -29,6 +29,35 @@ export const ResolutionSettingsView: VFC<Props> = ({ settingsManager }) => {
 
   return (
     <DialogBody>
+      <DialogControlsSection>
+        <DialogControlsSectionHeader>General</DialogControlsSectionHeader>
+        <Field
+          label="Default bitrate in kbps (optional)"
+          description="Bitrate to be applied when starting stream. Will be overridden by the one from custom resolution if provided."
+          childrenContainerWidth="fixed"
+        >
+          <NumericTextInput
+            min={minBitrate}
+            max={maxBitrate}
+            optional={true}
+            value={hostSettings.resolution.defaultBitrate}
+            setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.resolution.defaultBitrate = value; })}
+          />
+        </Field>
+        <Field
+          label="Default FPS"
+          description="FPS to be applied when starting stream. Will be overridden by the one from custom resolution if provided. Providing FPS without bitrate will trigger Moonlight to automatically calculate the bitrate!"
+          childrenContainerWidth="fixed"
+        >
+          <NumericTextInput
+            min={minFps}
+            max={maxFps}
+            optional={true}
+            value={hostSettings.resolution.defaultFps}
+            setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.resolution.defaultFps = value; })}
+          />
+        </Field>
+      </DialogControlsSection>
       <DialogControlsSection>
         <DialogControlsSectionHeader>Custom Resolution</DialogControlsSectionHeader>
         <Field
@@ -53,20 +82,6 @@ export const ResolutionSettingsView: VFC<Props> = ({ settingsManager }) => {
           value={hostSettings.resolution.useCustomDimensions}
           setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.resolution.useCustomDimensions = value; })}
         />
-        <Field
-          label="Default bitrate in kbps (optional)"
-          description="Bitrate to be applied when starting stream. Will be overridden by the one from custom resolution if provided."
-          childrenContainerWidth="fixed"
-          bottomSeparator="none"
-        >
-          <NumericTextInput
-            min={minBitrate}
-            max={maxBitrate}
-            optional={true}
-            value={hostSettings.resolution.defaultBitrate}
-            setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.resolution.defaultBitrate = value; })}
-          />
-        </Field>
         <Field
           label="Selected custom resolution"
           childrenContainerWidth="fixed"
