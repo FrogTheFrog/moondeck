@@ -5,12 +5,12 @@ import { ChangelogView } from "../components/changelogview";
 import { GameSessionView } from "../components/gamesessionview";
 import { HostSelectionView } from "../components/hostselectionview";
 import { HostSettingsView } from "../components/hostsettingsview";
+import { ResolutionSettingsView } from "../components/resolutionsettingsview";
 import { SetupGuideView } from "../components/setupguideview";
 import { ShortcutsView } from "../components/shortcutsview";
 import { StatusIndicatorsView } from "../components/statusindicatorsview";
 import { SunshineAppsView } from "../components/sunshineappsview";
 import { VFC } from "react";
-import { ResolutionSettingsView } from "../components/resolutionsettingsview";
 
 interface Props {
   connectivityManager: ConnectivityManager;
