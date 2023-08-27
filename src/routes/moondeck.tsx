@@ -6,6 +6,7 @@ import { GameSessionView } from "../components/gamesessionview";
 import { HostSelectionView } from "../components/hostselectionview";
 import { HostSettingsView } from "../components/hostsettingsview";
 import { ResolutionSettingsView } from "../components/resolutionsettingsview";
+import { RunnerSettingsView } from "../components/runnersettingsview";
 import { SetupGuideView } from "../components/setupguideview";
 import { ShortcutsView } from "../components/shortcutsview";
 import { StatusIndicatorsView } from "../components/statusindicatorsview";
@@ -55,6 +56,11 @@ const MoonDeckRouter: VFC<Props> = ({ connectivityManager, settingsManager, shor
           title: "Resolution Settings",
           content: <ResolutionSettingsView settingsManager={settingsManager} />,
           route: "/moondeck/resolution-settings"
+        },
+        {
+          title: "Runner Settings",
+          content: <RunnerSettingsView settingsManager={settingsManager} />,
+          route: "/moondeck/runner-settings"
         },
         "separator",
         {
