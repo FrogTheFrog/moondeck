@@ -57,6 +57,18 @@ export const MoonlightSettingsView: VFC<Props> = ({ settingsManager }) => {
             setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.resolution.defaultFps = value; })}
           />
         </Field>
+        <ToggleField
+          label="Pass the resolution option to Buddy to change resolution on host PC"
+          description="Disable this if you want to use do/undo commands for changing resolution"
+          value={hostSettings.resolution.passToBuddy}
+          setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.resolution.passToBuddy = value; })}
+        />
+        <ToggleField
+          label="Pass the resolution, bitrate and FPS options to Moonlight to use instead of Moonlight's default ones"
+          description="Disable this if you want to use the settings from the Moonlight app itself"
+          value={hostSettings.resolution.passToMoonlight}
+          setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.resolution.passToMoonlight = value; })}
+        />
       </DialogControlsSection>
       <DialogControlsSection>
         <DialogControlsSectionHeader>Custom Resolution</DialogControlsSectionHeader>
@@ -132,25 +144,6 @@ export const MoonlightSettingsView: VFC<Props> = ({ settingsManager }) => {
             />
           </Focusable>
         </Field>
-      </DialogControlsSection>
-      <DialogControlsSection>
-        <DialogControlsSectionHeader>Gamestream Resolution</DialogControlsSectionHeader>
-        <Field
-          description="Here you can specify how to use custom resolution for the gamestream."
-          focusable={true}
-        />
-        <ToggleField
-          label="Pass the resolution option to Buddy to change resolution on host PC"
-          description="Disable this if you want to use do/undo commands for changing resolution"
-          value={hostSettings.resolution.passToBuddy}
-          setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.resolution.passToBuddy = value; })}
-        />
-        <ToggleField
-          label="Pass the resolution and bitrate options to Moonlight to use instead of default ones"
-          description="Disable this if you want to use the settings from the Moonlight app itself"
-          value={hostSettings.resolution.passToMoonlight}
-          setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.resolution.passToMoonlight = value; })}
-        />
       </DialogControlsSection>
       <DialogControlsSection>
         <DialogControlsSectionHeader>App Resolution Override</DialogControlsSectionHeader>
