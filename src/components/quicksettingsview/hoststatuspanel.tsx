@@ -1,10 +1,10 @@
-import { BuddyStatus, UserSettings, ServerStatus, SettingsManager } from "../../lib";
+import { BuddyStatus, ServerStatus, SettingsManager, UserSettings } from "../../lib";
 import { BuddyStatusField, LabelWithIcon, ServerStatusField } from "../shared";
 import { Field, PanelSection, PanelSectionRow } from "decky-frontend-lib";
-import { HostOff } from "../icons";
 import { CurrentHostSettings } from "../../hooks";
-import { VFC } from "react";
+import { HostOff } from "../icons";
 import { HostSelectionDropdown } from "../hostselectionview/hostselectiondropdown";
+import { VFC } from "react";
 
 interface Props {
   currentHostSettings: CurrentHostSettings | null;

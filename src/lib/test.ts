@@ -1,9 +1,11 @@
-import { getGamepadNavigationTrees } from 'decky-frontend-lib';
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
+import { getGamepadNavigationTrees } from "decky-frontend-lib";
 
 function getQuickAccessWindow(): Window | null {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const navTrees = getGamepadNavigationTrees();
-  return navTrees.find((tree: any) => tree?.id === 'QuickAccess-NA')?.m_Root?.m_element?.ownerDocument.defaultView ?? null;
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any
+  return navTrees.find((tree: any) => tree?.id === "QuickAccess-NA")?.m_Root?.m_element?.ownerDocument.defaultView ?? null;
 }
 
 /**
@@ -45,14 +47,14 @@ export function useQuickAccessVisible(): boolean {
   useEffect(() => {
     const quickAccessWindow = getQuickAccessWindow();
     if (quickAccessWindow === null) {
-      console.error('Could not get window of QuickAccess menu!');
+      console.error("Could not get window of QuickAccess menu!");
       return;
     }
 
-    const onVisibilityChange = () => setIsHidden(quickAccessWindow.document.hidden);
-    quickAccessWindow.addEventListener('visibilitychange', onVisibilityChange);
+    const onVisibilityChange = (): void => setIsHidden(quickAccessWindow.document.hidden);
+    quickAccessWindow.addEventListener("visibilitychange", onVisibilityChange);
     return () => {
-      quickAccessWindow.removeEventListener('visibilitychange', onVisibilityChange);
+      quickAccessWindow.removeEventListener("visibilitychange", onVisibilityChange);
     };
   }, []);
 
