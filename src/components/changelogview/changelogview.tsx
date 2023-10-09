@@ -6,6 +6,17 @@ export const ChangelogView: VFC<unknown> = () => {
     <DialogBody>
       <DialogControlsSection>
         <Field
+          label="1.6.10"
+          description={
+            <>
+              <div>&bull; Added a dropdown for selecting hosts in quick access menu.</div>
+              <div>&bull; Fixed a bug where a host might be added automatically as a new host entry if the server's id changes.</div>
+              <div>&bull; Fixed some minor UI bugs.</div>
+            </>
+          }
+          focusable={true}
+        />
+        <Field
           label="1.6.9"
           description={
             <>

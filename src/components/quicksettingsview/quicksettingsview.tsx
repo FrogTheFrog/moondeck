@@ -1,5 +1,5 @@
 import { ConnectivityManager, MoonDeckAppLauncher, SettingsManager } from "../../lib";
-import { useBuddyStatus, useCurrentHostSettings, useMoonDeckAppData, useServerStatus } from "../../hooks";
+import { useBuddyStatus, useCurrentHostSettings, useCurrentSettings, useMoonDeckAppData, useServerStatus } from "../../hooks";
 import { GameSessionPanel } from "./gamesessionpanel";
 import { GoToSettingsPanel } from "./gotosettingspanel";
 import { HostAppPanel } from "./hostapppanel";
@@ -7,7 +7,7 @@ import { HostCommandPanel } from "./hostcommandpanel";
 import { HostStatusPanel } from "./hoststatuspanel";
 import { ResolutionPanel } from "./resolutionpanel";
 import { VFC } from "react";
-import { useQuickAccessVisible } from "decky-frontend-lib";
+import { useQuickAccessVisible } from "../../lib/test";
 
 interface Props {
   connectivityManager: ConnectivityManager;
@@ -20,6 +20,7 @@ export const QuickSettingsView: VFC<Props> = ({ connectivityManager, settingsMan
   const [serverStatus, serverRefreshStatus] = useServerStatus(connectivityManager, isVisible);
   const [buddyStatus, buddyRefreshStatus] = useBuddyStatus(connectivityManager, isVisible);
   const currentHostSettings = useCurrentHostSettings(settingsManager);
+  const currentSettings = useCurrentSettings(settingsManager);
   const appData = useMoonDeckAppData(moonDeckAppLauncher);
 
   return (
@@ -28,7 +29,7 @@ export const QuickSettingsView: VFC<Props> = ({ connectivityManager, settingsMan
       {appData !== null
         ? <GameSessionPanel appData={appData} moonDeckAppLauncher={moonDeckAppLauncher} />
         : <>
-            <HostStatusPanel currentHostSettings={currentHostSettings} serverStatus={serverStatus} serverRefreshStatus={serverRefreshStatus} buddyStatus={buddyStatus} buddyRefreshStatus={buddyRefreshStatus} />
+            <HostStatusPanel currentHostSettings={currentHostSettings} currentSettings={currentSettings} settingsManager={settingsManager} serverStatus={serverStatus} serverRefreshStatus={serverRefreshStatus} buddyStatus={buddyStatus} buddyRefreshStatus={buddyRefreshStatus} />
             <HostAppPanel currentHostSettings={currentHostSettings} settingsManager={settingsManager} />
             <ResolutionPanel currentHostSettings={currentHostSettings} settingsManager={settingsManager} />
           </>

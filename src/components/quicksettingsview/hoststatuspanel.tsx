@@ -1,20 +1,23 @@
-import { BuddyStatus, ServerStatus } from "../../lib";
+import { BuddyStatus, UserSettings, ServerStatus, SettingsManager } from "../../lib";
 import { BuddyStatusField, LabelWithIcon, ServerStatusField } from "../shared";
 import { Field, PanelSection, PanelSectionRow } from "decky-frontend-lib";
-import { HostOff, HostOn } from "../icons";
+import { HostOff } from "../icons";
 import { CurrentHostSettings } from "../../hooks";
 import { VFC } from "react";
+import { HostSelectionDropdown } from "../hostselectionview/hostselectiondropdown";
 
 interface Props {
   currentHostSettings: CurrentHostSettings | null;
+  currentSettings: UserSettings | null;
+  settingsManager: SettingsManager;
   serverStatus: ServerStatus;
   serverRefreshStatus: boolean;
   buddyStatus: BuddyStatus;
   buddyRefreshStatus: boolean;
 }
 
-export const HostStatusPanel: VFC<Props> = ({ currentHostSettings, serverStatus, serverRefreshStatus, buddyStatus, buddyRefreshStatus }) => {
-  if (currentHostSettings === null) {
+export const HostStatusPanel: VFC<Props> = ({ currentHostSettings, currentSettings, settingsManager, serverStatus, serverRefreshStatus, buddyStatus, buddyRefreshStatus }) => {
+  if (currentHostSettings === null || currentSettings === null) {
     return (
       <PanelSection title="STATUS">
         <PanelSectionRow>
@@ -26,10 +29,17 @@ export const HostStatusPanel: VFC<Props> = ({ currentHostSettings, serverStatus,
     );
   }
 
+  const disabledDropdown = Object.keys(currentSettings.hostSettings).length < 2;
   return (
     <PanelSection title="STATUS">
       <PanelSectionRow>
-        <Field label={<LabelWithIcon icon={HostOn} label={currentHostSettings.hostName} />} bottomSeparator={"none"} />
+        <HostSelectionDropdown
+          disableNoneOption={true}
+          disabled={disabledDropdown}
+          focusable={!disabledDropdown}
+          currentSettings={currentSettings}
+          setHost={(value) => { settingsManager.update((settings) => { settings.currentHostId = value; }); }}
+        />
       </PanelSectionRow>
       <PanelSectionRow>
         <ServerStatusField label="GameStream" status={serverStatus} isRefreshing={serverRefreshStatus} noSeparator={true} />

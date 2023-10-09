@@ -38,6 +38,7 @@ export const ResolutionPanel: VFC<Props> = ({ currentHostSettings, settingsManag
           spacingBetweenLabelAndChild="none"
         >
           <ResolutionSelectionDropdown
+            focusable={currentHostSettings.resolution.dimensions.length > 1}
             currentIndex={currentHostSettings.resolution.selectedDimensionIndex}
             currentList={currentHostSettings.resolution.dimensions}
             setIndex={(value) => { settingsManager.updateHost((hostSettings) => { hostSettings.resolution.selectedDimensionIndex = value; }); }}

@@ -176,11 +176,11 @@ export class ServerProxy {
       }
 
       if (this.settingsManager.settings.value?.currentHostId === hostId) {
-        const newStatus = result === null ? "Offline" : "Online";
+        const newStatus = result?.uniqueId === hostId ? "Online" : "Offline";
         this.updateStatus(newStatus);
       }
 
-      if (result !== null) {
+      if (result?.uniqueId === hostId) {
         this.updateHostSettingsUnlocked(result, false, null);
       }
     } finally {
