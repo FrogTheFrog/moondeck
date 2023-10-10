@@ -1,12 +1,16 @@
 lockfileVersion: '6.0'
 
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
 dependencies:
   async-mutex:
     specifier: ^0.4.0
     version: 0.4.0
   decky-frontend-lib:
-    specifier: ^3.21.8
-    version: 3.21.8
+    specifier: ^3.22.1
+    version: 3.22.1
   ip-regex:
     specifier: ^5.0.0
     version: 5.0.0
@@ -850,8 +854,8 @@ packages:
       ms: 2.1.2
     dev: true
 
-  /decky-frontend-lib@3.21.8:
-    resolution: {integrity: sha512-I45KWzoTSakUcsN7drHhiOc+rYKYygIsuYTHqc8DbpPDJvUx6xlU4t7D2TMrj9o/xS/V3WY9N/pX8eF6AcGT1g==}
+  /decky-frontend-lib@3.22.1:
+    resolution: {integrity: sha512-railcEne+fP4E83u8BukSpVpTVe+jUjny+Ca52LO/G3JaOr39K4pvKBLrMhzS0FALVNAfFrxopqxH9nbnzJoQA==}
     dev: false
 
   /deep-is@0.1.4:
@@ -1370,8 +1374,8 @@ packages:
     resolution: {integrity: sha512-OO0pH2lK6a0hZnAdau5ItzHPI6pUlvI7jMVnxUQRtw4owF2wk8lOSabtGDCTP4Ggrg2MbGnWO9X8K1t4+fGMDw==}
     dev: true
 
-  /fsevents@2.3.2:
-    resolution: {integrity: sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==}
+  /fsevents@2.3.3:
+    resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
     os: [darwin]
     requiresBuild: true
@@ -2087,7 +2091,7 @@ packages:
     resolution: {integrity: sha512-uKxbd0IhMZOhjAiD5oAFp7BqvkA4Dv47qpOCtaNvng4HBwdbWtdOh8f5nZNuk2rp51PMGk3bzfWu5oayNEuYnw==}
     engines: {node: '>=10.0.0'}
     optionalDependencies:
-      fsevents: 2.3.2
+      fsevents: 2.3.3
     dev: true
 
   /run-parallel@1.2.0:
