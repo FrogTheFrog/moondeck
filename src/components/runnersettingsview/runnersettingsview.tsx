@@ -1,6 +1,6 @@
 import { DialogBody, DialogControlsSection, DialogControlsSectionHeader, Field } from "decky-frontend-lib";
 import { LabelWithIcon, NumericTextInput, ToggleField } from "../shared";
-import { SettingsManager, appLaunchDefault, appLaunchStabilityDefault, appUpdateDefault, buddyRequestsDefault, initialConditionsDefault, servicePingDefault, streamReadinessDefault } from "../../lib";
+import { SettingsManager, appLaunchDefault, appLaunchStabilityDefault, appUpdateDefault, buddyRequestsDefault, initialConditionsDefault, servicePingDefault, streamEnd, streamReadinessDefault } from "../../lib";
 import { HostOff } from "../icons";
 import { VFC } from "react";
 import { useCurrentHostSettings } from "../../hooks";
@@ -115,6 +115,17 @@ export const RunnerSettingsView: VFC<Props> = ({ settingsManager }) => {
             min={1}
             value={hostSettings.runnerTimeouts.appUpdate}
             setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.runnerTimeouts.appUpdate = value; })}
+          />
+        </Field>
+        <Field
+          label={`streamEnd (default: ${streamEnd})`}
+          description="Timeout for when we are waiting for stream to end after successful session."
+          childrenContainerWidth="fixed"
+        >
+          <NumericTextInput
+            min={1}
+            value={hostSettings.runnerTimeouts.streamEnd}
+            setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.runnerTimeouts.streamEnd = value; })}
           />
         </Field>
       </DialogControlsSection>

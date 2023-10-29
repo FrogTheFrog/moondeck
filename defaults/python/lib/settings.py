@@ -17,6 +17,7 @@ class RunnerTimeouts(TypedDict):
     appLaunch: int
     appLaunchStability: int
     appUpdate: int
+    streamEnd: int
 
 
 class HostApp(TypedDict):
@@ -208,7 +209,10 @@ class SettingsManager:
                 data["hostSettings"][host]["resolution"]["defaultFps"] = None
                 for i in range(len(data["hostSettings"][host]["resolution"]["dimensions"])):
                     data["hostSettings"][host]["resolution"]["dimensions"][i]["fps"] = None
-
+        if data["version"] == 12:
+            data["version"] = 13
+            for host in data["hostSettings"].keys():
+                data["hostSettings"][host]["runnerTimeouts"]["streamEnd"] = 15
 
         return data
 

@@ -83,6 +83,17 @@ async def wait_for_app_to_close(client: BuddyClient, app_id: int):
 
     return await pool_host_info(client, wait_till_close)
 
+async def wait_for_stream_to_stop(client: BuddyClient, timeouts: RunnerTimeouts):
+    obj = {"retries": timeouts["streamEnd"]}
+
+    async def wait_to_stop(info: HostInfoResponse):
+        if info["streamState"] == StreamState.NotStreaming:
+            return True
+
+        return await sleep_while_counting_down(obj, runnerresult.Result.StreamDidNotEnd)
+
+    return await pool_host_info(client, wait_to_stop)
+
 
 async def wait_for_app_launch(client: BuddyClient, app_id: int, timeouts: RunnerTimeouts):
     obj = {"retries": timeouts["appLaunch"], "stability_counter": timeouts["appLaunchStability"], "was_updating": False}
@@ -168,6 +179,11 @@ async def launch_app_and_wait(client: BuddyClient, close_steam: bool, app_id: in
         result = await client.end_stream()
         if result:
             return result
+        
+    logger.info("Waiting for stream to stop")
+    result = await wait_for_stream_to_stop(client, timeouts)
+    if result and result == runnerresult.Result.StreamDidNotEnd:
+        return result
 
 
 async def start_moonlight(proxy: MoonlightProxy):

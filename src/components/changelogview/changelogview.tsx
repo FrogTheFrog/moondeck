@@ -6,6 +6,11 @@ export const ChangelogView: VFC<unknown> = () => {
     <DialogBody>
       <DialogControlsSection>
         <Field
+          label="1.6.11"
+          description="Added a wait with timeout for stream to end after a successful session so that Sunshine can cleanup properly."
+          focusable={true}
+        />
+        <Field
           label="1.6.10"
           description={
             <>
