@@ -168,15 +168,15 @@ async def launch_app_and_wait(client: BuddyClient, close_steam: bool, app_id: in
     result = await wait_for_app_to_close(client, app_id)
     if result:
         return result
+    
+    logger.info("App closed gracefully, ending stream if it's still open")
+    result = await client.end_stream()
+    if result:
+        return result
 
     if close_steam:
-        logger.info("App closed gracefully, asking to close Steam if it's still open")
+        logger.info("Asking to close Steam if it's still open")
         result = await client.close_steam(None)
-        if result:
-            return result
-    else:
-        logger.info("App closed gracefully, ending stream if it's still open")
-        result = await client.end_stream()
         if result:
             return result
         
