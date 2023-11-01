@@ -7,7 +7,12 @@ export const ChangelogView: VFC<unknown> = () => {
       <DialogControlsSection>
         <Field
           label="1.6.11"
-          description="Added a wait with timeout for stream to end after a successful session so that Sunshine can cleanup properly."
+          description={
+            <>
+              <div>&bull; Added a wait with timeout for stream to end after a successful session so that Sunshine can cleanup properly.</div>
+              <div>&bull; Removed the IP restriction for static address - you can now use domain names.</div>
+            </>
+          }
           focusable={true}
         />
         <Field

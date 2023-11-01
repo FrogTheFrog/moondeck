@@ -42,14 +42,14 @@ export const HostSettingsView: VFC<Props> = ({ settingsManager }) => {
         <Field label="MAC address" focusable={true}>
           {hostSettings.mac}
         </Field>
-        <Field label="IP address" focusable={true}>
+        <Field label="Address" focusable={true}>
           {hostSettings.address}
+        </Field>
+        <Field label="Address type" focusable={true}>
+          {hostSettings.staticAddress ? "Static" : "Dynamic"}
         </Field>
         <Field label="Host info port" focusable={true}>
           {hostSettings.hostInfoPort}
-        </Field>
-        <Field label="IP address type" focusable={true}>
-          {hostSettings.staticAddress ? "Static" : "Dynamic"}
         </Field>
         <Field label="Buddy port" childrenContainerWidth="fixed">
           <NumericTextInput

@@ -1,6 +1,6 @@
 import { ConnectivityManager, GameStreamHost, logger } from "../../lib";
 import { DialogButton, Field, ModalRoot, sleep } from "decky-frontend-lib";
-import { IpAddressTextInput, NumericTextInput } from "../shared";
+import { NonEmptyTextInput, NumericTextInput } from "../shared";
 import { VFC, useState } from "react";
 
 interface Props {
@@ -45,10 +45,19 @@ export const ManualHostModal: VFC<Props> = ({ closeModal, connectivityManager })
   return (
     <ModalRoot closeModal={handleDismiss}>
       <Field
-        label="IPv4 address"
+        label={
+          <span style={{ width: "100%", textAlign: "center" }}>
+            {`http://${address.length > 0 ? address : "{address}"}:${port}`}
+          </span>
+        }
         childrenContainerWidth="fixed"
       >
-        <IpAddressTextInput
+      </Field>
+      <Field
+        label="Address"
+        childrenContainerWidth="fixed"
+      >
+        <NonEmptyTextInput
           disabled={isVerifying}
           value={address}
           setValue={(value) => { setVerifiedHost(null); setAddress(value); }}

@@ -123,7 +123,7 @@ export const RunnerSettingsView: VFC<Props> = ({ settingsManager }) => {
           childrenContainerWidth="fixed"
         >
           <NumericTextInput
-            min={1}
+            min={0}
             value={hostSettings.runnerTimeouts.streamEnd}
             setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.runnerTimeouts.streamEnd = value; })}
           />

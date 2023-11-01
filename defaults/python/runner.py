@@ -83,8 +83,11 @@ async def wait_for_app_to_close(client: BuddyClient, app_id: int):
 
     return await pool_host_info(client, wait_till_close)
 
+
 async def wait_for_stream_to_stop(client: BuddyClient, timeouts: RunnerTimeouts):
     obj = {"retries": timeouts["streamEnd"]}
+    if obj["retries"] <= 0:
+        return None
 
     async def wait_to_stop(info: HostInfoResponse):
         if info["streamState"] == StreamState.NotStreaming:

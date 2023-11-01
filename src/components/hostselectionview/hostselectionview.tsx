@@ -54,7 +54,7 @@ export const HostSelectionView: VFC<Props> = ({ connectivityManager, settingsMan
         </Field>
         <Field
           label="Add host manually"
-          description="Add host by specifying a static IPv4 address if it cannot be found via scanning."
+          description="Add host by specifying a static address if it cannot be found via scanning."
           childrenContainerWidth="fixed"
         >
           <AddHostButton
