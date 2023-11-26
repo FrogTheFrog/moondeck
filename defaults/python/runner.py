@@ -19,7 +19,7 @@ from lib.moonlightproxy import MoonlightProxy, ResolutionDimensions, ResolutionS
 from lib.buddyrequests import HostInfoResponse, StreamState
 from lib.buddyclient import BuddyClient, ChangeResolutionResult
 from lib.logger import logger, set_log_filename, enable_debug_level
-from lib.settings import HostSettings, settings_manager, RunnerTimeouts
+from lib.settings import Dimension, HostSettings, settings_manager, RunnerTimeouts
 
 import os
 import asyncio
@@ -314,39 +314,62 @@ def get_auto_resolution() -> Optional[MoonDeckResolution]:
     except:
         logger.exception("While getting auto resolution")
         return None
+    
+
+def get_linked_display() -> Optional[str]:
+    value = os.environ.get("MOONDECK_LINKED_DISPLAY")
+    try:
+        if value is None:
+            return None
+        
+        return str(value)
+    except:
+        logger.exception("While getting linked display")
+        return None
 
 
 def get_resolution_change(host_settings: HostSettings) -> ResolutionChange:
-    size: Optional[ResolutionSize] = None
-    bitrate = host_settings["resolution"]["defaultBitrate"]
-    fps = host_settings["resolution"]["defaultFps"]
-
+    dimensions: ResolutionDimensions = { 
+        "size": None,
+        "bitrate": host_settings["resolution"]["defaultBitrate"],
+        "fps": host_settings["resolution"]["defaultFps"]
+    }
     dimension_list = host_settings["resolution"]["dimensions"]
-    if host_settings["resolution"]["useCustomDimensions"] and len(dimension_list) > 0:
+
+    def update_dimensions(dimension: Dimension):
+        dimensions["size"] = { "width": dimension["width"], "height": dimension["height"] }
+        if dimension["bitrate"] is not None:
+            dimensions["bitrate"] = dimension["bitrate"]
+        if dimension["fps"] is not None:
+            dimensions["fps"] = dimension["fps"]
+
+    if host_settings["resolution"]["useLinkedDisplays"] and len(dimension_list) > 0:
+        linked_display = get_linked_display()
+        if linked_display:
+            for dimension in dimension_list:
+                if linked_display in dimension["linkedDisplays"]:
+                    logger.info(f"Using linked custom resolution for display \"{linked_display}\".")
+                    update_dimensions(dimension)
+
+    if not dimensions["size"] and host_settings["resolution"]["useCustomDimensions"] and len(dimension_list) > 0:
         index = host_settings["resolution"]["selectedDimensionIndex"]
         if index >= 0 and index < len(dimension_list):
-            res_dimensions = dimension_list[index]
-
-            size = { "width": res_dimensions["width"], "height": res_dimensions["height"] }
-            if res_dimensions["bitrate"] is not None:
-                bitrate = res_dimensions["bitrate"]
-            if res_dimensions["fps"] is not None:
-                fps = res_dimensions["fps"]
+            logger.info("Using custom resolution.")
+            update_dimensions(dimension_list[index])
         else:
             logger.warn(f"Dimension index ({index}) out of range ([0;{len(dimension_list)}]). Still continuing...")
-
     
-    if not size and host_settings["resolution"]["automatic"]:
+    if not dimensions["size"] and host_settings["resolution"]["automatic"]:
         auto_resolution = get_auto_resolution()
             
-        logger.info(f"Auto resolution from MoonDeck: {auto_resolution}")
+        logger.info(f"Using auto resolution from MoonDeck: {auto_resolution}")
         if auto_resolution:
-            size = { "width": auto_resolution["width"], "height": auto_resolution["height"] }
+            dimensions["size"] = { "width": auto_resolution["width"], "height": auto_resolution["height"] }
         else:
             logger.warn(f"Cannot use automatic resolution! MoonDeck did not pass resolution. Still continuing...")
         
     res_change: ResolutionChange = { 
-        "dimensions": { "size": size, "bitrate": bitrate, "fps": fps },
+        "dimensions": dimensions,
         "passToBuddy": host_settings["resolution"]["passToBuddy"],
         "passToMoonlight": host_settings["resolution"]["passToMoonlight"]
     }

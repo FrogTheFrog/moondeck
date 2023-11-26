@@ -44,6 +44,7 @@ export interface Dimension {
   height: number;
   bitrate: number | null;
   fps: number | null;
+  linkedDisplays: string[];
 }
 
 export interface HostResolution {
@@ -52,6 +53,7 @@ export interface HostResolution {
   passToBuddy: boolean;
   passToMoonlight: boolean;
   useCustomDimensions: boolean;
+  useLinkedDisplays: boolean;
   selectedDimensionIndex: number;
   defaultBitrate: number | null;
   defaultFps: number | null;

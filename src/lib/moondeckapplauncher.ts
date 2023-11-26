@@ -1,8 +1,8 @@
 import { AppDetails, ServerAPI } from "decky-frontend-lib";
+import { Dimension, HostResolution, HostSettings, SettingsManager } from "./settingsmanager";
 import { E_ALREADY_LOCKED, Mutex, tryAcquire } from "async-mutex";
-import { HostResolution, HostSettings, SettingsManager } from "./settingsmanager";
 import { Subscription, pairwise } from "rxjs";
-import { getAppDetails, getCurrentDisplayModeString, getMoonDeckAppIdMark, getMoonDeckResMark, getSystemNetworkStore, launchApp, registerForGameLifetime, registerForSuspendNotifictions, setAppHiddenState, setAppLaunchOptions, setAppResolutionOverride, setShortcutName, waitForNetworkConnection } from "./steamutils";
+import { getAppDetails, getCurrentDisplayModeString, getDisplayIdentifiers, getMoonDeckAppIdMark, getMoonDeckLinkedDisplayMark, getMoonDeckResMark, getSystemNetworkStore, launchApp, registerForGameLifetime, registerForSuspendNotifictions, setAppHiddenState, setAppLaunchOptions, setAppResolutionOverride, setShortcutName, waitForNetworkConnection } from "./steamutils";
 import { CommandProxy } from "./commandproxy";
 import { MoonDeckAppProxy } from "./moondeckapp";
 import { ShortcutManager } from "./shortcutmanager";
@@ -23,21 +23,30 @@ async function getMoonDeckRunPath(serverAPI: ServerAPI): Promise<string | null> 
   return null;
 }
 
-function getCustomDimension(hostResolution: Readonly<HostResolution>): string | null {
+function getCustomDimension(display: string | null, hostResolution: Readonly<HostResolution>): string | null {
+  const dimensions = hostResolution.dimensions;
+  const stringify = (dimension: Dimension): string => { return `${dimension.width}x${dimension.height}`; };
+
+  if (display !== null) {
+    for (const dimension of dimensions) {
+      if (dimension.linkedDisplays.includes(display)) {
+        return stringify(dimension);
+      }
+    }
+  }
   if (hostResolution.useCustomDimensions) {
-    const dimensions = hostResolution.dimensions;
     const index = hostResolution.selectedDimensionIndex;
     if (index >= 0 && index < dimensions.length) {
       const dimension = dimensions[index];
-      return `${dimension.width}x${dimension.height}`;
+      return stringify(dimension);
     }
     logger.error("Dimension index out of range!");
   }
   return null;
 }
 
-function getSelectedAppResolution(mode: string | null, hostSettings: Readonly<HostSettings>): string {
-  const customDimension = getCustomDimension(hostSettings.resolution);
+function getSelectedAppResolution(mode: string | null, display: string | null, hostSettings: Readonly<HostSettings>): string {
+  const customDimension = getCustomDimension(display, hostSettings.resolution);
   switch (hostSettings.resolution.appResolutionOverride) {
     case "CustomResolution":
       if (customDimension) {
@@ -249,13 +258,22 @@ export class MoonDeckAppLauncher {
           return;
         }
 
+        let currentDisplay: string | null = null;
+        if (hostSettings.resolution.useLinkedDisplays) {
+          const displays = await getDisplayIdentifiers();
+          if (displays === null) {
+            logger.toast("Failed to get display info from Steam!", { output: "error" });
+          }
+          currentDisplay = displays?.current ?? null;
+        }
+
         const mode = await getCurrentDisplayModeString();
-        if (!await setAppResolutionOverride(details.unAppID, getSelectedAppResolution(mode, hostSettings))) {
+        if (!await setAppResolutionOverride(details.unAppID, getSelectedAppResolution(mode, currentDisplay, hostSettings))) {
           logger.toast("Failed to set app resolution override (needs restart?)!", { output: "error" });
           return;
         }
 
-        const launchOptions = `${getMoonDeckAppIdMark(appId)}${getMoonDeckResMark(mode, hostSettings.resolution.automatic)} %command%`;
+        const launchOptions = `${getMoonDeckAppIdMark(appId)}${getMoonDeckResMark(mode, hostSettings.resolution.automatic)}${getMoonDeckLinkedDisplayMark(currentDisplay)} %command%`;
         if (!await setAppLaunchOptions(details.unAppID, launchOptions)) {
           logger.toast("Failed to update shortcut launch options (needs restart?)!", { output: "error" });
           return;

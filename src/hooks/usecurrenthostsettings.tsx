@@ -1,5 +1,6 @@
 import { HostSettings, SettingsManager, UserSettings } from "../lib";
 import { useEffect, useState } from "react";
+import { cloneDeep } from "lodash";
 
 export interface CurrentHostSettings extends HostSettings {
   clientId: string;
@@ -11,7 +12,7 @@ function getCurrentHostSettings(settings: Readonly<UserSettings> | null): Curren
     return null;
   }
 
-  const hostSettings = settings.hostSettings[settings.currentHostId];
+  const hostSettings = cloneDeep(settings.hostSettings[settings.currentHostId]);
   if (hostSettings === undefined) {
     return null;
   }

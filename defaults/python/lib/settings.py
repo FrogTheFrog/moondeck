@@ -30,6 +30,7 @@ class Dimension(TypedDict):
     height: int
     bitrate: Optional[int]
     fps: Optional[int]
+    linkedDisplays: List[str]
 
 
 class HostResolution(TypedDict):
@@ -38,6 +39,7 @@ class HostResolution(TypedDict):
     passToBuddy: bool
     passToMoonlight: bool
     useCustomDimensions: bool
+    useLinkedDisplays: bool
     selectedDimensionIndex: int
     defaultBitrate: Optional[int]
     defaultFps: Optional[int]
@@ -213,6 +215,12 @@ class SettingsManager:
             data["version"] = 13
             for host in data["hostSettings"].keys():
                 data["hostSettings"][host]["runnerTimeouts"]["streamEnd"] = 15
+        if data["version"] == 13:
+            data["version"] = 14
+            for host in data["hostSettings"].keys():
+                data["hostSettings"][host]["resolution"]["useLinkedDisplays"] = True
+                for i in range(len(data["hostSettings"][host]["resolution"]["dimensions"])):
+                    data["hostSettings"][host]["resolution"]["dimensions"][i]["linkedDisplays"] = []
 
         return data
 

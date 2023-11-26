@@ -32,6 +32,11 @@ export interface SteamClientEx {
     RegisterForResumeSuspendedGamesProgress: (callback: (info: SystemResumeInfo) => void) => { unregister: () => void };
     StartRestart: () => void;
   };
+  System: {
+    DisplayManager: {
+      RegisterForStateChanges: (callback: () => void) => { unregister: () => void };
+    };
+  };
 }
 
 export async function waitForPredicate(retries: number, delay: number, predicate: () => (boolean | Promise<boolean>)): Promise<boolean> {

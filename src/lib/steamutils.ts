@@ -24,7 +24,16 @@ export function getMoonDeckResMark(mode: string | null, useAutoResolution: boole
     return "";
   }
 
-  return ` ${mark}=${mode}`;
+  return ` ${mark}="${mode}"`;
+}
+
+export function getMoonDeckLinkedDisplayMark(display: string | null): string {
+  const mark = "MOONDECK_LINKED_DISPLAY";
+  if (display === null) {
+    return "";
+  }
+
+  return ` ${mark}="${display}"`;
 }
 
 export function getMoonDeckAppIdMark(appId: number | null): string {

@@ -4,6 +4,7 @@ import { ModifyListButton, RemoveListEntryButton } from "../shared/indexedlist";
 import { SettingsManager, maxBitrate, maxFps, minBitrate, minFps } from "../../lib";
 import { AppResolutionOverrideDropdown } from "./appresolutionoverridedropdown";
 import { HostOff } from "../icons";
+import { LinkedDisplayList } from "./linkeddisplaylist";
 import { ModifyResolutionModal } from "./modifyresolutionmodal";
 import { VFC } from "react";
 import { useCurrentHostSettings } from "../../hooks";
@@ -144,6 +145,7 @@ export const MoonlightSettingsView: VFC<Props> = ({ settingsManager }) => {
             />
           </Focusable>
         </Field>
+        <LinkedDisplayList hostSettings={hostSettings} settingsManager={settingsManager} />
       </DialogControlsSection>
       <DialogControlsSection>
         <DialogControlsSectionHeader>App Resolution Override</DialogControlsSectionHeader>

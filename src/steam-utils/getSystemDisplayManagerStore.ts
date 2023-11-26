@@ -7,10 +7,13 @@ export interface DisplayMode {
 
 export interface Display {
   current_mode_id: number;
+  description: string;
+  height_mm: number;
   is_internal: boolean;
   is_enabled: boolean;
   is_primary: boolean;
   modes: DisplayMode[];
+  width_mm: number;
 }
 
 export interface DisplayState {

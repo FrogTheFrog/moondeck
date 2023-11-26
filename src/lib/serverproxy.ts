@@ -113,6 +113,7 @@ export class ServerProxy {
           passToBuddy: currentSettings?.resolution.passToBuddy ?? true,
           passToMoonlight: currentSettings?.resolution.passToMoonlight ?? true,
           useCustomDimensions: currentSettings?.resolution.useCustomDimensions ?? false,
+          useLinkedDisplays: currentSettings?.resolution.useLinkedDisplays ?? true,
           selectedDimensionIndex: currentSettings?.resolution.selectedDimensionIndex ?? -1,
           defaultBitrate: currentSettings?.resolution.defaultBitrate ?? null,
           defaultFps: currentSettings?.resolution.defaultFps ?? null,

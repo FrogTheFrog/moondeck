@@ -23,7 +23,7 @@ export const ModifyResolutionModal: IndexedListModal<HostResolution["dimensions"
 
   useEffect(() => {
     if (typeof width === "number" && typeof height === "number" && (typeof bitrate === "number" || bitrate === null) && (typeof fps === "number" || fps === null)) {
-      setResolution({ width, height, bitrate, fps });
+      setResolution({ width, height, bitrate, fps, linkedDisplays: initialValue?.linkedDisplays ?? [] });
     } else {
       setResolution(null);
     }

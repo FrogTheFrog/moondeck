@@ -5,6 +5,11 @@ export const ChangelogView: VFC<unknown> = () => {
   return (
     <DialogBody>
       <DialogControlsSection>
+      <Field
+          label="1.6.12"
+          description="Added a feature to link display to custom resolution. The resolution is then automatically selected before starting stream."
+          focusable={true}
+        />
         <Field
           label="1.6.11"
           description={
