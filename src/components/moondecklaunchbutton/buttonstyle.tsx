@@ -41,13 +41,14 @@ const CleanStyle = (
   </style>
 );
 
-function getThemeElement(theme: UserSettings["buttonStyle"]["theme"]): ReactElement {
+function getThemeElement(theme: UserSettings["buttonStyle"]["theme"]): ReactElement | null {
   switch (theme) {
     case "HighContrast":
       return HighContrastStyle;
     case "Clean":
-    default:
       return CleanStyle;
+    default:
+      return null;
   }
 }
 
@@ -62,8 +63,8 @@ export const ButtonStyle: VFC<Props> = ({ theme }) => {
               margin: 0 !important;
             }
 
-            .moondeck-button:focus > svg {
-              fill: #000;
+            .moondeck-button svg path {
+              fill: currentcolor;
             }
           `
         }

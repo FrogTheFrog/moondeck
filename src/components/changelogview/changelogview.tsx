@@ -5,7 +5,16 @@ export const ChangelogView: VFC<unknown> = () => {
   return (
     <DialogBody>
       <DialogControlsSection>
-      <Field
+        <Field
+          label="1.6.13"
+          description={
+            <>
+              <div>&bull; Fixed round CSS style not applying to the MoonDeck button.</div>
+            </>
+          }
+          focusable={true}
+        />
+        <Field
           label="1.6.12"
           description="Added a feature to link display to custom resolution. The resolution is then automatically selected before starting stream."
           focusable={true}

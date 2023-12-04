@@ -1,4 +1,4 @@
-import { Button, appDetailsClasses, appDetailsHeaderClasses, joinClassNames, playSectionClasses, sleep } from "decky-frontend-lib";
+import { Button, Focusable, appDetailsClasses, appDetailsHeaderClasses, basicAppDetailsSectionStylerClasses, joinClassNames, playSectionClasses, sleep } from "decky-frontend-lib";
 import { CSSProperties, VFC, useEffect, useRef, useState } from "react";
 import { OffsetStyle, achorPositionName } from "./offsetstyle";
 import { SettingsManager, UserSettings, isAppTypeSupported, logger } from "../../lib";
@@ -24,27 +24,32 @@ interface ShellProps {
 
 export const MoonDeckLaunchButtonShell: VFC<ShellProps> = ({ onClick, buttonPosition, buttonStyle }) => {
   const [clickPending, setClickPending] = useState(false);
-  const handleClick = onClick
-    ? () => {
+  const handleClick = (() => {
+    if (onClick) {
+      return () => {
         setClickPending(true);
         onClick().catch((e) => logger.critical(e)).finally(() => setClickPending(false));
-      }
-    : undefined;
+      };
+    }
+    return undefined;
+  })();
 
   return (
-    <div className="moondeck-container">
+    <Focusable className={joinClassNames(basicAppDetailsSectionStylerClasses.AppButtons, "moondeck-container")}>
       <OffsetStyle buttonPosition={buttonPosition} />
       <ContainerStyle buttonPosition={buttonPosition} />
       <ButtonStyle theme={buttonStyle.theme} />
-      <Button
-        disabled={clickPending}
-        noFocusRing={!buttonStyle.showFocusRing}
-        className={joinClassNames(playSectionClasses.MenuButton, "moondeck-button")}
-        onClick={handleClick}
-      >
-        <MoonDeckMain />
-      </Button>
-    </div>
+      <Focusable>
+        <Button
+          disabled={clickPending}
+          noFocusRing={!buttonStyle.showFocusRing}
+          className={joinClassNames(playSectionClasses.MenuButton, "moondeck-button")}
+          onClick={handleClick}
+        >
+          <MoonDeckMain />
+        </Button>
+      </Focusable>
+    </Focusable>
   );
 };
 

@@ -131,7 +131,7 @@ class SettingsManager:
                 },
                 "buttonStyle": {
                     "showFocusRing": True,
-                    "theme": "HighContrast"
+                    "theme": "Clean"
                 },
                 "hostSettings": {}}))
 
