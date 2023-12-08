@@ -10,8 +10,8 @@ from .utils import wake_on_lan
 # https://paletton.com/#uid=13w120knwheMwWhDouE8X6E6K00
 BG_COLOR = "#000000"
 INACTIVE_COLOR = "#191E22"
-ACTIVE_COLOR = "#075F9D"
-TEXT_COLOR = "#0791F2"
+ACTIVE_COLOR = "#0791F2"
+TEXT_COLOR = "#FFFFFF"
 
 
 class LoadingLabel(tk.Frame):
@@ -84,7 +84,7 @@ class LoadingBar(tk.Frame):
 class WolSplashScreen:
     def __init__(self, address: str, mac: str, timeout: int):
         if timeout > 0:
-            wake_on_lan(address=address, mac=mac)
+            # wake_on_lan(address=address, mac=mac)
             self.timeout_end = datetime.now(timezone.utc) + timedelta(seconds=timeout)
         else:
             self.timeout_end = None
