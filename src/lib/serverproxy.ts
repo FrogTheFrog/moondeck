@@ -1,4 +1,4 @@
-import { HostSettings, SettingsManager, appLaunchDefault, appLaunchStabilityDefault, appUpdateDefault, buddyRequestsDefault, initialConditionsDefault, servicePingDefault, streamEndDefault, streamReadinessDefault } from "./settingsmanager";
+import { HostSettings, SettingsManager, appLaunchDefault, appLaunchStabilityDefault, appUpdateDefault, buddyRequestsDefault, initialConditionsDefault, servicePingDefault, streamEndDefault, streamReadinessDefault, wakeOnLanDefault } from "./settingsmanager";
 import { BehaviorSubject } from "rxjs";
 import { BuddyProxy } from "./buddyproxy";
 import { Mutex } from "async-mutex";
@@ -131,7 +131,8 @@ export class ServerProxy {
           appLaunch: currentSettings?.runnerTimeouts.appLaunch ?? appLaunchDefault,
           appLaunchStability: currentSettings?.runnerTimeouts.appLaunchStability ?? appLaunchStabilityDefault,
           appUpdate: currentSettings?.runnerTimeouts.appUpdate ?? appUpdateDefault,
-          streamEnd: currentSettings?.runnerTimeouts.streamEnd ?? streamEndDefault
+          streamEnd: currentSettings?.runnerTimeouts.streamEnd ?? streamEndDefault,
+          wakeOnLan: currentSettings?.runnerTimeouts.wakeOnLan ?? wakeOnLanDefault
         },
         runnerDebugLogs: currentSettings?.runnerDebugLogs ?? false
       };

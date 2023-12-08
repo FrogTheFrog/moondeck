@@ -1,6 +1,6 @@
 import { DialogBody, DialogControlsSection, DialogControlsSectionHeader, Field } from "decky-frontend-lib";
 import { LabelWithIcon, NumericTextInput, ToggleField } from "../shared";
-import { SettingsManager, appLaunchDefault, appLaunchStabilityDefault, appUpdateDefault, buddyRequestsDefault, initialConditionsDefault, servicePingDefault, streamEndDefault, streamReadinessDefault } from "../../lib";
+import { SettingsManager, appLaunchDefault, appLaunchStabilityDefault, appUpdateDefault, buddyRequestsDefault, initialConditionsDefault, servicePingDefault, streamEndDefault, streamReadinessDefault, wakeOnLanDefault } from "../../lib";
 import { HostOff } from "../icons";
 import { VFC } from "react";
 import { useCurrentHostSettings } from "../../hooks";
@@ -126,6 +126,17 @@ export const RunnerSettingsView: VFC<Props> = ({ settingsManager }) => {
             min={0}
             value={hostSettings.runnerTimeouts.streamEnd}
             setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.runnerTimeouts.streamEnd = value; })}
+          />
+        </Field>
+        <Field
+          label={`wakeOnLan (default: ${wakeOnLanDefault})`}
+          description="Timeout for how long to wait until host is available. Setting this to 0 disables the automatic WOL."
+          childrenContainerWidth="fixed"
+        >
+          <NumericTextInput
+            min={0}
+            value={hostSettings.runnerTimeouts.wakeOnLan}
+            setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.runnerTimeouts.wakeOnLan = value; })}
           />
         </Field>
       </DialogControlsSection>

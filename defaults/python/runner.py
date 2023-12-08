@@ -15,11 +15,12 @@ add_plugin_to_path()
 
 from enum import Enum
 from typing import Optional, TypedDict
-from lib.moonlightproxy import MoonlightProxy, ResolutionDimensions, ResolutionSize
+from lib.moonlightproxy import MoonlightProxy, ResolutionDimensions
 from lib.buddyrequests import HostInfoResponse, StreamState
-from lib.buddyclient import BuddyClient, ChangeResolutionResult
+from lib.buddyclient import BuddyClient, ChangeResolutionResult, HelloResult
 from lib.logger import logger, set_log_filename, enable_debug_level
 from lib.settings import Dimension, HostSettings, settings_manager, RunnerTimeouts
+from lib.wolsplashscreen import WolSplashScreen
 
 import os
 import asyncio
@@ -239,34 +240,34 @@ async def wait_for_initial_host_conditions(res_change: ResolutionChange, client:
     return None
 
 
-async def establish_connection(client: BuddyClient):
-    logger.info("Establishing connection to Buddy")
-    resp = await client.say_hello()
-    if resp:
-        return resp
+async def establish_connection(client: BuddyClient, mac: str, hostInfoPort: int, timeouts: RunnerTimeouts):
+    logger.info("Checking connection to Buddy and GameStream server")
 
-    return None
+    async with WolSplashScreen(client.address, mac, timeouts["wakeOnLan"]) as splash:
+        while True:
+            buddy_result = await client.say_hello(force=True)
+            if buddy_result:
+                if buddy_result != HelloResult.Offline:
+                    return buddy_result
+            
+            buddy_status = buddy_result != HelloResult.Offline
+            server_status = await hostinfo.get_server_info(client.address, 
+                                                        hostInfoPort, 
+                                                        timeout=timeouts["servicePing"]) is not None
+            
+            if not splash.update(buddy_status, server_status):
+                if not buddy_status:
+                    return HelloResult.Offline
+                if not server_status:
+                    return runnerresult.Result.GameStreamDead
+                return None
 
 
-async def establish_connection(client: BuddyClient, hostInfoPort: int, timeouts: RunnerTimeouts):
-    logger.info("Establishing connection to Buddy")
-    resp = await client.say_hello()
-    if resp:
-        return resp
-
-    logger.info("Checking if GameStream service is running")
-    server_info = await hostinfo.get_server_info(client.address, hostInfoPort, timeout=timeouts["servicePing"])
-    if not server_info:
-        return runnerresult.Result.GameStreamDead
-
-    return None
-
-
-async def run_game(res_change: ResolutionChange, host_app: str, hostname: str, address: str, hostInfoPort:int, buddyPort: int, client_id: Optional[str], close_steam: bool, timeouts: RunnerTimeouts, app_id: int):
+async def run_game(res_change: ResolutionChange, host_app: str, hostname: str, mac: str, address: str, hostInfoPort:int, buddyPort: int, client_id: Optional[str], close_steam: bool, timeouts: RunnerTimeouts, app_id: int):
     try:
         async with BuddyClient(address, buddyPort, client_id, timeouts["buddyRequests"]) as client, \
                    MoonlightProxy(hostname, host_app, res_change["dimensions"] if res_change["passToMoonlight"] else None) as proxy:
-            result = await establish_connection(client=client, hostInfoPort=hostInfoPort, timeouts=timeouts)
+            result = await establish_connection(client=client, mac=mac, hostInfoPort=hostInfoPort, timeouts=timeouts)
             if result:
                 return result
 
@@ -427,6 +428,7 @@ async def main():
         result = await run_game(res_change,
                                 host_app,
                                 host_settings["hostName"],
+                                host_settings["mac"],
                                 host_settings["address"],
                                 host_settings["hostInfoPort"],
                                 host_settings["buddyPort"],

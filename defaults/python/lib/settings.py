@@ -18,6 +18,7 @@ class RunnerTimeouts(TypedDict):
     appLaunchStability: int
     appUpdate: int
     streamEnd: int
+    wakeOnLan: int
 
 
 class HostApp(TypedDict):
@@ -221,6 +222,10 @@ class SettingsManager:
                 data["hostSettings"][host]["resolution"]["useLinkedDisplays"] = True
                 for i in range(len(data["hostSettings"][host]["resolution"]["dimensions"])):
                     data["hostSettings"][host]["resolution"]["dimensions"][i]["linkedDisplays"] = []
+        if data["version"] == 14:
+            data["version"] = 15
+            for host in data["hostSettings"].keys():
+                data["hostSettings"][host]["runnerTimeouts"]["wakeOnLan"] = 60
 
         return data
 

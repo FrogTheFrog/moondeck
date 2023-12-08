@@ -104,7 +104,7 @@ class BuddyClient(contextlib.AbstractAsyncContextManager):
             logger.exception("Request failed: unknown expection raised.")
             return HelloResult.Exception
 
-    async def say_hello(self):
+    async def say_hello(self, force=False):
         async def request():
             resp = await self.__requests.get_api_version()
             if resp["version"] != constants.BUDDY_API_VERSION:
@@ -126,12 +126,11 @@ class BuddyClient(contextlib.AbstractAsyncContextManager):
             
             return None
 
-        if self.__hello_was_ok:
+        if self.__hello_was_ok and not force:
             return
 
         result = await self._try_request(request(), HelloResult.Offline)
-        if not result:
-            self.__hello_was_ok = True
+        self.__hello_was_ok = not result
 
         return result
 

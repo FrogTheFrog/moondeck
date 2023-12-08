@@ -22,6 +22,7 @@ export const appLaunchDefault = 30 as const;
 export const appLaunchStabilityDefault = 15 as const;
 export const appUpdateDefault = 15 as const;
 export const streamEndDefault = 15 as const;
+export const wakeOnLanDefault = 60 as const;
 
 export interface RunnerTimeouts {
   buddyRequests: number;
@@ -32,6 +33,7 @@ export interface RunnerTimeouts {
   appLaunchStability: number;
   appUpdate: number;
   streamEnd: number;
+  wakeOnLan: number;
 }
 
 export interface HostApp {

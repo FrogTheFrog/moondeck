@@ -23,7 +23,7 @@ from typing import Any, Dict
 from python.lib.settings import settings_manager, UserSettings
 from python.lib.logger import logger, set_log_filename
 from python.lib.buddyclient import BuddyClient, HelloResult, PcStateChange
-from python.externals.wakeonlan import send_magic_packet
+from python.lib.utils import wake_on_lan
 # autopep8: on
 
 set_log_filename(constants.LOG_FILE, rotate=True)
@@ -118,9 +118,7 @@ class Plugin:
     @utils.async_scope_log(logger.info)
     async def wake_on_lan(self, address: str, mac: str):
         try:
-            # Sending broadcast as well as directly to address
-            send_magic_packet(mac)
-            send_magic_packet(mac, ip_address=address)
+            wake_on_lan(address, mac)
         except Exception:
             logger.exception("Unhandled exception")
 

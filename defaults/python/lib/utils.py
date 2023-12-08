@@ -4,6 +4,9 @@ import inspect
 from enum import Enum
 from functools import wraps
 from typing import Any, Dict, List, Literal, Type, Union, TypeVar, get_args, get_origin, is_typeddict
+from externals.wakeonlan import send_magic_packet
+
+from .logger import logger
 
 
 T = TypeVar("T")
@@ -95,6 +98,7 @@ def from_dict(output_type: Type[T], data: Dict[str, Any]) -> T:
 
     return output_type(**verified_data) if is_typed_dict(output_type) else verified_data
 
+
 # Decorator for loging the entry/exit and the result
 def async_scope_log(log_fn):
     def decorator(func):
@@ -110,3 +114,10 @@ def async_scope_log(log_fn):
             return result
         return impl
     return decorator
+
+
+def wake_on_lan(address: str, mac: str):
+    # Sending broadcast as well as directly to address
+    logger.info(f"Sending WOL ({mac}) to {address}")
+    send_magic_packet(mac)
+    send_magic_packet(mac, ip_address=address)

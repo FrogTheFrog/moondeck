@@ -10,6 +10,7 @@ export const ChangelogView: VFC<unknown> = () => {
           description={
             <>
               <div>&bull; Fixed round CSS style not applying to the MoonDeck button.</div>
+              <div>&bull; Added auto-WOL functionality. Can be disabled in the runner settings.</div>
             </>
           }
           focusable={true}
