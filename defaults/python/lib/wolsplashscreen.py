@@ -84,7 +84,7 @@ class LoadingBar(tk.Frame):
 class WolSplashScreen:
     def __init__(self, address: str, mac: str, timeout: int):
         if timeout > 0:
-            # wake_on_lan(address=address, mac=mac)
+            wake_on_lan(address=address, mac=mac)
             self.timeout_end = datetime.now(timezone.utc) + timedelta(seconds=timeout)
         else:
             self.timeout_end = None
