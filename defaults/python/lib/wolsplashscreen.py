@@ -105,7 +105,7 @@ class WolSplashScreen:
             await run_loop(1)
 
         if not self.destroy_flag:
-            await run_loop(10)
+            await run_loop(13)
             if not self.destroy_flag:
                 self.root.destroy()        
 
