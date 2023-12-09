@@ -141,9 +141,27 @@ async def wait_for_stream_to_be_ready(client: BuddyClient, timeouts: RunnerTimeo
         return await sleep_while_counting_down(obj, runnerresult.Result.StreamFailedToStart)
 
     return await pool_host_info(client, wait_till_stream_is_ready)
-    
 
-async def launch_app_and_wait(client: BuddyClient, close_steam: bool, app_id: int, timeouts: RunnerTimeouts):
+
+async def end_the_stream(client: BuddyClient, close_steam: bool, timeouts: RunnerTimeouts):
+    logger.info("App closed gracefully, ending stream if it's still open")
+    result = await client.end_stream()
+    if result:
+        return result
+
+    if close_steam:
+        logger.info("Asking to close Steam if it's still open")
+        result = await client.close_steam(None)
+        if result:
+            return result
+        
+    logger.info("Waiting for stream to stop")
+    result = await wait_for_stream_to_stop(client, timeouts)
+    if result:
+        return result
+
+
+async def launch_app_and_wait(client: BuddyClient, app_id: int, timeouts: RunnerTimeouts):
     logger.info("Waiting for Steam to be ready to launch games")
     result = await wait_for_stream_to_be_ready(client, timeouts)
     if result:
@@ -171,22 +189,6 @@ async def launch_app_and_wait(client: BuddyClient, close_steam: bool, app_id: in
     logger.info("Waiting for app or Steam to close")
     result = await wait_for_app_to_close(client, app_id)
     if result:
-        return result
-    
-    logger.info("App closed gracefully, ending stream if it's still open")
-    result = await client.end_stream()
-    if result:
-        return result
-
-    if close_steam:
-        logger.info("Asking to close Steam if it's still open")
-        result = await client.close_steam(None)
-        if result:
-            return result
-        
-    logger.info("Waiting for stream to stop")
-    result = await wait_for_stream_to_stop(client, timeouts)
-    if result and result == runnerresult.Result.StreamDidNotEnd:
         return result
 
 
@@ -280,7 +282,7 @@ async def run_game(res_change: ResolutionChange, host_app: str, hostname: str, m
                 return result
 
             proxy_task = asyncio.create_task(proxy.wait())
-            launch_task = asyncio.create_task(launch_app_and_wait(client=client, close_steam=close_steam, app_id=app_id, timeouts=timeouts))
+            launch_task = asyncio.create_task(launch_app_and_wait(client=client, app_id=app_id, timeouts=timeouts))
 
             done, _ = await asyncio.wait({proxy_task, launch_task}, return_when=asyncio.FIRST_COMPLETED)
             if proxy_task in done:
@@ -298,6 +300,10 @@ async def run_game(res_change: ResolutionChange, host_app: str, hostname: str, m
                 result = launch_task.result()
                 if result:
                     return result
+                
+            result = await end_the_stream(client=client, close_steam=close_steam, timeouts=timeouts)
+            if result:
+                return result
 
     except Exception:
         logger.exception("Unhandled exception")
