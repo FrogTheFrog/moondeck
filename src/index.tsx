@@ -1,5 +1,6 @@
 import { ConnectivityManager, MoonDeckAppLauncher, SettingsManager, ShortcutManager, logger, registerForLoginStateChange, waitForServicesInitialized } from "./lib";
-import { ServerAPI, definePlugin, staticClasses } from "decky-frontend-lib";
+import { ServerAPI, definePlugin } from "decky-frontend-lib";
+import { SimpleTitleView, TitleView } from "./components/titleview";
 import { MoonDeckMain } from "./components/icons";
 import { QuickSettingsView } from "./components/quicksettingsview/quicksettingsview";
 import { RouteManager } from "./routes";
@@ -39,7 +40,8 @@ export default definePlugin((serverAPI: ServerAPI) => {
   );
 
   return {
-    title: <div className={staticClasses.Title}>MoonDeck</div>,
+    titleView: <TitleView />,
+    title: <SimpleTitleView />,
     content: <QuickSettingsView connectivityManager={connectivityManager} settingsManager={settingsManager} moonDeckAppLauncher={moonDeckAppLauncher}/>,
     icon: <MoonDeckMain />,
     alwaysRender: true,

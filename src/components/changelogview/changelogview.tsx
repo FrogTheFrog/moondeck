@@ -6,6 +6,16 @@ export const ChangelogView: VFC<unknown> = () => {
     <DialogBody>
       <DialogControlsSection>
         <Field
+          label="1.6.14"
+          description={
+            <>
+              <div>&bull; Fix issues with MobX@6 on beta.</div>
+              <div>&bull; Moved settings button to be inline with the title.</div>
+            </>
+          }
+          focusable={true}
+        />
+        <Field
           label="1.6.13"
           description={
             <>
