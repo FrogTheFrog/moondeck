@@ -1,4 +1,4 @@
-import { AppStoreDetails, getAppStore } from "./steamutils";
+import { AppStoreOverview, getAppStoreEx } from "./steamutils";
 import BiMap from "ts-bidirectional-map";
 import { cloneDeep } from "lodash";
 import { logger } from "./logger";
@@ -113,47 +113,47 @@ function unpatchProperty(orig: object, out: object, prop: string): void {
   out[prop] = patchData.origValue;
 }
 
-export class AppDetailsPatcher<T extends keyof AppStoreDetails> {
+export class AppOverviewPatcher<T extends keyof AppStoreOverview> {
   private unobserveCallback: (() => void) | null = null;
   private uninterceptCallback: (() => void) | null = null;
   private readonly shortcutToSteamAppIds = new BiMap<number, number>();
 
-  constructor(private readonly propSetterPredicates: { [K in T]: SetterPredicate<AppStoreDetails[K]> }) {
+  constructor(private readonly propSetterPredicates: { [K in T]: SetterPredicate<AppStoreOverview[K]> }) {
   }
 
   init(): void {
-    const appStore = getAppStore();
-    if (appStore === null) {
-      logger.error("appStore is null!");
+    const appStoreEx = getAppStoreEx();
+    if (appStoreEx === null) {
+      logger.error("appStoreEx is null!");
       return;
     }
 
     // Watching for changes on custom shortcut
-    this.unobserveCallback = appStore.m_mapApps.observe((details) => {
-      const steamAppId = this.shortcutToSteamAppIds.get(details.name);
-      if (typeof steamAppId !== "number" || details.type === "delete") {
+    this.unobserveCallback = appStoreEx.observe((change) => {
+      const steamAppId = this.shortcutToSteamAppIds.get(change.name);
+      if (typeof steamAppId !== "number" || change.type === "delete") {
         return;
       }
 
-      const steamAppDetails = appStore.m_mapApps.get(steamAppId);
-      if (steamAppDetails != null) {
-        this.trySwapDetails(details.newValue, steamAppDetails);
+      const steamAppOverview = appStoreEx.getAppOverview(steamAppId);
+      if (steamAppOverview != null) {
+        this.trySwapOverview(change.newValue, steamAppOverview);
       }
     });
 
     // Watching for changes on the actual app we are patching
-    this.uninterceptCallback = appStore.m_mapApps.intercept((details) => {
-      const shortcutAppId = this.shortcutToSteamAppIds.getKey(details.name);
-      if (typeof shortcutAppId !== "number" || details.type === "delete" || details.newValue == null) {
-        return details;
+    this.uninterceptCallback = appStoreEx.intercept((change) => {
+      const shortcutAppId = this.shortcutToSteamAppIds.getKey(change.name);
+      if (typeof shortcutAppId !== "number" || change.type === "delete" || change.newValue == null) {
+        return change;
       }
 
-      const shortcutAppDetails = appStore.m_mapApps.get(shortcutAppId);
-      if (shortcutAppDetails != null) {
-        this.trySwapDetails(shortcutAppDetails, details.newValue, true);
+      const steamAppOverview = appStoreEx.getAppOverview(shortcutAppId);
+      if (steamAppOverview != null) {
+        this.trySwapOverview(steamAppOverview, change.newValue, true);
       }
 
-      return details;
+      return change;
     });
   }
 
@@ -184,14 +184,14 @@ export class AppDetailsPatcher<T extends keyof AppStoreDetails> {
     this.shortcutToSteamAppIds.delete(shortcutAppId);
 
     if (typeof steamAppId === "number") {
-      this.tryRestoreDetails(steamAppId);
+      this.tryRestoreOverview(steamAppId);
     }
   }
 
   tryUpdate(shortcutAppId: number): void {
-    const appStore = getAppStore();
-    if (appStore === null) {
-      logger.error("appStore is null!");
+    const appStoreEx = getAppStoreEx();
+    if (appStoreEx === null) {
+      logger.error("appStoreEx is null!");
       return;
     }
 
@@ -201,19 +201,19 @@ export class AppDetailsPatcher<T extends keyof AppStoreDetails> {
       return;
     }
 
-    const fromDetails = appStore.m_mapApps.get(shortcutAppId);
-    const toDetails = appStore.m_mapApps.get(steamAppId);
-    if (fromDetails == null || toDetails == null) {
+    const fromOverview = appStoreEx.getAppOverview(shortcutAppId);
+    const toOverview = appStoreEx.getAppOverview(steamAppId);
+    if (fromOverview == null || toOverview == null) {
       return;
     }
 
-    this.trySwapDetails(fromDetails, toDetails);
+    this.trySwapOverview(fromOverview, toOverview);
   }
 
-  trySwapDetails(from: AppStoreDetails, to: AppStoreDetails, mutable = false): void {
-    const appStore = getAppStore();
-    if (appStore === null) {
-      logger.error("appStore is null!");
+  trySwapOverview(from: AppStoreOverview, to: AppStoreOverview, mutable = false): void {
+    const appStoreEx = getAppStoreEx();
+    if (appStoreEx === null) {
+      logger.error("appStoreEx is null!");
       return;
     }
 
@@ -223,30 +223,30 @@ export class AppDetailsPatcher<T extends keyof AppStoreDetails> {
       patchProperty(to, prop, predicate as SetterPredicate<unknown>, from[prop]);
     }
 
-    logger.debug(`Patching app details from ${from.appid} to ${to.appid}.`);
+    logger.debug(`Patching app overview from ${from.appid} to ${to.appid}.`);
     if (!mutable) {
-      appStore.m_mapApps.set(to.appid, to);
+      appStoreEx.setAppOverview(to.appid, to);
     }
   }
 
-  tryRestoreDetails(appId: number): void {
-    const appStore = getAppStore();
-    if (appStore === null) {
-      logger.error("appStore is null!");
+  tryRestoreOverview(appId: number): void {
+    const appStoreEx = getAppStoreEx();
+    if (appStoreEx === null) {
+      logger.error("appStoreEx is null!");
       return;
     }
 
-    const details = appStore.m_mapApps.get(appId);
-    if (details == null) {
+    const overview = appStoreEx.getAppOverview(appId);
+    if (overview == null) {
       return;
     }
 
-    const clonedDetails = cloneDeep(details);
+    const clonedOverview = cloneDeep(overview);
     for (const prop of Object.keys(this.propSetterPredicates)) {
-      unpatchProperty(details, clonedDetails, prop);
+      unpatchProperty(overview, clonedOverview, prop);
     }
 
-    logger.debug(`Restoring app details for ${appId}.`);
-    appStore.m_mapApps.set(clonedDetails.appid, clonedDetails);
+    logger.debug(`Restoring app overview for ${appId}.`);
+    appStoreEx.setAppOverview(clonedOverview.appid, clonedOverview);
   }
 }

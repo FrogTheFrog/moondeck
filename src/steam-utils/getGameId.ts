@@ -1,4 +1,4 @@
-import { getAppOverview } from "./getAppOverview";
+import { getAppStoreEx } from "./getAppStoreEx";
 import { logger } from "../lib/logger";
 import { waitForAppOverview } from "./waitForAppOverview";
 
@@ -12,7 +12,13 @@ import { waitForAppOverview } from "./waitForAppOverview";
  * @returns GameId if succeeded or null otherwise.
  */
 export async function getGameId(appId: number): Promise<string | null> {
-  const overview = await waitForAppOverview(appId, (overview) => overview !== null) ? await getAppOverview(appId) : null;
+  const appStoreEx = getAppStoreEx();
+  if (appStoreEx === null) {
+    logger.error(`Could not get game id for ${appId} - appStoreEx is null!`);
+    return null;
+  }
+
+  const overview = await waitForAppOverview(appId, (overview) => overview !== null) ? appStoreEx.getAppOverview(appId) : null;
   if (overview === null) {
     logger.error(`Could not get game id for ${appId}!`);
     return null;

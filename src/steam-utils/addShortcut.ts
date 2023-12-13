@@ -1,5 +1,5 @@
 import { SteamClientEx } from "./shared";
-import { getAppOverview } from "./getAppOverview";
+import { getAppStoreEx } from "./getAppStoreEx";
 import { logger } from "../lib/logger";
 import { removeShortcut } from "./removeShortcut";
 import { setShortcutName } from "./setShortcutName";
@@ -18,11 +18,16 @@ import { waitForAppOverview } from "./waitForAppOverview";
  */
 export async function addShortcut(appName: string, execPath: string): Promise<number | null> {
   logger.log(`Adding shortcut for ${appName}.`);
+  const appStoreEx = getAppStoreEx();
+  if (appStoreEx === null) {
+    logger.error(`Could not add shortcut for ${appName} - appStoreEx is null!`);
+    return null;
+  }
 
   const appId = await (SteamClient as SteamClientEx).Apps.AddShortcut(appName, execPath, "", "");
   if (typeof appId === "number") {
     if (await waitForAppOverview(appId, (overview) => overview !== null)) {
-      const overview = await getAppOverview(appId);
+      const overview = appStoreEx.getAppOverview(appId);
 
       // Comparison to display name is necessary as sometimes Steam decides
       // to generate an incomplete shortcut (see comments for 'removeShortcut')

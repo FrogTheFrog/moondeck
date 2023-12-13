@@ -18,8 +18,8 @@ dependencies:
     specifier: ^4.17.21
     version: 4.17.21
   mobx:
-    specifier: '5'
-    version: 5.15.7
+    specifier: ^6.12.0
+    version: 6.12.0
   promise-throttle-all:
     specifier: ^1.1.1
     version: 1.1.1
@@ -1810,8 +1810,8 @@ packages:
     resolution: {integrity: sha512-bzfL1YUZsP41gmu/qjrEk0Q6i2ix/cVeAhbCbqH9u3zYutS1cLg00qhrD0M2MVdCcx4Sc0UpP2eBWo9rotpq6g==}
     dev: true
 
-  /mobx@5.15.7:
-    resolution: {integrity: sha512-wyM3FghTkhmC+hQjyPGGFdpehrcX1KOXsDuERhfK2YbJemkUhEB+6wzEN639T21onxlfYBmriA1PFnvxTUhcKw==}
+  /mobx@6.12.0:
+    resolution: {integrity: sha512-Mn6CN6meXEnMa0a5u6a5+RKrqRedHBhZGd15AWLk9O6uFY4KYHzImdt8JI8WODo1bjTSRnwXhJox+FCUZhCKCQ==}
     dev: false
 
   /ms@2.0.0:

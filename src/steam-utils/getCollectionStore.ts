@@ -1,8 +1,8 @@
-import { SteamAppOverview } from "./getAppStore";
+import { AppStoreOverview } from "./getAppStoreEx";
 
 export interface Collection {
   AsDragDropCollection: () => {
-    RemoveApps: (overviews: SteamAppOverview[]) => void;
+    RemoveApps: (overviews: AppStoreOverview[]) => void;
   };
   apps: {
     keys: () => IterableIterator<number>;

@@ -1,6 +1,6 @@
 import { SteamClientEx } from "./shared";
 import { collectionStoreInvalidation } from "./collectionStoreInvalidation";
-import { getAppOverview } from "./getAppOverview";
+import { getAppStoreEx } from "./getAppStoreEx";
 import { getCollectionStore } from "./getCollectionStore";
 import { logger } from "../lib/logger";
 import { waitForAppOverview } from "./waitForAppOverview";
@@ -23,7 +23,13 @@ import { waitForAppOverview } from "./waitForAppOverview";
  * @returns True if shortcut was removed, false otherwise.
  */
 export async function removeShortcut(appId: number): Promise<boolean> {
-  const overview = await waitForAppOverview(appId, (overview) => overview !== null) ? await getAppOverview(appId) : null;
+  const appStoreEx = getAppStoreEx();
+  if (appStoreEx === null) {
+    logger.error(`Could not remove shortcut for ${appId} - appStoreEx is null!`);
+    return false;
+  }
+
+  const overview = await waitForAppOverview(appId, (overview) => overview !== null) ? appStoreEx.getAppOverview(appId) : null;
   if (overview === null) {
     logger.error(`Could not remove shortcut for ${appId} - does not exist!`);
     return true;

@@ -1,4 +1,4 @@
-export * from "./appdetailspatcher";
+export * from "./appoverviewpatcher";
 export * from "./asyncloop";
 export * from "./buddyproxy";
 export * from "./commandproxy";
