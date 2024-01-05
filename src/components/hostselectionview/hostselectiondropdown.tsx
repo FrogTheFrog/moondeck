@@ -4,13 +4,13 @@ import { UserSettings } from "../../lib";
 
 interface Props {
   disableNoneOption?: boolean;
-  focusable?: boolean;
+  singleItemSelection?: boolean;
   disabled: boolean;
   currentSettings: UserSettings;
   setHost: (value: UserSettings["currentHostId"]) => void;
 }
 
-export const HostSelectionDropdown: VFC<Props> = ({ disableNoneOption, focusable, disabled, currentSettings, setHost }) => {
+export const HostSelectionDropdown: VFC<Props> = ({ disableNoneOption, singleItemSelection, disabled, currentSettings, setHost }) => {
   const [currentHost, setCurrentHost] = useState<UserSettings["currentHostId"]>(null);
   const [entries, setEntries] = useState<Array<{ id: typeof currentHost; label: string }>>([]);
 
@@ -32,7 +32,7 @@ export const HostSelectionDropdown: VFC<Props> = ({ disableNoneOption, focusable
   return (
     <ListDropdown<typeof currentHost>
       disabled={disabled}
-      focusable={focusable}
+      singleItemSelection={singleItemSelection}
       optionList={entries}
       label="Select host"
       value={currentHost}

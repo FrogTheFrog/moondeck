@@ -29,14 +29,13 @@ export const HostStatusPanel: VFC<Props> = ({ currentHostSettings, currentSettin
     );
   }
 
-  const disabledDropdown = Object.keys(currentSettings.hostSettings).length < 2;
   return (
     <PanelSection title="STATUS">
       <PanelSectionRow>
         <HostSelectionDropdown
           disableNoneOption={true}
-          disabled={disabledDropdown}
-          focusable={!disabledDropdown}
+          disabled={false}
+          singleItemSelection={true}
           currentSettings={currentSettings}
           setHost={(value) => { settingsManager.update((settings) => { settings.currentHostId = value; }); }}
         />

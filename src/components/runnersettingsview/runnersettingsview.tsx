@@ -27,9 +27,9 @@ export const RunnerSettingsView: VFC<Props> = ({ settingsManager }) => {
   return (
     <DialogBody>
       <DialogControlsSection>
-        <DialogControlsSectionHeader>Debug logs</DialogControlsSectionHeader>
+        <DialogControlsSectionHeader>General</DialogControlsSectionHeader>
         <ToggleField
-          label="Enabled"
+          label="Debug logs"
           value={hostSettings.runnerDebugLogs}
           setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.runnerDebugLogs = value; })}
         />
