@@ -92,27 +92,31 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
     async def terminate_all_instances(self, kill_all: bool):
         if self.exec_path is None or kill_all: 
             kill_proc = await asyncio.create_subprocess_exec(MoonlightProxy.flatpak, "kill", MoonlightProxy.flatpak_moonlight,
-                                                            stdout=asyncio.subprocess.PIPE,
-                                                            stderr=asyncio.subprocess.PIPE)
+                                                             stdout=asyncio.subprocess.PIPE,
+                                                             stderr=asyncio.subprocess.PIPE)
             output, _ = await kill_proc.communicate()
             if output:
                 newline = "\n"
                 logger.info(f"flatpak kill output: {newline}{output.decode().strip(newline)}")
 
-        if self.exec_path is not None or kill_all: 
-            kill_proc = await asyncio.create_subprocess_shell("pkill -f -e -i \"moonlight\"",
-                                                            stdout=asyncio.subprocess.PIPE,
-                                                            stderr=asyncio.subprocess.PIPE)
-            output, _ = await kill_proc.communicate()
-            if output:
-                newline = "\n"
-                logger.info(f"pkill output: {newline}{output.decode().strip(newline)}")
+        if self.exec_path is not None or kill_all:
+            if self.process:
+                self.process.kill()
+                self.process = None
+            else:
+                kill_proc = await asyncio.create_subprocess_shell("pkill -f -e -i \"moonlight\"",
+                                                                  stdout=asyncio.subprocess.PIPE,
+                                                                  stderr=asyncio.subprocess.PIPE)
+                output, _ = await kill_proc.communicate()
+                if output:
+                    newline = "\n"
+                    logger.info(f"pkill output: {newline}{output.decode().strip(newline)}")
 
     async def is_moonlight_installed(self):
         if self.exec_path is None:
             kill_proc = await asyncio.create_subprocess_exec(MoonlightProxy.flatpak, "list",
-                                                            stdout=asyncio.subprocess.PIPE,
-                                                            stderr=asyncio.subprocess.PIPE)
+                                                             stdout=asyncio.subprocess.PIPE,
+                                                             stderr=asyncio.subprocess.PIPE)
             output, _ = await kill_proc.communicate()
             if output:
                 return output.decode().find(MoonlightProxy.flatpak_moonlight) != -1
