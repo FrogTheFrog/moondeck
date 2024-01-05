@@ -133,8 +133,7 @@ export class ServerProxy {
           appUpdate: currentSettings?.runnerTimeouts.appUpdate ?? appUpdateDefault,
           streamEnd: currentSettings?.runnerTimeouts.streamEnd ?? streamEndDefault,
           wakeOnLan: currentSettings?.runnerTimeouts.wakeOnLan ?? wakeOnLanDefault
-        },
-        runnerDebugLogs: currentSettings?.runnerDebugLogs ?? false
+        }
       };
 
       settings.currentHostId = selectHost ? host.uniqueId : settings.currentHostId;

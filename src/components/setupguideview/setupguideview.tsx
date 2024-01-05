@@ -24,7 +24,7 @@ export const SetupGuideView: VFC<Props> = ({ settingsManager }) => {
         <DialogControlsSectionHeader>How to get this plugin working?</DialogControlsSectionHeader>
         <Field
           label="Step 1 - Configure Moonlight client to work with Sunshine"
-          description="Download the flatpak version (via Desktop) of the Moonlight client and make sure it is configured."
+          description="Download the flatpak version or AppImage (via Desktop) of the Moonlight client and make sure it is configured."
           focusable={true} />
         <Field
           label="Step 2 - Download and setup Buddy on host PC"

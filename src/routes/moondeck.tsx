@@ -20,7 +20,7 @@ interface Props {
   shortcutManager: ShortcutManager;
 }
 
-const MoonDeckRouter: VFC<Props> = ({ connectivityManager, settingsManager, shortcutManager }) => {
+const MoonDeckRouter: VFC<Props> = ({ connectivityManager, settingsManager, serverAPI, shortcutManager }) => {
   return (
     <SidebarNavigation
       title="MoonDeck"
@@ -54,7 +54,7 @@ const MoonDeckRouter: VFC<Props> = ({ connectivityManager, settingsManager, shor
         },
         {
           title: "Moonlight Settings",
-          content: <MoonlightSettingsView settingsManager={settingsManager} />,
+          content: <MoonlightSettingsView serverAPI={serverAPI} settingsManager={settingsManager} />,
           route: "/moondeck/resolution-settings"
         },
         {

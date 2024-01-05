@@ -73,7 +73,6 @@ export interface HostSettings {
   resolution: HostResolution;
   hostApp: HostApp;
   runnerTimeouts: RunnerTimeouts;
-  runnerDebugLogs: boolean;
 }
 
 export interface GameSessionSettings {
@@ -102,12 +101,30 @@ export interface UserSettings {
   buttonPosition: ButtonPositionSettings;
   buttonStyle: ButtonStyleSettings;
   hostSettings: { [key: string]: HostSettings };
+  runnerDebugLogs: boolean;
+  useMoonlightExec: boolean;
+  moonlightExecPath: string;
 }
 
 export function stringifyDimension(value: Dimension): string {
   const fps = value.fps === null ? "" : `x${value.fps}`;
   const bitrate = value.bitrate === null ? "" : ` (${value.bitrate} kbps)`;
   return `${value.width}x${value.height}${fps}${bitrate}`;
+}
+
+async function getHomeDir(serverAPI: ServerAPI): Promise<string | null> {
+  try {
+    const resp = await serverAPI.callPluginMethod<unknown, string>("get_home_dir", {});
+    if (resp.success) {
+      return resp.result;
+    } else {
+      logger.error(`Error while getting home directory: ${resp.result}`);
+    }
+  } catch (message) {
+    logger.critical(message);
+  }
+
+  return null;
 }
 
 async function getUserSettings(serverAPI: ServerAPI): Promise<UserSettings | null> {
@@ -136,6 +153,8 @@ async function setUserSettings(serverAPI: ServerAPI, settings: UserSettings): Pr
 }
 
 export class SettingsManager {
+  private homeDir: string | null = null;
+
   private readonly serverAPI: ServerAPI;
   private readonly refreshMutex = new Mutex();
   private readonly refreshInProgressSubject = new BehaviorSubject<boolean>(false);
@@ -229,5 +248,13 @@ export class SettingsManager {
 
     callback(hostSettings);
     this.set(settings);
+  }
+
+  async getHomeDir(): Promise<string | null> {
+    if (this.homeDir === null) {
+      this.homeDir = await getHomeDir(this.serverAPI);
+    }
+
+    return this.homeDir;
   }
 }

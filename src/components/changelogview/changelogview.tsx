@@ -9,7 +9,8 @@ export const ChangelogView: VFC<unknown> = () => {
           label="1.6.15"
           description={
             <>
-              <div>&bull; Activated host selection dropdown even when there is only 1 host in QAM, so that the navigation is not broken.</div>
+              <div>&bull; Activated host selection dropdown even when there is only 1 host in QAM, so that the navigation is less broken.</div>
+              <div>&bull; Added a setting for a custom Moonlight executable (AppImage or whatever).</div>
             </>
           }
           focusable={true}

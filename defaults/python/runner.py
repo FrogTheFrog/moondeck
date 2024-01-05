@@ -193,12 +193,12 @@ async def launch_app_and_wait(client: BuddyClient, app_id: int, timeouts: Runner
 
 
 async def start_moonlight(proxy: MoonlightProxy):
-    logger.info("Checking if Moonlight flatpak is installed")
+    logger.info("Checking if Moonlight flatpak is installed or custom binary exists")
     if not await proxy.is_moonlight_installed():
         return runnerresult.Result.MoonlightIsNotInstalled
 
     logger.info("Terminating all Moonlight instances if any")
-    await proxy.terminate_all_instances()
+    await proxy.terminate_all_instances(kill_all=True)
 
     logger.info("Starting Moonlight")
     await proxy.start()
@@ -265,10 +265,10 @@ async def establish_connection(client: BuddyClient, mac: str, hostInfoPort: int,
                 return None
 
 
-async def run_game(res_change: ResolutionChange, host_app: str, hostname: str, mac: str, address: str, hostInfoPort:int, buddyPort: int, client_id: Optional[str], close_steam: bool, timeouts: RunnerTimeouts, app_id: int):
+async def run_game(res_change: ResolutionChange, host_app: str, hostname: str, mac: str, address: str, hostInfoPort:int, buddyPort: int, client_id: Optional[str], close_steam: bool, timeouts: RunnerTimeouts, moonlight_exec_path: Optional[str], app_id: int):
     try:
         async with BuddyClient(address, buddyPort, client_id, timeouts["buddyRequests"]) as client, \
-                   MoonlightProxy(hostname, host_app, res_change["dimensions"] if res_change["passToMoonlight"] else None) as proxy:
+                   MoonlightProxy(hostname, host_app, res_change["dimensions"] if res_change["passToMoonlight"] else None, moonlight_exec_path) as proxy:
             result = await establish_connection(client=client, mac=mac, hostInfoPort=hostInfoPort, timeouts=timeouts)
             if result:
                 return result
@@ -417,7 +417,7 @@ async def main():
             runnerresult.set_result(runnerresult.Result.HostNotSelected)
             return
         
-        if host_settings["runnerDebugLogs"]:
+        if user_settings["runnerDebugLogs"]:
             enable_debug_level()
 
         res_change = get_resolution_change(host_settings=host_settings)
@@ -441,6 +441,7 @@ async def main():
                                 user_settings["clientId"],
                                 host_settings["closeSteamOnceSessionEnds"],
                                 host_settings["runnerTimeouts"],
+                                user_settings["moonlightExecPath"] if user_settings["useMoonlightExec"] else None,
                                 app_id)
         runnerresult.set_result(result)
 

@@ -1,4 +1,4 @@
-import { DialogBody, DialogControlsSection, DialogControlsSectionHeader, Field, Focusable } from "decky-frontend-lib";
+import { DialogBody, DialogControlsSection, DialogControlsSectionHeader, Field, Focusable, ServerAPI } from "decky-frontend-lib";
 import { LabelWithIcon, NumericTextInput, ResolutionSelectionDropdown, ToggleField } from "../shared";
 import { ModifyListButton, RemoveListEntryButton } from "../shared/indexedlist";
 import { SettingsManager, maxBitrate, maxFps, minBitrate, minFps } from "../../lib";
@@ -6,14 +6,16 @@ import { AppResolutionOverrideDropdown } from "./appresolutionoverridedropdown";
 import { HostOff } from "../icons";
 import { LinkedDisplayList } from "./linkeddisplaylist";
 import { ModifyResolutionModal } from "./modifyresolutionmodal";
+import { MoonlightExecutableSelection } from "./moonlightexecutableselection";
 import { VFC } from "react";
 import { useCurrentHostSettings } from "../../hooks";
 
 interface Props {
+  serverAPI: ServerAPI;
   settingsManager: SettingsManager;
 }
 
-export const MoonlightSettingsView: VFC<Props> = ({ settingsManager }) => {
+export const MoonlightSettingsView: VFC<Props> = ({ serverAPI, settingsManager }) => {
   const hostSettings = useCurrentHostSettings(settingsManager);
   if (hostSettings === null) {
     return (
@@ -32,6 +34,7 @@ export const MoonlightSettingsView: VFC<Props> = ({ settingsManager }) => {
     <DialogBody>
       <DialogControlsSection>
         <DialogControlsSectionHeader>General</DialogControlsSectionHeader>
+        <MoonlightExecutableSelection serverAPI={serverAPI} settingsManager={settingsManager} />
         <Field
           label="Default bitrate in kbps (optional)"
           description="Bitrate to be applied when starting stream. Will be overridden by the one from custom resolution if provided."
@@ -46,7 +49,7 @@ export const MoonlightSettingsView: VFC<Props> = ({ settingsManager }) => {
           />
         </Field>
         <Field
-          label="Default FPS"
+          label="Default FPS (optional)"
           description="FPS to be applied when starting stream. Will be overridden by the one from custom resolution if provided. Providing FPS without bitrate will trigger Moonlight to automatically calculate the bitrate!"
           childrenContainerWidth="fixed"
         >

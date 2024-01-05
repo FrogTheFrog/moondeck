@@ -1,17 +1,18 @@
 import { DialogBody, DialogControlsSection, DialogControlsSectionHeader, Field } from "decky-frontend-lib";
 import { LabelWithIcon, NumericTextInput, ToggleField } from "../shared";
 import { SettingsManager, appLaunchDefault, appLaunchStabilityDefault, appUpdateDefault, buddyRequestsDefault, initialConditionsDefault, servicePingDefault, streamEndDefault, streamReadinessDefault, wakeOnLanDefault } from "../../lib";
+import { useCurrentHostSettings, useCurrentSettings } from "../../hooks";
 import { HostOff } from "../icons";
 import { VFC } from "react";
-import { useCurrentHostSettings } from "../../hooks";
 
 interface Props {
   settingsManager: SettingsManager;
 }
 
 export const RunnerSettingsView: VFC<Props> = ({ settingsManager }) => {
+  const userSettings = useCurrentSettings(settingsManager);
   const hostSettings = useCurrentHostSettings(settingsManager);
-  if (hostSettings === null) {
+  if (userSettings === null || hostSettings === null) {
     return (
       <DialogBody>
         <DialogControlsSection>
@@ -30,8 +31,8 @@ export const RunnerSettingsView: VFC<Props> = ({ settingsManager }) => {
         <DialogControlsSectionHeader>General</DialogControlsSectionHeader>
         <ToggleField
           label="Debug logs"
-          value={hostSettings.runnerDebugLogs}
-          setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.runnerDebugLogs = value; })}
+          value={userSettings.runnerDebugLogs}
+          setValue={(value) => settingsManager.update((userSettings) => { userSettings.runnerDebugLogs = value; })}
         />
       </DialogControlsSection>
       <DialogControlsSection>

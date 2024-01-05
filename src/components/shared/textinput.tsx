@@ -1,4 +1,4 @@
-import { ChangeEvent, ReactElement, useEffect, useState } from "react";
+import { ReactElement, useEffect, useState } from "react";
 import { TextField } from "decky-frontend-lib";
 
 interface Props<T> {
@@ -10,43 +10,33 @@ interface Props<T> {
 }
 
 export const TextInput: <T>(props: Props<T>) => ReactElement<Props<T>> = ({ disabled, value, setValue, convert, setIsValid }) => {
-  const [cachedValue, setCachedValue] = useState<string>(value);
+  const [cachedValue, setCachedValue] = useState<string | null>(null);
   const [error, setError] = useState<string>("");
 
-  const handleChange = (event: ChangeEvent<HTMLInputElement>): void => {
-    setCachedValue(event.target.value);
+  const handleChange = (newValue: string, fromOutside: boolean): void => {
+    // First error message suppressed on purpose
+    const firstChange = cachedValue === null;
+    const converted = convert(newValue);
 
-    const converted = convert(event.target.value);
-    if (converted.success) {
-      setValue(converted.value);
-      setError("");
-    } else {
-      setError(converted.error);
-    }
+    setCachedValue(newValue);
+    setError(converted.success || firstChange ? "" : converted.error);
     setIsValid?.(converted.success);
+
+    if (converted.success && !fromOutside) {
+      setValue(converted.value);
+    }
   };
 
-  useEffect(() => {
-    const converted = convert(value);
-    if (!converted.success) {
-      // First error message suppressed on purpose
-      if (value !== "") {
-        setError(converted.error);
-      }
-      setIsValid?.(false);
-    } else {
-      setIsValid?.(true);
-    }
-  }, []);
+  useEffect(() => handleChange(value, true), [value]);
 
   return (
     <>
       <TextField
         disabled={disabled}
-        value={cachedValue}
-        onChange={handleChange}
+        value={cachedValue ?? ""}
+        onChange={(event) => handleChange(event.target.value, false)}
       />
-      { error && <div>{error}</div> }
+      {error && <div>{error}</div>}
     </>
   );
 };

@@ -58,7 +58,6 @@ class HostSettings(TypedDict):
     resolution: HostResolution
     hostApp: HostApp
     runnerTimeouts: RunnerTimeouts
-    runnerDebugLogs: bool
 
 
 class GameSessionSettings(TypedDict):
@@ -87,6 +86,9 @@ class UserSettings(TypedDict):
     buttonPosition: ButtonPositionSettings
     buttonStyle: ButtonStyleSettings
     hostSettings: Dict[str, HostSettings]
+    runnerDebugLogs: bool
+    useMoonlightExec: bool
+    moonlightExecPath: str
 
 
 class SettingsManager:
@@ -134,7 +136,10 @@ class SettingsManager:
                     "showFocusRing": True,
                     "theme": "Clean"
                 },
-                "hostSettings": {}}))
+                "hostSettings": {},
+                "runnerDebugLogs": False,
+                "useMoonlightExec": False,
+                "moonlightExecPath": ""}))
 
     async def set(self, settings: UserSettings):
         try:
@@ -226,6 +231,14 @@ class SettingsManager:
             data["version"] = 15
             for host in data["hostSettings"].keys():
                 data["hostSettings"][host]["runnerTimeouts"]["wakeOnLan"] = 60
+        if data["version"] == 15:
+            data["version"] = 16
+            for host in data["hostSettings"].keys():
+                del data["hostSettings"][host]["runnerDebugLogs"]
+            
+            data["runnerDebugLogs"] = False
+            data["useMoonlightExec"] = False
+            data["moonlightExecPath"] = ""
 
         return data
 

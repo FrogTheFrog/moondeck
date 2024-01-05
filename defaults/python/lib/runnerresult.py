@@ -17,7 +17,7 @@ class Result(Enum):
     StreamDidNotEnd = "Stream did not end in time!"
     AppLaunchFailed = "Failed to launch app in time!"
     MoonlightClosed = "Moonlight has been closed!"
-    MoonlightIsNotInstalled = "Moonlight's flatpak is not installed!"
+    MoonlightIsNotInstalled = "Moonlight executable/flatpak not found!"
 
 
 def set_result(result: Optional[Enum], log_result=True):

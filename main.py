@@ -14,6 +14,7 @@ def add_plugin_to_path():
 add_plugin_to_path()
 
 import asyncio
+import pathlib
 import python.lib.runnerresult as runnerresult
 import python.lib.hostinfo as hostinfo
 import python.lib.constants as constants
@@ -142,14 +143,22 @@ class Plugin:
             logger.exception("Unhandled exception")
 
     @utils.async_scope_log(logger.info)
+    async def get_home_dir(self):
+        try:
+            return str(pathlib.Path("/home", constants.CURRENT_USER))
+        except Exception:
+            logger.exception("Unhandled exception")
+
+    @utils.async_scope_log(logger.info)
     async def kill_runner(self, app_id: int):
         try:
             logger.info("Killing reaper and moonlight!")
-            kill_proc = await asyncio.create_subprocess_shell(f"pkill -f -e \"AppId={app_id}|moonlight\"",
+            kill_proc = await asyncio.create_subprocess_shell(f"pkill -f -e -i \"AppId={app_id}|moonlight\"",
                                                               stdout=asyncio.subprocess.PIPE,
                                                               stderr=asyncio.subprocess.STDOUT)
             output, _ = await kill_proc.communicate()
-            logger.info(f"pkill output: {output}")
+            newline = "\n"
+            logger.info(f"pkill output: {newline}{output.decode().strip(newline)}")
 
         except Exception:
             logger.exception("Unhandled exception")
@@ -157,11 +166,11 @@ class Plugin:
     @utils.async_scope_log(logger.info)
     async def is_runner_active(self, app_id: int):
         try:
-            kill_proc = await asyncio.create_subprocess_shell(f"pgrep -f \"AppId={app_id}\"",
+            kill_proc = await asyncio.create_subprocess_shell(f"pgrep -f -i \"AppId={app_id}\"",
                                                               stdout=asyncio.subprocess.PIPE,
                                                               stderr=asyncio.subprocess.DEVNULL)
             output, _ = await kill_proc.communicate()
-            return any(chr.isdigit() for chr in output.decode("utf-8"))
+            return any(chr.isdigit() for chr in output.decode())
 
         except Exception:
             logger.exception("Unhandled exception")
