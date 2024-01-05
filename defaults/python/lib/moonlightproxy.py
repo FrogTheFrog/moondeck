@@ -101,7 +101,10 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
 
         if self.exec_path is not None or kill_all:
             if self.process:
-                self.process.kill()
+                try:
+                    self.process.kill()
+                except ProcessLookupError:
+                    pass
                 self.process = None
             else:
                 kill_proc = await asyncio.create_subprocess_shell("pkill -f -e -i \"moonlight\"",
