@@ -1,9 +1,11 @@
 import { AppStoreOverview, getAppStoreEx } from "./steamutils";
+import { IMapWillChange, Lambda } from "mobx";
 import BiMap from "ts-bidirectional-map";
+import { ObservableObjectAdministration } from "mobx/dist/internal";
 import { cloneDeep } from "lodash";
 import { logger } from "./logger";
 
-const patchKey = Symbol("PATCH_DATA");
+const patchKey = Symbol("MoonDeck");
 type SetterPredicate<T> = (currentValue: T, newValue: T) => boolean;
 interface PatchData<T> {
   patchedValue: T;
@@ -69,10 +71,10 @@ function isPatched(obj: object, prop: string): boolean {
   return getPatchData(obj, prop) !== null;
 }
 
-function patchProperty<T>(obj: object, prop: string, setterPredicate: SetterPredicate<T>, value: T): void {
+function patchProperty<T>(obj: object, prop: string, setterPredicate: SetterPredicate<T>, value: T): boolean {
   if (isPatched(obj, prop)) {
     obj[prop] = value;
-    return;
+    return false;
   }
 
   const descriptor = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(obj), prop);
@@ -87,6 +89,7 @@ function patchProperty<T>(obj: object, prop: string, setterPredicate: SetterPred
     origSetter: descriptor?.set
   };
   Object.defineProperty(obj, prop, makeSetterAndGetter(patchData));
+  return true;
 }
 
 function unpatchProperty(orig: object, out: object, prop: string): void {
@@ -111,6 +114,15 @@ function unpatchProperty(orig: object, out: object, prop: string): void {
   }
 
   out[prop] = patchData.origValue;
+}
+
+function getMobxAdminSymbol(obj: object): symbol | null {
+  for (const symbol of Object.getOwnPropertySymbols(obj)) {
+    if (symbol.description?.includes("mobx admin")) {
+      return symbol;
+    }
+  }
+  return null;
 }
 
 export class AppOverviewPatcher<T extends keyof AppStoreOverview> {
@@ -210,21 +222,59 @@ export class AppOverviewPatcher<T extends keyof AppStoreOverview> {
     this.trySwapOverview(fromOverview, toOverview);
   }
 
-  trySwapOverview(from: AppStoreOverview, to: AppStoreOverview, mutable = false): void {
+  trySwapOverview(from: AppStoreOverview, to: AppStoreOverview, fromIntercept = false): void {
     const appStoreEx = getAppStoreEx();
     if (appStoreEx === null) {
       logger.error("appStoreEx is null!");
       return;
     }
 
-    to = mutable ? to : cloneDeep(to);
+    logger.debug(`Checking if need to patch overview for ${to.appid}.`);
+    const mobxAdmin = getMobxAdminSymbol(to);
+    if (mobxAdmin) {
+      const mobxAdminObj = to[mobxAdmin] as ObservableObjectAdministration;
+      const isBeingObserved = mobxAdminObj.values_.size > 0;
 
-    for (const [prop, predicate] of Object.entries(this.propSetterPredicates)) {
-      patchProperty(to, prop, predicate as SetterPredicate<unknown>, from[prop]);
+      if (isBeingObserved) {
+        const interceptorUnregister = mobxAdminObj[patchKey] as Lambda | undefined;
+        if (!interceptorUnregister) {
+          logger.debug(`Patching MobX for ${to.appid}.`);
+          mobxAdminObj[patchKey] = mobxAdminObj.intercept_((change: IMapWillChange<string | number, unknown>) => {
+            if (change.type === "update") {
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+              const predicate = this.propSetterPredicates[change.name] as SetterPredicate<unknown> | undefined;
+              if (predicate) {
+                if (!predicate(change.object[change.name], change.newValue)) {
+                  return null;
+                }
+              }
+            }
+
+            return change;
+          });
+        }
+
+        for (const [prop] of Object.entries(this.propSetterPredicates)) {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          to[prop] = from[prop];
+        }
+
+        return;
+      }
     }
 
-    logger.debug(`Patching app overview from ${from.appid} to ${to.appid}.`);
-    if (!mutable) {
+    to = fromIntercept ? to : cloneDeep(to);
+
+    let patched = false;
+    for (const [prop, predicate] of Object.entries(this.propSetterPredicates)) {
+      patched = patchProperty(to, prop, predicate as SetterPredicate<unknown>, from[prop]) || patched;
+    }
+
+    if (patched) {
+      logger.debug(`Patching setter/getter for ${to.appid}.`);
+    }
+
+    if (!fromIntercept) {
       appStoreEx.setAppOverview(to.appid, to);
     }
   }
@@ -239,6 +289,18 @@ export class AppOverviewPatcher<T extends keyof AppStoreOverview> {
     const overview = appStoreEx.getAppOverview(appId);
     if (overview == null) {
       return;
+    }
+
+    const mobxAdmin = getMobxAdminSymbol(overview);
+    if (mobxAdmin) {
+      const mobxAdminObj = overview[mobxAdmin] as ObservableObjectAdministration;
+      const interceptorUnregister = mobxAdminObj[patchKey] as Lambda | undefined;
+      if (interceptorUnregister) {
+        logger.debug(`Unpatching MobX for ${appId}.`);
+        interceptorUnregister();
+
+        return;
+      }
     }
 
     const clonedOverview = cloneDeep(overview);
