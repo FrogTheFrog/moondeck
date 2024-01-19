@@ -5,6 +5,11 @@ export const ChangelogView: VFC<unknown> = () => {
   return (
     <DialogBody>
       <DialogControlsSection>
+      <Field
+          label="1.6.16"
+          description="Updated MobX patching logic. Nothing observable, just some error are gone..."
+          focusable={true}
+        />
         <Field
           label="1.6.15"
           description={
