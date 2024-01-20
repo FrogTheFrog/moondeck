@@ -7,7 +7,12 @@ export const ChangelogView: VFC<unknown> = () => {
       <DialogControlsSection>
       <Field
           label="1.6.16"
-          description="Updated MobX patching logic. Nothing observable, just some error are gone..."
+          description={
+            <>
+              <div>&bull; Updated MobX patching strategy. Nothing observable, just some errors are gone...</div>
+              <div>&bull; Bumped DFL version.</div>
+            </>
+          }
           focusable={true}
         />
         <Field
