@@ -9,7 +9,7 @@ from .client_exceptions import (
     ServerDisconnectedError,
     ServerTimeoutError,
 )
-from .helpers import BaseTimerContext
+from .helpers import BaseTimerContext, status_code_must_be_empty_body
 from .http import HttpResponseParser, RawResponseMessage
 from .streams import EMPTY_PAYLOAD, DataQueue, StreamReader
 
@@ -35,6 +35,8 @@ class ResponseHandler(BaseProtocol, DataQueue[Tuple[RawResponseMessage, StreamRe
 
         self._read_timeout: Optional[float] = None
         self._read_timeout_handle: Optional[asyncio.TimerHandle] = None
+
+        self._timeout_ceil_threshold: Optional[float] = 5
 
     @property
     def upgraded(self) -> bool:
@@ -143,11 +145,15 @@ class ResponseHandler(BaseProtocol, DataQueue[Tuple[RawResponseMessage, StreamRe
         auto_decompress: bool = True,
         read_timeout: Optional[float] = None,
         read_bufsize: int = 2**16,
+        timeout_ceil_threshold: float = 5,
+        max_line_size: int = 8190,
+        max_field_size: int = 8190,
     ) -> None:
         self._skip_payload = skip_payload
 
         self._read_timeout = read_timeout
-        self._reschedule_timeout()
+
+        self._timeout_ceil_threshold = timeout_ceil_threshold
 
         self._parser = HttpResponseParser(
             self,
@@ -158,6 +164,8 @@ class ResponseHandler(BaseProtocol, DataQueue[Tuple[RawResponseMessage, StreamRe
             response_with_body=not skip_payload,
             read_until_eof=read_until_eof,
             auto_decompress=auto_decompress,
+            max_line_size=max_line_size,
+            max_field_size=max_field_size,
         )
 
         if self._tail:
@@ -180,6 +188,9 @@ class ResponseHandler(BaseProtocol, DataQueue[Tuple[RawResponseMessage, StreamRe
             )
         else:
             self._read_timeout_handle = None
+
+    def start_timeout(self) -> None:
+        self._reschedule_timeout()
 
     def _on_read_timeout(self) -> None:
         exc = ServerTimeoutError("Timeout on reading data from socket")
@@ -230,7 +241,9 @@ class ResponseHandler(BaseProtocol, DataQueue[Tuple[RawResponseMessage, StreamRe
 
                     self._payload = payload
 
-                    if self._skip_payload or message.code in (204, 304):
+                    if self._skip_payload or status_code_must_be_empty_body(
+                        message.code
+                    ):
                         self.feed_data((message, EMPTY_PAYLOAD), 0)
                     else:
                         self.feed_data((message, payload), 0)

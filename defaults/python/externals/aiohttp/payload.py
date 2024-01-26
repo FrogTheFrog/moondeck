@@ -13,6 +13,7 @@ from typing import (
     Any,
     ByteString,
     Dict,
+    Final,
     Iterable,
     Optional,
     TextIO,
@@ -26,14 +27,14 @@ from multidict import CIMultiDict
 from . import hdrs
 from .abc import AbstractStreamWriter
 from .helpers import (
-    PY_36,
+    _SENTINEL,
     content_disposition_header,
     guess_filename,
     parse_mimetype,
     sentinel,
 )
 from .streams import StreamReader
-from .typedefs import Final, JSONEncoder, _CIMultiDict
+from .typedefs import JSONEncoder, _CIMultiDict
 
 __all__ = (
     "PAYLOAD_REGISTRY",
@@ -141,7 +142,7 @@ class Payload(ABC):
         headers: Optional[
             Union[_CIMultiDict, Dict[str, str], Iterable[Tuple[str, str]]]
         ] = None,
-        content_type: Optional[str] = sentinel,
+        content_type: Union[str, None, _SENTINEL] = sentinel,
         filename: Optional[str] = None,
         encoding: Optional[str] = None,
         **kwargs: Any,
@@ -231,10 +232,7 @@ class BytesPayload(Payload):
             self._size = len(value)
 
         if self._size > TOO_LARGE_BYTES_BODY:
-            if PY_36:
-                kwargs = {"source": self}
-            else:
-                kwargs = {}
+            kwargs = {"source": self}
             warnings.warn(
                 "Sending a large body directly with raw bytes might"
                 " lock the event loop. You should probably pass an "

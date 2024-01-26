@@ -4,6 +4,7 @@ Small module for use with the wake on lan protocol.
 
 """
 import argparse
+import ipaddress
 import socket
 from typing import List
 from typing import Optional
@@ -40,7 +41,8 @@ def send_magic_packet(
     *macs: str,
     ip_address: str = BROADCAST_IP,
     port: int = DEFAULT_PORT,
-    interface: Optional[str] = None
+    interface: Optional[str] = None,
+    address_family: Optional[socket.AddressFamily] = None
 ) -> None:
     """
     Wake up computers having any of the given mac addresses.
@@ -54,17 +56,31 @@ def send_magic_packet(
         ip_address: the ip address of the host to send the magic packet to.
         port: the port of the host to send the magic packet to.
         interface: the ip address of the network adapter to route the magic packet through.
+        address_family: the address family of the ip address to initiate connection with.
+            When not specificied, chosen automatically between IPv4 and IPv6.
 
     """
     packets = [create_magic_packet(mac) for mac in macs]
 
-    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+    if address_family is None:
+        address_family = (
+            socket.AF_INET6 if _is_ipv6_address(ip_address) else socket.AF_INET
+        )
+
+    with socket.socket(address_family, socket.SOCK_DGRAM) as sock:
         if interface is not None:
             sock.bind((interface, 0))
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         sock.connect((ip_address, port))
         for packet in packets:
             sock.send(packet)
+
+
+def _is_ipv6_address(ip_address: str) -> bool:
+    try:
+        return isinstance(ipaddress.ip_address(ip_address), ipaddress.IPv6Address)
+    except ValueError:
+        return False
 
 
 def main(argv: Optional[List[str]] = None) -> None:
@@ -81,6 +97,12 @@ def main(argv: Optional[List[str]] = None) -> None:
         metavar="mac address",
         nargs="+",
         help="The mac addresses of the computers you are trying to wake.",
+    )
+    parser.add_argument(
+        "-6",
+        dest="use_ipv6",
+        action="store_true",
+        help="To indicate if ipv6 should be used by default instead of ipv4.",
     )
     parser.add_argument(
         "-i",
@@ -102,7 +124,13 @@ def main(argv: Optional[List[str]] = None) -> None:
         help="The ip address of the network adapter to route the magic packet through.",
     )
     args = parser.parse_args(argv)
-    send_magic_packet(*args.macs, ip_address=args.i, port=args.p, interface=args.n)
+    send_magic_packet(
+        *args.macs,
+        ip_address=args.i,
+        port=args.p,
+        interface=args.n,
+        address_family=socket.AF_INET6 if args.use_ipv6 else None
+    )
 
 
 if __name__ == "__main__":  # pragma: nocover

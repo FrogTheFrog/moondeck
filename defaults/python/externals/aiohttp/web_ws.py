@@ -3,9 +3,9 @@ import base64
 import binascii
 import hashlib
 import json
-from typing import Any, Iterable, Optional, Tuple, cast
+import sys
+from typing import Any, Final, Iterable, Optional, Tuple, cast
 
-import async_timeout
 import attr
 from multidict import CIMultiDict
 
@@ -27,10 +27,15 @@ from .http import (
 )
 from .log import ws_logger
 from .streams import EofStream, FlowControlDataQueue
-from .typedefs import Final, JSONDecoder, JSONEncoder
+from .typedefs import JSONDecoder, JSONEncoder
 from .web_exceptions import HTTPBadRequest, HTTPException
 from .web_request import BaseRequest
 from .web_response import StreamResponse
+
+if sys.version_info >= (3, 11):
+    import asyncio as async_timeout
+else:
+    import async_timeout
 
 __all__ = (
     "WebSocketResponse",
@@ -105,7 +110,12 @@ class WebSocketResponse(StreamResponse):
         if self._heartbeat is not None:
             assert self._loop is not None
             self._heartbeat_cb = call_later(
-                self._send_heartbeat, self._heartbeat, self._loop
+                self._send_heartbeat,
+                self._heartbeat,
+                self._loop,
+                timeout_ceil_threshold=self._req._protocol._timeout_ceil_threshold
+                if self._req is not None
+                else 5,
             )
 
     def _send_heartbeat(self) -> None:
@@ -119,7 +129,12 @@ class WebSocketResponse(StreamResponse):
             if self._pong_response_cb is not None:
                 self._pong_response_cb.cancel()
             self._pong_response_cb = call_later(
-                self._pong_not_received, self._pong_heartbeat, self._loop
+                self._pong_not_received,
+                self._pong_heartbeat,
+                self._loop,
+                timeout_ceil_threshold=self._req._protocol._timeout_ceil_threshold
+                if self._req is not None
+                else 5,
             )
 
     def _pong_not_received(self) -> None:
@@ -285,6 +300,19 @@ class WebSocketResponse(StreamResponse):
     @property
     def compress(self) -> bool:
         return self._compress
+
+    def get_extra_info(self, name: str, default: Any = None) -> Any:
+        """Get optional transport information.
+
+        If no value associated with ``name`` is found, ``default`` is returned.
+        """
+        writer = self._writer
+        if writer is None:
+            return default
+        transport = writer.transport
+        if transport is None:
+            return default
+        return transport.get_extra_info(name, default)
 
     def exception(self) -> Optional[BaseException]:
         return self._exception
