@@ -79,7 +79,7 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
                 return
 
             logger.info("Starting to save Moonlight output.")
-            with open(constants.MOONLIGHT_LOG_FILE, "w") as file:
+            with open(constants.MOONLIGHT_LOG_FILE, "w", 1) as file:
                 while not stream.at_eof():
                     data = await stream.readline()
                     file.write(data.decode())
