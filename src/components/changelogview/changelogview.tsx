@@ -5,7 +5,18 @@ export const ChangelogView: VFC<unknown> = () => {
   return (
     <DialogBody>
       <DialogControlsSection>
-      <Field
+        <Field
+          label="1.6.17"
+          description={
+            <>
+              <div>&bull; Migrated plugin to use global DFL version.</div>
+              <div>&bull; Fixed issue where MoonDeckStream would close on host when stream is terminated (in some cases).</div>
+              <div>&bull; Moonlight log is now properly written to (tnx python for this stupid non-sense).</div>
+            </>
+          }
+          focusable={true}
+        />
+        <Field
           label="1.6.16"
           description={
             <>
