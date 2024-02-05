@@ -55,7 +55,7 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
                 args += ["--fps", f"{self.resolution['fps']}"]
             if self.resolution["bitrate"]:
                 args += ["--bitrate", f"{self.resolution['bitrate']}"]
-        args += ["stream", self.hostname, self.host_app]
+        args += ["--no-quit-after", "stream", self.hostname, self.host_app]
 
         logger.info(f"Executing: {exec} {' '.join(args)}")
         self.process = await asyncio.create_subprocess_exec(exec, *args,
