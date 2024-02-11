@@ -56,6 +56,10 @@ class GetHostInfoResult(Enum):
     Failed = "Failed to get host info via Buddy!"
 
 
+class GetHostPcInfoResult(Enum):
+    Failed = "Failed to get host pc info via Buddy!"
+
+
 class EndStreamResult(Enum):
     BuddyRefused = "Buddy refused to end stream. Check the logs on host!"
     Failed = "Failed to end stream via Buddy!"
@@ -229,6 +233,16 @@ class BuddyClient(contextlib.AbstractAsyncContextManager):
                 return result
 
             return await self.__requests.get_host_info()
+
+        return await self._try_request(request(), GetHostInfoResult.Failed)
+    
+    async def get_host_pc_info(self):
+        async def request():
+            result = await self.say_hello()
+            if result:
+                return result
+
+            return await self.__requests.get_host_pc_info()
 
         return await self._try_request(request(), GetHostInfoResult.Failed)
 

@@ -14,7 +14,6 @@ class GameStreamHost(TypedDict):
     address: str
     port: int
     hostName: str
-    mac: str
     uniqueId: str
 
 
@@ -27,12 +26,6 @@ def __getHostIdFromXml(data: str):
 def __getHostNameFromXml(data: str):
     if data:
         result = re.search("<hostname>(.*?)</hostname>", data)
-        return str(result.group(1)) if result else None
-
-
-def __getMacFromXml(data: str):
-    if data:
-        result = re.search("<mac>(.*?)</mac>", data)
         return str(result.group(1)) if result else None
 
 
@@ -138,15 +131,13 @@ async def get_server_info(address: str, port: int, timeout: Optional[float]):
                 async with session.get(f"http://{address}:{port}/serverinfo") as resp:
                     data = await resp.text(encoding="utf-8")
                     hostname = __getHostNameFromXml(data)
-                    mac = __getMacFromXml(data)
                     unique_id = __getHostIdFromXml(data)
 
-                    if all(v is not None for v in [hostname, mac, unique_id]):
+                    if all(v is not None for v in [hostname, unique_id]):
                         return utils.from_dict(GameStreamHost, {
                             "address": address,
                             "port": port,
                             "hostName": hostname,
-                            "mac": mac,
                             "uniqueId": unique_id})
     except (asyncio.TimeoutError, aiohttp.ClientError) as e:
         logger.debug(f"Timeout or client error while executing request: {e}")

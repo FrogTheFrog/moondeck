@@ -6,6 +6,11 @@ export const ChangelogView: VFC<unknown> = () => {
     <DialogBody>
       <DialogControlsSection>
         <Field
+          label="1.7.0"
+          description="Fixed incoming breaking change from Sunshine (mac address no longer being exposed via HTTP port). Requires new Buddy 1.6.0 version!"
+          focusable={true}
+        />
+        <Field
           label="1.6.17"
           description={
             <>

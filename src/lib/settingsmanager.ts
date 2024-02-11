@@ -24,6 +24,8 @@ export const appUpdateDefault = 15 as const;
 export const streamEndDefault = 15 as const;
 export const wakeOnLanDefault = 60 as const;
 
+export type OsType = "Windows" | "Linux" | "Other";
+
 export interface RunnerTimeouts {
   buddyRequests: number;
   servicePing: number;
@@ -69,6 +71,7 @@ export interface HostSettings {
   staticAddress: boolean;
   hostName: string;
   mac: string;
+  os: OsType;
   closeSteamOnceSessionEnds: boolean;
   resolution: HostResolution;
   hostApp: HostApp;

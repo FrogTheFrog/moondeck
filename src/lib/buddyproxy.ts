@@ -1,25 +1,33 @@
+import { OsType, SettingsManager } from "./settingsmanager";
 import { BehaviorSubject } from "rxjs";
 import { Mutex } from "async-mutex";
 import { ReadonlySubject } from "./readonlysubject";
 import { ServerAPI } from "decky-frontend-lib";
-import { SettingsManager } from "./settingsmanager";
 import { logger } from "./logger";
 
 export type BuddyStatus = "VersionMismatch" | "Restarting" | "ShuttingDown" | "Suspending" | "NoClientId" | "NotPaired" | "Pairing" | "SslVerificationFailed" | "Exception" | "Offline" | "Online";
 
-async function getBuddyStatus(serverAPI: ServerAPI, address: string, buddyPort: number, clientId: string, timeout: number): Promise<BuddyStatus> {
+interface BuddyInfo {
+  status: BuddyStatus;
+  info: {
+    mac: string;
+    os: OsType;
+  } | null;
+}
+
+async function getBuddyInfo(serverAPI: ServerAPI, address: string, buddyPort: number, clientId: string, timeout: number): Promise<BuddyInfo> {
   try {
-    const resp = await serverAPI.callPluginMethod<{ address: string; buddy_port: number; client_id: string; timeout: number }, BuddyStatus>("get_buddy_status", { address, buddy_port: buddyPort, client_id: clientId, timeout });
+    const resp = await serverAPI.callPluginMethod<{ address: string; buddy_port: number; client_id: string; timeout: number }, BuddyInfo>("get_buddy_info", { address, buddy_port: buddyPort, client_id: clientId, timeout });
     if (resp.success) {
       return resp.result;
     } else {
-      logger.error(`Error while fetching buddy status: ${resp.result}`);
+      logger.error(`Error while fetching buddy info: ${resp.result}`);
     }
   } catch (message) {
     logger.critical(message);
   }
 
-  return "Offline";
+  return { status: "Offline", info: null };
 }
 
 async function getGamestreamAppNames(serverAPI: ServerAPI, address: string, buddyPort: number, clientId: string, timeout: number): Promise<string[] | null> {
@@ -48,9 +56,16 @@ export class BuddyProxy {
   readonly status = new ReadonlySubject(this.statusSubject);
   readonly refreshing = new ReadonlySubject(this.refreshingSubject);
 
-  private updateStatus(newStatus: BuddyStatus): void {
-    if (this.statusSubject.value !== newStatus) {
-      this.statusSubject.next(newStatus);
+  private updateInfo(buddyInfo: BuddyInfo): void {
+    const info = buddyInfo.info;
+    if (info) {
+      this.settingsManager.updateHost((hostSettings) => {
+        hostSettings.mac = info.mac;
+        hostSettings.os = info.os;
+      });
+    }
+    if (this.statusSubject.value !== buddyInfo.status) {
+      this.statusSubject.next(buddyInfo.status);
     }
   }
 
@@ -76,13 +91,13 @@ export class BuddyProxy {
       const clientId = this.settingsManager.settings.value?.clientId ?? null;
 
       if (hostId === null || address === null || buddyPort === null || clientId === null) {
-        this.updateStatus("Offline");
+        this.updateInfo({ status: "Offline", info: null });
         return;
       }
 
-      const result = await getBuddyStatus(this.serverAPI, address, buddyPort, clientId, 1);
+      const result = await getBuddyInfo(this.serverAPI, address, buddyPort, clientId, 1);
       if (this.settingsManager.settings.value?.currentHostId === hostId) {
-        this.updateStatus(result);
+        this.updateInfo(result);
       }
     } finally {
       this.refreshingSubject.next(false);

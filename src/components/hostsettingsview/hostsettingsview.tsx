@@ -36,6 +36,9 @@ export const HostSettingsView: VFC<Props> = ({ settingsManager }) => {
         <Field label="GameStream client ID" focusable={true}>
           {hostSettings.currentHostId}
         </Field>
+        <Field label="Operating System" focusable={true}>
+          {hostSettings.os}
+        </Field>
         <Field label="Hostname" focusable={true}>
           {hostSettings.hostName}
         </Field>

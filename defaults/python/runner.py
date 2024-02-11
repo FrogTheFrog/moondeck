@@ -254,8 +254,8 @@ async def establish_connection(client: BuddyClient, mac: str, hostInfoPort: int,
             
             buddy_status = buddy_result != HelloResult.Offline
             server_status = await hostinfo.get_server_info(client.address, 
-                                                        hostInfoPort, 
-                                                        timeout=timeouts["servicePing"]) is not None
+                                                           hostInfoPort, 
+                                                           timeout=timeouts["servicePing"]) is not None
             
             if not splash.update(buddy_status, server_status):
                 if not buddy_status:

@@ -10,7 +10,6 @@ export interface GameStreamHost {
   address: string;
   port: number;
   hostName: string;
-  mac: string;
   uniqueId: string;
 }
 
@@ -105,7 +104,8 @@ export class ServerProxy {
         address: host.address,
         staticAddress: staticAddress ?? (currentSettings?.staticAddress ?? false),
         hostName: host.hostName,
-        mac: host.mac,
+        mac: currentSettings?.mac ?? "00:00:00:00:00:00",
+        os: currentSettings?.os ?? "Other",
         closeSteamOnceSessionEnds: currentSettings?.closeSteamOnceSessionEnds ?? false,
         resolution: {
           automatic: currentSettings?.resolution.automatic ?? true,

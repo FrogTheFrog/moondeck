@@ -7,6 +7,7 @@ from . import utils
 
 from typing import Any, Dict, List, Literal, Optional, TypedDict, get_args
 from .logger import logger
+from .buddyrequests import OsType
 
 
 class RunnerTimeouts(TypedDict):
@@ -54,6 +55,7 @@ class HostSettings(TypedDict):
     staticAddress: bool
     hostName: str
     mac: str
+    os: OsType
     closeSteamOnceSessionEnds: bool
     resolution: HostResolution
     hostApp: HostApp
@@ -239,6 +241,10 @@ class SettingsManager:
             data["runnerDebugLogs"] = False
             data["useMoonlightExec"] = False
             data["moonlightExecPath"] = ""
+        if data["version"] == 16:
+            data["version"] = 17
+            for host in data["hostSettings"].keys():
+                data["hostSettings"][host]["os"] = "Other"
 
         return data
 

@@ -5,7 +5,7 @@ import pathlib
 import ssl
 from . import utils
 
-from typing import List, Optional, TypedDict
+from typing import List, Literal, Optional, TypedDict
 from enum import Enum
 
 
@@ -59,6 +59,11 @@ class HostInfoResponse(TypedDict):
     steamRunningAppId: int
     steamTrackedUpdatingAppId: Optional[int]
     streamState: StreamState
+
+OsType = Literal["Windows", "Linux", "Other"]
+class HostPcInfoResponse(TypedDict):
+    mac: str
+    os: OsType
 
 
 class BuddyRequests(contextlib.AbstractAsyncContextManager):
@@ -168,6 +173,11 @@ class BuddyRequests(contextlib.AbstractAsyncContextManager):
         async with self.__session.get(f"{self.base_url}/hostInfo") as resp:
             data = await resp.json(encoding="utf-8")
             return utils.from_dict(HostInfoResponse, data)
+        
+    async def get_host_pc_info(self):
+        async with self.__session.get(f"{self.base_url}/hostPcInfo") as resp:
+            data = await resp.json(encoding="utf-8")
+            return utils.from_dict(HostPcInfoResponse, data)
 
     async def post_end_stream(self):
         async with self.__session.post(f"{self.base_url}/endStream") as resp:
