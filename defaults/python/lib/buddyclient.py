@@ -98,7 +98,7 @@ class BuddyClient(contextlib.AbstractAsyncContextManager):
         except aiohttp.ClientSSLError as e:
             logger.debug(f"Request failed: SSL Verification: {e}")
             return HelloResult.SslVerificationFailed
-        except (aiohttp.ServerConnectionError, aiohttp.ClientConnectorError) as e:
+        except (aiohttp.ServerConnectionError, aiohttp.ClientConnectorError, aiohttp.ClientResponseError) as e:
             logger.debug(f"Connection error while executing request: {e}")
             return fallback_value
         except aiohttp.ClientError as e:
