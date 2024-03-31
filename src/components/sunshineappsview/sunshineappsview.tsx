@@ -1,12 +1,12 @@
 import { AppDetails, DialogBody, DialogButton, DialogControlsSection, DialogControlsSectionHeader, Field, Navigation } from "decky-frontend-lib";
 import { BuddyProxy, SettingsManager, getAllExternalAppDetails, logger } from "../../lib";
 import { ReactNode, VFC, useEffect, useState } from "react";
+import { useCurrentHostSettings, useCurrentSettings } from "../../hooks";
 import { BatchResOverrideButton } from "./batchresoverridebutton";
 import { HostOff } from "../icons";
 import { LabelWithIcon } from "../shared";
 import { PurgeButton } from "./purgebutton";
 import { SyncButton } from "./syncbutton";
-import { useCurrentHostSettings } from "../../hooks";
 
 interface Props {
   settingsManager: SettingsManager;
@@ -14,6 +14,7 @@ interface Props {
 }
 
 export const SunshineAppsView: VFC<Props> = ({ settingsManager, buddyProxy }) => {
+  const settings = useCurrentSettings(settingsManager);
   const hostSettings = useCurrentHostSettings(settingsManager);
   const [shortcuts, setShortcuts] = useState<AppDetails[]>([]);
 
@@ -28,7 +29,7 @@ export const SunshineAppsView: VFC<Props> = ({ settingsManager, buddyProxy }) =>
   useEffect(refreshApps, []);
 
   let syncButton: ReactNode = null;
-  if (hostSettings === null) {
+  if (settings == null || hostSettings === null) {
     syncButton =
       <DialogControlsSection>
         <DialogControlsSectionHeader>Sync with Buddy</DialogControlsSectionHeader>
@@ -46,7 +47,7 @@ export const SunshineAppsView: VFC<Props> = ({ settingsManager, buddyProxy }) =>
           description="Steam client might be restarted afterwards!"
           childrenContainerWidth="fixed"
         >
-          <SyncButton shortcuts={shortcuts} moonDeckHostApps={hostSettings.hostApp.apps} hostName={hostSettings.hostName} buddyProxy={buddyProxy} refreshApps={refreshApps} />
+          <SyncButton shortcuts={shortcuts} moonDeckHostApps={hostSettings.hostApp.apps} hostName={hostSettings.hostName} buddyProxy={buddyProxy} moonlightExecPath={settings.useMoonlightExec ? settings.moonlightExecPath || null : null} refreshApps={refreshApps} />
         </Field>
       </DialogControlsSection>;
   }

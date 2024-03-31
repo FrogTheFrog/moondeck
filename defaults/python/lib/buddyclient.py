@@ -105,7 +105,7 @@ class BuddyClient(contextlib.AbstractAsyncContextManager):
             logger.exception(f"Client error while executing request")
             return HelloResult.Exception
         except Exception as e:
-            logger.exception("Request failed: unknown expection raised.")
+            logger.exception("Request failed: unknown exception raised.")
             return HelloResult.Exception
 
     async def say_hello(self, force=False):

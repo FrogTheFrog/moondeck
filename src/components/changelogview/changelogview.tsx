@@ -5,6 +5,15 @@ export const ChangelogView: VFC<unknown> = () => {
   return (
     <DialogBody>
       <DialogControlsSection>
+      <Field
+          label="1.7.1"
+          description={
+            <>
+              <div>&bull; Sunshine app generator will now use custom Moonlight executable if selected.</div>
+            </>
+          }
+          focusable={true}
+        />
         <Field
           label="1.7.0"
           description="Fixed incoming breaking change from Sunshine (mac address no longer being exposed via HTTP port). Requires new Buddy 1.6.0 version!"
