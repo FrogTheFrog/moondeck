@@ -73,6 +73,7 @@ class ButtonPositionSettings(TypedDict):
     offsetX: str
     offsetY: str
     offsetForHltb: bool
+    zIndex: str
 
 
 class ButtonStyleSettings(TypedDict):
@@ -132,7 +133,8 @@ class SettingsManager:
                     "verticalAlignment": "right",
                     "offsetX": "",
                     "offsetY": "",
-                    "offsetForHltb": False
+                    "offsetForHltb": False,
+                    "zIndex": ""
                 },
                 "buttonStyle": {
                     "showFocusRing": True,
@@ -245,6 +247,9 @@ class SettingsManager:
             data["version"] = 17
             for host in data["hostSettings"].keys():
                 data["hostSettings"][host]["os"] = "Other"
+        if data["version"] == 17:
+            data["version"] = 18
+            data["buttonPosition"]["zIndex"] = ""
 
         return data
 

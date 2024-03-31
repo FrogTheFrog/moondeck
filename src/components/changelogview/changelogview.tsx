@@ -12,6 +12,7 @@ export const ChangelogView: VFC<unknown> = () => {
               <div>&bull; Sunshine app generator will now use custom Moonlight executable if selected.</div>
               <div>&bull; Sunshine app generator now properly escapes hostname and app name.</div>
               <div>&bull; Exotic hostnames with HTML characters are now properly parsed.</div>
+              <div>&bull; Added an option to set z-index to the button.</div>
             </>
           }
           focusable={true}

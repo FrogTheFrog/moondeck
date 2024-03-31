@@ -89,6 +89,7 @@ export interface ButtonPositionSettings {
   offsetX: string;
   offsetY: string;
   offsetForHltb: boolean;
+  zIndex: string;
 }
 
 export interface ButtonStyleSettings {

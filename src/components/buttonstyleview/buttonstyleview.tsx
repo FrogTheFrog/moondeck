@@ -84,6 +84,16 @@ export const ButtonStyleView: VFC<Props> = ({ settingsManager }) => {
             setValue={(value) => settingsManager.update((settings) => { settings.buttonPosition.offsetY = value; })}
           />
         </Field>
+        <Field
+          label="Z-Index"
+          description="CSS style string that will be used to set z-index."
+          childrenContainerWidth="fixed"
+        >
+          <AnyTextInput
+            value={settings.buttonPosition.zIndex}
+            setValue={(value) => settingsManager.update((settings) => { settings.buttonPosition.zIndex = value; })}
+          />
+        </Field>
       </DialogControlsSection>
     </DialogBody>
   );

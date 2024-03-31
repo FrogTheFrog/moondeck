@@ -20,6 +20,7 @@ export const ContainerStyle: VFC<Props> = ({ buttonPosition }) => {
         `
           .moondeck-container {
             position: absolute;
+            z-index: ${buttonPosition.zIndex || "auto"};
             ${buttonPosition.verticalAlignment}: calc(${defaultVerticalOffset} + var(${xOffsetName}));
             ${buttonPosition.horizontalAlignment}: calc(${defaultHorizontalOffset} + var(${yOffsetName}));
           }
