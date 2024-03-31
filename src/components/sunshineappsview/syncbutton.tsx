@@ -26,7 +26,9 @@ async function addExternalShortcut(appName: string, moonlightExecPath: string): 
 }
 
 function makeLaunchOptions(appName: string, hostName: string, customExec: boolean): string {
-  return `${getMoonDeckManagedMark()} %command% ${customExec ? "" : "run com.moonlight_stream.Moonlight"} stream ${hostName} "${appName}"`;
+  const escapedHostName = hostName.replace("'", "'\\''");
+  const escapedAppName = appName.replace("'", "'\\''");
+  return `${getMoonDeckManagedMark()} %command% ${customExec ? "" : "run com.moonlight_stream.Moonlight"} stream '${escapedHostName}' '${escapedAppName}'`;
 }
 
 async function updateLaunchOptions(appId: number, appName: string, hostName: string, customExec: boolean): Promise<void> {
