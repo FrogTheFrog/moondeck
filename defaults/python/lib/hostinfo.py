@@ -1,4 +1,5 @@
 import asyncio
+import html
 import re
 import externals.aiohttp as aiohttp
 import externals.zeroconf as zc
@@ -20,13 +21,13 @@ class GameStreamHost(TypedDict):
 def __getHostIdFromXml(data: str):
     if data:
         result = re.search("<uniqueid>(.*?)</uniqueid>", data)
-        return str(result.group(1)) if result else None
+        return html.unescape(str(result.group(1))) if result else None
 
 
 def __getHostNameFromXml(data: str):
     if data:
         result = re.search("<hostname>(.*?)</hostname>", data)
-        return str(result.group(1)) if result else None
+        return html.unescape(str(result.group(1))) if result else None
 
 
 async def __getter_timeout(cancel_condition: asyncio.Condition, timeout: float):
