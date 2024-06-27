@@ -11,5 +11,8 @@ export function collectionStoreInvalidation(): void {
     return;
   }
 
-  collectionStore.WarmCache();
+  // Seems to have been fixed in 2024-06-27 beta
+  if (collectionStore.WarmCache) {
+    collectionStore.WarmCache();
+  }
 }

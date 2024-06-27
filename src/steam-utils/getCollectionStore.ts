@@ -16,7 +16,7 @@ export interface CollectionStore {
   userCollections: Collection[];
   BIsHidden: (appId: number) => boolean;
   SetAppsAsHidden: (appIds: number[], hide: boolean) => void;
-  WarmCache: () => void;
+  WarmCache?: () => void;
 }
 
 /**
