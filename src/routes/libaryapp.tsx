@@ -1,10 +1,10 @@
 import { MoonDeckAppLauncher, SettingsManager, logger } from "../lib";
-import { Navigation, RoutePatch, ServerAPI, afterPatch, appDetailsClasses, findInReactTree, wrapReactType } from "decky-frontend-lib";
+import { Navigation, afterPatch, appDetailsClasses, findInReactTree, wrapReactType } from "@decky/ui";
+import { RoutePatch, routerHook } from "@decky/api";
 import { MoonDeckLaunchButtonAnchor } from "../components/moondecklaunchbutton";
 import { ReactElement } from "react";
 
 interface Props {
-  serverAPI: ServerAPI;
   moonDeckAppLauncher: MoonDeckAppLauncher;
   settingsManager: SettingsManager;
 }
@@ -20,8 +20,8 @@ type FirstElement = ReactElement<
   } | undefined>;
 } | undefined>;
 
-function patchLibraryApp(route: string, { serverAPI, moonDeckAppLauncher, settingsManager }: Props): RoutePatch {
-  return serverAPI.routerHook.addPatch(
+function patchLibraryApp(route: string, { moonDeckAppLauncher, settingsManager }: Props): RoutePatch {
+  return routerHook.addPatch(
     route,
     (routeProps?: { path?: string; children?: ReactElement<{ renderFunc: boolean }> }) => {
       if (!routeProps?.children?.props?.renderFunc) {
@@ -111,6 +111,6 @@ export function LibraryAppHook(props: Props): () => void {
   const route = "/library/app/:appid";
   const libraryPatch = patchLibraryApp(route, props);
   return () => {
-    props.serverAPI.routerHook.removePatch(route, libraryPatch);
+    routerHook.removePatch(route, libraryPatch);
   };
 }

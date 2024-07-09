@@ -1,4 +1,4 @@
-import { DialogBody, DialogControlsSection, Field } from "decky-frontend-lib";
+import { DialogBody, DialogControlsSection, Field } from "@decky/ui";
 import { VFC } from "react";
 
 export const ChangelogView: VFC<unknown> = () => {

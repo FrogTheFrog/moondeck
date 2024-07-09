@@ -1,4 +1,4 @@
-import { AppDetails } from "decky-frontend-lib";
+import { AppDetails } from "@decky/ui";
 import { getAppDetails } from "./getAppDetails";
 import { waitForPredicate } from "./shared";
 

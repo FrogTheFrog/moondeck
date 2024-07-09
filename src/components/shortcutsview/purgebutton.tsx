@@ -1,4 +1,4 @@
-import { ConfirmModal, DialogButton, showModal } from "decky-frontend-lib";
+import { ConfirmModal, DialogButton, showModal } from "@decky/ui";
 import { ShortcutManager, logger } from "../../lib";
 import { VFC } from "react";
 

@@ -1,4 +1,4 @@
-import { Field, PanelSection, PanelSectionRow } from "decky-frontend-lib";
+import { Field, PanelSection, PanelSectionRow } from "@decky/ui";
 import { CurrentHostSettings } from "../../hooks";
 import { HostAppSelectionDropdown } from "../shared";
 import { SettingsManager } from "../../lib";

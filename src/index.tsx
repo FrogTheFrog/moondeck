@@ -1,18 +1,16 @@
 import { ConnectivityManager, MoonDeckAppLauncher, SettingsManager, ShortcutManager, logger, registerForLoginStateChange, waitForServicesInitialized } from "./lib";
-import { ServerAPI, definePlugin } from "decky-frontend-lib";
-import { SimpleTitleView, TitleView } from "./components/titleview";
 import { MoonDeckMain } from "./components/icons";
 import { QuickSettingsView } from "./components/quicksettingsview/quicksettingsview";
 import { RouteManager } from "./routes";
+import { TitleView } from "./components/titleview";
+import { definePlugin } from "@decky/api";
 
-export default definePlugin((serverAPI: ServerAPI) => {
-  logger.init(serverAPI);
-
+export default definePlugin(() => {
   const shortcutManager = new ShortcutManager();
-  const settingsManager = new SettingsManager(serverAPI);
-  const connectivityManager = new ConnectivityManager(serverAPI, settingsManager);
-  const moonDeckAppLauncher = new MoonDeckAppLauncher(serverAPI, settingsManager, shortcutManager, connectivityManager.commandProxy);
-  const routeManager = new RouteManager(serverAPI, connectivityManager, settingsManager, shortcutManager, moonDeckAppLauncher);
+  const settingsManager = new SettingsManager();
+  const connectivityManager = new ConnectivityManager(settingsManager);
+  const moonDeckAppLauncher = new MoonDeckAppLauncher(settingsManager, shortcutManager, connectivityManager.commandProxy);
+  const routeManager = new RouteManager(connectivityManager, settingsManager, shortcutManager, moonDeckAppLauncher);
 
   const initCallback = async (username: string): Promise<void> => {
     if (await waitForServicesInitialized()) {
@@ -40,14 +38,14 @@ export default definePlugin((serverAPI: ServerAPI) => {
   );
 
   return {
-    titleView: <TitleView />,
-    title: <SimpleTitleView />,
-    content: <QuickSettingsView connectivityManager={connectivityManager} settingsManager={settingsManager} moonDeckAppLauncher={moonDeckAppLauncher}/>,
+    name: "MoonDeck",
     icon: <MoonDeckMain />,
-    alwaysRender: true,
+    content: <QuickSettingsView connectivityManager={connectivityManager} settingsManager={settingsManager} moonDeckAppLauncher={moonDeckAppLauncher} />,
     onDismount() {
       unregister();
       deinitCallback();
-    }
+    },
+    alwaysRender: true,
+    titleView: <TitleView />
   };
 });

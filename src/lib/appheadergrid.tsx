@@ -1,5 +1,5 @@
-import { CSSProperties, FC, ReactElement, VFC, cloneElement, useEffect, useRef, useState } from "react";
-import { Focusable, appDetailsClasses, appDetailsHeaderClasses, findInReactTree } from "decky-frontend-lib";
+import { CSSProperties, FC, ReactElement, ReactNode, VFC, cloneElement, useEffect, useRef, useState } from "react";
+import { Focusable, appDetailsClasses, appDetailsHeaderClasses, findInReactTree } from "@decky/ui";
 
 interface GridSpace {
   value: string;
@@ -34,6 +34,7 @@ export interface AlignOptions {
 
 interface HeaderGridAreaProps {
   areaName: string;
+  children?: ReactNode;
   alignOptions: AlignOptions;
 }
 

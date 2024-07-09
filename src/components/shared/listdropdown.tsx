@@ -1,4 +1,4 @@
-import { Dropdown, DropdownOption } from "decky-frontend-lib";
+import { Dropdown, DropdownOption } from "@decky/ui";
 import { ReactElement, useEffect, useState } from "react";
 
 interface OptionWithLabel<T> { id: T; label: string }

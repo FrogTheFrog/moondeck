@@ -1,4 +1,4 @@
-import { AppDetails, ConfirmModal, DialogButton, showModal } from "decky-frontend-lib";
+import { AppDetails, ConfirmModal, DialogButton, showModal } from "@decky/ui";
 import { BuddyProxy, addShortcut, getMoonDeckManagedMark, logger, removeShortcut, restartSteamClient, setAppLaunchOptions } from "../../lib";
 import { VFC } from "react";
 

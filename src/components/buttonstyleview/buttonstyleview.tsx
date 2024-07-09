@@ -1,5 +1,5 @@
 import { AnyTextInput, ListDropdown, SettingsLoadingField, ToggleField } from "../shared";
-import { DialogBody, DialogControlsSection, DialogControlsSectionHeader, Field } from "decky-frontend-lib";
+import { DialogBody, DialogControlsSection, DialogControlsSectionHeader, Field } from "@decky/ui";
 import { SettingsManager, UserSettings, buttonStyles, horizontalAlignmentValues, verticalAlignmentValues } from "../../lib";
 import { VFC } from "react";
 import { useCurrentSettings } from "../../hooks";

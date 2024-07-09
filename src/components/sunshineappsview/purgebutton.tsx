@@ -1,4 +1,4 @@
-import { AppDetails, ConfirmModal, DialogButton, showModal } from "decky-frontend-lib";
+import { AppDetails, ConfirmModal, DialogButton, showModal } from "@decky/ui";
 import { logger, removeShortcut, restartSteamClient } from "../../lib";
 import { VFC } from "react";
 

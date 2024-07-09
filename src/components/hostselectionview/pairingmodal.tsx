@@ -1,6 +1,6 @@
 import { ConnectivityManager, logger } from "../../lib";
 import { VFC, useEffect } from "react";
-import { ModalRoot } from "decky-frontend-lib";
+import { ModalRoot } from "@decky/ui";
 import { useBuddyStatus } from "../../hooks";
 
 interface Props {

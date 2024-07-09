@@ -1,4 +1,4 @@
-import { DialogBody, DialogControlsSection, DialogControlsSectionHeader, Field, Focusable } from "decky-frontend-lib";
+import { DialogBody, DialogControlsSection, DialogControlsSectionHeader, Field, Focusable } from "@decky/ui";
 import { HostAppSelectionDropdown, LabelWithIcon, NumericTextInput, ToggleField } from "../shared";
 import { ModifyListButton, RemoveListEntryButton } from "../shared/indexedlist";
 import { HostOff } from "../icons";

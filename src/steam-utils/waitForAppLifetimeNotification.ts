@@ -1,4 +1,4 @@
-import { LifetimeNotification } from "decky-frontend-lib";
+import { LifetimeNotification } from "@decky/ui";
 import { SteamClientEx } from "./shared";
 import { logger } from "../lib/logger";
 

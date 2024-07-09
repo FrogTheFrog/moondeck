@@ -1,4 +1,4 @@
-import { DialogBody, DialogControlsSection, Field } from "decky-frontend-lib";
+import { DialogBody, DialogControlsSection, Field } from "@decky/ui";
 import { SettingsLoadingField, ToggleField } from "../shared";
 import { SettingsManager } from "../../lib";
 import { VFC } from "react";

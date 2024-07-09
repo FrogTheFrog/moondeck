@@ -2,7 +2,7 @@ import { OsType, SettingsManager } from "./settingsmanager";
 import { BehaviorSubject } from "rxjs";
 import { Mutex } from "async-mutex";
 import { ReadonlySubject } from "./readonlysubject";
-import { ServerAPI } from "decky-frontend-lib";
+import { call } from "@decky/api";
 import { logger } from "./logger";
 
 export type BuddyStatus = "VersionMismatch" | "Restarting" | "ShuttingDown" | "Suspending" | "NoClientId" | "NotPaired" | "Pairing" | "SslVerificationFailed" | "Exception" | "Offline" | "Online";
@@ -15,38 +15,27 @@ interface BuddyInfo {
   } | null;
 }
 
-async function getBuddyInfo(serverAPI: ServerAPI, address: string, buddyPort: number, clientId: string, timeout: number): Promise<BuddyInfo> {
+async function getBuddyInfo(address: string, buddyPort: number, clientId: string, timeout: number): Promise<BuddyInfo> {
   try {
-    const resp = await serverAPI.callPluginMethod<{ address: string; buddy_port: number; client_id: string; timeout: number }, BuddyInfo>("get_buddy_info", { address, buddy_port: buddyPort, client_id: clientId, timeout });
-    if (resp.success) {
-      return resp.result;
-    } else {
-      logger.error(`Error while fetching buddy info: ${resp.result}`);
-    }
+    return await call<[string, number, string, number], BuddyInfo>("get_buddy_info", address, buddyPort, clientId, timeout);
   } catch (message) {
-    logger.critical(message);
+    logger.critical("Error while fetching buddy info: ", message);
   }
 
   return { status: "Offline", info: null };
 }
 
-async function getGamestreamAppNames(serverAPI: ServerAPI, address: string, buddyPort: number, clientId: string, timeout: number): Promise<string[] | null> {
+async function getGamestreamAppNames(address: string, buddyPort: number, clientId: string, timeout: number): Promise<string[] | null> {
   try {
-    const resp = await serverAPI.callPluginMethod<{ address: string; buddy_port: number; client_id: string; timeout: number }, string[] | null>("get_gamestream_app_names", { address, buddy_port: buddyPort, client_id: clientId, timeout });
-    if (resp.success) {
-      return resp.result;
-    } else {
-      logger.error(`Error while fetching gamestream apps: ${resp.result}`);
-    }
+    return await call<[string, number, string, number], string[] | null>("get_gamestream_app_names", address, buddyPort, clientId, timeout);
   } catch (message) {
-    logger.critical(message);
+    logger.critical("Error while fetching gamestream apps: ", message);
   }
 
   return null;
 }
 
 export class BuddyProxy {
-  private readonly serverAPI: ServerAPI;
   private readonly settingsManager: SettingsManager;
 
   private readonly mutex = new Mutex();
@@ -69,8 +58,7 @@ export class BuddyProxy {
     }
   }
 
-  constructor(serverAPI: ServerAPI, settingsManager: SettingsManager) {
-    this.serverAPI = serverAPI;
+  constructor(settingsManager: SettingsManager) {
     this.settingsManager = settingsManager;
   }
 
@@ -95,7 +83,7 @@ export class BuddyProxy {
         return;
       }
 
-      const result = await getBuddyInfo(this.serverAPI, address, buddyPort, clientId, 1);
+      const result = await getBuddyInfo(address, buddyPort, clientId, 1);
       if (this.settingsManager.settings.value?.currentHostId === hostId) {
         this.updateInfo(result);
       }
@@ -116,6 +104,6 @@ export class BuddyProxy {
       return null;
     }
 
-    return await getGamestreamAppNames(this.serverAPI, address, buddyPort, clientId, 3);
+    return await getGamestreamAppNames(address, buddyPort, clientId, 3);
   }
 }

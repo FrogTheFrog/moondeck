@@ -1,15 +1,15 @@
 import { AnyTextInput, ToggleField } from "../shared";
-import { DialogButton, Field, FilePickerRes, FileSelectionType, Focusable, ServerAPI } from "decky-frontend-lib";
+import { DialogButton, Field, Focusable } from "@decky/ui";
+import { FilePickerRes, FileSelectionType, openFilePicker } from "@decky/api";
 import { SettingsManager, logger } from "../../lib";
 import { VFC } from "react";
 import { useCurrentSettings } from "../../hooks";
 
 interface Props {
-  serverAPI: ServerAPI;
   settingsManager: SettingsManager;
 }
 
-export const MoonlightExecutableSelection: VFC<Props> = ({ serverAPI, settingsManager }) => {
+export const MoonlightExecutableSelection: VFC<Props> = ({ settingsManager }) => {
   const userSettings = useCurrentSettings(settingsManager);
   if (userSettings === null) {
     return null;
@@ -18,7 +18,7 @@ export const MoonlightExecutableSelection: VFC<Props> = ({ serverAPI, settingsMa
   const browseForExec = (): void => {
     settingsManager.getHomeDir().then((homeDir): Promise<FilePickerRes> | null => {
       if (homeDir !== null) {
-        return serverAPI.openFilePickerV2(FileSelectionType.FILE, `${homeDir}/Downloads`);
+        return openFilePicker(FileSelectionType.FILE, `${homeDir}/Downloads`);
       }
       return null;
     }).then((result) => {

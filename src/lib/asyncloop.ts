@@ -1,5 +1,5 @@
 import { logger } from "./logger";
-import { sleep } from "decky-frontend-lib";
+import { sleep } from "@decky/ui";
 
 export type AsyncCallback = () => void | Promise<void>;
 export type TimeoutLoopResult = () => Promise<void>;

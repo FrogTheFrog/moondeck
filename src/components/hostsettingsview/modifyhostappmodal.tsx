@@ -1,4 +1,4 @@
-import { DialogButton, Field, ModalRoot } from "decky-frontend-lib";
+import { DialogButton, Field, ModalRoot } from "@decky/ui";
 import { useEffect, useState } from "react";
 import { HostApp } from "../../lib";
 import { IndexedListModal } from "../shared/indexedlist";

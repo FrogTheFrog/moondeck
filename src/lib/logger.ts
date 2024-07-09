@@ -1,18 +1,11 @@
-import { ServerAPI } from "decky-frontend-lib";
+import { toaster } from "@decky/api";
 
 class Logger {
-  private serverAPI: ServerAPI | null = null;
-
-  init(serverAPI: ServerAPI): void {
-    this.serverAPI = serverAPI;
-  }
-
   toast(entry: string, options: { duration?: number; output?: "debug" | "log" | "warn" | "error" | null } = {}): void {
     const { duration = 5000, output = "log" } = options;
-    if (this.serverAPI !== null) {
-      const critical = output === "error";
-      this.serverAPI.toaster.toast({ title: "MoonDeck", body: entry, duration, critical });
-    }
+    const critical = output === "error";
+    toaster.toast({ title: "MoonDeck", body: entry, duration, critical });
+
     switch (output) {
       case "debug":
         this.log(entry);

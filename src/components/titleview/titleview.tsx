@@ -1,10 +1,6 @@
-import { DialogButton, Focusable, Navigation, staticClasses } from "decky-frontend-lib";
+import { DialogButton, Focusable, Navigation, staticClasses } from "@decky/ui";
 import { SettingsMain } from "../icons";
 import { VFC } from "react";
-
-export const SimpleTitleView: VFC<unknown> = () => {
-  return <div className={staticClasses.Title}>MoonDeck</div>;
-};
 
 export const TitleView: VFC<unknown> = () => {
   const onSettingsClick = (): void => {

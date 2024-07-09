@@ -1,5 +1,5 @@
 import { DisplayMode, getSystemDisplayManagerStore } from "./getSystemDisplayManagerStore";
-import { findSP } from "decky-frontend-lib";
+import { findSP } from "@decky/ui";
 import { logger } from "../lib/logger";
 
 /**

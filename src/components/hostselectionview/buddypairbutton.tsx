@@ -1,5 +1,5 @@
 import { ConnectivityManager, logger } from "../../lib";
-import { DialogButton, showModal } from "decky-frontend-lib";
+import { DialogButton, showModal } from "@decky/ui";
 import { VFC, useState } from "react";
 import { PairingModal } from "./pairingmodal";
 import { random } from "lodash";

@@ -1,5 +1,5 @@
 import { BuddyStatus, ConnectivityManager, ServerStatus, logger } from "../../lib";
-import { ButtonItem, PanelSection, PanelSectionRow } from "decky-frontend-lib";
+import { ButtonItem, PanelSection, PanelSectionRow } from "@decky/ui";
 import { VFC } from "react";
 import { useCommandExecutionStatus } from "../../hooks";
 

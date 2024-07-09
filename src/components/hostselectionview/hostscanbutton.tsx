@@ -1,5 +1,5 @@
 import { ConnectivityManager, GameStreamHost, logger } from "../../lib";
-import { DialogButton, Menu, MenuItem, showContextMenu } from "decky-frontend-lib";
+import { DialogButton, Menu, MenuItem, showContextMenu } from "@decky/ui";
 import { Dispatch, VFC } from "react";
 
 interface Props {

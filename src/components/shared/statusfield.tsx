@@ -1,5 +1,5 @@
 import { BuddyStatus, ServerStatus } from "../../lib";
-import { Field, Spinner } from "decky-frontend-lib";
+import { Field, Spinner } from "@decky/ui";
 import { IconType } from "react-icons";
 import { LabelWithIcon } from "./labelwithicon";
 import { VFC } from "react";

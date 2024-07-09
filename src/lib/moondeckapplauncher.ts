@@ -1,25 +1,20 @@
-import { AppDetails, ServerAPI } from "decky-frontend-lib";
 import { Dimension, HostResolution, HostSettings, SettingsManager } from "./settingsmanager";
 import { E_ALREADY_LOCKED, Mutex, tryAcquire } from "async-mutex";
 import { Subscription, pairwise } from "rxjs";
 import { getAppDetails, getCurrentDisplayModeString, getDisplayIdentifiers, getMoonDeckAppIdMark, getMoonDeckLinkedDisplayMark, getMoonDeckResMark, getSystemNetworkStore, launchApp, registerForGameLifetime, registerForSuspendNotifictions, setAppHiddenState, setAppLaunchOptions, setAppResolutionOverride, setShortcutName, waitForNetworkConnection } from "./steamutils";
+import { AppDetails } from "@decky/ui";
 import { CommandProxy } from "./commandproxy";
 import { MoonDeckAppProxy } from "./moondeckapp";
 import { ShortcutManager } from "./shortcutmanager";
+import { call } from "@decky/api";
 import { logger } from "./logger";
 
-async function getMoonDeckRunPath(serverAPI: ServerAPI): Promise<string | null> {
+async function getMoonDeckRunPath(): Promise<string | null> {
   try {
-    const resp = await serverAPI.callPluginMethod<unknown, string>("get_moondeckrun_path", {});
-    if (resp.success) {
-      return resp.result;
-    } else {
-      logger.error(`Error while getting moondeckrun.sh path: ${resp.result}`);
-    }
+    return await call<[], string | null>("get_moondeckrun_path");
   } catch (message) {
-    logger.critical(message);
+    logger.critical("Error while getting moondeckrun.sh path: ", message);
   }
-
   return null;
 }
 
@@ -171,19 +166,18 @@ export class MoonDeckAppLauncher {
 
   private async getMoonDeckRunPath(): Promise<string | null> {
     if (this.moonDeckRunPath === null) {
-      this.moonDeckRunPath = await getMoonDeckRunPath(this.serverAPI);
+      this.moonDeckRunPath = await getMoonDeckRunPath();
     }
 
     return this.moonDeckRunPath;
   }
 
   constructor(
-    private readonly serverAPI: ServerAPI,
     private readonly settingsManager: SettingsManager,
     private readonly shortcutManager: ShortcutManager,
     commandProxy: CommandProxy
   ) {
-    this.moonDeckApp = new MoonDeckAppProxy(serverAPI, commandProxy);
+    this.moonDeckApp = new MoonDeckAppProxy(commandProxy);
   }
 
   init(): void {

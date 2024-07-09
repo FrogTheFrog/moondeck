@@ -3,7 +3,7 @@ import { BehaviorSubject } from "rxjs";
 import { BuddyProxy } from "./buddyproxy";
 import { Mutex } from "async-mutex";
 import { ReadonlySubject } from "./readonlysubject";
-import { ServerAPI } from "decky-frontend-lib";
+import { call } from "@decky/api";
 import { logger } from "./logger";
 
 export interface GameStreamHost {
@@ -16,75 +16,51 @@ export interface GameStreamHost {
 export type ServerStatus = "Offline" | "Online";
 export type PairingStartStatus = "AlreadyPaired" | "VersionMismatch" | "NoClientId" | "Pairing" | "Offline" | "BuddyRefused" | "Failed" | "PairingStarted";
 
-async function scanForHosts(serverAPI: ServerAPI, timeout: number): Promise<GameStreamHost[]> {
+async function scanForHosts(timeout: number): Promise<GameStreamHost[]> {
   try {
-    const resp = await serverAPI.callPluginMethod<{ timeout: number }, GameStreamHost[]>("scan_for_hosts", { timeout });
-    if (resp.success) {
-      return resp.result;
-    } else {
-      logger.error("Error while scanning for hosts: " + resp.result);
-    }
+    return await call<[number], GameStreamHost[]>("scan_for_hosts", timeout);
   } catch (message) {
-    logger.critical(message);
+    logger.critical("Error while scanning for hosts: ", message);
   }
   return [];
 }
 
-async function findHost(serverAPI: ServerAPI, hostId: string, timeout: number): Promise<GameStreamHost | null> {
+async function findHost(hostId: string, timeout: number): Promise<GameStreamHost | null> {
   try {
-    const resp = await serverAPI.callPluginMethod<{ host_id: string; timeout: number }, GameStreamHost | null>("find_host", { host_id: hostId, timeout });
-    if (resp.success) {
-      return resp.result;
-    } else {
-      logger.error("Error while finding host: " + resp.result);
-    }
+    return await call<[string, number], GameStreamHost | null>("find_host", hostId, timeout);
   } catch (message) {
-    logger.critical(message);
+    logger.critical("Error while finding host: ", message);
   }
   return null;
 }
 
-async function getServerInfo(serverAPI: ServerAPI, address: string, port: number, timeout: number): Promise<GameStreamHost | null> {
+async function getServerInfo(address: string, port: number, timeout: number): Promise<GameStreamHost | null> {
   try {
-    const resp = await serverAPI.callPluginMethod<{ address: string; port: number; timeout: number }, GameStreamHost | null>("get_server_info", { address, port, timeout });
-    if (resp.success) {
-      return resp.result;
-    } else {
-      logger.error("Error while getting server info: " + resp.result);
-    }
+    return await call<[string, number, number], GameStreamHost | null>("get_server_info", address, port, timeout);
   } catch (message) {
-    logger.critical(message);
+    logger.critical("Error while getting server info: ", message);
   }
   return null;
 }
 
-async function startPairing(serverAPI: ServerAPI, address: string, buddyPort: number, clientId: string, pin: number, timeout: number): Promise<PairingStartStatus> {
+async function startPairing(address: string, buddyPort: number, clientId: string, pin: number, timeout: number): Promise<PairingStartStatus> {
   try {
-    const resp = await serverAPI.callPluginMethod<{ address: string; buddy_port: number; client_id: string; pin: number; timeout: number }, PairingStartStatus>("start_pairing", { address, buddy_port: buddyPort, client_id: clientId, pin, timeout });
-    if (resp.success) {
-      return resp.result;
-    } else {
-      logger.error("Error while pairing with buddy: " + resp.result);
-    }
+    return await call<[string, number, string, number, number], PairingStartStatus>("start_pairing", address, buddyPort, clientId, pin, timeout);
   } catch (message) {
-    logger.critical(message);
+    logger.critical("Error while pairing with buddy: ", message);
   }
   return "Offline";
 }
 
-async function abortPairing(serverAPI: ServerAPI, address: string, buddyPort: number, clientId: string, timeout: number): Promise<void> {
+async function abortPairing(address: string, buddyPort: number, clientId: string, timeout: number): Promise<void> {
   try {
-    const resp = await serverAPI.callPluginMethod<{ address: string; buddy_port: number; client_id: string; timeout: number }, null>("abort_pairing", { address, buddy_port: buddyPort, client_id: clientId, timeout });
-    if (!resp.success) {
-      logger.error("Error while aborting pairing: " + resp.result);
-    }
+    await call<[string, number, string, number], unknown>("abort_pairing", address, buddyPort, clientId, timeout);
   } catch (message) {
-    logger.critical(message);
+    logger.critical("Error while aborting pairing: ", message);
   }
 }
 
 export class ServerProxy {
-  private readonly serverAPI: ServerAPI;
   private readonly settingsManager: SettingsManager;
   private readonly buddyProxy: BuddyProxy;
 
@@ -147,8 +123,7 @@ export class ServerProxy {
     }
   }
 
-  constructor(serverAPI: ServerAPI, settingsManager: SettingsManager, buddyProxy: BuddyProxy) {
-    this.serverAPI = serverAPI;
+  constructor(settingsManager: SettingsManager, buddyProxy: BuddyProxy) {
     this.settingsManager = settingsManager;
     this.buddyProxy = buddyProxy;
   }
@@ -172,9 +147,9 @@ export class ServerProxy {
       let result: GameStreamHost | null = null;
       const hostSettings = this.settingsManager.hostSettings;
       if (hostSettings) {
-        result = hostSettings.staticAddress ? await getServerInfo(this.serverAPI, hostSettings.address, hostSettings.hostInfoPort, 1) : await findHost(this.serverAPI, hostId, 1);
+        result = hostSettings.staticAddress ? await getServerInfo(hostSettings.address, hostSettings.hostInfoPort, 1) : await findHost(hostId, 1);
       } else {
-        result = await findHost(this.serverAPI, hostId, 1);
+        result = await findHost(hostId, 1);
       }
 
       if (this.settingsManager.settings.value?.currentHostId === hostId) {
@@ -192,11 +167,11 @@ export class ServerProxy {
   }
 
   async getServerInfo(address: string, port: number): Promise<GameStreamHost | null> {
-    return await getServerInfo(this.serverAPI, address, port, 2);
+    return await getServerInfo(address, port, 2);
   }
 
   async scanForHosts(): Promise<GameStreamHost[]> {
-    return await scanForHosts(this.serverAPI, 5);
+    return await scanForHosts(5);
   }
 
   async startPairing(pin: number): Promise<PairingStartStatus> {
@@ -210,7 +185,7 @@ export class ServerProxy {
       return "Offline";
     }
 
-    const result = await startPairing(this.serverAPI, address, buddyPort, clientId, pin, 5);
+    const result = await startPairing(address, buddyPort, clientId, pin, 5);
     await this.buddyProxy.refreshStatus();
     return result;
   }
@@ -226,7 +201,7 @@ export class ServerProxy {
       return;
     }
 
-    await abortPairing(this.serverAPI, address, buddyPort, clientId, 5);
+    await abortPairing(address, buddyPort, clientId, 5);
     await this.buddyProxy.refreshStatus();
   }
 

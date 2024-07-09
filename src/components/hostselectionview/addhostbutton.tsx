@@ -1,4 +1,4 @@
-import { DialogButton, showModal } from "decky-frontend-lib";
+import { DialogButton, showModal } from "@decky/ui";
 import { ConnectivityManager } from "../../lib";
 import { ManualHostModal } from "./manualhostmodal";
 import { VFC } from "react";

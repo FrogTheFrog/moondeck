@@ -1,5 +1,5 @@
 import { CurrentHostSettings, useCurrentDisplayIdentifier } from "../../hooks";
-import { Field, PanelSection, PanelSectionRow } from "decky-frontend-lib";
+import { Field, PanelSection, PanelSectionRow } from "@decky/ui";
 import { ResolutionSelectionDropdown, ToggleField } from "../shared";
 import { SettingsManager } from "../../lib";
 import { VFC } from "react";

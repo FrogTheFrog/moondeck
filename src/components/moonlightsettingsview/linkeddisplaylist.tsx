@@ -1,4 +1,4 @@
-import { DialogButton, Field, showModal } from "decky-frontend-lib";
+import { DialogButton, Field, showModal } from "@decky/ui";
 import { ReactNode, VFC, useState } from "react";
 import { SettingsManager, getDisplayIdentifiers, logger, stringifyDimension } from "../../lib";
 import { CurrentHostSettings } from "../../hooks";

@@ -1,4 +1,4 @@
-import { DialogButton } from "decky-frontend-lib";
+import { DialogButton } from "@decky/ui";
 import { IndexedListModalProps } from "./indexedlistmodal";
 import { ReactElement } from "react";
 

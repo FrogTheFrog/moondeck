@@ -1,6 +1,6 @@
 import { BuddyStatus, ServerStatus, SettingsManager, UserSettings } from "../../lib";
 import { BuddyStatusField, LabelWithIcon, ServerStatusField } from "../shared";
-import { Field, PanelSection, PanelSectionRow } from "decky-frontend-lib";
+import { Field, PanelSection, PanelSectionRow } from "@decky/ui";
 import { CurrentHostSettings } from "../../hooks";
 import { HostOff } from "../icons";
 import { HostSelectionDropdown } from "../hostselectionview/hostselectiondropdown";

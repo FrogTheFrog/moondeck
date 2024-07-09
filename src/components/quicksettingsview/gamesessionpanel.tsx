@@ -1,4 +1,4 @@
-import { ButtonItem, Field, Navigation, PanelSection, PanelSectionRow, ToggleField } from "decky-frontend-lib";
+import { ButtonItem, Field, Navigation, PanelSection, PanelSectionRow, ToggleField } from "@decky/ui";
 import { MoonDeckAppData, MoonDeckAppLauncher, logger } from "../../lib";
 import { VFC, useState } from "react";
 

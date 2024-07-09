@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { AppStoreOverview, getAppStoreEx } from "./steamutils";
 import { IMapWillChange, Lambda } from "mobx";
 import BiMap from "ts-bidirectional-map";
@@ -73,12 +76,12 @@ function isPatched(obj: object, prop: string): boolean {
 
 function patchProperty<T>(obj: object, prop: string, setterPredicate: SetterPredicate<T>, value: T): boolean {
   if (isPatched(obj, prop)) {
-    obj[prop] = value;
+    (obj as any)[prop] = value;
     return false;
   }
 
   const descriptor = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(obj), prop);
-  const origValue = obj[prop] as T;
+  const origValue = (obj as any)[prop] as T;
   const patchData = {
     patchedValue: setterPredicate(origValue, value) ? value : origValue,
     setterPredicate,
@@ -113,7 +116,7 @@ function unpatchProperty(orig: object, out: object, prop: string): void {
     return;
   }
 
-  out[prop] = patchData.origValue;
+  (out as any)[prop] = patchData.origValue;
 }
 
 function getMobxAdminSymbol(obj: object): symbol | null {
@@ -232,19 +235,19 @@ export class AppOverviewPatcher<T extends keyof AppStoreOverview> {
     logger.debug(`Checking if need to patch overview for ${to.appid}.`);
     const mobxAdmin = getMobxAdminSymbol(to);
     if (mobxAdmin) {
-      const mobxAdminObj = to[mobxAdmin] as ObservableObjectAdministration;
+      const mobxAdminObj = (to as any)[mobxAdmin] as ObservableObjectAdministration;
       const isBeingObserved = mobxAdminObj.values_.size > 0;
 
       if (isBeingObserved) {
-        const interceptorUnregister = mobxAdminObj[patchKey] as Lambda | undefined;
+        const interceptorUnregister = (mobxAdminObj as any)[patchKey] as Lambda | undefined;
         if (!interceptorUnregister) {
           logger.debug(`Patching MobX for ${to.appid}.`);
-          mobxAdminObj[patchKey] = mobxAdminObj.intercept_((change: IMapWillChange<string | number, unknown>) => {
+          (mobxAdminObj as any)[patchKey] = mobxAdminObj.intercept_((change: IMapWillChange<string | number, unknown>) => {
             if (change.type === "update") {
               // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-              const predicate = this.propSetterPredicates[change.name] as SetterPredicate<unknown> | undefined;
+              const predicate = (this.propSetterPredicates as any)[change.name] as SetterPredicate<unknown> | undefined;
               if (predicate) {
-                if (!predicate(change.object[change.name], change.newValue)) {
+                if (!predicate((change.object as any)[change.name], change.newValue)) {
                   return null;
                 }
               }
@@ -256,7 +259,7 @@ export class AppOverviewPatcher<T extends keyof AppStoreOverview> {
 
         for (const [prop] of Object.entries(this.propSetterPredicates)) {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-          to[prop] = from[prop];
+          (to as any)[prop] = (from as any)[prop];
         }
 
         return;
@@ -267,7 +270,7 @@ export class AppOverviewPatcher<T extends keyof AppStoreOverview> {
 
     let patched = false;
     for (const [prop, predicate] of Object.entries(this.propSetterPredicates)) {
-      patched = patchProperty(to, prop, predicate as SetterPredicate<unknown>, from[prop]) || patched;
+      patched = patchProperty(to, prop, predicate as SetterPredicate<unknown>, (from as any)[prop]) || patched;
     }
 
     if (patched) {
@@ -293,8 +296,8 @@ export class AppOverviewPatcher<T extends keyof AppStoreOverview> {
 
     const mobxAdmin = getMobxAdminSymbol(overview);
     if (mobxAdmin) {
-      const mobxAdminObj = overview[mobxAdmin] as ObservableObjectAdministration;
-      const interceptorUnregister = mobxAdminObj[patchKey] as Lambda | undefined;
+      const mobxAdminObj = (overview as any)[mobxAdmin] as ObservableObjectAdministration;
+      const interceptorUnregister = (mobxAdminObj as any)[patchKey] as Lambda | undefined;
       if (interceptorUnregister) {
         logger.debug(`Unpatching MobX for ${appId}.`);
         interceptorUnregister();

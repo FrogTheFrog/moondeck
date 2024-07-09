@@ -1,4 +1,4 @@
-import { AppDetails, DialogBody, DialogButton, DialogControlsSection, DialogControlsSectionHeader, Field, Navigation } from "decky-frontend-lib";
+import { AppDetails, DialogBody, DialogButton, DialogControlsSection, DialogControlsSectionHeader, Field, Navigation } from "@decky/ui";
 import { ReactNode, VFC, useEffect, useState } from "react";
 import { ShortcutManager, getAllMoonDeckAppDetails, logger } from "../../lib";
 import { PurgeButton } from "./purgebutton";

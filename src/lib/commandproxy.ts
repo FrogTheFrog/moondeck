@@ -1,49 +1,40 @@
-import { ServerAPI, sleep } from "decky-frontend-lib";
 import { BehaviorSubject } from "rxjs";
 import { BuddyProxy } from "./buddyproxy";
 import { Mutex } from "async-mutex";
 import { ReadonlySubject } from "./readonlysubject";
 import { ServerProxy } from "./serverproxy";
 import { SettingsManager } from "./settingsmanager";
+import { call } from "@decky/api";
 import { logger } from "./logger";
+import { sleep } from "@decky/ui";
 
 type PcStateChange = "Restart" | "Shutdown" | "Suspend";
 
-async function wakeOnLan(serverAPI: ServerAPI, address: string, mac: string): Promise<void> {
+async function wakeOnLan(address: string, mac: string): Promise<void> {
   try {
-    const resp = await serverAPI.callPluginMethod<{ address: string; mac: string }, null>("wake_on_lan", { address, mac });
-    if (!resp.success) {
-      logger.error("Error while sending WOL: " + resp.result);
-    }
+    await call<[string, string], unknown>("wake_on_lan", address, mac);
   } catch (message) {
-    logger.critical(message);
+    logger.critical("Error while sending WOL: ", message);
   }
 }
 
-async function changePcState(serverAPI: ServerAPI, address: string, buddyPort: number, clientId: string, state: PcStateChange, timeout: number): Promise<void> {
+async function changePcState(address: string, buddyPort: number, clientId: string, state: PcStateChange, timeout: number): Promise<void> {
   try {
-    const resp = await serverAPI.callPluginMethod<{ address: string; buddy_port: number; client_id: string; state: PcStateChange; timeout: number }, null>("change_pc_state", { address, buddy_port: buddyPort, client_id: clientId, state, timeout });
-    if (!resp.success) {
-      logger.error("Error while changing PC state: " + resp.result);
-    }
+    await call<[string, number, string, PcStateChange, number], unknown>("change_pc_state", address, buddyPort, clientId, state, timeout);
   } catch (message) {
-    logger.critical(message);
+    logger.critical("Error while changing PC state: ", message);
   }
 }
 
-async function closeSteam(serverAPI: ServerAPI, address: string, buddyPort: number, clientId: string, timeout: number): Promise<void> {
+async function closeSteam(address: string, buddyPort: number, clientId: string, timeout: number): Promise<void> {
   try {
-    const resp = await serverAPI.callPluginMethod<{ address: string; buddy_port: number; client_id: string; timeout: number }, null>("close_steam", { address, buddy_port: buddyPort, client_id: clientId, timeout });
-    if (!resp.success) {
-      logger.error("Error while trying to close Steam on host PC: " + resp.result);
-    }
+    await call<[string, number, string, number], unknown>("close_steam", address, buddyPort, clientId, timeout);
   } catch (message) {
-    logger.critical(message);
+    logger.critical("Error while trying to close Steam on host PC: ", message);
   }
 }
 
 export class CommandProxy {
-  private readonly serverAPI: ServerAPI;
   private readonly settingsManager: SettingsManager;
   private readonly buddyProxy: BuddyProxy;
   private readonly serverProxy: ServerProxy;
@@ -64,7 +55,7 @@ export class CommandProxy {
         const clientId = this.settingsManager.settings.value?.clientId ?? null;
 
         if (address !== null && buddyPort !== null && clientId !== null) {
-          await changePcState(this.serverAPI, address, buddyPort, clientId, state, 5);
+          await changePcState(address, buddyPort, clientId, state, 5);
           await sleep(2 * 1000);
           await this.buddyProxy.refreshStatus();
         }
@@ -75,8 +66,7 @@ export class CommandProxy {
     }
   }
 
-  constructor(serverAPI: ServerAPI, settingsManager: SettingsManager, buddyProxy: BuddyProxy, serverProxy: ServerProxy) {
-    this.serverAPI = serverAPI;
+  constructor(settingsManager: SettingsManager, buddyProxy: BuddyProxy, serverProxy: ServerProxy) {
     this.settingsManager = settingsManager;
     this.buddyProxy = buddyProxy;
     this.serverProxy = serverProxy;
@@ -92,7 +82,7 @@ export class CommandProxy {
         const mac = hostSettings?.mac ?? null;
 
         if (address !== null && mac !== null) {
-          await wakeOnLan(this.serverAPI, address, mac);
+          await wakeOnLan(address, mac);
           await sleep(2 * 1000);
         }
       }
@@ -128,7 +118,7 @@ export class CommandProxy {
         const clientId = this.settingsManager.settings.value?.clientId ?? null;
 
         if (address !== null && buddyPort !== null && clientId !== null) {
-          await closeSteam(this.serverAPI, address, buddyPort, clientId, 5);
+          await closeSteam(address, buddyPort, clientId, 5);
           await sleep(2 * 1000);
         }
       }

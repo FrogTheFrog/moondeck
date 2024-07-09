@@ -1,5 +1,5 @@
 import { ConnectivityManager, GameStreamHost, logger } from "../../lib";
-import { DialogButton, Field, ModalRoot, sleep } from "decky-frontend-lib";
+import { DialogButton, Field, ModalRoot, sleep } from "@decky/ui";
 import { NonEmptyTextInput, NumericTextInput } from "../shared";
 import { VFC, useState } from "react";
 

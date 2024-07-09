@@ -6,7 +6,7 @@ import { HostCommandPanel } from "./hostcommandpanel";
 import { HostStatusPanel } from "./hoststatuspanel";
 import { ResolutionPanel } from "./resolutionpanel";
 import { VFC } from "react";
-import { useQuickAccessVisible } from "decky-frontend-lib";
+import { useQuickAccessVisible } from "@decky/ui";
 
 interface Props {
   connectivityManager: ConnectivityManager;

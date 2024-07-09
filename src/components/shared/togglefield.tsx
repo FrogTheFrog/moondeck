@@ -1,5 +1,5 @@
 import { ReactNode, VFC } from "react";
-import { ToggleField as ToggleFieldDfl } from "decky-frontend-lib";
+import { ToggleField as ToggleFieldDfl } from "@decky/ui";
 
 interface Props {
   label?: ReactNode;

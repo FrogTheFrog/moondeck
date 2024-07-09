@@ -2,7 +2,7 @@ import { cloneDeep, isEqual, throttle } from "lodash";
 import { BehaviorSubject } from "rxjs";
 import { Mutex } from "async-mutex";
 import { ReadonlySubject } from "./readonlysubject";
-import { ServerAPI } from "decky-frontend-lib";
+import { call } from "@decky/api";
 import { logger } from "./logger";
 
 export const appResolutionOverrideValues = ["CustomResolution", "DisplayResolution", "Native", "Default"] as const;
@@ -116,54 +116,39 @@ export function stringifyDimension(value: Dimension): string {
   return `${value.width}x${value.height}${fps}${bitrate}`;
 }
 
-async function getHomeDir(serverAPI: ServerAPI): Promise<string | null> {
+async function getHomeDir(): Promise<string | null> {
   try {
-    const resp = await serverAPI.callPluginMethod<unknown, string>("get_home_dir", {});
-    if (resp.success) {
-      return resp.result;
-    } else {
-      logger.error(`Error while getting home directory: ${resp.result}`);
-    }
+    return await call<[], string>("get_home_dir");
   } catch (message) {
-    logger.critical(message);
-  }
-
-  return null;
-}
-
-async function getUserSettings(serverAPI: ServerAPI): Promise<UserSettings | null> {
-  try {
-    const resp = await serverAPI.callPluginMethod<unknown, UserSettings | null>("get_user_settings", {});
-    if (resp.success) {
-      return resp.result;
-    } else {
-      logger.error(`Error while fetching user settings: ${resp.result}`);
-    }
-  } catch (message) {
-    logger.critical(message);
+    logger.critical("Error while getting home directory: ", message);
   }
   return null;
 }
 
-async function setUserSettings(serverAPI: ServerAPI, settings: UserSettings): Promise<void> {
+async function getUserSettings(): Promise<UserSettings | null> {
   try {
-    const resp = await serverAPI.callPluginMethod<{ data: UserSettings }, null>("set_user_settings", { data: settings });
-    if (!resp.success) {
-      logger.error(`Error while setting user settings: ${resp.result}`);
-    }
+    return await call<[], UserSettings | null>("get_user_settings");
   } catch (message) {
-    logger.critical(message);
+    logger.critical("Error while fetching user settings: ", message);
+  }
+  return null;
+}
+
+async function setUserSettings(settings: UserSettings): Promise<void> {
+  try {
+    await call<[UserSettings], unknown>("set_user_settings", settings);
+  } catch (message) {
+    logger.critical("Error while setting user settings: ", message);
   }
 }
 
 export class SettingsManager {
   private homeDir: string | null = null;
 
-  private readonly serverAPI: ServerAPI;
   private readonly refreshMutex = new Mutex();
   private readonly refreshInProgressSubject = new BehaviorSubject<boolean>(false);
   private readonly settingsSubject = new BehaviorSubject<UserSettings | null>(null);
-  private readonly setUserSettingsThrottled = throttle((settings: UserSettings) => { setUserSettings(this.serverAPI, settings).catch((e) => logger.critical(e)); }, 1000);
+  private readonly setUserSettingsThrottled = throttle((settings: UserSettings) => { setUserSettings(settings).catch((e) => logger.critical(e)); }, 1000);
 
   readonly refreshInProgress = new ReadonlySubject(this.refreshInProgressSubject);
   readonly settings = new ReadonlySubject(this.settingsSubject);
@@ -173,7 +158,7 @@ export class SettingsManager {
     try {
       this.refreshInProgressSubject.next(true);
 
-      const settings = await getUserSettings(this.serverAPI);
+      const settings = await getUserSettings();
       if (!isEqual(this.settings.value, settings)) {
         this.settingsSubject.next(settings);
       }
@@ -190,10 +175,6 @@ export class SettingsManager {
 
     this.settingsSubject.next(settings);
     this.setUserSettingsThrottled(settings);
-  }
-
-  constructor(serverAPI: ServerAPI) {
-    this.serverAPI = serverAPI;
   }
 
   get hostSettings(): Readonly<HostSettings> | null {
@@ -256,7 +237,7 @@ export class SettingsManager {
 
   async getHomeDir(): Promise<string | null> {
     if (this.homeDir === null) {
-      this.homeDir = await getHomeDir(this.serverAPI);
+      this.homeDir = await getHomeDir();
     }
 
     return this.homeDir;

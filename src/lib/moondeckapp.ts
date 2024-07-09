@@ -2,46 +2,32 @@ import { setShortcutName, terminateApp } from "./steamutils";
 import { BehaviorSubject } from "rxjs";
 import { CommandProxy } from "./commandproxy";
 import { ReadonlySubject } from "./readonlysubject";
-import { ServerAPI } from "decky-frontend-lib";
+import { call } from "@decky/api";
 import { isEqual } from "lodash";
 import { logger } from "./logger";
 
-async function killRunner(serverAPI: ServerAPI, appId: number): Promise<void> {
+async function killRunner(appId: number): Promise<void> {
   try {
-    const resp = await serverAPI.callPluginMethod<{ app_id: number }, null>("kill_runner", { app_id: appId });
-    if (!resp.success) {
-      logger.error(`Error while killing runner script: ${resp.result}`);
-    }
+    await call<[number], unknown>("kill_runner", appId);
   } catch (message) {
-    logger.critical(message);
+    logger.critical("Error while killing runner script: ", message);
   }
 }
 
-async function isRunnerActive(serverAPI: ServerAPI, appId: number): Promise<boolean> {
+async function isRunnerActive(appId: number): Promise<boolean> {
   try {
-    const resp = await serverAPI.callPluginMethod<{ app_id: number }, boolean>("is_runner_active", { app_id: appId });
-    if (resp.success) {
-      return resp.result;
-    } else {
-      logger.error(`Error while getting runner status: ${resp.result}`);
-    }
+    await call<[number], boolean>("is_runner_active", appId);
   } catch (message) {
-    logger.critical(message);
+    logger.critical("Error while getting runner status: ", message);
   }
-
   return false;
 }
 
-async function getRunnerResult(serverAPI: ServerAPI): Promise<string | null> {
+async function getRunnerResult(): Promise<string | null> {
   try {
-    const resp = await serverAPI.callPluginMethod<unknown, string | null>("get_runner_result", {});
-    if (resp.success) {
-      return resp.result;
-    } else {
-      logger.error(`Error while fetching runner result: ${resp.result}`);
-    }
+    return await call<[], string | null>("get_runner_result");
   } catch (message) {
-    logger.critical(message);
+    logger.critical("Error while fetching runner result: ", message);
   }
 
   return "Error while fetching runner result!";
@@ -62,12 +48,10 @@ export interface MoonDeckAppData {
 }
 
 export class MoonDeckAppProxy extends ReadonlySubject<MoonDeckAppData | null> {
-  private readonly serverAPI: ServerAPI;
   private readonly commandProxy: CommandProxy;
 
-  constructor(serverAPI: ServerAPI, commandProxy: CommandProxy) {
+  constructor(commandProxy: CommandProxy) {
     super(new BehaviorSubject<MoonDeckAppData | null>(null));
-    this.serverAPI = serverAPI;
     this.commandProxy = commandProxy;
   }
 
@@ -154,7 +138,7 @@ export class MoonDeckAppProxy extends ReadonlySubject<MoonDeckAppData | null> {
     await this.changeName(false);
     if (!await terminateApp(this.subject.value.moonDeckAppId, 5000)) {
       logger.toast("Failed to terminate, trying to kill!", { output: "warn" });
-      await killRunner(this.serverAPI, this.subject.value.moonDeckAppId);
+      await killRunner(this.subject.value.moonDeckAppId);
     }
 
     // Reset the original value
@@ -176,7 +160,7 @@ export class MoonDeckAppProxy extends ReadonlySubject<MoonDeckAppData | null> {
   }
 
   async getRunnerResult(): Promise<string | null> {
-    return await getRunnerResult(this.serverAPI);
+    return await getRunnerResult();
   }
 
   async clearRunnerResult(): Promise<void> {
@@ -189,6 +173,6 @@ export class MoonDeckAppProxy extends ReadonlySubject<MoonDeckAppData | null> {
       return false;
     }
 
-    return await isRunnerActive(this.serverAPI, this.subject.value.moonDeckAppId);
+    return await isRunnerActive(this.subject.value.moonDeckAppId);
   }
 }

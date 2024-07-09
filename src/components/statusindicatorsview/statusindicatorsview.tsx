@@ -1,5 +1,5 @@
 import { BuddyStatus, ServerStatus } from "../../lib";
-import { DialogBody, DialogControlsSection, DialogControlsSectionHeader, Field } from "decky-frontend-lib";
+import { DialogBody, DialogControlsSection, DialogControlsSectionHeader, Field } from "@decky/ui";
 import { VFC } from "react";
 import { stringifyStatus } from "../shared";
 

@@ -1,4 +1,4 @@
-import { DialogBody, DialogControlsSection, Field } from "decky-frontend-lib";
+import { DialogBody, DialogControlsSection, Field } from "@decky/ui";
 import { HostOff } from "../icons";
 import { LabelWithIcon } from "./labelwithicon";
 import { VFC } from "react";

@@ -30,11 +30,24 @@
             }
         },
         {
-            "label": "updatefrontendlib",
+            "label": "update_ui",
             "type": "shell",
             "group": "build",
-            "detail": "Update deck-frontend-lib",
-            "command": "pnpm update decky-frontend-lib --latest",
+            "detail": "Update DFL",
+            "command": "pnpm update @decky/ui --latest",
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "silent",
+                "revealProblems": "onProblem",
+                "close": true
+            }
+        },
+        {
+            "label": "update_api",
+            "type": "shell",
+            "group": "build",
+            "detail": "Update Decky API",
+            "command": "pnpm update @decky/api --latest",
             "problemMatcher": [],
             "presentation": {
                 "reveal": "silent",

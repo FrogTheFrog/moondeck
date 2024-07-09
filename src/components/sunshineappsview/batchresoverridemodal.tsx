@@ -1,4 +1,4 @@
-import { DialogButton, Field, Focusable, ModalRoot } from "decky-frontend-lib";
+import { DialogButton, Field, Focusable, ModalRoot } from "@decky/ui";
 import { HostSettings, getCurrentDisplayModeString, logger } from "../../lib";
 import { NumericTextInput, ResolutionSelectionDropdown } from "../shared";
 import { ReactNode, VFC, useEffect, useState } from "react";

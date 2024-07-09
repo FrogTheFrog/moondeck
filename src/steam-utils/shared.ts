@@ -1,4 +1,4 @@
-import { AppDetails, LifetimeNotification, sleep } from "decky-frontend-lib";
+import { AppDetails, LifetimeNotification, sleep } from "@decky/ui";
 
 export interface SystemSuspendInfo {
   state: number;

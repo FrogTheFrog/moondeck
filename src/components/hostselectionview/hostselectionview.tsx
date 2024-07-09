@@ -1,6 +1,6 @@
 import { BuddyStatusField, ServerStatusField, SettingsLoadingField } from "../shared";
 import { ConnectivityManager, SettingsManager } from "../../lib";
-import { DialogBody, DialogControlsSection, DialogControlsSectionHeader, Field } from "decky-frontend-lib";
+import { DialogBody, DialogControlsSection, DialogControlsSectionHeader, Field } from "@decky/ui";
 import { VFC, useState } from "react";
 import { useBuddyStatus, useCurrentSettings, useServerStatus } from "../../hooks";
 import { AddHostButton } from "./addhostbutton";

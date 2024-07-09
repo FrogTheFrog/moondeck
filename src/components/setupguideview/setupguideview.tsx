@@ -1,5 +1,5 @@
 import { BuddyStatusField, SettingsLoadingField } from "../shared";
-import { DialogBody, DialogButton, DialogControlsSection, DialogControlsSectionHeader, Field, Navigation } from "decky-frontend-lib";
+import { DialogBody, DialogButton, DialogControlsSection, DialogControlsSectionHeader, Field, Navigation } from "@decky/ui";
 import { MoonDeckLaunchButtonShell } from "../moondecklaunchbutton";
 import { SettingsManager } from "../../lib";
 import { VFC } from "react";

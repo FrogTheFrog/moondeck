@@ -1,5 +1,5 @@
 import { ReactElement, useEffect, useState } from "react";
-import { TextField } from "decky-frontend-lib";
+import { TextField } from "@decky/ui";
 
 interface Props<T> {
   disabled?: boolean;

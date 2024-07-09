@@ -1,4 +1,4 @@
-import { AppDetails, DialogButton, showModal } from "decky-frontend-lib";
+import { AppDetails, DialogButton, showModal } from "@decky/ui";
 import { HostSettings, logger, setAppResolutionOverride } from "../../lib";
 import { VFC, useState } from "react";
 import { BatchResOverrideModal } from "./batchresoverridemodal";

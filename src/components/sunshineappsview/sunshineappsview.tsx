@@ -1,4 +1,4 @@
-import { AppDetails, DialogBody, DialogButton, DialogControlsSection, DialogControlsSectionHeader, Field, Navigation } from "decky-frontend-lib";
+import { AppDetails, DialogBody, DialogButton, DialogControlsSection, DialogControlsSectionHeader, Field, Navigation } from "@decky/ui";
 import { BuddyProxy, SettingsManager, getAllExternalAppDetails, logger } from "../../lib";
 import { ReactNode, VFC, useEffect, useState } from "react";
 import { useCurrentHostSettings, useCurrentSettings } from "../../hooks";

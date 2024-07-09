@@ -1,4 +1,4 @@
-import { Button, Focusable, appDetailsClasses, appDetailsHeaderClasses, basicAppDetailsSectionStylerClasses, joinClassNames, playSectionClasses, sleep } from "decky-frontend-lib";
+import { Button, Focusable, appDetailsClasses, appDetailsHeaderClasses, basicAppDetailsSectionStylerClasses, joinClassNames, playSectionClasses, sleep } from "@decky/ui";
 import { CSSProperties, VFC, useEffect, useRef, useState } from "react";
 import { OffsetStyle, achorPositionName } from "./offsetstyle";
 import { SettingsManager, UserSettings, isAppTypeSupported, logger } from "../../lib";
