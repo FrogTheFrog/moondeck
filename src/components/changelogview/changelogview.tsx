@@ -5,7 +5,12 @@ export const ChangelogView: VFC<unknown> = () => {
   return (
     <DialogBody>
       <DialogControlsSection>
-      <Field
+        <Field
+          label="1.7.2"
+          description="Migrate plugin to use new Decky API."
+          focusable={true}
+        />
+        <Field
           label="1.7.1"
           description={
             <>
