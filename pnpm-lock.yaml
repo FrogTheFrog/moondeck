@@ -41,8 +41,8 @@ devDependencies:
     specifier: ^1.0.1
     version: 1.0.1
   '@decky/ui':
-    specifier: ^4.2.2
-    version: 4.2.2
+    specifier: ^4.4.0
+    version: 4.4.0
   '@types/lodash':
     specifier: ^4.14.184
     version: 4.17.6
@@ -118,8 +118,8 @@ packages:
       typescript: 5.5.3
     dev: true
 
-  /@decky/ui@4.2.2:
-    resolution: {integrity: sha512-2jc4Ivi2JfOpIJp7CgdB9m+WjW5tbmLIoIePC4NU0MMy8kZePzzoxOS5ZeXze13ETtXlMGfY+h2bH7gzMVNYBw==}
+  /@decky/ui@4.4.0:
+    resolution: {integrity: sha512-w6hSoEdWQyXdvSk8cv4cGDJQ6/xoRx9LYrdNjTGPPj8hRmBcoRlThgZ+9vchmNsAJuOymwQ5hQXqHN6Y86eoOQ==}
     dev: true
 
   /@es-joy/jsdoccomment@0.36.1:
