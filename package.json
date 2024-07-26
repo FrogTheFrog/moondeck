@@ -1,7 +1,7 @@
 {
   "name": "moondeck",
   "version": "1.7.2",
-  "description": "MoonDeck is an automation tool that will simplify launching your Steam games via the Moonlight client for streaming.",
+  "description": "MoonDeck lets you play any of your Steam games via Moonlight without needing to add them to Sunshine first, providing a similar experience to GeForce GameStream or Steam Remote Play",
   "type": "module",
   "scripts": {
     "build": "pnpm run unlink-python && rollup -c",
