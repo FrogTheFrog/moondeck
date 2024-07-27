@@ -1,6 +1,6 @@
 # MoonDeck ![Status](https://github.com/FrogTheFrog/moondeck/actions/workflows/build.yaml/badge.svg) [![Chat](https://img.shields.io/badge/Chat-on%20discord-7289da.svg)](https://discord.com/invite/U88fbeHyzt) ![Decky store](https://img.shields.io/badge/dynamic/json?color=blue&label=Decky%20version&query=%24%5B%3F%28%40.name%3D%3D%27MoonDeck%27%29%5D.versions%5B0%5D.name&url=https%3A%2F%2Fplugins.deckbrew.xyz%2Fplugins)
 
-A plugin that lets you play any of your Steam games via Moonlight without needing to add them to Sunshine first, providing a similar experience to GeForce GameStream or Steam Remote Play
+A plugin that lets you play any of your Steam games via Moonlight without needing to add them to Sunshine first, providing a similar experience to GeForce GameStream or Steam Remote Play.
 
 ![quicksettings](.github/assets/quickmenu.png)
 
