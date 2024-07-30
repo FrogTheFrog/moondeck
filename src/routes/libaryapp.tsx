@@ -70,12 +70,12 @@ function patchLibraryApp(route: string, { moonDeckAppLauncher, settingsManager }
           const parent = findInReactTree(ret, (x: ParentElement) => Array.isArray(x?.props?.children) && x?.props?.className?.includes(appDetailsClasses.InnerContainer)) as ParentElement;
           if (typeof parent !== "object") {
             logger.error(`Failed to patch ${route} - parent element not found!`);
-            return null;
+            return ret;
           }
 
           if (typeof appType !== "number" || typeof appId !== "number" || typeof appName !== "string") {
             logger.error(`Failed to patch ${route} - undefined data!`);
-            return null;
+            return ret;
           }
 
           const hltbIndex = parent.props.children.findIndex((x) => x.props.id === "hltb-for-deck");
