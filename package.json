@@ -30,7 +30,7 @@
   "homepage": "https://github.com/FrogTheFrog/moondeck#readme",
   "devDependencies": {
     "@decky/rollup": "^1.0.1",
-    "@decky/ui": "^4.4.0",
+    "@decky/ui": "^4.6.0",
     "@types/lodash": "^4.14.184",
     "@types/react": "18.3.3",
     "@types/react-dom": "18.3.0",
@@ -50,7 +50,7 @@
     "typescript": "^5.5.3"
   },
   "dependencies": {
-    "@decky/api": "^1.0.6",
+    "@decky/api": "^1.1.0",
     "async-mutex": "^0.4.0",
     "ip-regex": "^5.0.0",
     "lodash": "^4.17.21",

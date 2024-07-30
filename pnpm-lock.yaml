@@ -6,8 +6,8 @@ settings:
 
 dependencies:
   '@decky/api':
-    specifier: ^1.0.6
-    version: 1.0.6
+    specifier: ^1.1.0
+    version: 1.1.0
   async-mutex:
     specifier: ^0.4.0
     version: 0.4.1
@@ -41,8 +41,8 @@ devDependencies:
     specifier: ^1.0.1
     version: 1.0.1
   '@decky/ui':
-    specifier: ^4.4.0
-    version: 4.4.0
+    specifier: ^4.6.0
+    version: 4.6.0
   '@types/lodash':
     specifier: ^4.14.184
     version: 4.17.6
@@ -97,8 +97,8 @@ devDependencies:
 
 packages:
 
-  /@decky/api@1.0.6:
-    resolution: {integrity: sha512-pacO2qvAin7ZoB9AnCgQbevQS+6Wiy0t1C6QVEJPCWeQQdEgJaUm3KSeRjh2KNqsjKHsbV0j72Pv4X5Q44Lr7Q==}
+  /@decky/api@1.1.0:
+    resolution: {integrity: sha512-ECCLeI+xj13b89931S/ww1pM3Hgo7utseiww8HXkITkl4OkRfGSO/jtm0srNZPZpkoNyD5k6raXBbDQ02zgAFg==}
     dev: false
 
   /@decky/rollup@1.0.1:
@@ -118,8 +118,8 @@ packages:
       typescript: 5.5.3
     dev: true
 
-  /@decky/ui@4.4.0:
-    resolution: {integrity: sha512-w6hSoEdWQyXdvSk8cv4cGDJQ6/xoRx9LYrdNjTGPPj8hRmBcoRlThgZ+9vchmNsAJuOymwQ5hQXqHN6Y86eoOQ==}
+  /@decky/ui@4.6.0:
+    resolution: {integrity: sha512-hGofSF1VeBxZ6ewA1Fq9iAsg50hxSLcNSsSNWS6N9E5UzdeEhd/1/6PIExHbtnSnMQGJ3lk9FaBBaz6IbG0Mvg==}
     dev: true
 
   /@es-joy/jsdoccomment@0.36.1:

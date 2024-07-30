@@ -2,7 +2,7 @@
   "name": "MoonDeck",
   "author": "FrogTheFrog",
   "flags": [],
-  "api_version": 1,
+  "api_version": 2,
   "publish": {
     "tags": ["gamestream", "moonlight", "moondeck", "streaming"],
     "description": "MoonDeck lets you play any of your Steam games via Moonlight without needing to add them to Sunshine first, providing a similar experience to GeForce GameStream or Steam Remote Play.",
