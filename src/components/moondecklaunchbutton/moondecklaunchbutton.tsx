@@ -73,38 +73,43 @@ const MoonDeckLaunchButton: VFC<Props> = ({ appId, appName, appType, moonDeckApp
   );
 };
 
+function findTopCapsuleParent(ref: HTMLDivElement | null): Element | null {
+  const children = ref?.parentElement?.children;
+  if (!children) {
+    return null;
+  }
+
+  let headerContainer: Element | undefined;
+  for (const child of children) {
+    if (child.className.includes(appDetailsClasses.Header)) {
+      headerContainer = child;
+      break;
+    }
+  }
+
+  if (!headerContainer) {
+    return null;
+  }
+
+  let topCapsule: Element | null = null;
+  for (const child of headerContainer.children) {
+    if (child.className.includes(appDetailsHeaderClasses.TopCapsule)) {
+      topCapsule = child;
+      break;
+    }
+  }
+
+  return topCapsule;
+}
+
 export const MoonDeckLaunchButtonAnchor: VFC<Props> = (props) => {
-  const ref = useRef<HTMLDivElement | null>(null);
+  // There will be no mutation when the page is loaded (either from exiting the game
+  // or just newly opening the page), therefore it's visible by default.
   const [show, setShow] = useState<boolean>(true);
+  const ref = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    const children = ref?.current?.parentElement?.children;
-    if (!children) {
-      logger.error("Children not found!");
-      return;
-    }
-
-    let headerContainer: Element | undefined;
-    for (const child of children) {
-      if (child.className.includes(appDetailsClasses.Header)) {
-        headerContainer = child;
-        break;
-      }
-    }
-
-    if (!headerContainer) {
-      logger.error("Header container not found!");
-      return;
-    }
-
-    let topCapsule: Element | undefined;
-    for (const child of headerContainer.children) {
-      if (child.className.includes(appDetailsHeaderClasses.TopCapsule)) {
-        topCapsule = child;
-        break;
-      }
-    }
-
+    const topCapsule = findTopCapsuleParent(ref?.current);
     if (!topCapsule) {
       logger.error("TopCapsule container not found!");
       return;
@@ -117,8 +122,16 @@ export const MoonDeckLaunchButtonAnchor: VFC<Props> = (props) => {
         }
 
         const className = (entry.target as Element).className;
-        const hide = className.includes("Fullscreen") && !className.includes(appDetailsHeaderClasses.FullscreenExitDone);
-        setShow(!hide);
+        const fullscreenMode =
+          className.includes(appDetailsHeaderClasses.FullscreenEnterStart) ||
+          className.includes(appDetailsHeaderClasses.FullscreenEnterActive) ||
+          className.includes(appDetailsHeaderClasses.FullscreenEnterDone) ||
+          className.includes(appDetailsHeaderClasses.FullscreenExitStart) ||
+          className.includes(appDetailsHeaderClasses.FullscreenExitActive);
+        const fullscreenAborted =
+          className.includes(appDetailsHeaderClasses.FullscreenExitDone);
+
+        setShow(!fullscreenMode || fullscreenAborted);
       }
     });
     mutationObserver.observe(topCapsule, { attributes: true, attributeFilter: ["class"] });
