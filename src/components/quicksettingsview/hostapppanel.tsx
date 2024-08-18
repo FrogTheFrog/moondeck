@@ -1,16 +1,21 @@
 import { Field, PanelSection, PanelSectionRow } from "@decky/ui";
+import { SettingsManager, UserSettings } from "../../lib";
 import { CurrentHostSettings } from "../../hooks";
 import { HostAppSelectionDropdown } from "../shared";
-import { SettingsManager } from "../../lib";
 import { VFC } from "react";
 
 interface Props {
+  currentSettings: UserSettings | null;
   currentHostSettings: CurrentHostSettings | null;
   settingsManager: SettingsManager;
 }
 
-export const HostAppPanel: VFC<Props> = ({ currentHostSettings, settingsManager }) => {
-  if (currentHostSettings === null || currentHostSettings.hostApp.apps.length < 2) {
+export const HostAppPanel: VFC<Props> = ({ currentSettings, currentHostSettings, settingsManager }) => {
+  if (currentSettings === null || currentHostSettings === null) {
+    return null;
+  }
+
+  if (!currentSettings.enableMoondeckShortcuts || currentHostSettings.hostApp.apps.length < 2) {
     return null;
   }
 

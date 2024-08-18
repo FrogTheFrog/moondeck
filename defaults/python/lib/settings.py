@@ -94,6 +94,7 @@ class UserSettings(TypedDict):
     gameSession: GameSessionSettings
     buttonPosition: ButtonPositionSettings
     buttonStyle: ButtonStyleSettings
+    enableMoondeckShortcuts: bool
     hostSettings: Dict[str, HostSettings]
     runnerDebugLogs: bool
     useMoonlightExec: bool
@@ -146,6 +147,7 @@ class SettingsManager:
                     "showFocusRing": True,
                     "theme": "Clean"
                 },
+                "enableMoondeckShortcuts": True,
                 "hostSettings": {},
                 "runnerDebugLogs": False,
                 "useMoonlightExec": False,
@@ -260,6 +262,9 @@ class SettingsManager:
             data["version"] = 19
             for host in data["hostSettings"].keys():
                 data["hostSettings"][host]["sunshineApps"] = { "showQuickAccessButton": False, "lastSelectedOverride": "Default" }
+        if data["version"] == 19:
+            data["version"] = 20
+            data["enableMoondeckShortcuts"] = True
 
         return data
 

@@ -110,6 +110,7 @@ export interface UserSettings {
   gameSession: GameSessionSettings;
   buttonPosition: ButtonPositionSettings;
   buttonStyle: ButtonStyleSettings;
+  enableMoondeckShortcuts: boolean;
   hostSettings: { [key: string]: HostSettings };
   runnerDebugLogs: boolean;
   useMoonlightExec: boolean;

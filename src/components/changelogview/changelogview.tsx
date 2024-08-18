@@ -10,8 +10,9 @@ export const ChangelogView: VFC<unknown> = () => {
           description={
             <>
               <div>&bull; Migrate plugin to use new Decky API.</div>
-              <div>&bull; Sunshine app sync button can now be added to the QAM.</div>
+              <div>&bull; Sunshine app sync button can now be added to the Quick Access Menu.</div>
               <div>&bull; Last used app resolution override will be used when adding new Sunshine apps.</div>
+              <div>&bull; MoonDeck shortcuts can now be disabled if only Sunshine apps are needed.</div>
             </>
           }
           focusable={true}

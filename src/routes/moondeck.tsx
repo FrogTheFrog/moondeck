@@ -65,7 +65,7 @@ const MoonDeckRouter: VFC<Props> = ({ connectivityManager, settingsManager, shor
         "separator",
         {
           title: "MoonDeck Shortcuts",
-          content: <ShortcutsView shortcutManager={shortcutManager} />,
+          content: <ShortcutsView settingsManager={settingsManager} shortcutManager={shortcutManager} />,
           route: "/moondeck/shortcuts"
         },
         {

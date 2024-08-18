@@ -30,8 +30,8 @@ export const QuickSettingsView: VFC<Props> = ({ connectivityManager, settingsMan
         : <>
             <HostStatusPanel currentHostSettings={currentHostSettings} currentSettings={currentSettings} settingsManager={settingsManager} serverStatus={serverStatus} serverRefreshStatus={serverRefreshStatus} buddyStatus={buddyStatus} buddyRefreshStatus={buddyRefreshStatus} />
             <SunshineAppsPanel buddyProxy={connectivityManager.buddyProxy} currentHostSettings={currentHostSettings} currentSettings={currentSettings} />
-            <HostAppPanel currentHostSettings={currentHostSettings} settingsManager={settingsManager} />
-            <ResolutionPanel currentHostSettings={currentHostSettings} settingsManager={settingsManager} />
+            <HostAppPanel currentHostSettings={currentHostSettings} currentSettings={currentSettings} settingsManager={settingsManager} />
+            <ResolutionPanel currentHostSettings={currentHostSettings} currentSettings={currentSettings} settingsManager={settingsManager} />
           </>
       }
       {currentHostSettings !== null &&

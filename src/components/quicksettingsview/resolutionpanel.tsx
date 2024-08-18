@@ -1,16 +1,25 @@
 import { CurrentHostSettings, useCurrentDisplayIdentifier } from "../../hooks";
 import { Field, PanelSection, PanelSectionRow } from "@decky/ui";
 import { ResolutionSelectionDropdown, ToggleField } from "../shared";
-import { SettingsManager } from "../../lib";
+import { SettingsManager, UserSettings } from "../../lib";
 import { VFC } from "react";
 
 interface Props {
+  currentSettings: UserSettings | null;
   currentHostSettings: CurrentHostSettings | null;
   settingsManager: SettingsManager;
 }
 
-export const ResolutionPanel: VFC<Props> = ({ currentHostSettings, settingsManager }) => {
-  if (currentHostSettings === null || (currentHostSettings.resolution.dimensions.length === 0 && !currentHostSettings.resolution.automatic)) {
+export const ResolutionPanel: VFC<Props> = ({ currentSettings, currentHostSettings, settingsManager }) => {
+  if (currentSettings === null || currentHostSettings === null) {
+    return null;
+  }
+
+  if (!currentSettings.enableMoondeckShortcuts) {
+    return null;
+  }
+
+  if (currentHostSettings.resolution.dimensions.length === 0 && !currentHostSettings.resolution.automatic) {
     return null;
   }
 

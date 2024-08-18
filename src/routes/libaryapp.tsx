@@ -53,19 +53,23 @@ function patchLibraryApp(route: string, { moonDeckAppLauncher, settingsManager }
             }
 
             ({ app_type: appType, appid: appId, display_name: appName } = overview);
-            if (moonDeckAppLauncher.moonDeckApp.value?.moonDeckAppId === appId) {
-              // We are suppressing the navigation to custom shortcut ONLY if this happens after
-              // launch via the moondeck button and we MUST navigate back ONLY once
-              if (moonDeckAppLauncher.moonDeckApp.canRedirect()) {
-                Navigation.NavigateBack();
-              }
-
-              return null;
-            }
-
             return children;
           }
-        ], (_2: Array<Record<string, unknown>>, ret?: ReactElement) => {
+        ], (_: Array<Record<string, unknown>>, ret?: ReactElement) => {
+          if (!settingsManager.settings.value?.enableMoondeckShortcuts) {
+            return ret;
+          }
+
+          if (moonDeckAppLauncher.moonDeckApp.value?.moonDeckAppId === appId) {
+            // We are suppressing the navigation to custom shortcut ONLY if this happens after
+            // launch via the moondeck button and we MUST navigate back ONLY once
+            if (moonDeckAppLauncher.moonDeckApp.canRedirect()) {
+              Navigation.NavigateBack();
+            }
+
+            return ret;
+          }
+
           type ParentElement = ReactElement<{ children: Array<ReactElement<{ id?: string; overview?: unknown; onShowLaunchingDetails?: unknown }>>; className: string }>;
           const parent = findInReactTree(ret, (x: ParentElement) => Array.isArray(x?.props?.children) && x?.props?.className?.includes(appDetailsClasses.InnerContainer)) as ParentElement;
           if (typeof parent !== "object") {

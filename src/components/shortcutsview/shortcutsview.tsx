@@ -1,16 +1,19 @@
 import { AppDetails, DialogBody, DialogButton, DialogControlsSection, DialogControlsSectionHeader, Field, Navigation } from "@decky/ui";
 import { ReactNode, VFC, useEffect, useState } from "react";
-import { ShortcutManager, getAllMoonDeckAppDetails, logger } from "../../lib";
+import { SettingsManager, ShortcutManager, getAllMoonDeckAppDetails, logger } from "../../lib";
+import { useCurrentSettings, useShortcutManagerState } from "../../hooks";
 import { PurgeButton } from "./purgebutton";
-import { useShortcutManagerState } from "../../hooks";
+import { ToggleField } from "../shared";
 
 interface Props {
+  settingsManager: SettingsManager;
   shortcutManager: ShortcutManager;
 }
 
-export const ShortcutsView: VFC<Props> = ({ shortcutManager }) => {
+export const ShortcutsView: VFC<Props> = ({ settingsManager, shortcutManager }) => {
   const isReady = useShortcutManagerState(shortcutManager);
   const [shortcuts, setShortcuts] = useState<AppDetails[]>([]);
+  const currentSettings = useCurrentSettings(settingsManager);
 
   useEffect(() => {
     if (isReady) {
@@ -29,7 +32,7 @@ export const ShortcutsView: VFC<Props> = ({ shortcutManager }) => {
     shortcutsList =
       <DialogControlsSection>
         <DialogControlsSectionHeader>Shortcuts</DialogControlsSectionHeader>
-        <Field description="These shortcuts are exposed here for debugging purposes mostly. Any changes you make here could break something or could be just discarded."/>
+        <Field description="These shortcuts are exposed here for debugging purposes mostly. Any changes you make here could break something or could be just discarded." />
         {shortcuts.map((shortcut) => {
           return (
             <Field
@@ -48,6 +51,16 @@ export const ShortcutsView: VFC<Props> = ({ shortcutManager }) => {
 
   return (
     <DialogBody>
+      {currentSettings !== null &&
+        <DialogControlsSection>
+          <ToggleField
+            label="Enable the MoonDeck shortcuts"
+            description="Disabling this will remove the MoonDeck button!"
+            value={currentSettings.enableMoondeckShortcuts}
+            setValue={(value) => settingsManager.update((settings) => { settings.enableMoondeckShortcuts = value; })}
+          />
+        </DialogControlsSection>
+      }
       <DialogControlsSection>
         <DialogControlsSectionHeader>Cleanup</DialogControlsSectionHeader>
         <Field
