@@ -109,6 +109,10 @@ export class ServerProxy {
           appUpdate: currentSettings?.runnerTimeouts.appUpdate ?? appUpdateDefault,
           streamEnd: currentSettings?.runnerTimeouts.streamEnd ?? streamEndDefault,
           wakeOnLan: currentSettings?.runnerTimeouts.wakeOnLan ?? wakeOnLanDefault
+        },
+        sunshineApps: {
+          showQuickAccessButton: currentSettings?.sunshineApps.showQuickAccessButton ?? false,
+          lastSelectedOverride: currentSettings?.sunshineApps.lastSelectedOverride ?? "Default"
         }
       };
 

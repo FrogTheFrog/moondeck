@@ -11,7 +11,7 @@ import { logger } from "../lib/logger";
  */
 export function restartSteamClient(): void {
   try {
-    (SteamClient as SteamClientEx).User.StartRestart();
+    (SteamClient as SteamClientEx).User.StartRestart(true);
   } catch (error) {
     logger.critical(error);
   }

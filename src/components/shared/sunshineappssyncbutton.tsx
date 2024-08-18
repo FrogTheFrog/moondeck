@@ -1,14 +1,14 @@
 import { AppDetails, ConfirmModal, DialogButton, showModal } from "@decky/ui";
-import { BuddyProxy, addShortcut, getMoonDeckManagedMark, logger, removeShortcut, restartSteamClient, setAppLaunchOptions } from "../../lib";
-import { VFC } from "react";
+import { BuddyProxy, HostSettings, UserSettings, addShortcut, getAllExternalAppDetails, getMoonDeckManagedMark, logger, removeShortcut, restartSteamClient, setAppLaunchOptions, setAppResolutionOverride } from "../../lib";
+import { VFC, useState } from "react";
 
 interface Props {
-  shortcuts: AppDetails[];
-  moonDeckHostApps: string[];
-  hostName: string;
+  shortcuts?: AppDetails[];
   buddyProxy: BuddyProxy;
-  moonlightExecPath: string | null;
-  refreshApps: () => void;
+  settings: UserSettings;
+  hostSettings: HostSettings;
+  noConfirmationDialog?: boolean;
+  refreshApps?: () => void;
 }
 
 function makeExecPath(moonlightExecPath: string | null): string {
@@ -31,13 +31,23 @@ function makeLaunchOptions(appName: string, hostName: string, customExec: boolea
   return `${getMoonDeckManagedMark()} %command% ${customExec ? "" : "run com.moonlight_stream.Moonlight"} stream '${escapedHostName}' '${escapedAppName}'`;
 }
 
-async function updateLaunchOptions(appId: number, appName: string, hostName: string, customExec: boolean): Promise<void> {
+async function updateLaunchOptions(appId: number, appName: string, hostName: string, customExec: boolean): Promise<boolean> {
   if (!await setAppLaunchOptions(appId, makeLaunchOptions(appName, hostName, customExec))) {
     logger.error(`Failed to set shortcut launch options for ${appName}!`);
+    return false;
   }
+  return true;
 }
 
-async function syncShortcuts(shortcuts: AppDetails[], moonDeckHostApps: string[], hostName: string, buddyProxy: BuddyProxy, moonlightExecPath: string | null, refreshApps: () => void): Promise<void> {
+async function updateResolutionOverride(appId: number, appName: string, resolution: string): Promise<boolean> {
+  if (!await setAppResolutionOverride(appId, resolution)) {
+    logger.warn(`Failed to set app resolution override for ${appName} to ${resolution}!`);
+    return false;
+  }
+  return true;
+}
+
+async function syncShortcuts(shortcuts: AppDetails[], moonDeckHostApps: string[], hostName: string, buddyProxy: BuddyProxy, moonlightExecPath: string | null, resOverride: string, refreshApps?: () => void): Promise<void> {
   let sunshineApps = await buddyProxy.getGamestreamAppNames();
   if (sunshineApps === null) {
     logger.toast("Failed to get Gamestream app list!", { output: "error" });
@@ -61,6 +71,7 @@ async function syncShortcuts(shortcuts: AppDetails[], moonDeckHostApps: string[]
   const appsToAdd = new Set<string>();
   const appsToUpdate: AppDetails[] = [];
   const appsToRemove: AppDetails[] = [];
+  let success = true;
 
   // Check which apps need to be added or updated
   for (const sunshineApp of sunshineApps) {
@@ -86,46 +97,80 @@ async function syncShortcuts(shortcuts: AppDetails[], moonDeckHostApps: string[]
   for (const app of appsToAdd) {
     const appId = await addExternalShortcut(app, execPath);
     if (appId !== null) {
-      await updateLaunchOptions(appId, app, hostName, customExec);
+      success = await updateLaunchOptions(appId, app, hostName, customExec) && success;
+      success = await updateResolutionOverride(appId, app, resOverride) && success;
+    } else {
+      success = false;
     }
   }
 
   // Update the launch options only
   for (const details of appsToUpdate) {
-    await updateLaunchOptions(details.unAppID, details.strDisplayName, hostName, customExec);
+    success = await updateLaunchOptions(details.unAppID, details.strDisplayName, hostName, customExec) && success;
   }
 
   // Remove them bastards!
   for (const details of appsToRemove) {
-    await removeShortcut(details.unAppID);
+    success = await removeShortcut(details.unAppID) && success;
   }
 
   if (appsToAdd.size > 0 || appsToUpdate.length > 0 || appsToRemove.length > 0) {
     if (appsToRemove.length > 0) {
       restartSteamClient();
     } else {
-      refreshApps();
-      logger.toast(`${appsToAdd.size + appsToUpdate.length}/${sunshineApps.length} app(s) were synced.`, { output: "log" });
+      refreshApps?.();
+      if (success) {
+        logger.toast(`${appsToAdd.size + appsToUpdate.length}/${sunshineApps.length} app(s) were synced.`, { output: "log" });
+      } else {
+        logger.toast("Some app(s) failed to sync synced.", { output: "error" });
+      }
     }
   } else {
     logger.toast("Apps are in sync.", { output: "log" });
   }
 }
 
-export const SyncButton: VFC<Props> = ({ shortcuts, moonDeckHostApps, hostName, buddyProxy, moonlightExecPath, refreshApps }) => {
+export const SunshineAppsSyncButton: VFC<Props> = ({ shortcuts, buddyProxy, settings, hostSettings, noConfirmationDialog, refreshApps }) => {
+  const [syncing, setSyncing] = useState(false);
+
   const handleClick = (): void => {
+    const onOk = (): void => {
+      (async () => {
+        setSyncing(true);
+        await syncShortcuts(
+          shortcuts ?? await getAllExternalAppDetails(),
+          hostSettings.hostApp.apps,
+          hostSettings.hostName,
+          buddyProxy,
+          settings.useMoonlightExec ? settings.moonlightExecPath || null : null,
+          hostSettings.sunshineApps.lastSelectedOverride,
+          refreshApps);
+      })()
+        .catch((e) => logger.critical(e))
+        .finally(() => { setSyncing(false); });
+    };
+
+    if (syncing) {
+      return;
+    }
+
+    if (noConfirmationDialog) {
+      onOk();
+      return;
+    }
+
     showModal(
       <ConfirmModal
         strTitle="Are you sure you want to sync?"
         strDescription="This action cannot be undone."
-        onOK={() => { syncShortcuts(shortcuts, moonDeckHostApps, hostName, buddyProxy, moonlightExecPath, refreshApps).catch((e) => logger.critical(e)); }}
+        onOK={onOk}
       />
     );
   };
 
   return (
-    <DialogButton onClick={() => handleClick()}>
-      Sync
+    <DialogButton disabled={syncing} onClick={() => handleClick()}>
+      Sync Apps
     </DialogButton>
   );
 };

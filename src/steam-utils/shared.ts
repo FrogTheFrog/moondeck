@@ -30,7 +30,7 @@ export interface SteamClientEx {
     RegisterForLoginStateChange: (callback: (username: string) => void) => { unregister: () => void };
     RegisterForPrepareForSystemSuspendProgress: (callback: (info: SystemSuspendInfo) => void) => { unregister: () => void };
     RegisterForResumeSuspendedGamesProgress: (callback: (info: SystemResumeInfo) => void) => { unregister: () => void };
-    StartRestart: () => void;
+    StartRestart: (param: boolean) => void;
   };
   System: {
     DisplayManager: {

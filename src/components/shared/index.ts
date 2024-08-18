@@ -9,5 +9,6 @@ export * from "./resolutionselectiondropdown";
 export * from "./serverstatusfield";
 export * from "./statusfield";
 export * from "./settingsloadingfield";
+export * from "./sunshineappssyncbutton";
 export * from "./textinput";
 export * from "./togglefield";

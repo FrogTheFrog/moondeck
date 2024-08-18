@@ -64,6 +64,11 @@ export interface HostResolution {
   dimensions: Dimension[];
 }
 
+export interface SunshineAppsSettings {
+  showQuickAccessButton: boolean;
+  lastSelectedOverride: string;
+}
+
 export interface HostSettings {
   hostInfoPort: number;
   buddyPort: number;
@@ -76,6 +81,7 @@ export interface HostSettings {
   resolution: HostResolution;
   hostApp: HostApp;
   runnerTimeouts: RunnerTimeouts;
+  sunshineApps: SunshineAppsSettings;
 }
 
 export interface GameSessionSettings {

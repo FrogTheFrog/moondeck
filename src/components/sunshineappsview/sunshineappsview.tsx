@@ -1,12 +1,11 @@
 import { AppDetails, DialogBody, DialogButton, DialogControlsSection, DialogControlsSectionHeader, Field, Navigation } from "@decky/ui";
 import { BuddyProxy, SettingsManager, getAllExternalAppDetails, logger } from "../../lib";
+import { LabelWithIcon, SunshineAppsSyncButton, ToggleField } from "../shared";
 import { ReactNode, VFC, useEffect, useState } from "react";
 import { useCurrentHostSettings, useCurrentSettings } from "../../hooks";
 import { BatchResOverrideButton } from "./batchresoverridebutton";
 import { HostOff } from "../icons";
-import { LabelWithIcon } from "../shared";
 import { PurgeButton } from "./purgebutton";
-import { SyncButton } from "./syncbutton";
 
 interface Props {
   settingsManager: SettingsManager;
@@ -47,8 +46,14 @@ export const SunshineAppsView: VFC<Props> = ({ settingsManager, buddyProxy }) =>
           description="Steam client might be restarted afterwards!"
           childrenContainerWidth="fixed"
         >
-          <SyncButton shortcuts={shortcuts} moonDeckHostApps={hostSettings.hostApp.apps} hostName={hostSettings.hostName} buddyProxy={buddyProxy} moonlightExecPath={settings.useMoonlightExec ? settings.moonlightExecPath || null : null} refreshApps={refreshApps} />
+          <SunshineAppsSyncButton shortcuts={shortcuts} buddyProxy={buddyProxy} settings={settings} hostSettings={hostSettings} refreshApps={refreshApps} />
         </Field>
+        <ToggleField
+          label="Show button in Quick Access Menu"
+          description="Confirmation dialog will not be displayed when using it!"
+          value={hostSettings.sunshineApps.showQuickAccessButton}
+          setValue={(value) => settingsManager.updateHost((settings) => { settings.sunshineApps.showQuickAccessButton = value; })}
+        />
       </DialogControlsSection>;
   }
 
@@ -74,7 +79,7 @@ export const SunshineAppsView: VFC<Props> = ({ settingsManager, buddyProxy }) =>
   }
 
   let batchResOverrideButton: ReactNode = null;
-  if (hostSettings && shortcuts.length > 0) {
+  if (hostSettings) {
     batchResOverrideButton =
       <DialogControlsSection>
         <DialogControlsSectionHeader>App Resolution Override</DialogControlsSectionHeader>
@@ -85,7 +90,7 @@ export const SunshineAppsView: VFC<Props> = ({ settingsManager, buddyProxy }) =>
               <div>Steam shortcut's resolution property needs to be set for all Sunshine apps to match the Moonlight client resolution.</div>
               <div>Otherwise the gamescope may try to apply scaling and you might get a blurry text/image.</div>
               <br />
-              <div>Note: this is already automatically done for MoonDeck-Steam apps, for MoonDeck-Sunshine apps you must do it manually.</div>
+              <div>Note: this is already automatically done for MoonDeck-Steam apps, for synced Sunshine apps you must do it manually.</div>
             </>
           }
           focusable={true}
@@ -93,8 +98,13 @@ export const SunshineAppsView: VFC<Props> = ({ settingsManager, buddyProxy }) =>
         <Field
           label="Select and apply resolution"
           childrenContainerWidth="fixed"
+          description={
+            <>
+              Override for newly added apps (last used): {hostSettings.sunshineApps.lastSelectedOverride}
+            </>
+          }
         >
-          <BatchResOverrideButton hostSettings={hostSettings} shortcuts={shortcuts} />
+          <BatchResOverrideButton hostSettings={hostSettings} shortcuts={shortcuts} settingsManager={settingsManager} />
         </Field>
       </DialogControlsSection>;
   }

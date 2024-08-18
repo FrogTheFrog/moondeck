@@ -5,6 +5,7 @@ import { HostAppPanel } from "./hostapppanel";
 import { HostCommandPanel } from "./hostcommandpanel";
 import { HostStatusPanel } from "./hoststatuspanel";
 import { ResolutionPanel } from "./resolutionpanel";
+import { SunshineAppsPanel } from "./sunshineappspanel";
 import { VFC } from "react";
 import { useQuickAccessVisible } from "@decky/api";
 
@@ -28,6 +29,7 @@ export const QuickSettingsView: VFC<Props> = ({ connectivityManager, settingsMan
         ? <GameSessionPanel appData={appData} moonDeckAppLauncher={moonDeckAppLauncher} />
         : <>
             <HostStatusPanel currentHostSettings={currentHostSettings} currentSettings={currentSettings} settingsManager={settingsManager} serverStatus={serverStatus} serverRefreshStatus={serverRefreshStatus} buddyStatus={buddyStatus} buddyRefreshStatus={buddyRefreshStatus} />
+            <SunshineAppsPanel buddyProxy={connectivityManager.buddyProxy} currentHostSettings={currentHostSettings} currentSettings={currentSettings} />
             <HostAppPanel currentHostSettings={currentHostSettings} settingsManager={settingsManager} />
             <ResolutionPanel currentHostSettings={currentHostSettings} settingsManager={settingsManager} />
           </>

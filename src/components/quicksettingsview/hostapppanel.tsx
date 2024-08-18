@@ -15,7 +15,7 @@ export const HostAppPanel: VFC<Props> = ({ currentHostSettings, settingsManager 
   }
 
   return (
-    <PanelSection title="APP NAME">
+    <PanelSection title="STREAMING APP NAME">
       <PanelSectionRow>
         <Field
           childrenContainerWidth="fixed"

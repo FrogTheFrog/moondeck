@@ -7,7 +7,13 @@ export const ChangelogView: VFC<unknown> = () => {
       <DialogControlsSection>
         <Field
           label="1.7.2"
-          description="Migrate plugin to use new Decky API."
+          description={
+            <>
+              <div>&bull; Migrate plugin to use new Decky API.</div>
+              <div>&bull; Sunshine app sync button can now be added to the QAM.</div>
+              <div>&bull; Last used app resolution override will be used when adding new Sunshine apps.</div>
+            </>
+          }
           focusable={true}
         />
         <Field

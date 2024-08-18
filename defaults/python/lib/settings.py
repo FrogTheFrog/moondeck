@@ -48,6 +48,11 @@ class HostResolution(TypedDict):
     dimensions: List[Dimension]
 
 
+class SunshineAppsSettings(TypedDict):
+    showQuickAccessButton: bool
+    lastSelectedOverride: str
+
+
 class HostSettings(TypedDict):
     hostInfoPort: int
     buddyPort: int
@@ -60,6 +65,7 @@ class HostSettings(TypedDict):
     resolution: HostResolution
     hostApp: HostApp
     runnerTimeouts: RunnerTimeouts
+    sunshineApps: SunshineAppsSettings
 
 
 class GameSessionSettings(TypedDict):
@@ -250,6 +256,10 @@ class SettingsManager:
         if data["version"] == 17:
             data["version"] = 18
             data["buttonPosition"]["zIndex"] = ""
+        if data["version"] == 18:
+            data["version"] = 19
+            for host in data["hostSettings"].keys():
+                data["hostSettings"][host]["sunshineApps"] = { "showQuickAccessButton": False, "lastSelectedOverride": "Default" }
 
         return data
 
