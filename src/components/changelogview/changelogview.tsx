@@ -13,6 +13,7 @@ export const ChangelogView: VFC<unknown> = () => {
               <div>&bull; Sunshine app sync button can now be added to the Quick Access Menu.</div>
               <div>&bull; Last used app resolution override will be used when adding new Sunshine apps.</div>
               <div>&bull; MoonDeck shortcuts can now be disabled if only Sunshine apps are needed.</div>
+              <div>&bull; Increase max bitrate value to 500000.</div>
             </>
           }
           focusable={true}

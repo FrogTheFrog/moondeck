@@ -10,7 +10,7 @@ export const buttonStyles = ["HighContrast", "Clean"] as const;
 export const horizontalAlignmentValues = ["top", "bottom"] as const;
 export const verticalAlignmentValues = ["left", "right"] as const;
 export const minBitrate = 500 as const;
-export const maxBitrate = 150000 as const;
+export const maxBitrate = 500000 as const;
 export const minFps = 30 as const;
 export const maxFps = 240 as const;
 
