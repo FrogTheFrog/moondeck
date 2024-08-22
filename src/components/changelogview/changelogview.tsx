@@ -6,7 +6,7 @@ export const ChangelogView: VFC<unknown> = () => {
     <DialogBody>
       <DialogControlsSection>
         <Field
-          label="1.7.2"
+          label="1.8.0"
           description={
             <>
               <div>&bull; Migrate plugin to use new Decky API.</div>
@@ -14,6 +14,7 @@ export const ChangelogView: VFC<unknown> = () => {
               <div>&bull; Last used app resolution override will be used when adding new Sunshine apps.</div>
               <div>&bull; MoonDeck shortcuts can now be disabled if only Sunshine apps are needed.</div>
               <div>&bull; Increase max bitrate value to 500000.</div>
+              <div>&bull; Fix IPv6 handling for WOL.</div>
             </>
           }
           focusable={true}
