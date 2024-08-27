@@ -9,10 +9,8 @@ export const appResolutionOverrideValues = ["CustomResolution", "DisplayResoluti
 export const buttonStyles = ["HighContrast", "Clean"] as const;
 export const horizontalAlignmentValues = ["top", "bottom"] as const;
 export const verticalAlignmentValues = ["left", "right"] as const;
-export const minBitrate = 500 as const;
-export const maxBitrate = 500000 as const;
-export const minFps = 30 as const;
-export const maxFps = 240 as const;
+export const minBitrate = 0 as const;
+export const minFps = 0 as const;
 
 export const buddyRequestsDefault = 5 as const;
 export const servicePingDefault = 5 as const;

@@ -1,7 +1,7 @@
 import { DialogBody, DialogControlsSection, DialogControlsSectionHeader, Field, Focusable } from "@decky/ui";
 import { LabelWithIcon, NumericTextInput, ResolutionSelectionDropdown, ToggleField } from "../shared";
 import { ModifyListButton, RemoveListEntryButton } from "../shared/indexedlist";
-import { SettingsManager, maxBitrate, maxFps, minBitrate, minFps } from "../../lib";
+import { SettingsManager, minBitrate, minFps } from "../../lib";
 import { AppResolutionOverrideDropdown } from "./appresolutionoverridedropdown";
 import { HostOff } from "../icons";
 import { LinkedDisplayList } from "./linkeddisplaylist";
@@ -41,7 +41,6 @@ export const MoonlightSettingsView: VFC<Props> = ({ settingsManager }) => {
         >
           <NumericTextInput
             min={minBitrate}
-            max={maxBitrate}
             optional={true}
             value={hostSettings.resolution.defaultBitrate}
             setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.resolution.defaultBitrate = value; })}
@@ -54,7 +53,6 @@ export const MoonlightSettingsView: VFC<Props> = ({ settingsManager }) => {
         >
           <NumericTextInput
             min={minFps}
-            max={maxFps}
             optional={true}
             value={hostSettings.resolution.defaultFps}
             setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.resolution.defaultFps = value; })}

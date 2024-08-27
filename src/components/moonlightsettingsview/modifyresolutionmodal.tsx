@@ -1,5 +1,5 @@
 import { DialogButton, Field, ModalRoot } from "@decky/ui";
-import { Dimension, HostResolution, maxBitrate, maxFps, minBitrate, minFps, stringifyDimension } from "../../lib";
+import { Dimension, HostResolution, minBitrate, minFps, stringifyDimension } from "../../lib";
 import { useEffect, useState } from "react";
 import { IndexedListModal } from "../shared/indexedlist";
 import { NumericTextInput } from "../shared";
@@ -93,7 +93,6 @@ export const ModifyResolutionModal: IndexedListModal<HostResolution["dimensions"
       >
         <NumericTextInput
           min={minBitrate}
-          max={maxBitrate}
           optional={true}
           value={bitrate}
           setValue={setBitrate}
@@ -107,7 +106,6 @@ export const ModifyResolutionModal: IndexedListModal<HostResolution["dimensions"
       >
         <NumericTextInput
           min={minFps}
-          max={maxFps}
           optional={true}
           value={fps}
           setValue={setFps}
