@@ -296,7 +296,13 @@ async def run_game(res_change: ResolutionChange, host_app: str, hostname: str, m
                     await asyncio.wait({launch_task}, timeout=2)
                     return runnerresult.Result.MoonlightClosed
             else:
-                assert launch_task in done, "Launch task is not done?!"
+                assert launch_task in done, "Launch task is not done?!"  
+
+                logger.info("Ending stream") 
+                result = await client.end_stream()
+                if result:
+                    logger.error(f"Failed to end the stream: {result.value}")
+
                 result = launch_task.result()
                 if result:
                     return result
