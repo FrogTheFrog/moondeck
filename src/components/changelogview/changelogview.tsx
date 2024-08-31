@@ -15,6 +15,7 @@ export const ChangelogView: VFC<unknown> = () => {
               <div>&bull; MoonDeck shortcuts can now be disabled if only Sunshine apps are needed.</div>
               <div>&bull; Removed fps and bitrate limits.</div>
               <div>&bull; Fix IPv6 handling for WOL.</div>
+              <div>&bull; Expose more runner timeout settings.</div>
             </>
           }
           focusable={true}

@@ -90,6 +90,10 @@ export class MoonDeckAppProxy extends ReadonlySubject<MoonDeckAppData | null> {
       result = await setShortcutName(this.subject.value.moonDeckAppId, this.subject.value.name);
     }
 
+    if (this.subject.value === null) {
+      return false;
+    }
+
     if (result) {
       const newValue = { ...this.subject.value, sessionOptions: { ...this.subject.value.sessionOptions, nameSetToAppId: changeToAppId } };
       if (!isEqual(this.subject.value, newValue)) {

@@ -1,4 +1,4 @@
-import { HostSettings, SettingsManager, appLaunchDefault, appLaunchStabilityDefault, appUpdateDefault, buddyRequestsDefault, initialConditionsDefault, servicePingDefault, streamEndDefault, streamReadinessDefault, wakeOnLanDefault } from "./settingsmanager";
+import { HostSettings, SettingsManager, appLaunchDefault, appLaunchStabilityDefault, appUpdateDefault, buddyRequestsDefault, initialConditionsDefault, networkReconnectAfterSuspendDefault, servicePingDefault, steamLaunchAfterSuspendDefault, steamLaunchDefault, streamEndDefault, streamReadinessDefault, wakeOnLanDefault } from "./settingsmanager";
 import { BehaviorSubject } from "rxjs";
 import { BuddyProxy } from "./buddyproxy";
 import { Mutex } from "async-mutex";
@@ -108,7 +108,10 @@ export class ServerProxy {
           appLaunchStability: currentSettings?.runnerTimeouts.appLaunchStability ?? appLaunchStabilityDefault,
           appUpdate: currentSettings?.runnerTimeouts.appUpdate ?? appUpdateDefault,
           streamEnd: currentSettings?.runnerTimeouts.streamEnd ?? streamEndDefault,
-          wakeOnLan: currentSettings?.runnerTimeouts.wakeOnLan ?? wakeOnLanDefault
+          wakeOnLan: currentSettings?.runnerTimeouts.wakeOnLan ?? wakeOnLanDefault,
+          steamLaunch: currentSettings?.runnerTimeouts.steamLaunch ?? steamLaunchDefault,
+          steamLaunchAfterSuspend: currentSettings?.runnerTimeouts.steamLaunchAfterSuspend ?? steamLaunchAfterSuspendDefault,
+          networkReconnectAfterSuspend: currentSettings?.runnerTimeouts.networkReconnectAfterSuspend ?? networkReconnectAfterSuspendDefault
         },
         sunshineApps: {
           showQuickAccessButton: currentSettings?.sunshineApps.showQuickAccessButton ?? false,

@@ -1,6 +1,6 @@
 import { DialogBody, DialogControlsSection, DialogControlsSectionHeader, Field } from "@decky/ui";
 import { LabelWithIcon, NumericTextInput, ToggleField } from "../shared";
-import { SettingsManager, appLaunchDefault, appLaunchStabilityDefault, appUpdateDefault, buddyRequestsDefault, initialConditionsDefault, servicePingDefault, streamEndDefault, streamReadinessDefault, wakeOnLanDefault } from "../../lib";
+import { SettingsManager, appLaunchDefault, appLaunchStabilityDefault, appUpdateDefault, buddyRequestsDefault, initialConditionsDefault, networkReconnectAfterSuspendDefault, servicePingDefault, steamLaunchAfterSuspendDefault, steamLaunchDefault, streamEndDefault, streamReadinessDefault, wakeOnLanDefault } from "../../lib";
 import { useCurrentHostSettings, useCurrentSettings } from "../../hooks";
 import { HostOff } from "../icons";
 import { VFC } from "react";
@@ -138,6 +138,39 @@ export const RunnerSettingsView: VFC<Props> = ({ settingsManager }) => {
             min={0}
             value={hostSettings.runnerTimeouts.wakeOnLan}
             setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.runnerTimeouts.wakeOnLan = value; })}
+          />
+        </Field>
+        <Field
+          label={`steamLaunch (default: ${steamLaunchDefault})`}
+          description="Timeout for how long to wait until Steam launches MoonDeck app."
+          childrenContainerWidth="fixed"
+        >
+          <NumericTextInput
+            min={0}
+            value={hostSettings.runnerTimeouts.steamLaunch}
+            setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.runnerTimeouts.steamLaunch = value; })}
+          />
+        </Field>
+        <Field
+          label={`steamLaunchAfterSuspend (default: ${steamLaunchAfterSuspendDefault})`}
+          description="Timeout for how long to wait until Steam launches MoonDeck app after system resumes from suspension."
+          childrenContainerWidth="fixed"
+        >
+          <NumericTextInput
+            min={0}
+            value={hostSettings.runnerTimeouts.steamLaunchAfterSuspend}
+            setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.runnerTimeouts.steamLaunchAfterSuspend = value; })}
+          />
+        </Field>
+        <Field
+          label={`networkReconnectAfterSuspend (default: ${networkReconnectAfterSuspendDefault})`}
+          description="Timeout for how long to wait for connection to be available to relaunch MoonDeck app."
+          childrenContainerWidth="fixed"
+        >
+          <NumericTextInput
+            min={0}
+            value={hostSettings.runnerTimeouts.networkReconnectAfterSuspend}
+            setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.runnerTimeouts.networkReconnectAfterSuspend = value; })}
           />
         </Field>
       </DialogControlsSection>

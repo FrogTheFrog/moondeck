@@ -20,6 +20,9 @@ class RunnerTimeouts(TypedDict):
     appUpdate: int
     streamEnd: int
     wakeOnLan: int
+    steamLaunch: int
+    steamLaunchAfterSuspend: int
+    networkReconnectAfterSuspend: int
 
 
 class HostApp(TypedDict):
@@ -265,6 +268,12 @@ class SettingsManager:
         if data["version"] == 19:
             data["version"] = 20
             data["enableMoondeckShortcuts"] = True
+        if data["version"] == 20:
+            data["version"] = 21
+            for host in data["hostSettings"].keys():
+                data["hostSettings"][host]["runnerTimeouts"]["steamLaunch"] = 5
+                data["hostSettings"][host]["runnerTimeouts"]["steamLaunchAfterSuspend"] = 15
+                data["hostSettings"][host]["runnerTimeouts"]["networkReconnectAfterSuspend"] = 15
 
         return data
 

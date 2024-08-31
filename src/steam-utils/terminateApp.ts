@@ -20,8 +20,7 @@ export async function terminateApp(appId: number, timeout: number): Promise<bool
   }
 
   try {
-    // Currently Steam fails to properly set appid for non-Steam games, so we use null :/
-    const startNotification = waitForAppLifetimeNotification(null, "end", timeout);
+    const startNotification = waitForAppLifetimeNotification(appId, "end", timeout);
     (SteamClient as SteamClientEx).Apps.TerminateApp(gameId, false);
     return await startNotification;
   } catch (error) {

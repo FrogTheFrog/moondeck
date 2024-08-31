@@ -1,4 +1,4 @@
-import { Dimension, HostResolution, HostSettings, SettingsManager } from "./settingsmanager";
+import { Dimension, HostResolution, HostSettings, SettingsManager, networkReconnectAfterSuspendDefault } from "./settingsmanager";
 import { E_ALREADY_LOCKED, Mutex, tryAcquire } from "async-mutex";
 import { Subscription, pairwise } from "rxjs";
 import { getAppDetails, getCurrentDisplayModeString, getDisplayIdentifiers, getMoonDeckAppIdMark, getMoonDeckLinkedDisplayMark, getMoonDeckResMark, getSystemNetworkStore, launchApp, registerForGameLifetime, registerForSuspendNotifictions, setAppHiddenState, setAppLaunchOptions, setAppResolutionOverride, setShortcutName, waitForNetworkConnection } from "./steamutils";
@@ -124,33 +124,36 @@ export class MoonDeckAppLauncher {
   }
 
   private initSuspension(): void {
-    this.unregisterSuspension = registerForSuspendNotifictions((info) => {
+    this.unregisterSuspension = registerForSuspendNotifictions(async (info) => {
       // This the earliest state or smt
       if (info.state === 1 && this.moonDeckApp.value !== null) {
-        this.moonDeckApp.suspendApp().catch((e) => logger.critical(e));
+        logger.log("Suspending MoonDeck app.");
+        await this.moonDeckApp.suspendApp();
       }
-    }, (info) => {
+    }, async (info) => {
       // This the latest state or smt
       if (info.state === 1) {
         const resumeAfterSuspend = this.settingsManager.settings.value?.gameSession.resumeAfterSuspend ?? false;
         if (!resumeAfterSuspend) {
-          this.moonDeckApp.clearApp().catch((e) => logger.critical(e));
+          await this.moonDeckApp.clearApp();
           return;
         }
 
-        waitForNetworkConnection().then((result) => {
-          if (this.moonDeckApp.value === null) {
-            return;
-          }
+        logger.log("Waiting for internet connection to resume MoonDeck app.");
+        const connection = await waitForNetworkConnection(this.settingsManager.hostSettings?.runnerTimeouts.networkReconnectAfterSuspend ?? networkReconnectAfterSuspendDefault);
 
-          if (result) {
-            logger.log(`Relaunching app ${this.moonDeckApp.value.steamAppId} after suspend.`);
-            this.launchApp(this.moonDeckApp.value.steamAppId, this.moonDeckApp.value.name).catch((e) => logger.critical(e));
-          } else {
-            logger.toast("Not resuming session - no network connection!", { output: "warn" });
-            this.moonDeckApp.clearApp().catch((e) => logger.critical(e));
-          }
-        }).catch((e) => logger.critical(e));
+        if (this.moonDeckApp.value === null) {
+          logger.log("MoonDeck app has been started manually already.");
+          return;
+        }
+
+        if (connection) {
+          logger.log(`Relaunching app ${this.moonDeckApp.value.steamAppId} after suspend.`);
+          await this.launchApp(this.moonDeckApp.value.steamAppId, this.moonDeckApp.value.name, true);
+        } else {
+          logger.toast("Not resuming session - no network connection!", { output: "warn" });
+          await this.moonDeckApp.clearApp();
+        }
       }
     });
   }
@@ -201,7 +204,7 @@ export class MoonDeckAppLauncher {
     }
   }
 
-  async launchApp(appId: number, appName: string): Promise<void> {
+  async launchApp(appId: number, appName: string, afterSuspend = false): Promise<void> {
     if (!this.shortcutManager.readyState.value) {
       logger.toast("Plugin is still initializing...");
       return;
@@ -282,7 +285,9 @@ export class MoonDeckAppLauncher {
 
         this.moonDeckApp.setApp(appId, details.unAppID, appName, sessionOptions);
         await this.moonDeckApp.clearRunnerResult();
-        if (!await launchApp(details.unAppID, 5000)) {
+
+        const launchTimeout = afterSuspend ? hostSettings.runnerTimeouts.steamLaunchAfterSuspend : hostSettings.runnerTimeouts.steamLaunch;
+        if (!await launchApp(details.unAppID, launchTimeout)) {
           logger.toast("Failed to launch shortcut!", { output: "error" });
           await this.moonDeckApp.killApp();
           await this.moonDeckApp.clearApp();

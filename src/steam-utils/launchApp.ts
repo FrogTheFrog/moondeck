@@ -19,8 +19,7 @@ export async function launchApp(appId: number, timeout: number): Promise<boolean
   }
 
   try {
-    // Currently Steam fails to properly set appid for non-Steam games, so we use null :/
-    const startNotification = waitForAppLifetimeNotification(null, "start", timeout);
+    const startNotification = waitForAppLifetimeNotification(appId, "start", timeout);
     (SteamClient as SteamClientEx).Apps.RunGame(gameId, "", -1, 100);
     return await startNotification;
   } catch (error) {
