@@ -287,7 +287,7 @@ export class MoonDeckAppLauncher {
         await this.moonDeckApp.clearRunnerResult();
 
         const launchTimeout = afterSuspend ? hostSettings.runnerTimeouts.steamLaunchAfterSuspend : hostSettings.runnerTimeouts.steamLaunch;
-        if (!await launchApp(details.unAppID, launchTimeout)) {
+        if (!await launchApp(details.unAppID, launchTimeout * 1000)) {
           logger.toast("Failed to launch shortcut!", { output: "error" });
           await this.moonDeckApp.killApp();
           await this.moonDeckApp.clearApp();

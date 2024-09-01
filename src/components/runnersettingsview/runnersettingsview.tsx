@@ -146,7 +146,7 @@ export const RunnerSettingsView: VFC<Props> = ({ settingsManager }) => {
           childrenContainerWidth="fixed"
         >
           <NumericTextInput
-            min={0}
+            min={1}
             value={hostSettings.runnerTimeouts.steamLaunch}
             setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.runnerTimeouts.steamLaunch = value; })}
           />
@@ -157,7 +157,7 @@ export const RunnerSettingsView: VFC<Props> = ({ settingsManager }) => {
           childrenContainerWidth="fixed"
         >
           <NumericTextInput
-            min={0}
+            min={1}
             value={hostSettings.runnerTimeouts.steamLaunchAfterSuspend}
             setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.runnerTimeouts.steamLaunchAfterSuspend = value; })}
           />
@@ -168,7 +168,7 @@ export const RunnerSettingsView: VFC<Props> = ({ settingsManager }) => {
           childrenContainerWidth="fixed"
         >
           <NumericTextInput
-            min={0}
+            min={1}
             value={hostSettings.runnerTimeouts.networkReconnectAfterSuspend}
             setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.runnerTimeouts.networkReconnectAfterSuspend = value; })}
           />
