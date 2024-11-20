@@ -115,6 +115,7 @@ export interface UserSettings {
   buttonPosition: ButtonPositionSettings;
   buttonStyle: ButtonStyleSettings;
   enableMoondeckShortcuts: boolean;
+  enableMoondeckButtonPrompt: boolean;
   hostSettings: { [key: string]: HostSettings };
   runnerDebugLogs: boolean;
   useMoonlightExec: boolean;

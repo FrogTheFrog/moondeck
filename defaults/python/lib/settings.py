@@ -98,6 +98,7 @@ class UserSettings(TypedDict):
     buttonPosition: ButtonPositionSettings
     buttonStyle: ButtonStyleSettings
     enableMoondeckShortcuts: bool
+    enableMoondeckButtonPrompt: bool
     hostSettings: Dict[str, HostSettings]
     runnerDebugLogs: bool
     useMoonlightExec: bool
@@ -151,6 +152,7 @@ class SettingsManager:
                     "theme": "Clean"
                 },
                 "enableMoondeckShortcuts": True,
+                "enableMoondeckButtonPrompt": False,
                 "hostSettings": {},
                 "runnerDebugLogs": False,
                 "useMoonlightExec": False,
@@ -274,6 +276,9 @@ class SettingsManager:
                 data["hostSettings"][host]["runnerTimeouts"]["steamLaunch"] = 5
                 data["hostSettings"][host]["runnerTimeouts"]["steamLaunchAfterSuspend"] = 15
                 data["hostSettings"][host]["runnerTimeouts"]["networkReconnectAfterSuspend"] = 15
+        if data["version"] == 21:
+            data["version"] = 22
+            data["enableMoondeckButtonPrompt"] = False
 
         return data
 

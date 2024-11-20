@@ -6,6 +6,11 @@ export const ChangelogView: VFC<unknown> = () => {
     <DialogBody>
       <DialogControlsSection>
         <Field
+          label="1.8.1"
+          description="Added an optional prompt to confirm whether you really want to start the stream or not."
+          focusable={true}
+        />
+        <Field
           label="1.8.0"
           description={
             <>

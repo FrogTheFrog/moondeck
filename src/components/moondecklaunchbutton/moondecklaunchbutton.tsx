@@ -1,10 +1,11 @@
-import { Button, Focusable, appDetailsClasses, appDetailsHeaderClasses, basicAppDetailsSectionStylerClasses, joinClassNames, playSectionClasses, sleep } from "@decky/ui";
+import { Button, Focusable, appDetailsClasses, appDetailsHeaderClasses, basicAppDetailsSectionStylerClasses, joinClassNames, playSectionClasses, showModal, sleep } from "@decky/ui";
 import { CSSProperties, VFC, useEffect, useRef, useState } from "react";
 import { OffsetStyle, achorPositionName } from "./offsetstyle";
 import { SettingsManager, UserSettings, isAppTypeSupported, logger } from "../../lib";
 import { useCurrentSettings, useMoonDeckAppData } from "../../hooks";
 import { ButtonStyle } from "./buttonstyle";
 import { ContainerStyle } from "./containerstyle";
+import { LaunchPromptModal } from "./launchpromptmodal";
 import { MoonDeckAppLauncher } from "../../lib/moondeckapplauncher";
 import { MoonDeckMain } from "../icons";
 
@@ -19,7 +20,7 @@ interface Props {
 interface ShellProps {
   buttonPosition?: UserSettings["buttonPosition"];
   buttonStyle: UserSettings["buttonStyle"];
-  onClick?: () => Promise<void>;
+  onClick?: (onDone: () => void) => void;
 }
 
 export const MoonDeckLaunchButtonShell: VFC<ShellProps> = ({ onClick, buttonPosition, buttonStyle }) => {
@@ -28,7 +29,7 @@ export const MoonDeckLaunchButtonShell: VFC<ShellProps> = ({ onClick, buttonPosi
     if (onClick) {
       return () => {
         setClickPending(true);
-        onClick().catch((e) => logger.critical(e)).finally(() => setClickPending(false));
+        onClick(() => setClickPending(false));
       };
     }
     return undefined;
@@ -65,9 +66,18 @@ const MoonDeckLaunchButton: VFC<Props> = ({ appId, appName, appType, moonDeckApp
     <MoonDeckLaunchButtonShell
       buttonPosition={settings.buttonPosition}
       buttonStyle={settings.buttonStyle}
-      onClick={async (): Promise<void> => {
-        await moonDeckAppLauncher.launchApp(appId, appName);
-        await sleep(1000);
+      onClick={(onDone: () => void) => {
+        const launchApp = async (): Promise<void> => {
+          await moonDeckAppLauncher.launchApp(appId, appName);
+          await sleep(1000);
+        };
+
+        if (settings.enableMoondeckButtonPrompt) {
+          // eslint-disable-next-line @typescript-eslint/no-empty-function
+          showModal(<LaunchPromptModal closeModal={() => { }} onDone={onDone} launchApp={launchApp} />);
+        } else {
+          launchApp().catch((e) => logger.critical(e)).finally(() => onDone());
+        }
       }}
     />
   );

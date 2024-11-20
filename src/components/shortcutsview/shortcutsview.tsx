@@ -59,6 +59,12 @@ export const ShortcutsView: VFC<Props> = ({ settingsManager, shortcutManager }) 
             value={currentSettings.enableMoondeckShortcuts}
             setValue={(value) => settingsManager.update((settings) => { settings.enableMoondeckShortcuts = value; })}
           />
+          <ToggleField
+            label="Enable confirmation prompt dialog for starting the stream"
+            description="In case you misclick a lot, you might want to enable this to prevent accidental streams."
+            value={currentSettings.enableMoondeckButtonPrompt}
+            setValue={(value) => settingsManager.update((settings) => { settings.enableMoondeckButtonPrompt = value; })}
+          />
         </DialogControlsSection>
       }
       <DialogControlsSection>
