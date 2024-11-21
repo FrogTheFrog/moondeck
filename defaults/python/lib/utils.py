@@ -147,5 +147,9 @@ def wake_on_lan(address: str, mac: str):
     for family, address_info in infos:
         address_log = address if address == address_info else f"{address} ({address_info})"
         logger.info(f"Sending WOL ({mac}) to {address_log}")
-        send_magic_packet(mac, ip_address="255.255.255.255" if family == socket.AF_INET else "ff02::1", address_family=family, port=default_port)
+
+        if family == socket.AF_INET:
+            # Broadcast for IPv4
+            send_magic_packet(mac, ip_address="255.255.255.255", address_family=family, port=default_port)
+
         send_magic_packet(mac, ip_address=address_info, address_family=family, port=default_port)
