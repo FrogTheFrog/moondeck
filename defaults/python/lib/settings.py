@@ -10,6 +10,9 @@ from .logger import logger
 from .buddyrequests import OsType
 
 
+ControllerConfigOption = Literal["Disable", "Default", "Enable", "Noop"]
+
+
 class RunnerTimeouts(TypedDict):
     buddyRequests: int
     servicePing: int
@@ -54,6 +57,7 @@ class HostResolution(TypedDict):
 class SunshineAppsSettings(TypedDict):
     showQuickAccessButton: bool
     lastSelectedOverride: str
+    lastSelectedControllerConfig: ControllerConfigOption
 
 
 class HostSettings(TypedDict):
@@ -74,6 +78,7 @@ class HostSettings(TypedDict):
 class GameSessionSettings(TypedDict):
     autoApplyAppId: bool
     resumeAfterSuspend: bool
+    controllerConfig: ControllerConfigOption
 
 
 class ButtonPositionSettings(TypedDict):
@@ -279,6 +284,11 @@ class SettingsManager:
         if data["version"] == 21:
             data["version"] = 22
             data["enableMoondeckButtonPrompt"] = False
+        if data["version"] == 22:
+            data["version"] = 23
+            data["gameSession"]["controllerConfig"] = "Noop"
+            for host in data["hostSettings"].keys():
+                data["hostSettings"][host]["sunshineApps"]["lastSelectedControllerConfig"] = "Noop"
 
         return data
 

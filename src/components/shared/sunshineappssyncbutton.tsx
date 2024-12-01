@@ -1,5 +1,5 @@
 import { AppDetails, ConfirmModal, DialogButton, showModal } from "@decky/ui";
-import { BuddyProxy, HostSettings, UserSettings, addShortcut, getAllExternalAppDetails, getMoonDeckManagedMark, logger, removeShortcut, restartSteamClient, setAppLaunchOptions, setAppResolutionOverride } from "../../lib";
+import { BuddyProxy, ControllerConfigValues, HostSettings, UserSettings, addShortcut, getAllExternalAppDetails, getMoonDeckManagedMark, logger, removeShortcut, restartSteamClient, setAppLaunchOptions, setAppResolutionOverride, updateControllerConfig } from "../../lib";
 import { VFC, useState } from "react";
 
 interface Props {
@@ -47,7 +47,7 @@ async function updateResolutionOverride(appId: number, appName: string, resoluti
   return true;
 }
 
-async function syncShortcuts(shortcuts: AppDetails[], moonDeckHostApps: string[], hostName: string, buddyProxy: BuddyProxy, moonlightExecPath: string | null, resOverride: string, refreshApps?: () => void): Promise<void> {
+async function syncShortcuts(shortcuts: AppDetails[], moonDeckHostApps: string[], hostName: string, buddyProxy: BuddyProxy, moonlightExecPath: string | null, resOverride: string, controllerConfig: keyof typeof ControllerConfigValues, refreshApps?: () => void): Promise<void> {
   let sunshineApps = await buddyProxy.getGamestreamAppNames();
   if (sunshineApps === null) {
     logger.toast("Failed to get Gamestream app list!", { output: "error" });
@@ -99,6 +99,9 @@ async function syncShortcuts(shortcuts: AppDetails[], moonDeckHostApps: string[]
     if (appId !== null) {
       success = await updateLaunchOptions(appId, app, hostName, customExec) && success;
       success = await updateResolutionOverride(appId, app, resOverride) && success;
+      if (success) {
+        updateControllerConfig(appId, controllerConfig);
+      }
     } else {
       success = false;
     }
@@ -144,6 +147,7 @@ export const SunshineAppsSyncButton: VFC<Props> = ({ shortcuts, buddyProxy, sett
           buddyProxy,
           settings.useMoonlightExec ? settings.moonlightExecPath || null : null,
           hostSettings.sunshineApps.lastSelectedOverride,
+          hostSettings.sunshineApps.lastSelectedControllerConfig,
           refreshApps);
       })()
         .catch((e) => logger.critical(e))

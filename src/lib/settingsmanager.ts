@@ -12,6 +12,18 @@ export const verticalAlignmentValues = ["left", "right"] as const;
 export const minBitrate = 0 as const;
 export const minFps = 0 as const;
 
+export enum ControllerConfigValues {
+  Disable = "Disable Steam Input",
+  Default = "Use default settings",
+  Enable = "Enable Steam Input",
+  Noop = "Do nothing"
+}
+export function getControllerConfigDropdownValues(): Array<{ id: keyof typeof ControllerConfigValues; label: string }> {
+  return Object.entries(ControllerConfigValues).map(([id, label]) => {
+    return { id, label } as unknown as { id: keyof typeof ControllerConfigValues; label: string };
+  });
+}
+
 export const buddyRequestsDefault = 5 as const;
 export const servicePingDefault = 5 as const;
 export const initialConditionsDefault = 30 as const;
@@ -71,6 +83,7 @@ export interface HostResolution {
 export interface SunshineAppsSettings {
   showQuickAccessButton: boolean;
   lastSelectedOverride: string;
+  lastSelectedControllerConfig: keyof typeof ControllerConfigValues;
 }
 
 export interface HostSettings {
@@ -91,6 +104,7 @@ export interface HostSettings {
 export interface GameSessionSettings {
   autoApplyAppId: boolean;
   resumeAfterSuspend: boolean;
+  controllerConfig: keyof typeof ControllerConfigValues;
 }
 
 export interface ButtonPositionSettings {

@@ -4,6 +4,7 @@ import { LabelWithIcon, SunshineAppsSyncButton, ToggleField } from "../shared";
 import { ReactNode, VFC, useEffect, useState } from "react";
 import { useCurrentHostSettings, useCurrentSettings } from "../../hooks";
 import { BatchResOverrideButton } from "./batchresoverridebutton";
+import { ControllerConfigButton } from "./controllerconfigbutton";
 import { HostOff } from "../icons";
 import { PurgeButton } from "./purgebutton";
 
@@ -78,6 +79,32 @@ export const SunshineAppsView: VFC<Props> = ({ settingsManager, buddyProxy }) =>
       </DialogControlsSection>;
   }
 
+  let controllerConfigButton: ReactNode = null;
+  if (hostSettings) {
+    controllerConfigButton =
+      <DialogControlsSection>
+        <DialogControlsSectionHeader>External controller Steam Input</DialogControlsSectionHeader>
+        <Field
+          description={
+            <>
+              <div>Choose which Steam Input option to use for the external controllers.</div>
+              <br />
+              <div>Disabling Steam Input is preferable in most cases as the Moonlight can then see the actual controller instead of a generic XBox one that Steam exposes.</div>
+              <br />
+              <div>This means that the motion data becomes available for PS4/Dualsense controllers and the rumble works better in most cases.</div>
+            </>
+          }
+          focusable={true}
+        />
+        <Field
+          label="Selected Steam Input option"
+          childrenContainerWidth="fixed"
+        >
+          <ControllerConfigButton hostSettings={hostSettings} shortcuts={shortcuts} settingsManager={settingsManager} />
+        </Field>
+      </DialogControlsSection>;
+  }
+
   let batchResOverrideButton: ReactNode = null;
   if (hostSettings) {
     batchResOverrideButton =
@@ -140,6 +167,7 @@ export const SunshineAppsView: VFC<Props> = ({ settingsManager, buddyProxy }) =>
         </Field>
       </DialogControlsSection>
       {syncButton}
+      {controllerConfigButton}
       {batchResOverrideButton}
       {shortcutsList}
     </DialogBody>

@@ -11,6 +11,7 @@ export const ChangelogView: VFC<unknown> = () => {
             <>
               <div>&bull; Added an optional prompt to confirm whether you really want to start the stream or not.</div>
               <div>&bull; Removed the WOL broadcast for IPv6.</div>
+              <div>&bull; Added an option to configure Steam Input state for external controllers.</div>
             </>
           }
           focusable={true}

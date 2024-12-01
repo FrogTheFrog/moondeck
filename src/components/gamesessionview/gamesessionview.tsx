@@ -1,6 +1,6 @@
 import { DialogBody, DialogControlsSection, Field } from "@decky/ui";
-import { SettingsLoadingField, ToggleField } from "../shared";
-import { SettingsManager } from "../../lib";
+import { ListDropdown, SettingsLoadingField, ToggleField } from "../shared";
+import { SettingsManager, UserSettings, getControllerConfigDropdownValues } from "../../lib";
 import { VFC } from "react";
 import { useCurrentSettings } from "../../hooks";
 
@@ -16,8 +16,35 @@ export const GameSessionView: VFC<Props> = ({ settingsManager }) => {
 
   return (
     <DialogBody>
-      <Field description="Contains configurable settings that are applied for the game sessions. Additional settings can be found in the quick access menu when the game is running." />
+      <Field
+        description="Contains configurable settings that are applied for the game sessions. Additional settings can be found in the quick access menu when the game is running."
+        focusable={true}
+      />
       <DialogControlsSection>
+        <Field
+          label="Selected Steam Input option"
+          childrenContainerWidth="fixed"
+          bottomSeparator="none"
+        >
+          <ListDropdown<UserSettings["gameSession"]["controllerConfig"]>
+            optionList={getControllerConfigDropdownValues()}
+            label="Loading..."
+            value={settings.gameSession.controllerConfig}
+            setValue={(value) => settingsManager.update((settings) => { settings.gameSession.controllerConfig = value; })}
+          />
+        </Field>
+        <Field
+          description={
+            <>
+              <div>Choose how to configure Steam Input before the game is launched for the external controllers.</div>
+              <br />
+              <div>Disabling Steam Input is preferable in most cases as the Moonlight can then see the actual controller instead of a generic XBox one that Steam exposes.</div>
+              <br />
+              <div>This means that the motion data becomes available for PS4/Dualsense controllers and the rumble works better in most cases.</div>
+            </>
+          }
+          focusable={true}
+        />
         <ToggleField
           label="Automatic title switch to AppId"
           description={

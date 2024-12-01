@@ -11,6 +11,13 @@ export interface SystemResumeInfo {
 
 export type AppResolutionOverrideConstants = "Default" | "Native";
 
+export enum ControllerConfigOption {
+  Disable = 0,
+  Default = 1,
+  Enable = 2
+}
+export type ControllerConfigValue = `${ControllerConfigOption}` extends `${infer T extends number}` ? T : never;
+
 export interface SteamClientEx {
   Apps: {
     AddShortcut: (appName: string, execPath: string, args: string, cmdLine: string) => Promise<number | undefined | null>;
@@ -21,6 +28,7 @@ export interface SteamClientEx {
     SetAppLaunchOptions: (appId: number, options: string) => void;
     SetAppResolutionOverride: (appId: number, resolution: AppResolutionOverrideConstants | string) => void;
     SetShortcutName: (appId: number, name: string) => void;
+    SetThirdPartyControllerConfiguration: (appId: number, value: ControllerConfigValue) => void;
     TerminateApp: (gameId: string, _1: boolean) => void;
   };
   GameSessions: {

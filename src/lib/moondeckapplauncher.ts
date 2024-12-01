@@ -1,7 +1,7 @@
-import { Dimension, HostResolution, HostSettings, SettingsManager, networkReconnectAfterSuspendDefault } from "./settingsmanager";
+import { ControllerConfigOption, SteamClientEx, getAppDetails, getCurrentDisplayModeString, getDisplayIdentifiers, getMoonDeckAppIdMark, getMoonDeckLinkedDisplayMark, getMoonDeckResMark, getSystemNetworkStore, launchApp, registerForGameLifetime, registerForSuspendNotifictions, setAppHiddenState, setAppLaunchOptions, setAppResolutionOverride, setShortcutName, waitForNetworkConnection } from "./steamutils";
+import { ControllerConfigValues, Dimension, HostResolution, HostSettings, SettingsManager, networkReconnectAfterSuspendDefault } from "./settingsmanager";
 import { E_ALREADY_LOCKED, Mutex, tryAcquire } from "async-mutex";
 import { Subscription, pairwise } from "rxjs";
-import { getAppDetails, getCurrentDisplayModeString, getDisplayIdentifiers, getMoonDeckAppIdMark, getMoonDeckLinkedDisplayMark, getMoonDeckResMark, getSystemNetworkStore, launchApp, registerForGameLifetime, registerForSuspendNotifictions, setAppHiddenState, setAppLaunchOptions, setAppResolutionOverride, setShortcutName, waitForNetworkConnection } from "./steamutils";
 import { AppDetails } from "@decky/ui";
 import { CommandProxy } from "./commandproxy";
 import { MoonDeckAppProxy } from "./moondeckapp";
@@ -57,6 +57,14 @@ function getSelectedAppResolution(mode: string | null, display: string | null, h
       return "Native";
     default:
       return "Default";
+  }
+}
+
+export function updateControllerConfig(appId: number, controllerConfig: keyof typeof ControllerConfigValues): void {
+  if (controllerConfig !== "Noop") {
+    logger.log(`Setting controller config to ${controllerConfig} for ${appId}.`);
+    const option = ControllerConfigOption[controllerConfig];
+    (SteamClient as SteamClientEx).Apps.SetThirdPartyControllerConfiguration(appId, option);
   }
 }
 
@@ -275,6 +283,8 @@ export class MoonDeckAppLauncher {
           logger.toast("Failed to update shortcut launch options (needs restart?)!", { output: "error" });
           return;
         }
+
+        updateControllerConfig(details.unAppID, settings.controllerConfig);
 
         let sessionOptions = this.moonDeckApp.value?.sessionOptions ?? null;
         if (sessionOptions === null) {

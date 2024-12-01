@@ -115,7 +115,8 @@ export class ServerProxy {
         },
         sunshineApps: {
           showQuickAccessButton: currentSettings?.sunshineApps.showQuickAccessButton ?? false,
-          lastSelectedOverride: currentSettings?.sunshineApps.lastSelectedOverride ?? "Default"
+          lastSelectedOverride: currentSettings?.sunshineApps.lastSelectedOverride ?? "Default",
+          lastSelectedControllerConfig: currentSettings?.sunshineApps.lastSelectedControllerConfig ?? "Noop"
         }
       };
 
