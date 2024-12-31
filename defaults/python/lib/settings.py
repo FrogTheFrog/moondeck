@@ -142,7 +142,8 @@ class SettingsManager:
                 "currentHostId": None,
                 "gameSession": {
                     "autoApplyAppId": False,
-                    "resumeAfterSuspend": False
+                    "resumeAfterSuspend": False,
+                    "controllerConfig": "Noop"
                 },
                 "buttonPosition": {
                     "horizontalAlignment": "bottom",
