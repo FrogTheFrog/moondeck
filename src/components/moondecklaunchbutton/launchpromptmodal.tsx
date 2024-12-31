@@ -1,15 +1,6 @@
-import { DialogButtonPrimary, DialogButtonSecondary, DialogHeader, Focusable, ModalRoot } from "@decky/ui";
+import { DialogButtonPrimary, DialogButtonSecondary, DialogHeader, Focusable, ModalRoot, NavEntryPositionPreferences } from "@decky/ui";
 import { VFC } from "react";
 import { logger } from "../../lib";
-
-// TODO: Remove once new Decky version comes out
-enum NavEntryPositionPreferences {
-  FIRST = 0,
-  LAST = 1,
-  MAINTAIN_X = 2,
-  MAINTAIN_Y = 3,
-  PREFERRED_CHILD = 4
-}
 
 interface Props {
   closeModal: () => void;
