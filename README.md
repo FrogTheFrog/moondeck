@@ -24,12 +24,15 @@ It requires an additional lightweight app to be installed on the host PC - [Moon
 1. Press Moondeck button on game to stream within SteamDeck's OS 
 2. Selected Game is launched via moonlight stream
 
+**Moondeck fixes this issue by adding a button to each game within the Steamdeck's OS to launch directly into a moonlight stream with ***Steam's specific game title ID #*** associated for the running application in SteamDeck's OS.**
+
+![applicationLaunch](.github/assets/moondeck_launch_button.png)
 
 ***Moondeck*** sets configurations ahead of time and skipping many of the steps each time a stream is started. This allows a streamlined experience of selecting a game directly from the steam deck's OS and immediately starting the game stream.
 
 
-**More importantly, the ***DEFAULT Moonlight*** method causes SteamDeck's OS to ONLY see *Moonlight* as the running application, rather than *any specific game*.**
-**This creates a few problems, such as:**
+**More importantly, the ***Moonlight, by DEFAULT,*** method caused SteamDeck's OS to ONLY see *Moonlight* as the running application, rather than *any specific game*.**
+**This created a few problems, such as:**
 
 
 
@@ -39,9 +42,7 @@ It requires an additional lightweight app to be installed on the host PC - [Moon
 - steam game guides for a streamed game cannot be found
 
 
-**Moondeck fixes this issue by adding a button to each game within the Steamdeck's OS to launch directly into a moonlight stream with ***Steam's specific game title ID #*** associated for the running application in SteamDeck's OS.**
 
-![applicationLaunch](.github/assets/moondeck_launch_button.png)
 
 
 The result is that per streamed game ***community controller profiles automatically associate, can be downloaded, and modified*** and ***performance profiles via the QAM can be created, saved, and modified***
