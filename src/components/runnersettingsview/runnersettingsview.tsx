@@ -3,6 +3,7 @@ import { LabelWithIcon, NumericTextInput, ToggleField } from "../shared";
 import { SettingsManager, appLaunchDefault, appLaunchStabilityDefault, appUpdateDefault, buddyRequestsDefault, initialConditionsDefault, networkReconnectAfterSuspendDefault, servicePingDefault, steamLaunchAfterSuspendDefault, steamLaunchDefault, streamEndDefault, streamReadinessDefault, wakeOnLanDefault } from "../../lib";
 import { useCurrentHostSettings, useCurrentSettings } from "../../hooks";
 import { HostOff } from "../icons";
+import { PythonExecutableSection } from "./pythonexecutablesection";
 import { VFC } from "react";
 
 interface Props {
@@ -34,6 +35,7 @@ export const RunnerSettingsView: VFC<Props> = ({ settingsManager }) => {
           value={userSettings.runnerDebugLogs}
           setValue={(value) => settingsManager.update((userSettings) => { userSettings.runnerDebugLogs = value; })}
         />
+        <PythonExecutableSection settingsManager={settingsManager} />
       </DialogControlsSection>
       <DialogControlsSection>
         <DialogControlsSectionHeader>Timeouts</DialogControlsSectionHeader>

@@ -4,4 +4,4 @@
 CURRENT_DIR=`dirname "$(readlink -f "$0")"`
 cd "$CURRENT_DIR";
 
-exec /usr/bin/python ./runner.py
+exec ${MOONLIGHT_PYTHON:-/usr/bin/python} ./runner.py

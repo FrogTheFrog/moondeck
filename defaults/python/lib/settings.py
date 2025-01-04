@@ -108,6 +108,8 @@ class UserSettings(TypedDict):
     runnerDebugLogs: bool
     useMoonlightExec: bool
     moonlightExecPath: str
+    usePythonExec: bool
+    pythonExecPath: str
 
 
 class SettingsManager:
@@ -162,7 +164,10 @@ class SettingsManager:
                 "hostSettings": {},
                 "runnerDebugLogs": False,
                 "useMoonlightExec": False,
-                "moonlightExecPath": ""}))
+                "moonlightExecPath": "",
+                "usePythonExec": False,
+                "pythonExecPath": ""
+                }))
 
     async def set(self, settings: UserSettings):
         try:
@@ -290,7 +295,10 @@ class SettingsManager:
             data["gameSession"]["controllerConfig"] = "Noop"
             for host in data["hostSettings"].keys():
                 data["hostSettings"][host]["sunshineApps"]["lastSelectedControllerConfig"] = "Noop"
-
+        if data["version"] == 23:
+            data["version"] = 24
+            data["usePythonExec"] = False
+            data["pythonExecPath"] = ""
         return data
 
 

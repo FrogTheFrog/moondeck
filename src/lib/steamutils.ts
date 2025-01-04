@@ -45,6 +45,15 @@ export function getMoonDeckAppIdMark(appId: number | null): string {
   return `${mark}=${appId}`;
 }
 
+export function getMoonDeckPython(path: string | null, useMoonlightExec: boolean): string {
+  const mark = "MOONDECK_PYTHON";
+  if (path === null || !useMoonlightExec) {
+    return mark;
+  }
+
+  return `${mark}="${path}"`;
+}
+
 export function getAppIdFromShortcut(value: string): number | null {
   const regex = new RegExp(`(?:${getMoonDeckAppIdMark(null)}=(?<steamAppId>\\d+))`, "gi");
   const matches = value.matchAll(regex);
