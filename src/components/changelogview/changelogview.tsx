@@ -7,7 +7,7 @@ export const ChangelogView: FC<unknown> = () => {
       <DialogControlsSection>
         <Field
           label="1.8.3"
-          description="Added python executable path override for moondeck runner."
+          description="Added python executable override to be used for a runner script (for immutable distros without required system packages)"
           focusable={true}
         />
         <Field

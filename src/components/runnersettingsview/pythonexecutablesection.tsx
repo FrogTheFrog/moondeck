@@ -44,6 +44,7 @@ export const PythonExecutableSection: FC<Props> = ({ settingsManager }) => {
 
   return (
     <Field
+      label="Custom Python executable"
       description="Some immutable distros ship with Python without tkinter, which is required for the runner to work. You can install Python via homebrew and link it here."
       childrenContainerWidth="max"
       childrenLayout="below"
