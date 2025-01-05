@@ -45,7 +45,7 @@ export function getMoonDeckAppIdMark(appId: number | null): string {
   return `${mark}=${appId}`;
 }
 
-export function getMoonDeckPython(path: string): string {
+export function getMoonDeckPythonMark(path: string): string {
   const mark = "MOONDECK_PYTHON";
   if (path.trim().length === 0) {
     return "";

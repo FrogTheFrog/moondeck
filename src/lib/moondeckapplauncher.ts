@@ -1,4 +1,4 @@
-import { ControllerConfigOption, SteamClientEx, getAppDetails, getCurrentDisplayModeString, getDisplayIdentifiers, getMoonDeckAppIdMark, getMoonDeckLinkedDisplayMark, getMoonDeckPython, getMoonDeckResMark, getSystemNetworkStore, launchApp, registerForGameLifetime, registerForSuspendNotifictions, setAppHiddenState, setAppLaunchOptions, setAppResolutionOverride, setShortcutName, waitForNetworkConnection } from "./steamutils";
+import { ControllerConfigOption, SteamClientEx, getAppDetails, getCurrentDisplayModeString, getDisplayIdentifiers, getMoonDeckAppIdMark, getMoonDeckLinkedDisplayMark, getMoonDeckPythonMark, getMoonDeckResMark, getSystemNetworkStore, launchApp, registerForGameLifetime, registerForSuspendNotifictions, setAppHiddenState, setAppLaunchOptions, setAppResolutionOverride, setShortcutName, waitForNetworkConnection } from "./steamutils";
 import { ControllerConfigValues, Dimension, HostResolution, HostSettings, SettingsManager, networkReconnectAfterSuspendDefault } from "./settingsmanager";
 import { E_ALREADY_LOCKED, Mutex, tryAcquire } from "async-mutex";
 import { Subscription, pairwise } from "rxjs";
@@ -280,7 +280,7 @@ export class MoonDeckAppLauncher {
 
         const pythonPath = this.settingsManager.settings.value?.pythonExecPath ?? "";
 
-        const launchOptions = `${getMoonDeckAppIdMark(appId)}${getMoonDeckResMark(mode, hostSettings.resolution.automatic)}${getMoonDeckLinkedDisplayMark(currentDisplay)}${getMoonDeckPython(pythonPath)} %command%`;
+        const launchOptions = `${getMoonDeckAppIdMark(appId)}${getMoonDeckResMark(mode, hostSettings.resolution.automatic)}${getMoonDeckLinkedDisplayMark(currentDisplay)}${getMoonDeckPythonMark(pythonPath)} %command%`;
         if (!await setAppLaunchOptions(details.unAppID, launchOptions)) {
           logger.toast("Failed to update shortcut launch options (needs restart?)!", { output: "error" });
           return;
