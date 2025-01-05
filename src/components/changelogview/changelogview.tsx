@@ -6,6 +6,11 @@ export const ChangelogView: VFC<unknown> = () => {
     <DialogBody>
       <DialogControlsSection>
         <Field
+          label="1.8.3"
+          description="Added python executable path override for moondeck runner."
+          focusable={true}
+        />
+        <Field
           label="1.8.2"
           description="Fixed exception (introduced with 1.8.1) when a fresh settings file is being created."
           focusable={true}

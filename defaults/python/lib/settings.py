@@ -164,8 +164,7 @@ class SettingsManager:
                 "runnerDebugLogs": False,
                 "useMoonlightExec": False,
                 "moonlightExecPath": "",
-                "pythonExecPath": ""
-                }))
+                "pythonExecPath": ""}))
 
     async def set(self, settings: UserSettings):
         try:

@@ -218,7 +218,7 @@ export class MoonDeckAppLauncher {
       return;
     }
 
-    const settings = this.settingsManager.settings.value?.gameSession ?? null;
+    const settings = this.settingsManager.settings.value;
     if (settings === null) {
       logger.toast("Settings are not available!", { output: "error" });
       return;
@@ -278,20 +278,18 @@ export class MoonDeckAppLauncher {
           return;
         }
 
-        const pythonPath = this.settingsManager.settings.value?.pythonExecPath ?? "";
-
-        const launchOptions = `${getMoonDeckAppIdMark(appId)}${getMoonDeckResMark(mode, hostSettings.resolution.automatic)}${getMoonDeckLinkedDisplayMark(currentDisplay)}${getMoonDeckPythonMark(pythonPath)} %command%`;
+        const launchOptions = `${getMoonDeckAppIdMark(appId)}${getMoonDeckResMark(mode, hostSettings.resolution.automatic)}${getMoonDeckLinkedDisplayMark(currentDisplay)}${getMoonDeckPythonMark(settings.pythonExecPath)} %command%`;
         if (!await setAppLaunchOptions(details.unAppID, launchOptions)) {
           logger.toast("Failed to update shortcut launch options (needs restart?)!", { output: "error" });
           return;
         }
 
-        updateControllerConfig(details.unAppID, settings.controllerConfig);
+        updateControllerConfig(details.unAppID, settings.gameSession.controllerConfig);
 
         let sessionOptions = this.moonDeckApp.value?.sessionOptions ?? null;
         if (sessionOptions === null) {
           sessionOptions = {
-            nameSetToAppId: settings.autoApplyAppId
+            nameSetToAppId: settings.gameSession.autoApplyAppId
           };
         }
 

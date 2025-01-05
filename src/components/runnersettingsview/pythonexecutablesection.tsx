@@ -2,17 +2,15 @@ import { DialogButton, Field, Focusable } from "@decky/ui";
 import { FilePickerRes, FileSelectionType, openFilePicker } from "@decky/api";
 import { SettingsManager, logger } from "../../lib";
 import { AnyTextInput } from "../shared";
+import { VFC } from "react";
 import { useCurrentSettings } from "../../hooks";
 
 interface Props {
   settingsManager: SettingsManager;
 }
 
-export const PythonExecutableSection: React.FC<Props> = ({
-  settingsManager
-}) => {
+export const PythonExecutableSection: VFC<Props> = ({ settingsManager }) => {
   const userSettings = useCurrentSettings(settingsManager);
-
   if (userSettings === null) {
     return null;
   }
@@ -46,7 +44,7 @@ export const PythonExecutableSection: React.FC<Props> = ({
 
   return (
     <Field
-      description="Some distros ship with Python without tkinter, which is required for the runner to work. You can install Python via homebrw and link it here."
+      description="Some immutable distros ship with Python without tkinter, which is required for the runner to work. You can install Python via homebrew and link it here."
       childrenContainerWidth="max"
       childrenLayout="below"
     >
