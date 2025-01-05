@@ -134,7 +134,6 @@ export interface UserSettings {
   runnerDebugLogs: boolean;
   useMoonlightExec: boolean;
   moonlightExecPath: string;
-  usePythonExec: boolean;
   pythonExecPath: string;
 }
 

@@ -1,7 +1,7 @@
-import { AnyTextInput, ToggleField } from "../shared";
 import { DialogButton, Field, Focusable } from "@decky/ui";
 import { FilePickerRes, FileSelectionType, openFilePicker } from "@decky/api";
 import { SettingsManager, logger } from "../../lib";
+import { AnyTextInput } from "../shared";
 import { useCurrentSettings } from "../../hooks";
 
 interface Props {
@@ -24,7 +24,7 @@ export const PythonExecutableSection: React.FC<Props> = ({
         if (homeDir !== null) {
           return openFilePicker(
             FileSelectionType.FILE,
-            `${homeDir}`,
+            "/",
             undefined,
             undefined,
             undefined,
@@ -45,46 +45,33 @@ export const PythonExecutableSection: React.FC<Props> = ({
   };
 
   return (
-    <>
-      <ToggleField
-        label="Use custom Python executable"
-        description="Some distros ship with Python without tkinter, which is required for the runner to work. You can install Python via homebrw and link it here."
-        bottomSeparator="none"
-        value={userSettings.usePythonExec}
-        setValue={(value) =>
-          settingsManager.update((userSettings) => {
-            userSettings.usePythonExec = value;
-          })
-        }
-      />
-
-      <Field childrenContainerWidth="max" childrenLayout="below">
-        <Focusable
-          style={{
-            display: "grid",
-            gap: "10px",
-            gridTemplateColumns: "1fr auto"
-          }}
+    <Field
+      description="Some distros ship with Python without tkinter, which is required for the runner to work. You can install Python via homebrw and link it here."
+      childrenContainerWidth="max"
+      childrenLayout="below"
+    >
+      <Focusable
+        style={{
+          display: "grid",
+          gap: "10px",
+          gridTemplateColumns: "1fr auto"
+        }}
+      >
+        <AnyTextInput
+          value={userSettings.pythonExecPath}
+          setValue={(value) =>
+            settingsManager.update((userSettings) => {
+              userSettings.pythonExecPath = value;
+            })
+          }
+        />
+        <DialogButton
+          style={{ minWidth: "initial", width: "initial" }}
+          onClick={() => browseForExec()}
         >
-          <AnyTextInput
-            disabled={!userSettings.usePythonExec}
-            value={userSettings.pythonExecPath}
-            setValue={(value) =>
-              settingsManager.update((userSettings) => {
-                userSettings.pythonExecPath = value;
-              })
-            }
-          />
-          <DialogButton
-            style={{ minWidth: "initial", width: "initial" }}
-            disabled={!userSettings.usePythonExec}
-            focusable={userSettings.usePythonExec}
-            onClick={() => browseForExec()}
-          >
-            Browse
-          </DialogButton>
-        </Focusable>
-      </Field>
-    </>
+          Browse
+        </DialogButton>
+      </Focusable>
+    </Field>
   );
 };

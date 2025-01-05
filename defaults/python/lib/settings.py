@@ -108,7 +108,6 @@ class UserSettings(TypedDict):
     runnerDebugLogs: bool
     useMoonlightExec: bool
     moonlightExecPath: str
-    usePythonExec: bool
     pythonExecPath: str
 
 
@@ -165,7 +164,6 @@ class SettingsManager:
                 "runnerDebugLogs": False,
                 "useMoonlightExec": False,
                 "moonlightExecPath": "",
-                "usePythonExec": False,
                 "pythonExecPath": ""
                 }))
 
@@ -297,7 +295,6 @@ class SettingsManager:
                 data["hostSettings"][host]["sunshineApps"]["lastSelectedControllerConfig"] = "Noop"
         if data["version"] == 23:
             data["version"] = 24
-            data["usePythonExec"] = False
             data["pythonExecPath"] = ""
         return data
 

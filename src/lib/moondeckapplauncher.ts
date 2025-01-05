@@ -278,10 +278,9 @@ export class MoonDeckAppLauncher {
           return;
         }
 
-        const pythonPath = this.settingsManager.settings.value?.pythonExecPath ?? null;
-        const usePythonExec = this.settingsManager.settings.value?.usePythonExec ?? false;
+        const pythonPath = this.settingsManager.settings.value?.pythonExecPath ?? "";
 
-        const launchOptions = `${getMoonDeckAppIdMark(appId)}${getMoonDeckResMark(mode, hostSettings.resolution.automatic)}${getMoonDeckLinkedDisplayMark(currentDisplay)}${getMoonDeckPython(pythonPath, usePythonExec)} %command%`;
+        const launchOptions = `${getMoonDeckAppIdMark(appId)}${getMoonDeckResMark(mode, hostSettings.resolution.automatic)}${getMoonDeckLinkedDisplayMark(currentDisplay)}${getMoonDeckPython(pythonPath)} %command%`;
         if (!await setAppLaunchOptions(details.unAppID, launchOptions)) {
           logger.toast("Failed to update shortcut launch options (needs restart?)!", { output: "error" });
           return;
