@@ -134,6 +134,7 @@ export interface UserSettings {
   runnerDebugLogs: boolean;
   useMoonlightExec: boolean;
   moonlightExecPath: string;
+  pythonExecPath: string;
 }
 
 export function stringifyDimension(value: Dimension): string {
