@@ -1,14 +1,14 @@
 import { ConnectivityManager, GameStreamHost, logger } from "../../lib";
 import { DialogButton, Field, ModalRoot, sleep } from "@decky/ui";
+import { FC, useState } from "react";
 import { NonEmptyTextInput, NumericTextInput } from "../shared";
-import { VFC, useState } from "react";
 
 interface Props {
   closeModal: () => void;
   connectivityManager: ConnectivityManager;
 }
 
-export const ManualHostModal: VFC<Props> = ({ closeModal, connectivityManager }) => {
+export const ManualHostModal: FC<Props> = ({ closeModal, connectivityManager }) => {
   const [address, setAddress] = useState("");
   const [port, setPort] = useState(47989);
   const [verifiedHost, setVerifiedHost] = useState<GameStreamHost | null>(null);

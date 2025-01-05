@@ -1,6 +1,6 @@
 import { ConnectivityManager, GameStreamHost, logger } from "../../lib";
 import { DialogButton, Menu, MenuItem, showContextMenu } from "@decky/ui";
-import { Dispatch, VFC } from "react";
+import { Dispatch, FC } from "react";
 
 interface Props {
   connectivityManager: ConnectivityManager;
@@ -9,7 +9,7 @@ interface Props {
   setIsScanning: Dispatch<boolean>;
 }
 
-export const HostScanButton: VFC<Props> = ({ connectivityManager, disabled, isScanning, setIsScanning }) => {
+export const HostScanButton: FC<Props> = ({ connectivityManager, disabled, isScanning, setIsScanning }) => {
   const addOrUpdateHost = (host: GameStreamHost): void => {
     connectivityManager.serverProxy.updateHostSettings(host, true, false).catch((e) => logger.critical(e));
   };

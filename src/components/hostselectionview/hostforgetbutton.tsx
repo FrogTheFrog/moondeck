@@ -1,6 +1,6 @@
 import { ConfirmModal, DialogButton, showModal } from "@decky/ui";
+import { FC } from "react";
 import { UserSettings } from "../../lib";
-import { VFC } from "react";
 
 interface Props {
   disabled: boolean;
@@ -8,7 +8,7 @@ interface Props {
   onForget: (value: Exclude< UserSettings["currentHostId"], null>) => void;
 }
 
-export const HostForgetButton: VFC<Props> = ({ disabled, currentHost, onForget }) => {
+export const HostForgetButton: FC<Props> = ({ disabled, currentHost, onForget }) => {
   const handleClick = (): void => {
     showModal(
       <ConfirmModal

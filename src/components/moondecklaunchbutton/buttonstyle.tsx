@@ -1,4 +1,4 @@
-import { ReactElement, VFC } from "react";
+import { FC, ReactElement } from "react";
 import { UserSettings } from "../../lib";
 
 interface Props {
@@ -52,7 +52,7 @@ function getThemeElement(theme: UserSettings["buttonStyle"]["theme"]): ReactElem
   }
 }
 
-export const ButtonStyle: VFC<Props> = ({ theme }) => {
+export const ButtonStyle: FC<Props> = ({ theme }) => {
   return (
     <>
       {getThemeElement(theme)}

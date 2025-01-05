@@ -1,12 +1,12 @@
 import { xOffsetName, yOffsetName, ySpecialOffsetName } from "./offsetstyle";
+import { FC } from "react";
 import { UserSettings } from "../../lib";
-import { VFC } from "react";
 
 interface Props {
   buttonPosition?: UserSettings["buttonPosition"];
 }
 
-export const ContainerStyle: VFC<Props> = ({ buttonPosition }) => {
+export const ContainerStyle: FC<Props> = ({ buttonPosition }) => {
   if (!buttonPosition) {
     return null;
   }

@@ -2,14 +2,14 @@ import { AnyTextInput, ToggleField } from "../shared";
 import { DialogButton, Field, Focusable } from "@decky/ui";
 import { FilePickerRes, FileSelectionType, openFilePicker } from "@decky/api";
 import { SettingsManager, logger } from "../../lib";
-import { VFC } from "react";
+import { FC } from "react";
 import { useCurrentSettings } from "../../hooks";
 
 interface Props {
   settingsManager: SettingsManager;
 }
 
-export const MoonlightExecutableSelection: VFC<Props> = ({ settingsManager }) => {
+export const MoonlightExecutableSelection: FC<Props> = ({ settingsManager }) => {
   const userSettings = useCurrentSettings(settingsManager);
   if (userSettings === null) {
     return null;

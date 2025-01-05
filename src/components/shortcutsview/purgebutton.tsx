@@ -1,13 +1,13 @@
 import { ConfirmModal, DialogButton, showModal } from "@decky/ui";
 import { ShortcutManager, logger } from "../../lib";
-import { VFC } from "react";
+import { FC } from "react";
 
 interface Props {
   disabled: boolean;
   shortcutManager: ShortcutManager;
 }
 
-export const PurgeButton: VFC<Props> = ({ disabled, shortcutManager }) => {
+export const PurgeButton: FC<Props> = ({ disabled, shortcutManager }) => {
   const handleClick = (): void => {
     showModal(
       <ConfirmModal

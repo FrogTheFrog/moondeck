@@ -1,7 +1,7 @@
 import { BuddyStatusField, ServerStatusField, SettingsLoadingField } from "../shared";
 import { ConnectivityManager, SettingsManager } from "../../lib";
 import { DialogBody, DialogControlsSection, DialogControlsSectionHeader, Field } from "@decky/ui";
-import { VFC, useState } from "react";
+import { FC, useState } from "react";
 import { useBuddyStatus, useCurrentSettings, useServerStatus } from "../../hooks";
 import { AddHostButton } from "./addhostbutton";
 import { BuddyPairButton } from "./buddypairbutton";
@@ -14,7 +14,7 @@ interface Props {
   settingsManager: SettingsManager;
 }
 
-export const HostSelectionView: VFC<Props> = ({ connectivityManager, settingsManager }) => {
+export const HostSelectionView: FC<Props> = ({ connectivityManager, settingsManager }) => {
   const [isScanning, setIsScanning] = useState(false);
   const [serverStatus, serverRefreshStatus] = useServerStatus(connectivityManager);
   const [buddyStatus, buddyRefreshStatus] = useBuddyStatus(connectivityManager);

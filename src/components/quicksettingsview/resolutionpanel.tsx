@@ -2,7 +2,7 @@ import { CurrentHostSettings, useCurrentDisplayIdentifier } from "../../hooks";
 import { Field, PanelSection, PanelSectionRow } from "@decky/ui";
 import { ResolutionSelectionDropdown, ToggleField } from "../shared";
 import { SettingsManager, UserSettings } from "../../lib";
-import { VFC } from "react";
+import { FC } from "react";
 
 interface Props {
   currentSettings: UserSettings | null;
@@ -10,7 +10,7 @@ interface Props {
   settingsManager: SettingsManager;
 }
 
-export const ResolutionPanel: VFC<Props> = ({ currentSettings, currentHostSettings, settingsManager }) => {
+export const ResolutionPanel: FC<Props> = ({ currentSettings, currentHostSettings, settingsManager }) => {
   if (currentSettings === null || currentHostSettings === null) {
     return null;
   }

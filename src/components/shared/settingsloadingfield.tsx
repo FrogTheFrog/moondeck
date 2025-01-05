@@ -1,9 +1,9 @@
 import { DialogBody, DialogControlsSection, Field } from "@decky/ui";
+import { FC } from "react";
 import { HostOff } from "../icons";
 import { LabelWithIcon } from "./labelwithicon";
-import { VFC } from "react";
 
-export const SettingsLoadingField: VFC<unknown> = () => {
+export const SettingsLoadingField: FC<unknown> = () => {
   return (
     <DialogBody>
       <DialogControlsSection>

@@ -1,6 +1,6 @@
 import { HostResolution, stringifyDimension } from "../../lib";
+import { FC } from "react";
 import { IndexedListDropdown } from "./indexedlist";
-import { VFC } from "react";
 
 interface Props {
   singleItemSelection?: boolean;
@@ -10,7 +10,7 @@ interface Props {
   setIndex: (value: number) => void;
 }
 
-export const ResolutionSelectionDropdown: VFC<Props> = ({ singleItemSelection, focusable, currentIndex, currentList, setIndex }) => {
+export const ResolutionSelectionDropdown: FC<Props> = ({ singleItemSelection, focusable, currentIndex, currentList, setIndex }) => {
   return (
     <IndexedListDropdown<HostResolution["dimensions"][number]>
       label="Select resolution"

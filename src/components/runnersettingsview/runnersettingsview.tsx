@@ -2,15 +2,15 @@ import { DialogBody, DialogControlsSection, DialogControlsSectionHeader, Field }
 import { LabelWithIcon, NumericTextInput, ToggleField } from "../shared";
 import { SettingsManager, appLaunchDefault, appLaunchStabilityDefault, appUpdateDefault, buddyRequestsDefault, initialConditionsDefault, networkReconnectAfterSuspendDefault, servicePingDefault, steamLaunchAfterSuspendDefault, steamLaunchDefault, streamEndDefault, streamReadinessDefault, wakeOnLanDefault } from "../../lib";
 import { useCurrentHostSettings, useCurrentSettings } from "../../hooks";
+import { FC } from "react";
 import { HostOff } from "../icons";
 import { PythonExecutableSection } from "./pythonexecutablesection";
-import { VFC } from "react";
 
 interface Props {
   settingsManager: SettingsManager;
 }
 
-export const RunnerSettingsView: VFC<Props> = ({ settingsManager }) => {
+export const RunnerSettingsView: FC<Props> = ({ settingsManager }) => {
   const userSettings = useCurrentSettings(settingsManager);
   const hostSettings = useCurrentHostSettings(settingsManager);
   if (userSettings === null || hostSettings === null) {

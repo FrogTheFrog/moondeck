@@ -1,6 +1,6 @@
+import { FC } from "react";
 import { HostApp } from "../../lib";
 import { IndexedListDropdown } from "./indexedlist";
-import { VFC } from "react";
 
 interface Props {
   currentIndex: number;
@@ -8,7 +8,7 @@ interface Props {
   setIndex: (value: number) => void;
 }
 
-export const HostAppSelectionDropdown: VFC<Props> = ({ currentIndex, currentList, setIndex }) => {
+export const HostAppSelectionDropdown: FC<Props> = ({ currentIndex, currentList, setIndex }) => {
   return (
     <IndexedListDropdown<HostApp["apps"][number]>
       label="MoonDeckStream"

@@ -1,9 +1,9 @@
 import { StatusField, StatusFieldProps } from "./statusfield";
 import { BuddyStatus } from "../../lib";
+import { FC } from "react";
 import { MoonDeckMain } from "../icons/moondeck";
-import { VFC } from "react";
 
-export const BuddyStatusField: VFC<StatusFieldProps<BuddyStatus>> = (props) => {
+export const BuddyStatusField: FC<StatusFieldProps<BuddyStatus>> = (props) => {
   const extendedProps = { ...props, ...{ icon: MoonDeckMain } };
   return (
     <StatusField {...extendedProps} />

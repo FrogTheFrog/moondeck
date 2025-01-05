@@ -1,7 +1,7 @@
 import { DialogButton, Field, Focusable, ModalRoot } from "@decky/ui";
+import { FC, ReactNode, useEffect, useState } from "react";
 import { HostSettings, getCurrentDisplayModeString, logger } from "../../lib";
 import { NumericTextInput, ResolutionSelectionDropdown } from "../shared";
-import { ReactNode, VFC, useEffect, useState } from "react";
 
 interface Props {
   hostSettings: HostSettings;
@@ -9,7 +9,7 @@ interface Props {
   closeModal: () => void;
 }
 
-export const BatchResOverrideModal: VFC<Props> = ({ hostSettings, onSelected, closeModal }) => {
+export const BatchResOverrideModal: FC<Props> = ({ hostSettings, onSelected, closeModal }) => {
   const [currentMode, setCurrentMode] = useState<string | null>(null);
   const [width, setWidth] = useState<number | null>(null);
   const [height, setHeight] = useState<number | null>(null);

@@ -1,6 +1,6 @@
 import { AppDetails, DialogButton, showModal } from "@decky/ui";
+import { FC, useState } from "react";
 import { HostSettings, SettingsManager, logger, setAppResolutionOverride } from "../../lib";
-import { VFC, useState } from "react";
 import { BatchResOverrideModal } from "./batchresoverridemodal";
 
 interface Props {
@@ -23,7 +23,7 @@ async function applyResolution(shortcuts: AppDetails[], resolution: string): Pro
   logger.toast(`Applied ${resolution} to ${counter}/${shortcuts.length} app(s).`, { output: "log" });
 }
 
-export const BatchResOverrideButton: VFC<Props> = ({ hostSettings, shortcuts, settingsManager }) => {
+export const BatchResOverrideButton: FC<Props> = ({ hostSettings, shortcuts, settingsManager }) => {
   const [busy, setBusy] = useState<boolean>(false);
   const doApply = (resolution: string): void => {
     if (busy) {

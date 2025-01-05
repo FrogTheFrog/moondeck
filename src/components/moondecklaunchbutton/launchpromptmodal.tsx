@@ -1,5 +1,5 @@
 import { DialogButtonPrimary, DialogButtonSecondary, DialogHeader, Focusable, ModalRoot, NavEntryPositionPreferences } from "@decky/ui";
-import { VFC } from "react";
+import { FC } from "react";
 import { logger } from "../../lib";
 
 interface Props {
@@ -8,7 +8,7 @@ interface Props {
   launchApp: () => Promise<void>;
 }
 
-export const LaunchPromptModal: VFC<Props> = ({ closeModal, onDone, launchApp }) => {
+export const LaunchPromptModal: FC<Props> = ({ closeModal, onDone, launchApp }) => {
   const handleDismiss = (): void => {
     closeModal();
     onDone();

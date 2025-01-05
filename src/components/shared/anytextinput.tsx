@@ -1,5 +1,5 @@
+import { FC } from "react";
 import { TextInput } from "./textinput";
-import { VFC } from "react";
 
 interface Props {
   disabled?: boolean;
@@ -7,7 +7,7 @@ interface Props {
   setValue: (value: string) => void;
 }
 
-export const AnyTextInput: VFC<Props> = ({ disabled, value, setValue }) => {
+export const AnyTextInput: FC<Props> = ({ disabled, value, setValue }) => {
   return (
     <TextInput<string>
       disabled={disabled}

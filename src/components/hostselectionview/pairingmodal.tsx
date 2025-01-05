@@ -1,5 +1,5 @@
 import { ConnectivityManager, logger } from "../../lib";
-import { VFC, useEffect } from "react";
+import { FC, useEffect } from "react";
 import { ModalRoot } from "@decky/ui";
 import { useBuddyStatus } from "../../hooks";
 
@@ -9,7 +9,7 @@ interface Props {
   pin: number;
 }
 
-export const PairingModal: VFC<Props> = ({ closeModal, connectivityManager, pin }) => {
+export const PairingModal: FC<Props> = ({ closeModal, connectivityManager, pin }) => {
   const [buddyStatus] = useBuddyStatus(connectivityManager);
 
   const handleDismiss = (): void => {

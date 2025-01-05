@@ -2,14 +2,14 @@ import { DialogButton, Field, Focusable } from "@decky/ui";
 import { FilePickerRes, FileSelectionType, openFilePicker } from "@decky/api";
 import { SettingsManager, logger } from "../../lib";
 import { AnyTextInput } from "../shared";
-import { VFC } from "react";
+import { FC } from "react";
 import { useCurrentSettings } from "../../hooks";
 
 interface Props {
   settingsManager: SettingsManager;
 }
 
-export const PythonExecutableSection: VFC<Props> = ({ settingsManager }) => {
+export const PythonExecutableSection: FC<Props> = ({ settingsManager }) => {
   const userSettings = useCurrentSettings(settingsManager);
   if (userSettings === null) {
     return null;

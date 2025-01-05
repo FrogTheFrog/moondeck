@@ -1,8 +1,8 @@
 import { BuddyStatus, ServerStatus } from "../../lib";
 import { Field, Spinner } from "@decky/ui";
+import { FC } from "react";
 import { IconType } from "react-icons";
 import { LabelWithIcon } from "./labelwithicon";
-import { VFC } from "react";
 
 export function stringifyStatus<T extends BuddyStatus | ServerStatus>(value: T): string {
   return value.replace(/([A-Z])/g, " $1");
@@ -19,7 +19,7 @@ interface ExtendedProps<T> extends StatusFieldProps<T> {
   icon: IconType;
 }
 
-export const StatusField: VFC<ExtendedProps<BuddyStatus | ServerStatus>> = ({ status, isRefreshing, label, noSeparator, icon }) => {
+export const StatusField: FC<ExtendedProps<BuddyStatus | ServerStatus>> = ({ status, isRefreshing, label, noSeparator, icon }) => {
   return (
     <Field
       label={<LabelWithIcon icon={icon} label={label} />}

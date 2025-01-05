@@ -1,6 +1,6 @@
 import { AppDetails, ConfirmModal, DialogButton, showModal } from "@decky/ui";
 import { logger, removeShortcut, restartSteamClient } from "../../lib";
-import { VFC } from "react";
+import { FC } from "react";
 
 interface Props {
   shortcuts: AppDetails[];
@@ -16,7 +16,7 @@ async function purgeShortcuts(shortcuts: AppDetails[]): Promise<void> {
   }
 }
 
-export const PurgeButton: VFC<Props> = ({ shortcuts }) => {
+export const PurgeButton: FC<Props> = ({ shortcuts }) => {
   const handleClick = (): void => {
     showModal(
       <ConfirmModal

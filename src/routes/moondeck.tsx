@@ -1,6 +1,7 @@
 import { ConnectivityManager, SettingsManager, ShortcutManager } from "../lib";
 import { ButtonStyleView } from "../components/buttonstyleview";
 import { ChangelogView } from "../components/changelogview";
+import { FC } from "react";
 import { GameSessionView } from "../components/gamesessionview";
 import { HostSelectionView } from "../components/hostselectionview";
 import { HostSettingsView } from "../components/hostsettingsview";
@@ -11,7 +12,6 @@ import { ShortcutsView } from "../components/shortcutsview";
 import { SidebarNavigation } from "@decky/ui";
 import { StatusIndicatorsView } from "../components/statusindicatorsview";
 import { SunshineAppsView } from "../components/sunshineappsview";
-import { VFC } from "react";
 import { routerHook } from "@decky/api";
 
 interface Props {
@@ -20,7 +20,7 @@ interface Props {
   shortcutManager: ShortcutManager;
 }
 
-const MoonDeckRouter: VFC<Props> = ({ connectivityManager, settingsManager, shortcutManager }) => {
+const MoonDeckRouter: FC<Props> = ({ connectivityManager, settingsManager, shortcutManager }) => {
   return (
     <SidebarNavigation
       title="MoonDeck"

@@ -1,7 +1,7 @@
 import { DialogBody, DialogControlsSection, Field } from "@decky/ui";
-import { VFC } from "react";
+import { FC } from "react";
 
-export const ChangelogView: VFC<unknown> = () => {
+export const ChangelogView: FC<unknown> = () => {
   return (
     <DialogBody>
       <DialogControlsSection>

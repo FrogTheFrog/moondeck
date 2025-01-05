@@ -1,12 +1,12 @@
 import { ConnectivityManager, MoonDeckAppLauncher, SettingsManager } from "../../lib";
 import { useBuddyStatus, useCurrentHostSettings, useCurrentSettings, useMoonDeckAppData, useServerStatus } from "../../hooks";
+import { FC } from "react";
 import { GameSessionPanel } from "./gamesessionpanel";
 import { HostAppPanel } from "./hostapppanel";
 import { HostCommandPanel } from "./hostcommandpanel";
 import { HostStatusPanel } from "./hoststatuspanel";
 import { ResolutionPanel } from "./resolutionpanel";
 import { SunshineAppsPanel } from "./sunshineappspanel";
-import { VFC } from "react";
 import { useQuickAccessVisible } from "@decky/api";
 
 interface Props {
@@ -15,7 +15,7 @@ interface Props {
   moonDeckAppLauncher: MoonDeckAppLauncher;
 }
 
-export const QuickSettingsView: VFC<Props> = ({ connectivityManager, settingsManager, moonDeckAppLauncher }) => {
+export const QuickSettingsView: FC<Props> = ({ connectivityManager, settingsManager, moonDeckAppLauncher }) => {
   const isVisible = useQuickAccessVisible();
   const [serverStatus, serverRefreshStatus] = useServerStatus(connectivityManager, isVisible);
   const [buddyStatus, buddyRefreshStatus] = useBuddyStatus(connectivityManager, isVisible);

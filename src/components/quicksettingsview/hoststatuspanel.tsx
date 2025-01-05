@@ -2,9 +2,9 @@ import { BuddyStatus, ServerStatus, SettingsManager, UserSettings } from "../../
 import { BuddyStatusField, LabelWithIcon, ServerStatusField } from "../shared";
 import { Field, PanelSection, PanelSectionRow } from "@decky/ui";
 import { CurrentHostSettings } from "../../hooks";
+import { FC } from "react";
 import { HostOff } from "../icons";
 import { HostSelectionDropdown } from "../hostselectionview/hostselectiondropdown";
-import { VFC } from "react";
 
 interface Props {
   currentHostSettings: CurrentHostSettings | null;
@@ -16,7 +16,7 @@ interface Props {
   buddyRefreshStatus: boolean;
 }
 
-export const HostStatusPanel: VFC<Props> = ({ currentHostSettings, currentSettings, settingsManager, serverStatus, serverRefreshStatus, buddyStatus, buddyRefreshStatus }) => {
+export const HostStatusPanel: FC<Props> = ({ currentHostSettings, currentSettings, settingsManager, serverStatus, serverRefreshStatus, buddyStatus, buddyRefreshStatus }) => {
   if (currentHostSettings === null || currentSettings === null) {
     return (
       <PanelSection title="STATUS">

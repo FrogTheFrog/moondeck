@@ -1,6 +1,6 @@
 import { AppDetails, ConfirmModal, DialogButton, showModal } from "@decky/ui";
 import { BuddyProxy, ControllerConfigValues, HostSettings, UserSettings, addShortcut, getAllExternalAppDetails, getMoonDeckManagedMark, logger, removeShortcut, restartSteamClient, setAppLaunchOptions, setAppResolutionOverride, updateControllerConfig } from "../../lib";
-import { VFC, useState } from "react";
+import { FC, useState } from "react";
 
 interface Props {
   shortcuts?: AppDetails[];
@@ -133,7 +133,7 @@ async function syncShortcuts(shortcuts: AppDetails[], moonDeckHostApps: string[]
   }
 }
 
-export const SunshineAppsSyncButton: VFC<Props> = ({ shortcuts, buddyProxy, settings, hostSettings, noConfirmationDialog, refreshApps }) => {
+export const SunshineAppsSyncButton: FC<Props> = ({ shortcuts, buddyProxy, settings, hostSettings, noConfirmationDialog, refreshApps }) => {
   const [syncing, setSyncing] = useState(false);
 
   const handleClick = (): void => {

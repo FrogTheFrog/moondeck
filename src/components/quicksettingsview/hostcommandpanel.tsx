@@ -1,6 +1,6 @@
 import { BuddyStatus, ConnectivityManager, ServerStatus, logger } from "../../lib";
 import { ButtonItem, PanelSection, PanelSectionRow } from "@decky/ui";
-import { VFC } from "react";
+import { FC } from "react";
 import { useCommandExecutionStatus } from "../../hooks";
 
 interface Props {
@@ -9,7 +9,7 @@ interface Props {
   buddyStatus: BuddyStatus;
 }
 
-export const HostCommandPanel: VFC<Props> = ({ connectivityManager, serverStatus, buddyStatus }) => {
+export const HostCommandPanel: FC<Props> = ({ connectivityManager, serverStatus, buddyStatus }) => {
   const executionStatus = useCommandExecutionStatus(connectivityManager);
 
   return (

@@ -1,7 +1,7 @@
 import { AppDetails, DialogBody, DialogButton, DialogControlsSection, DialogControlsSectionHeader, Field, Navigation } from "@decky/ui";
 import { BuddyProxy, SettingsManager, getAllExternalAppDetails, logger } from "../../lib";
+import { FC, ReactNode, useEffect, useState } from "react";
 import { LabelWithIcon, SunshineAppsSyncButton, ToggleField } from "../shared";
-import { ReactNode, VFC, useEffect, useState } from "react";
 import { useCurrentHostSettings, useCurrentSettings } from "../../hooks";
 import { BatchResOverrideButton } from "./batchresoverridebutton";
 import { ControllerConfigButton } from "./controllerconfigbutton";
@@ -13,7 +13,7 @@ interface Props {
   buddyProxy: BuddyProxy;
 }
 
-export const SunshineAppsView: VFC<Props> = ({ settingsManager, buddyProxy }) => {
+export const SunshineAppsView: FC<Props> = ({ settingsManager, buddyProxy }) => {
   const settings = useCurrentSettings(settingsManager);
   const hostSettings = useCurrentHostSettings(settingsManager);
   const [shortcuts, setShortcuts] = useState<AppDetails[]>([]);

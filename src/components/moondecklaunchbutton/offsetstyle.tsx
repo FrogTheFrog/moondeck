@@ -1,5 +1,5 @@
+import { FC } from "react";
 import { UserSettings } from "../../lib";
-import { VFC } from "react";
 
 interface Props {
   buttonPosition?: UserSettings["buttonPosition"];
@@ -10,7 +10,7 @@ export const xOffsetName = "--moondeck-x-offset";
 export const yOffsetName = "--moondeck-y-offset";
 export const ySpecialOffsetName = "--moondeck-y-special-offset";
 
-export const OffsetStyle: VFC<Props> = ({ buttonPosition }) => {
+export const OffsetStyle: FC<Props> = ({ buttonPosition }) => {
   if (!buttonPosition) {
     return null;
   }

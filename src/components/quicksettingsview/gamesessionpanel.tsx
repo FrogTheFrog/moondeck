@@ -1,13 +1,13 @@
 import { ButtonItem, Field, Navigation, PanelSection, PanelSectionRow, ToggleField } from "@decky/ui";
+import { FC, useState } from "react";
 import { MoonDeckAppData, MoonDeckAppLauncher, logger } from "../../lib";
-import { VFC, useState } from "react";
 
 interface Props {
   appData: MoonDeckAppData;
   moonDeckAppLauncher: MoonDeckAppLauncher;
 }
 
-export const GameSessionPanel: VFC<Props> = ({ appData, moonDeckAppLauncher }) => {
+export const GameSessionPanel: FC<Props> = ({ appData, moonDeckAppLauncher }) => {
   const [isDisabled, setIsDisabled] = useState<boolean>(false);
 
   const handleNameChange = (): void => {

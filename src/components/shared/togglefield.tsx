@@ -1,4 +1,4 @@
-import { ReactNode, VFC } from "react";
+import { FC, ReactNode } from "react";
 import { ToggleField as ToggleFieldDfl } from "@decky/ui";
 
 interface Props {
@@ -11,7 +11,7 @@ interface Props {
   setValue: (value: boolean) => void;
 }
 
-export const ToggleField: VFC<Props> = ({ label, description, layout, disabled, bottomSeparator, value, setValue }) => {
+export const ToggleField: FC<Props> = ({ label, description, layout, disabled, bottomSeparator, value, setValue }) => {
   return (
     <ToggleFieldDfl
       label={label}

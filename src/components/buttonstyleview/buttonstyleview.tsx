@@ -1,14 +1,14 @@
 import { AnyTextInput, ListDropdown, SettingsLoadingField, ToggleField } from "../shared";
 import { DialogBody, DialogControlsSection, DialogControlsSectionHeader, Field } from "@decky/ui";
 import { SettingsManager, UserSettings, buttonStyles, horizontalAlignmentValues, verticalAlignmentValues } from "../../lib";
-import { VFC } from "react";
+import { FC } from "react";
 import { useCurrentSettings } from "../../hooks";
 
 interface Props {
   settingsManager: SettingsManager;
 }
 
-export const ButtonStyleView: VFC<Props> = ({ settingsManager }) => {
+export const ButtonStyleView: FC<Props> = ({ settingsManager }) => {
   const settings = useCurrentSettings(settingsManager);
   if (settings === null) {
     return <SettingsLoadingField />;

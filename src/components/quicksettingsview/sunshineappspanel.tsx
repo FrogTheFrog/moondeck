@@ -1,8 +1,8 @@
 import { BuddyProxy, UserSettings } from "../../lib";
 import { Field, PanelSection, PanelSectionRow } from "@decky/ui";
 import { CurrentHostSettings } from "../../hooks";
+import { FC } from "react";
 import { SunshineAppsSyncButton } from "../shared";
-import { VFC } from "react";
 
 interface Props {
   buddyProxy: BuddyProxy;
@@ -10,7 +10,7 @@ interface Props {
   currentSettings: UserSettings | null;
 }
 
-export const SunshineAppsPanel: VFC<Props> = ({ buddyProxy, currentHostSettings, currentSettings }) => {
+export const SunshineAppsPanel: FC<Props> = ({ buddyProxy, currentHostSettings, currentSettings }) => {
   if (currentHostSettings === null || currentSettings === null) {
     return null;
   }

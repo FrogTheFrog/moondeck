@@ -1,8 +1,8 @@
 import { Field, PanelSection, PanelSectionRow } from "@decky/ui";
 import { SettingsManager, UserSettings } from "../../lib";
 import { CurrentHostSettings } from "../../hooks";
+import { FC } from "react";
 import { HostAppSelectionDropdown } from "../shared";
-import { VFC } from "react";
 
 interface Props {
   currentSettings: UserSettings | null;
@@ -10,7 +10,7 @@ interface Props {
   settingsManager: SettingsManager;
 }
 
-export const HostAppPanel: VFC<Props> = ({ currentSettings, currentHostSettings, settingsManager }) => {
+export const HostAppPanel: FC<Props> = ({ currentSettings, currentHostSettings, settingsManager }) => {
   if (currentSettings === null || currentHostSettings === null) {
     return null;
   }

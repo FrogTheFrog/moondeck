@@ -1,4 +1,4 @@
-import { VFC, useEffect, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import { ListDropdown } from "../shared";
 import { UserSettings } from "../../lib";
 
@@ -10,7 +10,7 @@ interface Props {
   setHost: (value: UserSettings["currentHostId"]) => void;
 }
 
-export const HostSelectionDropdown: VFC<Props> = ({ disableNoneOption, singleItemSelection, disabled, currentSettings, setHost }) => {
+export const HostSelectionDropdown: FC<Props> = ({ disableNoneOption, singleItemSelection, disabled, currentSettings, setHost }) => {
   const [currentHost, setCurrentHost] = useState<UserSettings["currentHostId"]>(null);
   const [entries, setEntries] = useState<Array<{ id: typeof currentHost; label: string }>>([]);
 

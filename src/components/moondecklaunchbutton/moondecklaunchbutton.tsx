@@ -1,5 +1,5 @@
 import { Button, Focusable, appDetailsClasses, appDetailsHeaderClasses, basicAppDetailsSectionStylerClasses, joinClassNames, playSectionClasses, showModal, sleep } from "@decky/ui";
-import { CSSProperties, VFC, useEffect, useRef, useState } from "react";
+import { CSSProperties, FC, useEffect, useRef, useState } from "react";
 import { OffsetStyle, achorPositionName } from "./offsetstyle";
 import { SettingsManager, UserSettings, isAppTypeSupported, logger } from "../../lib";
 import { useCurrentSettings, useMoonDeckAppData } from "../../hooks";
@@ -23,7 +23,7 @@ interface ShellProps {
   onClick?: (onDone: () => void) => void;
 }
 
-export const MoonDeckLaunchButtonShell: VFC<ShellProps> = ({ onClick, buttonPosition, buttonStyle }) => {
+export const MoonDeckLaunchButtonShell: FC<ShellProps> = ({ onClick, buttonPosition, buttonStyle }) => {
   const [clickPending, setClickPending] = useState(false);
   const handleClick = (() => {
     if (onClick) {
@@ -54,7 +54,7 @@ export const MoonDeckLaunchButtonShell: VFC<ShellProps> = ({ onClick, buttonPosi
   );
 };
 
-const MoonDeckLaunchButton: VFC<Props> = ({ appId, appName, appType, moonDeckAppLauncher, settingsManager }) => {
+const MoonDeckLaunchButton: FC<Props> = ({ appId, appName, appType, moonDeckAppLauncher, settingsManager }) => {
   const appData = useMoonDeckAppData(moonDeckAppLauncher);
   const settings = useCurrentSettings(settingsManager);
 
@@ -112,7 +112,7 @@ function findTopCapsuleParent(ref: HTMLDivElement | null): Element | null {
   return topCapsule;
 }
 
-export const MoonDeckLaunchButtonAnchor: VFC<Props> = (props) => {
+export const MoonDeckLaunchButtonAnchor: FC<Props> = (props) => {
   // There will be no mutation when the page is loaded (either from exiting the game
   // or just newly opening the page), therefore it's visible by default.
   const [show, setShow] = useState<boolean>(true);

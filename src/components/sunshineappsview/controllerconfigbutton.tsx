@@ -1,5 +1,5 @@
+import { FC, useState } from "react";
 import { HostSettings, SettingsManager, UserSettings, getControllerConfigDropdownValues, logger, updateControllerConfig } from "../../lib";
-import { VFC, useState } from "react";
 import { AppDetails } from "@decky/ui";
 import { ListDropdown } from "../shared";
 
@@ -21,7 +21,7 @@ function applyConfig(shortcuts: AppDetails[], value: UserSettings["gameSession"]
   }
 }
 
-export const ControllerConfigButton: VFC<Props> = ({ hostSettings, shortcuts, settingsManager }) => {
+export const ControllerConfigButton: FC<Props> = ({ hostSettings, shortcuts, settingsManager }) => {
   const [busy, setBusy] = useState<boolean>(false);
   const doApply = (value: UserSettings["gameSession"]["controllerConfig"]): void => {
     if (busy) {

@@ -1,5 +1,5 @@
 import { DialogButton, Field, showModal } from "@decky/ui";
-import { ReactNode, VFC, useState } from "react";
+import { FC, ReactNode, useState } from "react";
 import { SettingsManager, getDisplayIdentifiers, logger, stringifyDimension } from "../../lib";
 import { CurrentHostSettings } from "../../hooks";
 import { LinkedDisplayModal } from "./linkeddisplaymodal";
@@ -11,7 +11,7 @@ interface Props {
   settingsManager: SettingsManager;
 }
 
-export const LinkedDisplayList: VFC<Props> = ({ hostSettings, settingsManager }) => {
+export const LinkedDisplayList: FC<Props> = ({ hostSettings, settingsManager }) => {
   const [linking, setLinking] = useState<boolean>(false);
   const hasCustomResolutions = hostSettings.resolution.dimensions.length > 0;
   const handleLinkClick = (): void => {

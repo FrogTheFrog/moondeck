@@ -1,5 +1,5 @@
 import { DialogButton, Field, ModalRoot } from "@decky/ui";
-import { VFC, useState } from "react";
+import { FC, useState } from "react";
 import { CurrentHostSettings } from "../../hooks";
 import { IndexedListDropdown } from "../shared/indexedlist";
 import { ResolutionSelectionDropdown } from "../shared";
@@ -12,7 +12,7 @@ interface Props {
   settingsManager: SettingsManager;
 }
 
-export const LinkedDisplayModal: VFC<Props> = ({ closeModal, displays, hostSettings, settingsManager }) => {
+export const LinkedDisplayModal: FC<Props> = ({ closeModal, displays, hostSettings, settingsManager }) => {
   const [displayIndex, setDisplayIndex] = useState<number>(-1);
   const [resolutionIndex, setResolutionIndex] = useState<number>(-1);
 

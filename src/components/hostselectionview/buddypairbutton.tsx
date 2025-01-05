@@ -1,6 +1,6 @@
 import { ConnectivityManager, logger } from "../../lib";
 import { DialogButton, showModal } from "@decky/ui";
-import { VFC, useState } from "react";
+import { FC, useState } from "react";
 import { PairingModal } from "./pairingmodal";
 import { random } from "lodash";
 
@@ -9,7 +9,7 @@ interface Props {
   disabled: boolean;
 }
 
-export const BuddyPairButton: VFC<Props> = ({ connectivityManager, disabled }) => {
+export const BuddyPairButton: FC<Props> = ({ connectivityManager, disabled }) => {
   const [modalIsOpen, setModalIsOpen] = useState(false);
 
   const handleClick = async (): Promise<void> => {

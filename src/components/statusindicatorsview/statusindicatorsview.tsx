@@ -1,6 +1,6 @@
 import { BuddyStatus, ServerStatus } from "../../lib";
 import { DialogBody, DialogControlsSection, DialogControlsSectionHeader, Field } from "@decky/ui";
-import { VFC } from "react";
+import { FC } from "react";
 import { stringifyStatus } from "../shared";
 
 function stringifyServerStatus(value: ServerStatus): string {
@@ -11,7 +11,7 @@ function stringifyBuddyStatus(value: BuddyStatus): string {
   return stringifyStatus(value);
 }
 
-export const StatusIndicatorsView: VFC<unknown> = () => {
+export const StatusIndicatorsView: FC<unknown> = () => {
   return (
     <DialogBody>
       <DialogControlsSection>

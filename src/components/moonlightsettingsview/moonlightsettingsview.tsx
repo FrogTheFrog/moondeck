@@ -3,18 +3,18 @@ import { LabelWithIcon, NumericTextInput, ResolutionSelectionDropdown, ToggleFie
 import { ModifyListButton, RemoveListEntryButton } from "../shared/indexedlist";
 import { SettingsManager, minBitrate, minFps } from "../../lib";
 import { AppResolutionOverrideDropdown } from "./appresolutionoverridedropdown";
+import { FC } from "react";
 import { HostOff } from "../icons";
 import { LinkedDisplayList } from "./linkeddisplaylist";
 import { ModifyResolutionModal } from "./modifyresolutionmodal";
 import { MoonlightExecutableSelection } from "./moonlightexecutableselection";
-import { VFC } from "react";
 import { useCurrentHostSettings } from "../../hooks";
 
 interface Props {
   settingsManager: SettingsManager;
 }
 
-export const MoonlightSettingsView: VFC<Props> = ({ settingsManager }) => {
+export const MoonlightSettingsView: FC<Props> = ({ settingsManager }) => {
   const hostSettings = useCurrentHostSettings(settingsManager);
   if (hostSettings === null) {
     return (

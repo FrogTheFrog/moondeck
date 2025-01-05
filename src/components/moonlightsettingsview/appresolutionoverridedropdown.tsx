@@ -1,6 +1,6 @@
 import { HostResolution, appResolutionOverrideValues } from "../../lib";
+import { FC } from "react";
 import { ListDropdown } from "../shared";
-import { VFC } from "react";
 
 interface Props {
   currentOverride: HostResolution["appResolutionOverride"];
@@ -12,7 +12,7 @@ function entryToLabel(value: string): string {
 }
 
 const entries = appResolutionOverrideValues.map((entry) => { return { id: entry, label: entryToLabel(entry) }; });
-export const AppResolutionOverrideDropdown: VFC<Props> = ({ currentOverride, setOverride }) => {
+export const AppResolutionOverrideDropdown: FC<Props> = ({ currentOverride, setOverride }) => {
   return (
     <ListDropdown<typeof currentOverride>
       optionList={entries}

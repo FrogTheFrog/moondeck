@@ -1,4 +1,4 @@
-import { VFC } from "react";
+import { FC } from "react";
 
 export interface IndexedListModalProps<ListElement> {
   currentList: ListElement[];
@@ -10,4 +10,4 @@ export interface IndexedListModalPropsWithClose<ListElement> extends IndexedList
   closeModal: () => void;
 }
 
-export type IndexedListModal<ListElement> = VFC<IndexedListModalPropsWithClose<ListElement>>;
+export type IndexedListModal<ListElement> = FC<IndexedListModalPropsWithClose<ListElement>>;

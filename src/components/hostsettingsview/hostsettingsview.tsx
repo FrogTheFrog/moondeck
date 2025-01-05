@@ -1,17 +1,17 @@
 import { DialogBody, DialogControlsSection, DialogControlsSectionHeader, Field, Focusable } from "@decky/ui";
 import { HostAppSelectionDropdown, LabelWithIcon, NumericTextInput, ToggleField } from "../shared";
 import { ModifyListButton, RemoveListEntryButton } from "../shared/indexedlist";
+import { FC } from "react";
 import { HostOff } from "../icons";
 import { ModifyHostAppModal } from "./modifyhostappmodal";
 import { SettingsManager } from "../../lib";
-import { VFC } from "react";
 import { useCurrentHostSettings } from "../../hooks";
 
 interface Props {
   settingsManager: SettingsManager;
 }
 
-export const HostSettingsView: VFC<Props> = ({ settingsManager }) => {
+export const HostSettingsView: FC<Props> = ({ settingsManager }) => {
   const hostSettings = useCurrentHostSettings(settingsManager);
   if (hostSettings === null) {
     return (

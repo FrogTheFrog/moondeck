@@ -1,5 +1,5 @@
 import { AppDetails, DialogBody, DialogButton, DialogControlsSection, DialogControlsSectionHeader, Field, Navigation } from "@decky/ui";
-import { ReactNode, VFC, useEffect, useState } from "react";
+import { FC, ReactNode, useEffect, useState } from "react";
 import { SettingsManager, ShortcutManager, getAllMoonDeckAppDetails, logger } from "../../lib";
 import { useCurrentSettings, useShortcutManagerState } from "../../hooks";
 import { PurgeButton } from "./purgebutton";
@@ -10,7 +10,7 @@ interface Props {
   shortcutManager: ShortcutManager;
 }
 
-export const ShortcutsView: VFC<Props> = ({ settingsManager, shortcutManager }) => {
+export const ShortcutsView: FC<Props> = ({ settingsManager, shortcutManager }) => {
   const isReady = useShortcutManagerState(shortcutManager);
   const [shortcuts, setShortcuts] = useState<AppDetails[]>([]);
   const currentSettings = useCurrentSettings(settingsManager);

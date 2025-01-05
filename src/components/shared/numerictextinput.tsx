@@ -1,5 +1,5 @@
+import { FC } from "react";
 import { TextInput } from "./textinput";
-import { VFC } from "react";
 
 interface CommonProps {
   disabled?: boolean;
@@ -21,7 +21,7 @@ interface OptionalProps extends CommonProps {
 
 type Props = NonOptionalProps | OptionalProps;
 
-export const NumericTextInput: VFC<Props> = ({ disabled, min, max, optional, value, setValue, setIsValid }) => {
+export const NumericTextInput: FC<Props> = ({ disabled, min, max, optional, value, setValue, setIsValid }) => {
   return (
     <TextInput<number | null>
       disabled={disabled}
