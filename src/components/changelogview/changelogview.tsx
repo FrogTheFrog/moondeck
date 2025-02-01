@@ -6,8 +6,13 @@ export const ChangelogView: FC<unknown> = () => {
     <DialogBody>
       <DialogControlsSection>
         <Field
+          label="1.8.4"
+          description="Deprecated the resolution change for linux and removed it for Windows."
+          focusable={true}
+        />
+        <Field
           label="1.8.3"
-          description="Added python executable override to be used for a runner script (for immutable distros without required system packages)"
+          description="Added python executable override to be used for a runner script (for immutable distros without required system packages)."
           focusable={true}
         />
         <Field

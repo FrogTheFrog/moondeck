@@ -295,6 +295,11 @@ class SettingsManager:
         if data["version"] == 23:
             data["version"] = 24
             data["pythonExecPath"] = ""
+        if data["version"] == 24:
+            data["version"] = 25
+            for host in data["hostSettings"].keys():
+                if data["hostSettings"][host]["os"] == "Windows":
+                    data["hostSettings"][host]["resolution"]["passToBuddy"] = False
         return data
 
 

@@ -59,9 +59,16 @@ export const MoonlightSettingsView: FC<Props> = ({ settingsManager }) => {
           />
         </Field>
         <ToggleField
-          label="Pass the resolution option to Buddy to change resolution on host PC"
-          description="Disable this if you want to use do/undo commands for changing resolution"
+          label="[DEPRECATED] Pass the resolution option to Buddy to change resolution on host PC"
+          description={
+            <>
+              <div>Disable this if you want to use do/undo commands for changing resolution.</div>
+              <br />
+              <div>This option has been deprecated for Linux and removed for Windows. Sunshine on Windows can now change the resolution by itself and on Linux only X11 was supported.</div>
+            </>
+          }
           value={hostSettings.resolution.passToBuddy}
+          disabled={hostSettings.os !== "Linux"}
           setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.resolution.passToBuddy = value; })}
         />
         <ToggleField

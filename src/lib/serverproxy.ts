@@ -86,7 +86,7 @@ export class ServerProxy {
         resolution: {
           automatic: currentSettings?.resolution.automatic ?? true,
           appResolutionOverride: currentSettings?.resolution.appResolutionOverride ?? "CustomResolution",
-          passToBuddy: currentSettings?.resolution.passToBuddy ?? true,
+          passToBuddy: currentSettings?.resolution.passToBuddy ?? false,
           passToMoonlight: currentSettings?.resolution.passToMoonlight ?? true,
           useCustomDimensions: currentSettings?.resolution.useCustomDimensions ?? false,
           useLinkedDisplays: currentSettings?.resolution.useLinkedDisplays ?? true,
