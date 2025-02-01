@@ -7,7 +7,12 @@ export const ChangelogView: FC<unknown> = () => {
       <DialogControlsSection>
         <Field
           label="1.8.4"
-          description="Deprecated the resolution change for linux and removed it for Windows."
+          description={
+            <>
+              <div>&bull; Deprecated the resolution change for linux and removed it for Windows.</div>
+              <div>&bull; Added MoonDeck button for demos.</div>
+            </>
+          }
           focusable={true}
         />
         <Field

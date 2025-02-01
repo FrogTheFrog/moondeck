@@ -119,6 +119,6 @@ export async function getAllExternalAppDetails(): Promise<AppDetails[]> {
 }
 
 export function isAppTypeSupported(appType: number): boolean {
-  // Only steam games are supported.
-  return appType === 1;
+  // Only steam games and demos are supported.
+  return appType === 1 || appType === 8;
 }
