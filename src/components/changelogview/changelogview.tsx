@@ -6,6 +6,11 @@ export const ChangelogView: FC<unknown> = () => {
     <DialogBody>
       <DialogControlsSection>
         <Field
+          label="1.8.5"
+          description="Added MoonDeck button for betas."
+          focusable={true}
+        />
+        <Field
           label="1.8.4"
           description={
             <>

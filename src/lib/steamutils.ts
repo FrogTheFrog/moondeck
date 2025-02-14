@@ -119,6 +119,29 @@ export async function getAllExternalAppDetails(): Promise<AppDetails[]> {
 }
 
 export function isAppTypeSupported(appType: number): boolean {
-  // Only steam games and demos are supported.
-  return appType === 1 || appType === 8;
+  // Supported steam apps:
+  switch (appType) {
+    case 1: // game
+      return true;
+    case 2: // software
+      return false;
+    case 4: // tool
+      return false;
+    case 8: // demo
+      return true;
+    case 32: // dlc
+      return false;
+    case 128: // driver
+      return false;
+    case 256: // config
+      return false;
+    case 2048: // video
+      return false;
+    case 8192: // music
+      return false;
+    case 65536: // beta
+      return true;
+    default:
+      return false;
+  }
 }
