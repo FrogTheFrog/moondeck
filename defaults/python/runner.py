@@ -36,6 +36,7 @@ async def main():
             enable_debug_level()
         
         await MoonDeckAppRunner.run(settings)
+        runnerresult.set_result(None)
 
     except runnerresult.RunnerError as err:
         runnerresult.set_result(err.result)
