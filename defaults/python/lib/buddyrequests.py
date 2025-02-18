@@ -38,10 +38,9 @@ class AppState(Enum):
     Stopped = 0
     Running = 1
     Updating = 2
-    CompilingShaders = 3
 
 
-class StreamedAppData:
+class StreamedAppData(TypedDict):
     app_id: int
     app_state: AppState
 

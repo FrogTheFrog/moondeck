@@ -87,8 +87,8 @@ class MoonDeckAppLauncher:
             if data is None:
                 raise Result.AppLaunchAborted
 
-            state = data["state"]
-            if state == AppState.Updating or state == AppState.CompilingShaders:
+            state = data["app_state"]
+            if state == AppState.Updating:
                 app_was_updating = True
 
                 # No timeout while the app is updating
@@ -127,8 +127,8 @@ class MoonDeckAppLauncher:
             if data is None:
                 break
 
-            state = data["state"]
-            if state != AppState.Running:
+            state = data["app_state"]
+            if state == AppState.Stopped:
                 break
 
             # Pool indefinitely
