@@ -62,20 +62,13 @@ jobs:
           name: moondeck
           path: moondeck
 
-      - name: Package release
-        run: |
-          zip -r moondeck.zip moondeck/*
-          tar -czvf moondeck.tar.gz moondeck
-
       - name: Nightly Release
         uses: andelf/nightly-release@main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          body: test
+          body: The latest version available! Might be broken, might be not ;)
           prerelease: false
           tag_name: nightly
           name: 'Nightly Release'
-          files: |
-            moondeck.zip
-            moondeck.tar.gz
+          files: moondeck.zip
