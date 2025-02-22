@@ -49,10 +49,19 @@ jobs:
           path: /tmp/artifacts/moondeck
           if-no-files-found: error
 
-  release:
-    needs: build
+  release-pre-check:
     runs-on: ubuntu-latest
-    if: ${{ github.token != '' }}
+    outputs:
+      do-release: ${{ steps.do-release.result }}
+    steps:
+      - name: Check if release can be performed
+        id: do-release
+        run: echo "result=${{ github.token != '' }}" >> "$GITHUB_OUTPUT"
+
+  release:
+    needs: ['build', 'release-pre-check']
+    runs-on: ubuntu-latest
+    if: ${{ needs.release-pre-check.outputs.do-release }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
