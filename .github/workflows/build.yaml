@@ -59,7 +59,7 @@ jobs:
         run: echo "result=${{ github.token != '' }}" >> "$GITHUB_OUTPUT"
 
   release:
-    needs: ['build', 'release-pre-check']
+    needs: [build, release-pre-check]
     runs-on: ubuntu-latest
     steps:
       - name: Test
