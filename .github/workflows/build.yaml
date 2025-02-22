@@ -37,14 +37,9 @@ jobs:
       - name: Build plugin
         run: decky plugin build -b -o /tmp/output -s directory $GITHUB_WORKSPACE
 
-      - name: Unzip plugin
-        run: |
-          mkdir /tmp/artifacts -p
-          unzip /tmp/output/moondeck.zip -d /tmp/artifactsc
-
       - name: Upload package
         uses: actions/upload-artifact@v4
         with:
           name: moondeck
-          path: /tmp/artifacts/moondeck
+          path: /tmp/output/moondeck.zip
           if-no-files-found: error
