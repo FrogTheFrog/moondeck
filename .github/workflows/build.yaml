@@ -61,9 +61,9 @@ jobs:
   release:
     needs: ['build', 'release-pre-check']
     runs-on: ubuntu-latest
-    if: ${{ needs.release-pre-check.outputs.do-release }}
     steps:
       - name: Checkout
+        if: ${{ needs.release-pre-check.outputs.do-release }}
         uses: actions/checkout@v4
 
       - name: Download artifacts
