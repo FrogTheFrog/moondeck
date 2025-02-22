@@ -54,9 +54,9 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    if: ${{ env.GITHUB_TOKEN != '' }}
     steps:
       - name: Checkout
+        if: ${{ env.GITHUB_TOKEN != '' }}
         uses: actions/checkout@v4
 
       - name: Download artifacts
