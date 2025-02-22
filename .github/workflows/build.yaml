@@ -53,19 +53,24 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - name: Get GITHUB_TOKEN
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Checkout
+        if: ${{ env.GITHUB_TOKEN != '' }}
         uses: actions/checkout@v4
 
       - name: Download artifacts
+        if: ${{ env.GITHUB_TOKEN != '' }}
         uses: actions/download-artifact@v4
         with:
           name: moondeck
           path: moondeck
 
       - name: Nightly Release
+        if: ${{ env.GITHUB_TOKEN != '' }}
         uses: andelf/nightly-release@main
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           body: The latest version available! Might be broken, might be not ;)
           prerelease: false
