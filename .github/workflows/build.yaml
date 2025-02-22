@@ -52,19 +52,17 @@ jobs:
   release-pre-check:
     runs-on: ubuntu-latest
     outputs:
-      do-release: ${{ steps.do-release.evaluation }}
+      do-release: ${{ steps.do-release.outputs.result }}
     steps:
       - name: Check if release can be performed
         id: do-release
-        run: echo "evaluation=${{ github.token != '' }}" >> "$GITHUB_OUTPUT"
+        run: echo "result=${{ github.token != '' }}" >> "$GITHUB_OUTPUT"
 
   release:
     needs: [build, release-pre-check]
     runs-on: ubuntu-latest
+    if: ${{ needs.release-pre-check.outputs.do-release }}
     steps:
-      - name: Test
-        run: echo "${{ needs.release-pre-check.outputs.do-release }}"
-
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
