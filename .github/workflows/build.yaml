@@ -52,11 +52,11 @@ jobs:
   release-pre-check:
     runs-on: ubuntu-latest
     outputs:
-      do-release: ${{ steps.do-release.result }}
+      do-release: ${{ steps.do-release.evaluation }}
     steps:
       - name: Check if release can be performed
         id: do-release
-        run: echo "result=${{ github.token != '' }}" >> "$GITHUB_OUTPUT"
+        run: echo "evaluation=${{ github.token != '' }}" >> "$GITHUB_OUTPUT"
 
   release:
     needs: [build, release-pre-check]
