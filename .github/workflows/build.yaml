@@ -6,9 +6,6 @@ on:
   pull_request:
     branches: ['main']
 
-env:
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -55,7 +52,7 @@ jobs:
   release:
     needs: build
     runs-on: ubuntu-latest
-    if: ${{ env.GITHUB_TOKEN != '' }}
+    if: ${{ github.token != '' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -67,7 +64,8 @@ jobs:
           path: moondeck.zip
 
       - name: Nightly Release
-        if: ${{ env.GITHUB_TOKEN != '' }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         uses: andelf/nightly-release@main
         with:
           body: The latest version available! Might be broken, might be not ;)
