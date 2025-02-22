@@ -39,10 +39,11 @@ jobs:
       - name: Unzip plugin
         run: |
           mkdir /tmp/artifacts -p
-          unzip /tmp/output/moondeck.zip -d /tmp/artifacts
+          unzip /tmp/output/moondeck.zip -d /tmp/artifactsc
 
       - name: Upload package
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: moondeck
           path: /tmp/artifacts/moondeck
+          if-no-files-found: error
