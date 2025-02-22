@@ -67,7 +67,11 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: moondeck
-          path: moondeck.zip
+          path: moondeck
+
+      - name: Package release
+        run: |
+          zip -r moondeck.zip moondeck/*
 
       - name: Nightly Release
         env:
