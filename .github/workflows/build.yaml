@@ -84,7 +84,7 @@ jobs:
         run: echo "result=${{ github.token != '' && github.ref == 'refs/heads/main' }}" >> "$GITHUB_OUTPUT"
 
   release:
-    name: Release
+    name: Nightly release
     needs: [build, test, release-pre-check]
     runs-on: ubuntu-latest
     if: ${{ needs.release-pre-check.outputs.do-release == 'true' }}
