@@ -87,7 +87,7 @@ jobs:
     name: Release
     needs: [build, test, release-pre-check]
     runs-on: ubuntu-latest
-    if: ${{ needs.release-pre-check.outputs.do-release }}
+    if: ${{ needs.release-pre-check.outputs.do-release == 'true' }}
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v4
