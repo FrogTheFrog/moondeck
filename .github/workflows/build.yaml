@@ -73,9 +73,6 @@ jobs:
       - name: Run tests
         run: pnpm run test
 
-      - name: What
-        run: echo "${{ github.ref_name }}"
-
   release-pre-check:
     name: Check for release conditions
     runs-on: ubuntu-latest
@@ -84,11 +81,11 @@ jobs:
     steps:
       - name: Check if release can be performed
         id: do-release
-        run: echo "result=${{ github.token != '' }}" >> "$GITHUB_OUTPUT"
+        run: echo "result=${{ github.token != '' && github.ref == 'refs/heads/main' }}" >> "$GITHUB_OUTPUT"
 
   release:
     name: Release
-    needs: [build, release-pre-check]
+    needs: [build, test, release-pre-check]
     runs-on: ubuntu-latest
     if: ${{ needs.release-pre-check.outputs.do-release }}
     steps:
