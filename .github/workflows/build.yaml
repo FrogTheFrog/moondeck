@@ -1,27 +1,111 @@
 name: Build
-on: [push]
+
+on:
+  push:
+    branches: ['main']
+  pull_request:
+    branches: ['main']
+
 jobs:
-  Linux:
+  build:
+    name: Build
     runs-on: ubuntu-latest
     steps:
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
 
       - name: Install PNPM
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v4
         with:
-          version: latest
+          version: 9
 
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: recursive
-      
-      - name: Install packages
+
+      - name: Install Dependencies
         run: pnpm install
 
-      - name: Build package
-        run: pnpm run build
+      - name: Download Decky CLI
+        run: |
+          mkdir /tmp/decky-cli
+          curl -L -o /tmp/decky-cli/decky "https://github.com/SteamDeckHomebrew/cli/releases/download/0.0.2/decky-linux-x86_64"
+          chmod +x /tmp/decky-cli/decky
+
+          echo "/tmp/decky-cli" >> $GITHUB_PATH
+            
+      - name: Build plugin
+        run: decky plugin build -b -o /tmp/output -s directory $GITHUB_WORKSPACE
+
+      - name: Unzip plugin
+        run: |
+          mkdir /tmp/artifacts -p
+          unzip /tmp/output/moondeck.zip -d /tmp/artifacts
+
+      - name: Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: moondeck
+          path: /tmp/artifacts/moondeck
+          if-no-files-found: error
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+
+      - name: Install PNPM
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Dependencies
+        run: pnpm install
 
       - name: Run tests
         run: pnpm run test
+
+  release-pre-check:
+    name: Check for release conditions
+    runs-on: ubuntu-latest
+    outputs:
+      do-release: ${{ steps.do-release.outputs.result }}
+    steps:
+      - name: Check if release can be performed
+        id: do-release
+        run: echo "result=${{ github.token != '' && github.ref == 'refs/heads/main' }}" >> "$GITHUB_OUTPUT"
+
+  release:
+    name: Nightly release
+    needs: [build, test, release-pre-check]
+    runs-on: ubuntu-latest
+    if: ${{ needs.release-pre-check.outputs.do-release == 'true' }}
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: moondeck
+          path: moondeck
+
+      - name: Package release
+        run: |
+          zip -r moondeck.zip moondeck/*
+
+      - name: Nightly Release
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        uses: andelf/nightly-release@main
+        with:
+          body: The latest version available! Might be broken, might be not ;)
+          prerelease: false
+          tag_name: nightly
+          name: 'Nightly Release'
+          files: moondeck.zip
