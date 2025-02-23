@@ -8,6 +8,7 @@ on:
 
 jobs:
   build:
+    name: Build
     runs-on: ubuntu-latest
     steps:
       - name: Setup Node.js
@@ -49,7 +50,34 @@ jobs:
           path: /tmp/artifacts/moondeck
           if-no-files-found: error
 
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+
+      - name: Install PNPM
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Dependencies
+        run: pnpm install
+
+      - name: Run tests
+        run: pnpm run test
+
+      - name: What
+        run: echo "${{ github.ref_name }}"
+
   release-pre-check:
+    name: Check for release conditions
     runs-on: ubuntu-latest
     outputs:
       do-release: ${{ steps.do-release.outputs.result }}
@@ -59,6 +87,7 @@ jobs:
         run: echo "result=${{ github.token != '' }}" >> "$GITHUB_OUTPUT"
 
   release:
+    name: Release
     needs: [build, release-pre-check]
     runs-on: ubuntu-latest
     if: ${{ needs.release-pre-check.outputs.do-release }}
