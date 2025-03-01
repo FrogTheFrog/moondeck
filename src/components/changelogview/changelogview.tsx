@@ -10,7 +10,7 @@ export const ChangelogView: FC<unknown> = () => {
           description={
             <>
               <div>&bull; Removed the resolution change option completely.</div>
-              <div>&bull; Bumped MoonDeckBuddy minimum version and updated the runner logic.</div>
+              <div>&bull; Bumped MoonDeckBuddy minimum version to v1.7.0 and updated the runner logic.</div>
             </>
           }
           focusable={true}
