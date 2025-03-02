@@ -1,5 +1,5 @@
 import { AppDetails, ConfirmModal, DialogButton, showModal } from "@decky/ui";
-import { BuddyProxy, HostSettings, addShortcut, checkExecPathMatch, getAllGamestreamAppDetails, getMoonDeckRunPath, logger, removeShortcut, restartSteamClient } from "../../lib";
+import { AppType, BuddyProxy, HostSettings, addShortcut, checkExecPathMatch, getAllGamestreamAppDetails, getMoonDeckManagedMark, getMoonDeckRunPath, logger, removeShortcut, restartSteamClient, setAppLaunchOptions } from "../../lib";
 import { FC, useState } from "react";
 
 interface Props {
@@ -14,6 +14,11 @@ async function addExternalShortcut(appName: string, moonlightExecPath: string): 
   const appId = await addShortcut(appName, moonlightExecPath);
   if (appId == null) {
     logger.error(`Failed to add ${appName} shortcut!`);
+    return null;
+  }
+
+  if (!await setAppLaunchOptions(appId, getMoonDeckManagedMark(AppType.GameStream))) {
+    logger.error(`Failed to set shortcut launch options for ${appName}!`);
     return null;
   }
 

@@ -38,8 +38,13 @@ export enum AppType {
   GameStream
 }
 
-export function getMoonDeckManagedMark(appType: AppType): string {
-  return `MOONDECK_MANAGED=${appType}`;
+export function getMoonDeckManagedMark(appType: AppType | null): string {
+  const mark = "MOONDECK_MANAGED";
+  if (appType === null) {
+    return mark;
+  }
+
+  return `${mark}=${appType}`;
 }
 
 export function getMoonDeckResMark(mode: string | null, useAutoResolution: boolean): string {
@@ -114,8 +119,10 @@ export async function getAllMoonDeckAppDetails(): Promise<AppDetails[]> {
     const allDetails = await throttleAll(100, tasks);
 
     for (const details of allDetails) {
-      if (details?.strShortcutExe.includes("moondeckrun.sh")) {
-        moonDeckApps.push(details);
+      if (details !== null) {
+        if (details.strShortcutExe.includes("moondeckrun.sh") && !details.strShortcutLaunchOptions.includes(getMoonDeckManagedMark(null))) {
+          moonDeckApps.push(details);
+        }
       }
     }
 
