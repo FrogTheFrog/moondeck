@@ -111,7 +111,7 @@ export class MoonDeckAppLauncher {
       return null;
     }
 
-    if (checkExecPathMatch(execPath, details.strShortcutExe)) {
+    if (!checkExecPathMatch(execPath, details.strShortcutExe)) {
       logger.error(`Exec path does not match the expected one for ${appId}! ${details.strShortcutExe} vs ${execPath}`);
       return null;
     }
