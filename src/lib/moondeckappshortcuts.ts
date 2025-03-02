@@ -1,27 +1,28 @@
-import { addShortcut, getAllMoonDeckAppDetails, getAppIdFromShortcut, getAppStoreEx, removeShortcut, restartSteamClient } from "./steamutils";
+import { AppType, EnvVars, addShortcut, getAppStoreEx, removeShortcut, restartSteamClient } from "./steamutils";
+import { getEnvKeyValueNumber, makeEnvKeyValue } from "./envutils";
+import { AppDetails } from "@decky/ui";
 import { AppOverviewPatcher } from "./appoverviewpatcher";
 import { BehaviorSubject } from "rxjs";
 import BiMap from "ts-bidirectional-map";
 import { ReadonlySubject } from "./readonlysubject";
 import { logger } from "./logger";
 
-export class ShortcutManager {
+export interface MoonDeckAppInfo {
+  appId: number;
+  appName: string;
+}
+
+export class MoonDeckAppShortcuts {
   private unobserveCallback: (() => void) | null = null;
   private keyMapping: BiMap<number, number> | null = null;
   private moondeckPurge = false;
-  private readonly readyStateSubject = new BehaviorSubject<boolean>(false);
+  private doneInitializing = false;
+  private readonly appInfoSubject = new BehaviorSubject<Map<number, MoonDeckAppInfo>>(new Map());
   private readonly appOverviewPatcher = new AppOverviewPatcher({
     rt_last_time_locally_played: (currentValue, newValue) => typeof currentValue !== "number" || (typeof newValue === "number" && newValue > currentValue)
   });
 
-  readonly readyState = new ReadonlySubject(this.readyStateSubject);
-
-  private updateReadyState(): void {
-    const newState = (this.keyMapping !== null && !this.moondeckPurge);
-    if (this.readyStateSubject.value !== newState) {
-      this.readyStateSubject.next(newState);
-    }
-  }
+  readonly appInfo = new ReadonlySubject(this.appInfoSubject);
 
   private initAppStoreObservable(): void {
     const appStoreEx = getAppStoreEx();
@@ -35,7 +36,7 @@ export class ShortcutManager {
         return;
       }
 
-      if (this.keyMapping?.hasValue(change.name) === false ?? false) {
+      if (this.keyMapping?.hasValue(change.name) === false) {
         return;
       }
 
@@ -43,32 +44,55 @@ export class ShortcutManager {
     });
   }
 
-  async init(): Promise<void> {
+  private filterMoonDeckApps(allDetails: AppDetails[]): AppDetails[] {
+    const moonDeckApps: AppDetails[] = [];
+
+    for (const details of allDetails) {
+      if (details !== null) {
+        const hasCorrectExec = details.strShortcutExe.includes("moondeckrun.sh");
+
+        // First check is needed for backwards compat.
+        const hasCorrectLaunchOptions = !details.strLaunchOptions.includes(EnvVars.AppType) ||
+          details.strLaunchOptions.includes(makeEnvKeyValue(EnvVars.AppType, AppType.MoonDeck));
+
+        if (hasCorrectExec && hasCorrectLaunchOptions) {
+          moonDeckApps.push(details);
+        }
+      }
+    }
+
+    return moonDeckApps;
+  }
+
+  async init(allDetails: AppDetails[]): Promise<void> {
     this.initAppStoreObservable();
     this.appOverviewPatcher.init();
     this.keyMapping = new BiMap();
 
+    const appInfo: Map<number, MoonDeckAppInfo> = new Map();
     let shortcutsRemoved = false;
-    const details = await getAllMoonDeckAppDetails();
-    for (const detail of details) {
-      const steamAppId = getAppIdFromShortcut(detail.strLaunchOptions);
+    for (const details of this.filterMoonDeckApps(allDetails)) {
+      const steamAppId = getEnvKeyValueNumber(details.strLaunchOptions, EnvVars.SteamAppId);
       if (steamAppId === null || steamAppId in this.keyMapping) {
         shortcutsRemoved = true;
-        await this.removeShortcut(detail.unAppID);
+        await this.removeShortcut(details.unAppID);
         continue;
       }
 
-      this.keyMapping.set(steamAppId, detail.unAppID);
-      this.appOverviewPatcher.addPair(detail.unAppID, steamAppId);
+      this.keyMapping.set(steamAppId, details.unAppID);
+      this.appOverviewPatcher.addPair(details.unAppID, steamAppId);
+      appInfo.set(details.unAppID, { appId: details.unAppID, appName: details.strDisplayName });
     }
 
-    this.updateReadyState();
+    this.appInfoSubject.next(appInfo);
     if (shortcutsRemoved) {
       logger.toast("Shortcuts were removed! Restart Steam Client!", { output: "error" });
     }
+    this.doneInitializing = true;
   }
 
   deinit(): void {
+    this.doneInitializing = false;
     this.appOverviewPatcher.deinit();
 
     if (this.unobserveCallback !== null) {
@@ -77,7 +101,7 @@ export class ShortcutManager {
     }
 
     this.keyMapping = null;
-    this.updateReadyState();
+    this.appInfoSubject.next(new Map());
   }
 
   getId(steamAppId: number): number | null {
@@ -109,6 +133,8 @@ export class ShortcutManager {
 
     this.keyMapping.set(steamAppId, appId);
     this.appOverviewPatcher.addPair(appId, steamAppId);
+    this.appInfoSubject.value.set(appId, { appId, appName });
+    this.appInfoSubject.next(new Map([...this.appInfoSubject.value]));
     return appId;
   }
 
@@ -120,6 +146,8 @@ export class ShortcutManager {
     if (this.keyMapping !== null) {
       this.keyMapping.deleteValue(moondeckAppId);
       this.appOverviewPatcher.removePair(moondeckAppId);
+      this.appInfoSubject.value.delete(moondeckAppId);
+      this.appInfoSubject.next(new Map([...this.appInfoSubject.value]));
     }
   }
 
@@ -129,18 +157,18 @@ export class ShortcutManager {
     }
 
     this.moondeckPurge = true;
-    this.updateReadyState();
-
-    const details = await getAllMoonDeckAppDetails();
-    for (const detail of details) {
-      await this.removeShortcut(detail.unAppID);
+    const appIds = Array.from(this.appInfoSubject.value.keys());
+    for (const appId of appIds) {
+      await this.removeShortcut(appId);
     }
-
     this.moondeckPurge = false;
-    this.updateReadyState();
 
-    if (details.length > 0) {
+    if (appIds.length > 0) {
       restartSteamClient();
     }
+  }
+
+  get initializing(): boolean {
+    return !this.doneInitializing;
   }
 }

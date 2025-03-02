@@ -1,8 +1,10 @@
-import { ConnectivityManager, ServerStatus, logger } from "../lib";
+import { ServerStatus, logger } from "../lib";
 import { Subscription, debounceTime } from "rxjs";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
+import { MoonDeckContext } from "../contexts";
 
-export function useServerStatus(connectivityManager: ConnectivityManager, observe?: boolean): [ServerStatus, boolean] {
+export function useServerStatus(observe?: boolean): [ServerStatus, boolean] {
+  const { connectivityManager } = useContext(MoonDeckContext);
   const [serverStatus, setServerStatus] = useState(connectivityManager.serverProxy.status.value);
   const [refreshStatus, setRefreshStatus] = useState(connectivityManager.serverProxy.refreshing.value);
 

@@ -1,4 +1,3 @@
-import { ConnectivityManager, MoonDeckAppLauncher, SettingsManager } from "../../lib";
 import { useBuddyStatus, useCurrentHostSettings, useCurrentSettings, useMoonDeckAppData, useServerStatus } from "../../hooks";
 import { FC } from "react";
 import { GameSessionPanel } from "./gamesessionpanel";
@@ -9,33 +8,27 @@ import { ResolutionPanel } from "./resolutionpanel";
 import { SunshineAppsPanel } from "./sunshineappspanel";
 import { useQuickAccessVisible } from "@decky/api";
 
-interface Props {
-  connectivityManager: ConnectivityManager;
-  settingsManager: SettingsManager;
-  moonDeckAppLauncher: MoonDeckAppLauncher;
-}
-
-export const QuickSettingsView: FC<Props> = ({ connectivityManager, settingsManager, moonDeckAppLauncher }) => {
+export const QuickSettingsView: FC = () => {
   const isVisible = useQuickAccessVisible();
-  const [serverStatus, serverRefreshStatus] = useServerStatus(connectivityManager, isVisible);
-  const [buddyStatus, buddyRefreshStatus] = useBuddyStatus(connectivityManager, isVisible);
-  const currentHostSettings = useCurrentHostSettings(settingsManager);
-  const currentSettings = useCurrentSettings(settingsManager);
-  const appData = useMoonDeckAppData(moonDeckAppLauncher);
+  const [serverStatus, serverRefreshStatus] = useServerStatus(isVisible);
+  const [buddyStatus, buddyRefreshStatus] = useBuddyStatus(isVisible);
+  const currentHostSettings = useCurrentHostSettings();
+  const currentSettings = useCurrentSettings();
+  const appData = useMoonDeckAppData();
 
   return (
     <>
       {appData !== null
-        ? <GameSessionPanel appData={appData} moonDeckAppLauncher={moonDeckAppLauncher} />
+        ? <GameSessionPanel appData={appData} />
         : <>
-            <HostStatusPanel currentHostSettings={currentHostSettings} currentSettings={currentSettings} settingsManager={settingsManager} serverStatus={serverStatus} serverRefreshStatus={serverRefreshStatus} buddyStatus={buddyStatus} buddyRefreshStatus={buddyRefreshStatus} />
-            <SunshineAppsPanel buddyProxy={connectivityManager.buddyProxy} currentHostSettings={currentHostSettings} currentSettings={currentSettings} />
-            <HostAppPanel currentHostSettings={currentHostSettings} currentSettings={currentSettings} settingsManager={settingsManager} />
-            <ResolutionPanel currentHostSettings={currentHostSettings} currentSettings={currentSettings} settingsManager={settingsManager} />
+            <HostStatusPanel currentHostSettings={currentHostSettings} currentSettings={currentSettings} serverStatus={serverStatus} serverRefreshStatus={serverRefreshStatus} buddyStatus={buddyStatus} buddyRefreshStatus={buddyRefreshStatus} />
+            <SunshineAppsPanel currentHostSettings={currentHostSettings} />
+            <HostAppPanel currentHostSettings={currentHostSettings} currentSettings={currentSettings} />
+            <ResolutionPanel currentHostSettings={currentHostSettings} currentSettings={currentSettings} />
           </>
       }
       {currentHostSettings !== null &&
-        <HostCommandPanel connectivityManager={connectivityManager} serverStatus={serverStatus} buddyStatus={buddyStatus} />
+        <HostCommandPanel serverStatus={serverStatus} buddyStatus={buddyStatus} />
       }
     </>
   );

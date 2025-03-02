@@ -14,8 +14,10 @@ def add_plugin_to_path():
 add_plugin_to_path()
 
 from lib.runner.moondeckapprunner import MoonDeckAppRunner
+from lib.runner.moonlightonlyrunner import MoonlightOnlyRunner
 from lib.logger import logger, set_log_filename, enable_debug_level
-from lib.runner.settingsparser import parse_settings
+from lib.utils import is_moondeck_runner_ready
+from lib.runner.settingsparser import parse_settings, RunnerType
 
 import asyncio
 import lib.constants as constants
@@ -29,13 +31,20 @@ async def main():
         logger.info("Resetting runner result")
         runnerresult.set_result(runnerresult.Result.ClosedPrematurely, log_result=False)
 
+        if not is_moondeck_runner_ready():
+            raise runnerresult.RunnerError(runnerresult.Result.RunnerNotReady)
+
         logger.info("Parsing runner settings")
         settings = await parse_settings()
 
         if settings["debug_logs"]:
             enable_debug_level()
         
-        await MoonDeckAppRunner.run(settings)
+        if settings["runner_type"] == RunnerType.MoonDeck:
+            await MoonDeckAppRunner.run(settings)
+        else:
+            await MoonlightOnlyRunner.run(settings)
+
         runnerresult.set_result(None)
 
     except runnerresult.RunnerError as err:

@@ -1,26 +1,19 @@
-import { ConnectivityManager, SettingsManager, ShortcutManager } from "../lib";
 import { ButtonStyleView } from "../components/buttonstyleview";
 import { ChangelogView } from "../components/changelogview";
 import { FC } from "react";
 import { GameSessionView } from "../components/gamesessionview";
 import { HostSelectionView } from "../components/hostselectionview";
 import { HostSettingsView } from "../components/hostsettingsview";
+import { MoonDeckAppsView } from "../components/moondeckappsview";
 import { MoonlightSettingsView } from "../components/moonlightsettingsview";
 import { RunnerSettingsView } from "../components/runnersettingsview";
 import { SetupGuideView } from "../components/setupguideview";
-import { ShortcutsView } from "../components/shortcutsview";
 import { SidebarNavigation } from "@decky/ui";
 import { StatusIndicatorsView } from "../components/statusindicatorsview";
 import { SunshineAppsView } from "../components/sunshineappsview";
 import { routerHook } from "@decky/api";
 
-interface Props {
-  connectivityManager: ConnectivityManager;
-  settingsManager: SettingsManager;
-  shortcutManager: ShortcutManager;
-}
-
-const MoonDeckRouter: FC<Props> = ({ connectivityManager, settingsManager, shortcutManager }) => {
+const MoonDeckRouter: FC<object> = () => {
   return (
     <SidebarNavigation
       title="MoonDeck"
@@ -28,7 +21,7 @@ const MoonDeckRouter: FC<Props> = ({ connectivityManager, settingsManager, short
       pages={[
         {
           title: "Setup Guide",
-          content: <SetupGuideView settingsManager={settingsManager} />,
+          content: <SetupGuideView />,
           route: "/moondeck/setup-guide"
         },
         {
@@ -44,44 +37,44 @@ const MoonDeckRouter: FC<Props> = ({ connectivityManager, settingsManager, short
         "separator",
         {
           title: "Host Selection",
-          content: <HostSelectionView connectivityManager={connectivityManager} settingsManager={settingsManager} />,
+          content: <HostSelectionView />,
           route: "/moondeck/host-selection"
         },
         {
           title: "Host Settings",
-          content: <HostSettingsView settingsManager={settingsManager} />,
+          content: <HostSettingsView />,
           route: "/moondeck/host-settings"
         },
         {
           title: "Moonlight Settings",
-          content: <MoonlightSettingsView settingsManager={settingsManager} />,
+          content: <MoonlightSettingsView />,
           route: "/moondeck/resolution-settings"
         },
         {
           title: "Runner Settings",
-          content: <RunnerSettingsView settingsManager={settingsManager} />,
+          content: <RunnerSettingsView />,
           route: "/moondeck/runner-settings"
         },
         "separator",
         {
-          title: "MoonDeck Shortcuts",
-          content: <ShortcutsView settingsManager={settingsManager} shortcutManager={shortcutManager} />,
+          title: "MoonDeck Apps",
+          content: <MoonDeckAppsView />,
           route: "/moondeck/shortcuts"
         },
         {
           title: "Sunshine Apps",
-          content: <SunshineAppsView settingsManager={settingsManager} buddyProxy={connectivityManager.buddyProxy} />,
+          content: <SunshineAppsView />,
           route: "/moondeck/external-shortcuts"
         },
         "separator",
         {
           title: "Game Session",
-          content: <GameSessionView settingsManager={settingsManager} />,
+          content: <GameSessionView />,
           route: "/moondeck/game-session"
         },
         {
           title: "Button Style",
-          content: <ButtonStyleView settingsManager={settingsManager} />,
+          content: <ButtonStyleView />,
           route: "/moondeck/button-style"
         }
       ]}
@@ -89,8 +82,8 @@ const MoonDeckRouter: FC<Props> = ({ connectivityManager, settingsManager, short
   );
 };
 
-export function MoonDeckRouterHook(props: Props): () => void {
-  routerHook.addRoute("/moondeck", () => <MoonDeckRouter {...props} />);
+export function MoonDeckRouterHook(): () => void {
+  routerHook.addRoute("/moondeck", () => <MoonDeckRouter />);
   return () => {
     routerHook.removeRoute("/moondeck");
   };

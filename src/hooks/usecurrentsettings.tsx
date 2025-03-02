@@ -1,8 +1,10 @@
-import { SettingsManager, UserSettings } from "../lib";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
+import { MoonDeckContext } from "../contexts";
+import { UserSettings } from "../lib";
 import { cloneDeep } from "lodash";
 
-export function useCurrentSettings(settingsManager: SettingsManager): Readonly<UserSettings | null> {
+export function useCurrentSettings(): Readonly<UserSettings | null> {
+  const { settingsManager } = useContext(MoonDeckContext);
   const [settings, setSettings] = useState(cloneDeep(settingsManager.settings.value));
 
   useEffect(() => {

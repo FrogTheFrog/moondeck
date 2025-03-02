@@ -1,18 +1,18 @@
 import { DialogButton, Field, ModalRoot } from "@decky/ui";
-import { FC, useState } from "react";
+import { FC, useContext, useState } from "react";
 import { CurrentHostSettings } from "../../hooks";
 import { IndexedListDropdown } from "../shared/indexedlist";
+import { MoonDeckContext } from "../../contexts";
 import { ResolutionSelectionDropdown } from "../shared";
-import { SettingsManager } from "../../lib";
 
 interface Props {
   closeModal: () => void;
   displays: string[];
   hostSettings: CurrentHostSettings;
-  settingsManager: SettingsManager;
 }
 
-export const LinkedDisplayModal: FC<Props> = ({ closeModal, displays, hostSettings, settingsManager }) => {
+export const LinkedDisplayModal: FC<Props> = ({ closeModal, displays, hostSettings }) => {
+  const { settingsManager } = useContext(MoonDeckContext);
   const [displayIndex, setDisplayIndex] = useState<number>(-1);
   const [resolutionIndex, setResolutionIndex] = useState<number>(-1);
 

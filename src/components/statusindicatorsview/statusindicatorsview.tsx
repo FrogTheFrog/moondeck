@@ -11,7 +11,7 @@ function stringifyBuddyStatus(value: BuddyStatus): string {
   return stringifyStatus(value);
 }
 
-export const StatusIndicatorsView: FC<unknown> = () => {
+export const StatusIndicatorsView: FC = () => {
   return (
     <DialogBody>
       <DialogControlsSection>

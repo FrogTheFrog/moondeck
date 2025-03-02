@@ -24,13 +24,29 @@ from typing import Any, Dict
 from python.lib.settings import settings_manager, UserSettings
 from python.lib.logger import logger, set_log_filename
 from python.lib.buddyclient import BuddyClient, HelloResult, PcStateChange
-from python.lib.utils import wake_on_lan
+from python.lib.utils import wake_on_lan, change_moondeck_runner_ready_state
 # autopep8: on
 
 set_log_filename(constants.LOG_FILE, rotate=True)
 
 
 class Plugin:
+    def __cleanup_states(self):
+        runnerresult.set_result(None)
+        change_moondeck_runner_ready_state(False)
+
+    @utils.async_scope_log(logger.info)
+    async def _main(self):
+        self.__cleanup_states()
+
+    @utils.async_scope_log(logger.info)
+    async def _unload(self):
+        self.__cleanup_states()
+
+    @utils.async_scope_log(logger.info)
+    async def set_runner_ready(self):
+        change_moondeck_runner_ready_state(True)
+
     @utils.async_scope_log(logger.info)
     async def get_runner_result(self):
         result = runnerresult.get_result()

@@ -2,18 +2,13 @@ import { BuddyStatusField, SettingsLoadingField } from "../shared";
 import { DialogBody, DialogButton, DialogControlsSection, DialogControlsSectionHeader, Field, Navigation } from "@decky/ui";
 import { FC } from "react";
 import { MoonDeckLaunchButtonShell } from "../moondecklaunchbutton";
-import { SettingsManager } from "../../lib";
 import { useCurrentSettings } from "../../hooks";
 
 const moondeckBuddyLink = "https://github.com/FrogTheFrog/moondeck-buddy";
 const moondeckWikiLink = "https://github.com/FrogTheFrog/moondeck/wiki";
 
-interface Props {
-  settingsManager: SettingsManager;
-}
-
-export const SetupGuideView: FC<Props> = ({ settingsManager }) => {
-  const settings = useCurrentSettings(settingsManager);
+export const SetupGuideView: FC = () => {
+  const settings = useCurrentSettings();
   if (settings === null) {
     return <SettingsLoadingField />;
   }

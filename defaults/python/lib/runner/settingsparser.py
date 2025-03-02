@@ -2,7 +2,7 @@ import os
 
 from typing import Optional, TypedDict
 
-from .envparser import EnvSettings, parse_env_settings
+from .envparser import EnvSettings, parse_env_settings, RunnerType
 from ..runnerresult import RunnerError, Result
 from ..settings import Dimension, HostSettings, RunnerTimeouts, settings_manager
 from ..moonlightproxy import ResolutionDimensions
@@ -14,7 +14,7 @@ class ResolutionSettings(TypedDict):
     pass_to_moonlight: bool
 
 
-class RunnerSettings(TypedDict):
+class MoonDeckAppRunnerSettings(TypedDict):
     resolution: ResolutionSettings
     host_app: str
     hostname: str
@@ -28,6 +28,20 @@ class RunnerSettings(TypedDict):
     moonlight_exec_path: Optional[str]
     app_id: int
     debug_logs: bool
+    runner_type: RunnerType.MoonDeck
+
+
+class MoonlightOnlyRunnerSettings(TypedDict):
+    resolution: ResolutionSettings
+    host_app: str
+    hostname: str
+    mac: str
+    address: str
+    timeouts: RunnerTimeouts
+    moonlight_exec_path: Optional[str]
+    app_id: int
+    debug_logs: bool
+    runner_type: RunnerType.MoonlightOnly
 
 
 def parse_resolution_settings(host_settings: HostSettings, env_settings: EnvSettings) -> ResolutionSettings:
@@ -91,7 +105,7 @@ def parse_host_app_name(host_settings: HostSettings) -> str:
     return host_app
 
 
-async def parse_settings() -> RunnerSettings:
+async def parse_settings() -> MoonDeckAppRunnerSettings | MoonlightOnlyRunnerSettings:
     logger.info("Getting current host settings")
     user_settings = await settings_manager.get()
     host_settings = None
@@ -106,21 +120,36 @@ async def parse_settings() -> RunnerSettings:
     logger.info("Parsing ENV settings")
     env_settings = parse_env_settings()
 
-    if env_settings["app_id"] is None:
-        raise RunnerError(Result.NoAppId)                        
-
-    return {
-        "resolution": parse_resolution_settings(host_settings=host_settings, env_settings=env_settings),
-        "host_app": parse_host_app_name(host_settings=host_settings),
-        "hostname": host_settings["hostName"],
-        "mac": host_settings["mac"],
-        "address": host_settings["address"],
-        "host_port": host_settings["hostInfoPort"],
-        "buddy_port": host_settings["buddyPort"],
-        "client_id": user_settings["clientId"],
-        "close_steam": host_settings["closeSteamOnceSessionEnds"],
-        "timeouts": host_settings["runnerTimeouts"],
-        "moonlight_exec_path": user_settings["moonlightExecPath"] if user_settings["useMoonlightExec"] else None,
-        "app_id": env_settings["app_id"],
-        "debug_logs": user_settings["runnerDebugLogs"]
-    }
+    if env_settings["runner_type"] is None:
+        raise RunnerError(Result.NoRunnerType)
+    
+    if env_settings["runner_type"] == RunnerType.MoonDeck:
+        return {
+            "resolution": parse_resolution_settings(host_settings=host_settings, env_settings=env_settings),
+            "host_app": parse_host_app_name(host_settings=host_settings),
+            "hostname": host_settings["hostName"],
+            "mac": host_settings["mac"],
+            "address": host_settings["address"],
+            "host_port": host_settings["hostInfoPort"],
+            "buddy_port": host_settings["buddyPort"],
+            "client_id": user_settings["clientId"],
+            "close_steam": host_settings["closeSteamOnceSessionEnds"],
+            "timeouts": host_settings["runnerTimeouts"],
+            "moonlight_exec_path": user_settings["moonlightExecPath"] if user_settings["useMoonlightExec"] else None,
+            "app_id": env_settings["app_id"],
+            "debug_logs": user_settings["runnerDebugLogs"],
+            "runner_type": RunnerType.MoonDeck
+        }
+    else:
+        return {
+            "resolution": parse_resolution_settings(host_settings=host_settings, env_settings=env_settings),
+            "host_app": env_settings["app_name"],
+            "hostname": host_settings["hostName"],
+            "mac": host_settings["mac"],
+            "address": host_settings["address"],
+            "host_port": host_settings["hostInfoPort"],
+            "timeouts": host_settings["runnerTimeouts"],
+            "moonlight_exec_path": user_settings["moonlightExecPath"] if user_settings["useMoonlightExec"] else None,
+            "debug_logs": user_settings["runnerDebugLogs"],
+            "runner_type": RunnerType.MoonlightOnly
+        }

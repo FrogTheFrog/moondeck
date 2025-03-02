@@ -2,18 +2,15 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-import { MoonDeckAppLauncher, SettingsManager, logger } from "../lib";
 import { Navigation, afterPatch, appDetailsClasses, createReactTreePatcher, findInReactTree } from "@decky/ui";
 import { RoutePatch, routerHook } from "@decky/api";
 import { MoonDeckLaunchButtonAnchor } from "../components/moondecklaunchbutton";
 import { ReactElement } from "react";
+import { getDefaultContext } from "../contexts";
+import { logger } from "../lib";
 
-interface Props {
-  moonDeckAppLauncher: MoonDeckAppLauncher;
-  settingsManager: SettingsManager;
-}
-
-function patchLibraryApp(route: string, { moonDeckAppLauncher, settingsManager }: Props): RoutePatch {
+function patchLibraryApp(route: string): RoutePatch {
+  const { moonDeckAppLauncher, settingsManager } = getDefaultContext();
   return routerHook.addPatch(
     route,
     (tree: any) => {
@@ -90,9 +87,7 @@ function patchLibraryApp(route: string, { moonDeckAppLauncher, settingsManager }
             <MoonDeckLaunchButtonAnchor
               appId={appId}
               appName={appName}
-              appType={appType}
-              moonDeckAppLauncher={moonDeckAppLauncher}
-              settingsManager={settingsManager} />
+              appType={appType} />
           );
 
           return ret;
@@ -106,9 +101,9 @@ function patchLibraryApp(route: string, { moonDeckAppLauncher, settingsManager }
   );
 }
 
-export function LibraryAppHook(props: Props): () => void {
+export function LibraryAppHook(): () => void {
   const route = "/library/app/:appid";
-  const libraryPatch = patchLibraryApp(route, props);
+  const libraryPatch = patchLibraryApp(route);
   return () => {
     routerHook.removePatch(route, libraryPatch);
   };

@@ -2,6 +2,7 @@ import copy
 import inspect
 import socket
 import ipaddress
+import pathlib
 
 from enum import Enum
 from functools import wraps
@@ -9,6 +10,7 @@ from typing import Any, Dict, List, Literal, Type, Union, TypeVar, get_args, get
 from externals.wakeonlan import send_magic_packet
 
 from .logger import logger
+from .constants import RUNNER_READY_FILE
 
 
 T = TypeVar("T")
@@ -153,3 +155,15 @@ def wake_on_lan(address: str, mac: str):
             send_magic_packet(mac, ip_address="255.255.255.255", address_family=family, port=default_port)
 
         send_magic_packet(mac, ip_address=address_info, address_family=family, port=default_port)
+
+
+def is_moondeck_runner_ready():
+    return pathlib.Path(RUNNER_READY_FILE).exists()
+
+
+def change_moondeck_runner_ready_state(make_ready):
+    path = pathlib.Path(RUNNER_READY_FILE)
+    if make_ready:
+        path.touch(exist_ok=True)
+    else:
+        path.unlink(missing_ok=True)

@@ -1,16 +1,18 @@
+import { FC, useContext } from "react";
 import { Field, PanelSection, PanelSectionRow } from "@decky/ui";
-import { SettingsManager, UserSettings } from "../../lib";
 import { CurrentHostSettings } from "../../hooks";
-import { FC } from "react";
 import { HostAppSelectionDropdown } from "../shared";
+import { MoonDeckContext } from "../../contexts";
+import { UserSettings } from "../../lib";
 
 interface Props {
   currentSettings: UserSettings | null;
   currentHostSettings: CurrentHostSettings | null;
-  settingsManager: SettingsManager;
 }
 
-export const HostAppPanel: FC<Props> = ({ currentSettings, currentHostSettings, settingsManager }) => {
+export const HostAppPanel: FC<Props> = ({ currentSettings, currentHostSettings }) => {
+  const { settingsManager } = useContext(MoonDeckContext);
+
   if (currentSettings === null || currentHostSettings === null) {
     return null;
   }

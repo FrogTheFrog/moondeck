@@ -1,10 +1,21 @@
 import { DialogBody, DialogControlsSection, Field } from "@decky/ui";
 import { FC } from "react";
 
-export const ChangelogView: FC<unknown> = () => {
+export const ChangelogView: FC = () => {
   return (
     <DialogBody>
       <DialogControlsSection>
+        <Field
+          label="1.9.1"
+          description={
+            <>
+              <div>&bull; Added an option to apply resolution override to the internal display.</div>
+              <div>&bull; Removed "pass to moonlight" button from quick access menu.</div>
+              <div>&bull; Sunshine apps will now work in a similar fashion as MoonDeck apps (once they are synced for the first time).</div>
+            </>
+          }
+          focusable={true}
+        />
         <Field
           label="1.9.0"
           description={
@@ -206,7 +217,7 @@ export const ChangelogView: FC<unknown> = () => {
           label="1.6.2"
           description={
             <>
-              <div>&bull; Gamestream server port is no longer hard-coded and will now be properly detected or can be entered when adding host manually.</div>
+              <div>&bull; GameStream server port is no longer hard-coded and will now be properly detected or can be entered when adding host manually.</div>
               <div>&bull; Bumped DFL version.</div>
             </>
           }
@@ -335,8 +346,8 @@ export const ChangelogView: FC<unknown> = () => {
           description={
             <>
               <div>&bull; Added this changelog page.</div>
-              <div>&bull; Discontinued support for NVidia's Gamestream service.</div>
-              <div>&bull; Added support for Sunshine's Gamestream service. New instructions need to be followed to setup Buddy again!</div>
+              <div>&bull; Discontinued support for NVidia's GameStream service.</div>
+              <div>&bull; Added support for Sunshine's GameStream service. New instructions need to be followed to setup Buddy again!</div>
             </>
           }
           focusable={true}

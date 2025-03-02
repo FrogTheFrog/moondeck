@@ -1,15 +1,13 @@
 import { DialogBody, DialogControlsSection, Field } from "@decky/ui";
+import { FC, useContext } from "react";
 import { ListDropdown, SettingsLoadingField, ToggleField } from "../shared";
-import { SettingsManager, UserSettings, getControllerConfigDropdownValues } from "../../lib";
-import { FC } from "react";
+import { UserSettings, getControllerConfigDropdownValues } from "../../lib";
+import { MoonDeckContext } from "../../contexts";
 import { useCurrentSettings } from "../../hooks";
 
-interface Props {
-  settingsManager: SettingsManager;
-}
-
-export const GameSessionView: FC<Props> = ({ settingsManager }) => {
-  const settings = useCurrentSettings(settingsManager);
+export const GameSessionView: FC = () => {
+  const { settingsManager } = useContext(MoonDeckContext);
+  const settings = useCurrentSettings();
   if (settings === null) {
     return <SettingsLoadingField />;
   }

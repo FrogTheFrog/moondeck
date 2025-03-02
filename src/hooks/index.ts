@@ -5,4 +5,5 @@ export * from "./usecurrenthostsettings";
 export * from "./usemoondeckappdata";
 export * from "./useserverstatus";
 export * from "./usecurrentsettings";
-export * from "./useshortcutmanagerstate";
+export * from "./usemoondeckappshortcuts";
+export * from "./usegamestreamappshortcuts";

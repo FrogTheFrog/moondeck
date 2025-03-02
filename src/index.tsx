@@ -1,24 +1,27 @@
-import { ConnectivityManager, MoonDeckAppLauncher, SettingsManager, ShortcutManager, logger, registerForLoginStateChange, waitForServicesInitialized } from "./lib";
+import { getAllNonSteamAppDetails, logger, registerForLoginStateChange, waitForServicesInitialized } from "./lib";
 import { MoonDeckMain } from "./components/icons";
 import { QuickSettingsView } from "./components/quicksettingsview/quicksettingsview";
 import { RouteManager } from "./routes";
 import { TitleView } from "./components/titleview";
 import { definePlugin } from "@decky/api";
+import { getDefaultContext } from "./contexts";
 
 export default definePlugin(() => {
-  const shortcutManager = new ShortcutManager();
-  const settingsManager = new SettingsManager();
-  const connectivityManager = new ConnectivityManager(settingsManager);
-  const moonDeckAppLauncher = new MoonDeckAppLauncher(settingsManager, shortcutManager, connectivityManager.commandProxy);
-  const routeManager = new RouteManager(connectivityManager, settingsManager, shortcutManager, moonDeckAppLauncher);
+  const { moonDeckAppShortcuts, externalAppShortcuts, settingsManager, connectivityManager, moonDeckAppLauncher } = getDefaultContext(true);
+  const routeManager = new RouteManager();
 
   const initCallback = async (username: string): Promise<void> => {
     if (await waitForServicesInitialized()) {
       logger.log(`Initializing plugin for ${username}`);
-      await shortcutManager.init();
+      const allAppDetails = await getAllNonSteamAppDetails();
+
+      externalAppShortcuts.init(allAppDetails);
+      await moonDeckAppShortcuts.init(allAppDetails);
       settingsManager.init();
       connectivityManager.init();
       moonDeckAppLauncher.init();
+
+      // Always the last
       routeManager.init();
     } else {
       logger.toast(`Failed to initialize Steam lib for ${username}!`, { output: "error" });
@@ -26,11 +29,14 @@ export default definePlugin(() => {
   };
   const deinitCallback = (): void => {
     logger.log("Deinitializing plugin");
+    // Always the first
     routeManager.deinit();
+
     moonDeckAppLauncher.deinit();
     connectivityManager.deinit();
     settingsManager.deinit();
-    shortcutManager.deinit();
+    moonDeckAppShortcuts.deinit();
+    externalAppShortcuts.deinit();
   };
   const unregister = registerForLoginStateChange(
     (username) => { initCallback(username).catch((e) => logger.critical(e)); },
@@ -40,7 +46,7 @@ export default definePlugin(() => {
   return {
     name: "MoonDeck",
     icon: <MoonDeckMain />,
-    content: <QuickSettingsView connectivityManager={connectivityManager} settingsManager={settingsManager} moonDeckAppLauncher={moonDeckAppLauncher} />,
+    content: <QuickSettingsView />,
     onDismount() {
       unregister();
       deinitCallback();

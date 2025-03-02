@@ -71,6 +71,7 @@ export interface Dimension {
 export interface HostResolution {
   automatic: boolean;
   appResolutionOverride: typeof appResolutionOverrideValues[number];
+  appResolutionOverrideForInternalDisplay: boolean;
   passToMoonlight: boolean;
   useCustomDimensions: boolean;
   useLinkedDisplays: boolean;
@@ -82,8 +83,6 @@ export interface HostResolution {
 
 export interface SunshineAppsSettings {
   showQuickAccessButton: boolean;
-  lastSelectedOverride: string;
-  lastSelectedControllerConfig: keyof typeof ControllerConfigValues;
 }
 
 export interface HostSettings {

@@ -1,15 +1,16 @@
-import { ConnectivityManager, logger } from "../../lib";
 import { DialogButton, showModal } from "@decky/ui";
-import { FC, useState } from "react";
+import { FC, useContext, useState } from "react";
+import { MoonDeckContext } from "../../contexts";
 import { PairingModal } from "./pairingmodal";
+import { logger } from "../../lib";
 import { random } from "lodash";
 
 interface Props {
-  connectivityManager: ConnectivityManager;
   disabled: boolean;
 }
 
-export const BuddyPairButton: FC<Props> = ({ connectivityManager, disabled }) => {
+export const BuddyPairButton: FC<Props> = ({ disabled }) => {
+  const { connectivityManager } = useContext(MoonDeckContext);
   const [modalIsOpen, setModalIsOpen] = useState(false);
 
   const handleClick = async (): Promise<void> => {
@@ -22,7 +23,7 @@ export const BuddyPairButton: FC<Props> = ({ connectivityManager, disabled }) =>
       setModalIsOpen(false);
       return;
     }
-    showModal(<PairingModal closeModal={() => setModalIsOpen(false)} connectivityManager={connectivityManager} pin={pin} />);
+    showModal(<PairingModal closeModal={() => setModalIsOpen(false)} pin={pin} />);
   };
 
   return (
