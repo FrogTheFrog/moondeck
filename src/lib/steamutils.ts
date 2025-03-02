@@ -39,10 +39,20 @@ export function getMoonDeckLinkedDisplayMark(display: string | null): string {
 export function getMoonDeckAppIdMark(appId: number | null): string {
   const mark = "MOONDECK_STEAM_APP_ID";
   if (appId === null) {
-    return mark;
+    return "";
   }
 
   return `${mark}=${appId}`;
+}
+
+export function getMoonDeckAppNameMark(appName: string | null): string {
+  const mark = "MOONDECK_STEAM_APP_NAME";
+  if (appName === null) {
+    return "";
+  }
+
+  const escapedAppName = appName.replace("'", "'\\''");
+  return `${mark}=${escapedAppName}`;
 }
 
 export function getMoonDeckPythonMark(path: string): string {

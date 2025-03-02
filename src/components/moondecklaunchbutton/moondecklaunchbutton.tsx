@@ -1,7 +1,7 @@
+import { AppType, SettingsManager, UserSettings, isAppTypeSupported, logger } from "../../lib";
 import { Button, Focusable, appDetailsClasses, appDetailsHeaderClasses, basicAppDetailsSectionStylerClasses, joinClassNames, playSectionClasses, showModal, sleep } from "@decky/ui";
 import { CSSProperties, FC, useEffect, useRef, useState } from "react";
 import { OffsetStyle, achorPositionName } from "./offsetstyle";
-import { SettingsManager, UserSettings, isAppTypeSupported, logger } from "../../lib";
 import { useCurrentSettings, useMoonDeckAppData } from "../../hooks";
 import { ButtonStyle } from "./buttonstyle";
 import { ContainerStyle } from "./containerstyle";
@@ -68,7 +68,7 @@ const MoonDeckLaunchButton: FC<Props> = ({ appId, appName, appType, moonDeckAppL
       buttonStyle={settings.buttonStyle}
       onClick={(onDone: () => void) => {
         const launchApp = async (): Promise<void> => {
-          await moonDeckAppLauncher.launchApp(appId, appName);
+          await moonDeckAppLauncher.launchApp(appId, appName, AppType.MoonDeck);
           await sleep(1000);
         };
 

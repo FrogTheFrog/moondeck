@@ -1,6 +1,6 @@
+import { AppType, MoonDeckAppData, MoonDeckAppLauncher, logger } from "../../lib";
 import { ButtonItem, Field, Navigation, PanelSection, PanelSectionRow, ToggleField } from "@decky/ui";
 import { FC, useState } from "react";
-import { MoonDeckAppData, MoonDeckAppLauncher, logger } from "../../lib";
 
 interface Props {
   appData: MoonDeckAppData;
@@ -34,17 +34,50 @@ export const GameSessionPanel: FC<Props> = ({ appData, moonDeckAppLauncher }) =>
       .finally(() => setIsDisabled(false));
   };
 
+  if (appData.appType === AppType.MoonDeck) {
+    return (
+      <>
+        <PanelSection title="Game Session">
+          <PanelSectionRow>
+            <ToggleField
+              label="AppId as game title"
+              disabled={isDisabled}
+              checked={appData.sessionOptions.nameSetToAppId}
+              onChange={() => handleNameChange()} />
+          </PanelSectionRow>
+        </PanelSection>
+        <PanelSection title="Kill Session">
+          <PanelSectionRow>
+            <Field
+              bottomSeparator="none"
+              description="Last somewhat graceful resort for when MoonDeck or host misbehaves." />
+          </PanelSectionRow>
+          <PanelSectionRow>
+            <ButtonItem
+              disabled={isDisabled}
+              layout="below"
+              bottomSeparator="none"
+              onClick={() => handleTermination()}
+            >
+              Exit MoonDeck runner
+            </ButtonItem>
+          </PanelSectionRow>
+          <PanelSectionRow>
+            <ButtonItem
+              disabled={isDisabled}
+              layout="below"
+              onClick={() => handleSteamClose()}
+            >
+              Close Steam on host
+            </ButtonItem>
+          </PanelSectionRow>
+        </PanelSection>
+      </>
+    );
+  }
+
   return (
     <>
-      <PanelSection title="Game Session">
-        <PanelSectionRow>
-          <ToggleField
-            label="AppId as game title"
-            disabled={isDisabled}
-            checked={appData.sessionOptions.nameSetToAppId}
-            onChange={() => handleNameChange()} />
-        </PanelSectionRow>
-      </PanelSection>
       <PanelSection title="Kill Session">
         <PanelSectionRow>
           <Field
@@ -59,15 +92,6 @@ export const GameSessionPanel: FC<Props> = ({ appData, moonDeckAppLauncher }) =>
             onClick={() => handleTermination()}
           >
             Exit MoonDeck runner
-          </ButtonItem>
-        </PanelSectionRow>
-        <PanelSectionRow>
-          <ButtonItem
-            disabled={isDisabled}
-            layout="below"
-            onClick={() => handleSteamClose()}
-          >
-            Close Steam on host
           </ButtonItem>
         </PanelSectionRow>
       </PanelSection>
