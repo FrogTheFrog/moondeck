@@ -39,7 +39,7 @@ export function getMoonDeckLinkedDisplayMark(display: string | null): string {
 export function getMoonDeckAppIdMark(appId: number | null): string {
   const mark = "MOONDECK_STEAM_APP_ID";
   if (appId === null) {
-    return "";
+    return mark;
   }
 
   return `${mark}=${appId}`;
