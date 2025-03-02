@@ -1,8 +1,24 @@
 import { AppDetails, LifetimeNotification } from "@decky/ui";
 import { SteamClientEx, getAllNonSteamAppIds, getAppDetails, getCurrentDisplayMode } from "../steam-utils";
+import { call } from "@decky/api";
 import { logger } from "./logger";
+import { makeEnvKeyValue } from "./envutils";
 import { throttleAll } from "promise-throttle-all";
 export * from "../steam-utils";
+
+export enum EnvVars {
+  AppType = "MOONDECK_APP_TYPE",
+  AutoResolution = "MOONDECK_AUTO_RES",
+  LinkedDisplay = "MOONDECK_LINKED_DISPLAY",
+  SteamAppId = "MOONDECK_STEAM_APP_ID",
+  AppName = "MOONDECK_APP_NAME",
+  Python = "MOONDECK_PYTHON"
+}
+
+export enum AppType {
+  MoonDeck,
+  GameStream
+}
 
 export function registerForGameLifetime(callback: (data: LifetimeNotification) => void): () => void {
   const { unregister } = (SteamClient as SteamClientEx).GameSessions.RegisterForAppLifetimeNotifications(callback);
@@ -14,64 +30,22 @@ export async function getCurrentDisplayModeString(): Promise<string | null> {
   return currentMode ? `${currentMode.width}x${currentMode.height}` : null;
 }
 
-export function getMoonDeckManagedMark(): string {
-  return "MOONDECK_MANAGED=1";
-}
-
-export function getMoonDeckResMark(mode: string | null, useAutoResolution: boolean): string {
-  const mark = "MOONDECK_AUTO_RES";
-  if (mode === null || !useAutoResolution) {
-    return "";
+let MoonDeckRunPath: string | null = null;
+export async function getMoonDeckRunPath(): Promise<string | null> {
+  if (MoonDeckRunPath !== null) {
+    return MoonDeckRunPath;
   }
 
-  return ` ${mark}="${mode}"`;
+  try {
+    MoonDeckRunPath = await call<[], string | null>("get_moondeckrun_path");
+  } catch (message) {
+    logger.critical("Error while getting moondeckrun.sh path: ", message);
+  }
+  return MoonDeckRunPath;
 }
 
-export function getMoonDeckLinkedDisplayMark(display: string | null): string {
-  const mark = "MOONDECK_LINKED_DISPLAY";
-  if (display === null) {
-    return "";
-  }
-
-  return ` ${mark}="${display}"`;
-}
-
-export function getMoonDeckAppIdMark(appId: number | null): string {
-  const mark = "MOONDECK_STEAM_APP_ID";
-  if (appId === null) {
-    return mark;
-  }
-
-  return `${mark}=${appId}`;
-}
-
-export function getMoonDeckPythonMark(path: string): string {
-  const mark = "MOONDECK_PYTHON";
-  if (path.trim().length === 0) {
-    return "";
-  }
-
-  return ` ${mark}="${path}"`;
-}
-
-export function getAppIdFromShortcut(value: string): number | null {
-  const regex = new RegExp(`(?:${getMoonDeckAppIdMark(null)}=(?<steamAppId>\\d+))`, "gi");
-  const matches = value.matchAll(regex);
-
-  let steamAppId: number | null = null;
-  for (const match of matches) {
-    if (match.groups != null) {
-      if (match.groups.steamAppId.length > 0) {
-        if (steamAppId !== null) {
-          return null;
-        }
-
-        steamAppId = Number(match.groups.steamAppId);
-      }
-    }
-  }
-
-  return steamAppId;
+export function checkExecPathMatch(execPath: string, shortcutExe: string): boolean {
+  return new RegExp(`^${execPath}|"${execPath}"$`).test(shortcutExe);
 }
 
 export async function getAllMoonDeckAppDetails(): Promise<AppDetails[]> {
@@ -84,8 +58,16 @@ export async function getAllMoonDeckAppDetails(): Promise<AppDetails[]> {
     const allDetails = await throttleAll(100, tasks);
 
     for (const details of allDetails) {
-      if (details?.strShortcutExe.includes("moondeckrun.sh")) {
-        moonDeckApps.push(details);
+      if (details !== null) {
+        const hasCorrectExec = details.strShortcutExe.includes("moondeckrun.sh");
+
+        // First check is needed for backwards compat.
+        const hasCorrectLaunchOptions = !details.strShortcutLaunchOptions.includes(EnvVars.AppType) ||
+          details.strShortcutLaunchOptions.includes(makeEnvKeyValue(EnvVars.AppType, AppType.MoonDeck));
+
+        if (hasCorrectExec && hasCorrectLaunchOptions) {
+          moonDeckApps.push(details);
+        }
       }
     }
 
@@ -96,9 +78,9 @@ export async function getAllMoonDeckAppDetails(): Promise<AppDetails[]> {
   }
 }
 
-export async function getAllExternalAppDetails(): Promise<AppDetails[]> {
+export async function getAllGameStreamAppDetails(): Promise<AppDetails[]> {
   try {
-    const externalApps: AppDetails[] = [];
+    const gamestreamApps: AppDetails[] = [];
 
     const appids = getAllNonSteamAppIds();
     // eslint-disable-next-line @typescript-eslint/promise-function-async
@@ -106,12 +88,18 @@ export async function getAllExternalAppDetails(): Promise<AppDetails[]> {
     const allDetails = await throttleAll(100, tasks);
 
     for (const details of allDetails) {
-      if (details?.strShortcutLaunchOptions.includes(getMoonDeckManagedMark())) {
-        externalApps.push(details);
+      if (details !== null) {
+        // First check is needed for backwards compat.
+        const hasCorrectLaunchOptions = details.strShortcutLaunchOptions.includes("MOONDECK_MANAGED=1") ||
+          details.strShortcutLaunchOptions.includes(makeEnvKeyValue(EnvVars.AppType, AppType.GameStream));
+
+        if (hasCorrectLaunchOptions) {
+          gamestreamApps.push(details);
+        }
       }
     }
 
-    return externalApps;
+    return gamestreamApps;
   } catch (error) {
     logger.critical(error);
     return [];

@@ -1,4 +1,5 @@
 import { ConnectivityManager, MoonDeckAppLauncher, SettingsManager, ShortcutManager, logger, registerForLoginStateChange, waitForServicesInitialized } from "./lib";
+import { ExternalAppLaunchInterceptor } from "./lib/externalapplaunchinterceptor";
 import { MoonDeckMain } from "./components/icons";
 import { QuickSettingsView } from "./components/quicksettingsview/quicksettingsview";
 import { RouteManager } from "./routes";
@@ -11,6 +12,7 @@ export default definePlugin(() => {
   const connectivityManager = new ConnectivityManager(settingsManager);
   const moonDeckAppLauncher = new MoonDeckAppLauncher(settingsManager, shortcutManager, connectivityManager.commandProxy);
   const routeManager = new RouteManager(connectivityManager, settingsManager, shortcutManager, moonDeckAppLauncher);
+  const externalAppLaunchInterceptor = new ExternalAppLaunchInterceptor(moonDeckAppLauncher);
 
   const initCallback = async (username: string): Promise<void> => {
     if (await waitForServicesInitialized()) {
@@ -20,12 +22,14 @@ export default definePlugin(() => {
       connectivityManager.init();
       moonDeckAppLauncher.init();
       routeManager.init();
+      await externalAppLaunchInterceptor.init();
     } else {
       logger.toast(`Failed to initialize Steam lib for ${username}!`, { output: "error" });
     }
   };
   const deinitCallback = (): void => {
     logger.log("Deinitializing plugin");
+    externalAppLaunchInterceptor.deinit();
     routeManager.deinit();
     moonDeckAppLauncher.deinit();
     connectivityManager.deinit();

@@ -160,7 +160,7 @@ class WolSplashScreen:
         if self.close_flag or self.destroy_flag:
             return False
 
-        if (buddy_status and server_status) or (datetime.now(timezone.utc) > self.timeout_end):
+        if ((buddy_status is None or buddy_status) and server_status) or (datetime.now(timezone.utc) > self.timeout_end):
             return False
         
         self.loading_text.set_text(text="Waiting for the host...")

@@ -1,4 +1,4 @@
-import { setShortcutName, terminateApp } from "./steamutils";
+import { AppType, setShortcutName, terminateApp } from "./steamutils";
 import { BehaviorSubject } from "rxjs";
 import { CommandProxy } from "./commandproxy";
 import { ReadonlySubject } from "./readonlysubject";
@@ -39,8 +39,9 @@ export interface SessionOptions {
 
 export interface MoonDeckAppData {
   steamAppId: number;
-  moonDeckAppId: number;
+  moonDeckAppId: number | null;
   name: string;
+  appType: AppType;
   redirected: boolean;
   beingKilled: boolean;
   beingSuspended: boolean;
@@ -55,11 +56,12 @@ export class MoonDeckAppProxy extends ReadonlySubject<MoonDeckAppData | null> {
     this.commandProxy = commandProxy;
   }
 
-  setApp(steamAppId: number, moonDeckAppId: number, name: string, sessionOptions: SessionOptions): void {
+  setApp(steamAppId: number, moonDeckAppId: number, name: string, appType: AppType, sessionOptions: SessionOptions): void {
     this.subject.next({
       steamAppId,
-      moonDeckAppId,
+      moonDeckAppId: appType === AppType.MoonDeck ? moonDeckAppId : null,
       name,
+      appType,
       redirected: false,
       beingKilled: false,
       beingSuspended: false,
@@ -81,6 +83,11 @@ export class MoonDeckAppProxy extends ReadonlySubject<MoonDeckAppData | null> {
   async changeName(changeToAppId: boolean): Promise<boolean> {
     if (this.subject.value === null) {
       return false;
+    }
+
+    // Name changing is only supported for MoonDeck app types
+    if (this.subject.value.moonDeckAppId === null) {
+      return true;
     }
 
     let result = true;
@@ -138,11 +145,12 @@ export class MoonDeckAppProxy extends ReadonlySubject<MoonDeckAppData | null> {
     this.subject.next({ ...this.subject.value, beingKilled: true });
 
     const nameSetToAppId = this.subject.value.sessionOptions.nameSetToAppId;
+    const appId = this.subject.value.moonDeckAppId ?? this.subject.value.steamAppId;
     // Necessary, otherwise the termination fails
     await this.changeName(false);
-    if (!await terminateApp(this.subject.value.moonDeckAppId, 5000)) {
-      logger.toast("Failed to terminate, trying to kill!", { output: "warn" });
-      await killRunner(this.subject.value.moonDeckAppId);
+    if (!await terminateApp(appId, 5000)) {
+      logger.warn("Failed to terminate, trying to kill!");
+      await killRunner(appId);
     }
 
     // Reset the original value
@@ -177,6 +185,7 @@ export class MoonDeckAppProxy extends ReadonlySubject<MoonDeckAppData | null> {
       return false;
     }
 
-    return await isRunnerActive(this.subject.value.moonDeckAppId);
+    const appId = this.subject.value.moonDeckAppId ?? this.subject.value.steamAppId;
+    return await isRunnerActive(appId);
   }
 }

@@ -25,7 +25,7 @@ async function getBuddyInfo(address: string, buddyPort: number, clientId: string
   return { status: "Offline", info: null };
 }
 
-async function getGamestreamAppNames(address: string, buddyPort: number, clientId: string, timeout: number): Promise<string[] | null> {
+async function getGameStreamAppNames(address: string, buddyPort: number, clientId: string, timeout: number): Promise<string[] | null> {
   try {
     return await call<[string, number, string, number], string[] | null>("get_gamestream_app_names", address, buddyPort, clientId, timeout);
   } catch (message) {
@@ -93,7 +93,7 @@ export class BuddyProxy {
     }
   }
 
-  async getGamestreamAppNames(): Promise<string[] | null> {
+  async getGameStreamAppNames(): Promise<string[] | null> {
     const hostSettings = this.settingsManager.hostSettings;
     const hostId = this.settingsManager.settings.value?.currentHostId ?? null;
     const address = hostSettings?.address ?? null;
@@ -104,6 +104,6 @@ export class BuddyProxy {
       return null;
     }
 
-    return await getGamestreamAppNames(address, buddyPort, clientId, 3);
+    return await getGameStreamAppNames(address, buddyPort, clientId, 3);
   }
 }

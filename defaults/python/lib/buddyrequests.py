@@ -61,7 +61,7 @@ class ResultLikeResponse(TypedDict):
     result: bool
 
 
-class GamestreamAppNamesResponse(TypedDict):
+class GameStreamAppNamesResponse(TypedDict):
     appNames: Optional[List[str]]
 
 
@@ -195,4 +195,4 @@ class BuddyRequests(contextlib.AbstractAsyncContextManager):
     async def get_gamestream_app_names(self):
         async with self.__session.get(f"{self.base_url}/gamestreamAppNames") as resp:
             data = await resp.json(encoding="utf-8")
-            return utils.from_dict(GamestreamAppNamesResponse, data)
+            return utils.from_dict(GameStreamAppNamesResponse, data)

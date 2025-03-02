@@ -1,22 +1,13 @@
-import { ControllerConfigOption, SteamClientEx, getAppDetails, getCurrentDisplayModeString, getDisplayIdentifiers, getMoonDeckAppIdMark, getMoonDeckLinkedDisplayMark, getMoonDeckPythonMark, getMoonDeckResMark, getSystemNetworkStore, launchApp, registerForGameLifetime, registerForSuspendNotifictions, setAppHiddenState, setAppLaunchOptions, setAppResolutionOverride, setShortcutName, waitForNetworkConnection } from "./steamutils";
+import { AppStartResult, AppType, ControllerConfigOption, EnvVars, SteamClientEx, checkExecPathMatch, getAppDetails, getCurrentDisplayModeString, getDisplayIdentifiers, getMoonDeckRunPath, getSystemNetworkStore, launchApp, registerForGameLifetime, registerForSuspendNotifictions, setAppHiddenState, setAppLaunchOptions, setAppResolutionOverride, setOverrideResolutionForInternalDisplay, setShortcutName, waitForNetworkConnection } from "./steamutils";
 import { ControllerConfigValues, Dimension, HostResolution, HostSettings, SettingsManager, networkReconnectAfterSuspendDefault } from "./settingsmanager";
 import { E_ALREADY_LOCKED, Mutex, tryAcquire } from "async-mutex";
 import { Subscription, pairwise } from "rxjs";
+import { getEnvKeyValueString, makeEnvKeyValue } from "./envutils";
 import { AppDetails } from "@decky/ui";
 import { CommandProxy } from "./commandproxy";
 import { MoonDeckAppProxy } from "./moondeckapp";
 import { ShortcutManager } from "./shortcutmanager";
-import { call } from "@decky/api";
 import { logger } from "./logger";
-
-async function getMoonDeckRunPath(): Promise<string | null> {
-  try {
-    return await call<[], string | null>("get_moondeckrun_path");
-  } catch (message) {
-    logger.critical("Error while getting moondeckrun.sh path: ", message);
-  }
-  return null;
-}
 
 function getCustomDimension(display: string | null, hostResolution: Readonly<HostResolution>): string | null {
   const dimensions = hostResolution.dimensions;
@@ -60,6 +51,38 @@ function getSelectedAppResolution(mode: string | null, display: string | null, h
   }
 }
 
+function getLaunchOptionsString(currentValue: string, appId: number, appType: AppType, displayMode: string | null, autoResolution: boolean, currentDisplay: string | null, pythonExecPath: string): string | null {
+  const launchOptions: string[] = [];
+  launchOptions.push(makeEnvKeyValue(EnvVars.AppType, appType));
+
+  if (appType === AppType.MoonDeck) {
+    launchOptions.push(makeEnvKeyValue(EnvVars.SteamAppId, appId));
+  } else {
+    const appNameFromOptions = getEnvKeyValueString(currentValue, EnvVars.AppName);
+    if (appNameFromOptions === null) {
+      logger.error(`Failed to get app name from launch options for for ${appId}!`);
+      return null;
+    }
+
+    launchOptions.push(makeEnvKeyValue(EnvVars.AppName, appNameFromOptions));
+  }
+
+  if (autoResolution && displayMode !== null) {
+    launchOptions.push(makeEnvKeyValue(EnvVars.AutoResolution, displayMode));
+  }
+
+  if (currentDisplay !== null) {
+    launchOptions.push(makeEnvKeyValue(EnvVars.LinkedDisplay, currentDisplay));
+  }
+
+  if (pythonExecPath.length > 0) {
+    launchOptions.push(makeEnvKeyValue(EnvVars.Python, pythonExecPath));
+  }
+
+  launchOptions.push("%command%");
+  return launchOptions.join(" ");
+}
+
 export function updateControllerConfig(appId: number, controllerConfig: keyof typeof ControllerConfigValues): void {
   if (controllerConfig !== "Noop") {
     logger.log(`Setting controller config to ${controllerConfig} for ${appId}.`);
@@ -71,37 +94,49 @@ export function updateControllerConfig(appId: number, controllerConfig: keyof ty
 export class MoonDeckAppLauncher {
   private unregisterLifetime: (() => void) | null = null;
   private unregisterSuspension: (() => void) | null = null;
-  private moonDeckRunPath: string | null = null;
   private subscription: Subscription | null = null;
   private readonly launchMutex = new Mutex();
   readonly moonDeckApp: MoonDeckAppProxy;
 
-  private async ensureAppDetails(steamAppId: number, execPath: string, appName: string): Promise<AppDetails | null> {
-    let appId = this.shortcutManager.getId(steamAppId);
-    let details = appId === null ? null : await getAppDetails(appId);
+  private async ensureAppDetails(steamAppId: number, execPath: string, appName: string, appType: AppType): Promise<AppDetails | null> {
+    let appId: number | null = null;
+    let details: AppDetails | null = null;
 
-    // Probably the cache is outdated
-    if (details === null && appId !== null) {
-      await this.shortcutManager.removeShortcut(appId);
-      appId = null;
-    }
+    if (appType === AppType.MoonDeck) {
+      appId = this.shortcutManager.getId(steamAppId);
+      details = appId === null ? null : await getAppDetails(appId);
 
-    if (appId === null) {
-      appId = await this.shortcutManager.addShortcut(steamAppId, appName, execPath);
+      // Probably the cache is outdated
+      if (details === null && appId !== null) {
+        await this.shortcutManager.removeShortcut(appId);
+        appId = null;
+      }
+
       if (appId === null) {
+        appId = await this.shortcutManager.addShortcut(steamAppId, appName, execPath);
+        if (appId === null) {
+          return null;
+        }
+      }
+
+      if (!await setAppHiddenState(appId, true)) {
+        logger.error(`Failed to hide app ${appId}!`);
+        await this.shortcutManager.removeShortcut(appId);
         return null;
       }
-    }
-
-    if (!await setAppHiddenState(appId, true)) {
-      logger.error(`Failed to hide app ${appId}!`);
-      await this.shortcutManager.removeShortcut(appId);
-      return null;
+    } else {
+      appId = steamAppId;
     }
 
     details = await getAppDetails(appId);
     if (details === null) {
       logger.error(`Failed to get app details for ${appId}!`);
+      return null;
+    }
+
+    if (!checkExecPathMatch(execPath, details.strShortcutExe)) {
+      logger.error(`Exec path does not match the expected one for ${appId}! ${details.strShortcutExe} vs ${execPath}`);
+      return null;
     }
 
     return details;
@@ -157,7 +192,7 @@ export class MoonDeckAppLauncher {
 
         if (connection) {
           logger.log(`Relaunching app ${this.moonDeckApp.value.steamAppId} after suspend.`);
-          await this.launchApp(this.moonDeckApp.value.steamAppId, this.moonDeckApp.value.name, true);
+          await this.launchApp(this.moonDeckApp.value.steamAppId, this.moonDeckApp.value.name, this.moonDeckApp.value.appType, true);
         } else {
           logger.toast("Not resuming session - no network connection!", { output: "warn" });
           await this.moonDeckApp.clearApp();
@@ -173,14 +208,6 @@ export class MoonDeckAppLauncher {
         this.shortcutManager.updateAppLaunchTimestamp(prev.steamAppId);
       }
     }));
-  }
-
-  private async getMoonDeckRunPath(): Promise<string | null> {
-    if (this.moonDeckRunPath === null) {
-      this.moonDeckRunPath = await getMoonDeckRunPath();
-    }
-
-    return this.moonDeckRunPath;
   }
 
   constructor(
@@ -212,7 +239,7 @@ export class MoonDeckAppLauncher {
     }
   }
 
-  async launchApp(appId: number, appName: string, afterSuspend = false): Promise<void> {
+  async launchApp(appId: number, appName: string, appType: AppType, afterSuspend = false): Promise<void> {
     if (!this.shortcutManager.readyState.value) {
       logger.toast("Plugin is still initializing...");
       return;
@@ -246,13 +273,13 @@ export class MoonDeckAppLauncher {
       try {
         logger.log(`Preparing to launch ${appName}.`);
 
-        const execPath = await this.getMoonDeckRunPath();
+        const execPath = await getMoonDeckRunPath();
         if (execPath === null) {
           logger.toast("Failed to get moondeckrun.sh path!", { output: "error" });
           return;
         }
 
-        const details = await this.ensureAppDetails(appId, execPath, appName);
+        const details = await this.ensureAppDetails(appId, execPath, appName, appType);
         if (details === null) {
           logger.toast("Failed to create shortcut (needs restart?)!", { output: "error" });
           return;
@@ -278,8 +305,13 @@ export class MoonDeckAppLauncher {
           return;
         }
 
-        const launchOptions = `${getMoonDeckAppIdMark(appId)}${getMoonDeckResMark(mode, hostSettings.resolution.automatic)}${getMoonDeckLinkedDisplayMark(currentDisplay)}${getMoonDeckPythonMark(settings.pythonExecPath)} %command%`;
-        if (!await setAppLaunchOptions(details.unAppID, launchOptions)) {
+        if (!await setOverrideResolutionForInternalDisplay(details.unAppID, true)) {
+          logger.toast("Failed to set app resolution override for internal display (needs restart?)!", { output: "error" });
+          return;
+        }
+
+        const launchOptions = getLaunchOptionsString(details.strLaunchOptions, appId, appType, mode, hostSettings.resolution.automatic, currentDisplay, settings.pythonExecPath);
+        if (launchOptions === null || !await setAppLaunchOptions(details.unAppID, launchOptions)) {
           logger.toast("Failed to update shortcut launch options (needs restart?)!", { output: "error" });
           return;
         }
@@ -293,13 +325,16 @@ export class MoonDeckAppLauncher {
           };
         }
 
-        this.moonDeckApp.setApp(appId, details.unAppID, appName, sessionOptions);
+        this.moonDeckApp.setApp(appId, details.unAppID, appName, appType, sessionOptions);
         await this.moonDeckApp.clearRunnerResult();
 
         const launchTimeout = afterSuspend ? hostSettings.runnerTimeouts.steamLaunchAfterSuspend : hostSettings.runnerTimeouts.steamLaunch;
-        if (!await launchApp(details.unAppID, launchTimeout * 1000)) {
-          logger.toast("Failed to launch shortcut!", { output: "error" });
-          await this.moonDeckApp.killApp();
+        const launchResult = await launchApp(details.unAppID, launchTimeout * 1000);
+        if (launchResult !== AppStartResult.Started) {
+          if (launchResult === AppStartResult.TimeoutOrError) {
+            logger.toast("Failed to launch shortcut!", { output: "error" });
+            await this.moonDeckApp.killApp();
+          }
           await this.moonDeckApp.clearApp();
           return;
         }

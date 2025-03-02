@@ -44,6 +44,7 @@ class Dimension(TypedDict):
 class HostResolution(TypedDict):
     automatic: bool
     appResolutionOverride: Literal["CustomResolution", "DisplayResolution", "Native", "Default"]
+    appResolutionOverrideForInternalDisplay: bool
     passToMoonlight: bool
     useCustomDimensions: bool
     useLinkedDisplays: bool
@@ -55,8 +56,6 @@ class HostResolution(TypedDict):
 
 class SunshineAppsSettings(TypedDict):
     showQuickAccessButton: bool
-    lastSelectedOverride: str
-    lastSelectedControllerConfig: ControllerConfigOption
 
 
 class HostSettings(TypedDict):
@@ -305,6 +304,12 @@ class SettingsManager:
                 data["hostSettings"][host]["runnerTimeouts"]["steamReadiness"] = 60
                 del data["hostSettings"][host]["runnerTimeouts"]["appUpdate"]
                 del data["hostSettings"][host]["resolution"]["passToBuddy"]
+        if data["version"] == 26:
+            data["version"] = 27
+            for host in data["hostSettings"].keys():
+                del data["hostSettings"][host]["sunshineApps"]["lastSelectedOverride"]
+                del data["hostSettings"][host]["sunshineApps"]["lastSelectedControllerConfig"]
+                data["hostSettings"][host]["resolution"]["appResolutionOverrideForInternalDisplay"] = False
         return data
 
 

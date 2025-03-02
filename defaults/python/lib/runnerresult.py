@@ -9,6 +9,8 @@ from .logger import logger
 class Result(Enum):
     ClosedPrematurely = "MoonDeck runner closed prematurely!"
     NoAppId = "Failed to parse app id!"
+    NoAppName = "Failed to parse app name!"
+    NoRunnerType = "Failed to parse runner type!"
     HostNotSelected = "Host is not selected!"
     Exception = "Unhandled exception!"
     GameStreamDead = "GameStream service not responsing!"

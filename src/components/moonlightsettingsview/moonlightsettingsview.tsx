@@ -148,15 +148,6 @@ export const MoonlightSettingsView: FC<Props> = ({ settingsManager }) => {
             <>
               <div>Sets the app shortcut resolution property which informs the Gamescope on how to perform scaling.</div>
               <br />
-              <div>Note: this applies ONLY for the external displays (technically you can enable it for internal display too, but we don't do it).</div>
-            </>
-          }
-          bottomSeparator="none"
-          focusable={true}
-        />
-        <Field
-          description={
-            <>
               <div>The following options are available:</div>
               <div>&bull; "Custom Resolution" (MoonDeck's default) - if custom resolution is enabled and selected, it will be used for scaling.</div>
               <div>&bull; "Display Resolution" - will use the resolution of the primary display for scaling.</div>
@@ -178,6 +169,12 @@ export const MoonlightSettingsView: FC<Props> = ({ settingsManager }) => {
             setOverride={(value) => { settingsManager.updateHost((hostSettings) => { hostSettings.resolution.appResolutionOverride = value; }); }}
           />
         </Field>
+        <ToggleField
+          label="Also apply for internal display."
+          description="By default the override is only for internal displays, but this can be changed with this option."
+          value={hostSettings.resolution.appResolutionOverrideForInternalDisplay}
+          setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.resolution.appResolutionOverrideForInternalDisplay = value; })}
+        />
       </DialogControlsSection>
     </DialogBody>
   );

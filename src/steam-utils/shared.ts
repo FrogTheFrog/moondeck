@@ -21,8 +21,12 @@ export type ControllerConfigValue = `${ControllerConfigOption}` extends `${infer
 export interface SteamClientEx {
   Apps: {
     AddShortcut: (appName: string, execPath: string, args: string, cmdLine: string) => Promise<number | undefined | null>;
+    CancelGameAction: (gameActionId: number) => void;
     GetResolutionOverrideForApp: (appId: number) => Promise<AppResolutionOverrideConstants | string>;
     RegisterForAppDetails: (appId: number, callback: (details: AppDetails) => void) => { unregister: () => void };
+    RegisterForGameActionEnd: (callback: (gameActionIdentifier: number) => void) => { unregister: () => void };
+    RegisterForGameActionStart: (callback: (gameActionIdentifier: number, gameId: string, action: string, source: unknown) => void) => { unregister: () => void };
+    RegisterForGameActionTaskChange: (callback: (gameActionIdentifier: number, gameId: string, action: string, task: string, _1: unknown) => void) => { unregister: () => void };
     RemoveShortcut: (appId: number) => void;
     RunGame: (gameId: string, _1: string, _2: number, _3: number) => void;
     SetAppLaunchOptions: (appId: number, options: string) => void;
@@ -30,6 +34,7 @@ export interface SteamClientEx {
     SetShortcutName: (appId: number, name: string) => void;
     SetThirdPartyControllerConfiguration: (appId: number, value: ControllerConfigValue) => void;
     TerminateApp: (gameId: string, _1: boolean) => void;
+    ToggleOverrideResolutionForInternalDisplay: (appId: number) => void;
   };
   GameSessions: {
     RegisterForAppLifetimeNotifications: (callback: (data: LifetimeNotification) => void) => { unregister: () => void };

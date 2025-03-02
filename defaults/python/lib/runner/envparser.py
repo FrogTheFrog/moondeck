@@ -1,7 +1,13 @@
 import os
 
+from enum import Enum
 from typing import Optional, TypedDict
 from ..logger import logger
+
+
+class RunnerType(Enum):
+    MoonDeck = 0
+    MoonlightOnly = 1
 
 
 class MoonDeckResolution(TypedDict):
@@ -13,6 +19,8 @@ class EnvSettings(TypedDict):
     auto_resolution: Optional[MoonDeckResolution]
     linked_display: Optional[str]
     app_id: Optional[int]
+    app_name: Optional[str]
+    runner_type: Optional[RunnerType]
 
 
 def get_auto_resolution() -> Optional[MoonDeckResolution]:
@@ -45,10 +53,29 @@ def get_app_id() -> Optional[int]:
     except:
         logger.exception("While getting app id")
         return None
+    
+def get_app_name() -> Optional[str]:
+    return os.environ.get("MOONDECK_APP_NAME")
+
+def get_runner_type() -> Optional[RunnerType]:
+    app_type = os.environ.get("MOONDECK_APP_TYPE")
+    try:
+        app_type = int(app_type) if app_type is not None else None
+        if app_type == 0:
+            return RunnerType.MoonDeck
+        if app_type == 1:
+            return RunnerType.MoonlightOnly
+        
+        return None
+    except:
+        logger.exception("While getting app type")
+        return None
 
 def parse_env_settings() -> EnvSettings:
     return {
         "auto_resolution": get_auto_resolution(),
         "linked_display": get_linked_display(),
-        "app_id": get_app_id()
+        "app_id": get_app_id(),
+        "app_name": get_app_name(),
+        "runner_type": get_runner_type()
     }

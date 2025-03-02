@@ -1,7 +1,7 @@
 import asyncio
 from typing import Optional
 
-from .settingsparser import RunnerSettings
+from .settingsparser import MoonDeckAppRunnerSettings
 from ..buddyrequests import AppState, StreamState
 from ..runnerresult import Result, RunnerError
 from ..hostinfo import get_server_info
@@ -253,7 +253,7 @@ class MoonDeckAppRunner:
                                           timeouts=timeouts)
 
     @classmethod
-    async def run(cls, settings: RunnerSettings):
+    async def run(cls, settings: MoonDeckAppRunnerSettings):
         buddy_client = BuddyClient(
             settings["address"],
             settings["buddy_port"],

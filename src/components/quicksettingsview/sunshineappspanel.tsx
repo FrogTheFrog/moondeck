@@ -1,5 +1,5 @@
-import { BuddyProxy, UserSettings } from "../../lib";
 import { Field, PanelSection, PanelSectionRow } from "@decky/ui";
+import { BuddyProxy } from "../../lib";
 import { CurrentHostSettings } from "../../hooks";
 import { FC } from "react";
 import { SunshineAppsSyncButton } from "../shared";
@@ -7,11 +7,10 @@ import { SunshineAppsSyncButton } from "../shared";
 interface Props {
   buddyProxy: BuddyProxy;
   currentHostSettings: CurrentHostSettings | null;
-  currentSettings: UserSettings | null;
 }
 
-export const SunshineAppsPanel: FC<Props> = ({ buddyProxy, currentHostSettings, currentSettings }) => {
-  if (currentHostSettings === null || currentSettings === null) {
+export const SunshineAppsPanel: FC<Props> = ({ buddyProxy, currentHostSettings }) => {
+  if (currentHostSettings === null) {
     return null;
   }
 
@@ -26,7 +25,7 @@ export const SunshineAppsPanel: FC<Props> = ({ buddyProxy, currentHostSettings, 
           childrenContainerWidth="fixed"
           spacingBetweenLabelAndChild="none"
         >
-          <SunshineAppsSyncButton buddyProxy={buddyProxy} settings={currentSettings} hostSettings={currentHostSettings} noConfirmationDialog={true} />
+          <SunshineAppsSyncButton buddyProxy={buddyProxy} hostSettings={currentHostSettings} noConfirmationDialog={true} />
         </Field>
       </PanelSectionRow>
     </PanelSection>
