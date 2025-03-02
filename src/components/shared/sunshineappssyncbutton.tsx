@@ -55,7 +55,7 @@ async function syncShortcuts(shortcuts: AppDetails[], moonDeckHostApps: string[]
     const details = existingApps.get(sunshineApp);
     if (!details) {
       appsToAdd.add(sunshineApp);
-    } else if (checkExecPathMatch(execPath, details.strShortcutExe)) {
+    } else if (!checkExecPathMatch(execPath, details.strShortcutExe)) {
       appsToRemove.push(details);
       appsToAdd.add(sunshineApp);
     }
