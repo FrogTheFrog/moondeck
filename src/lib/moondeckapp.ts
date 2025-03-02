@@ -1,4 +1,4 @@
-import { setShortcutName, terminateApp } from "./steamutils";
+import { AppType, setShortcutName, terminateApp } from "./steamutils";
 import { BehaviorSubject } from "rxjs";
 import { CommandProxy } from "./commandproxy";
 import { ReadonlySubject } from "./readonlysubject";
@@ -31,11 +31,6 @@ async function getRunnerResult(): Promise<string | null> {
   }
 
   return "Error while fetching runner result!";
-}
-
-export enum AppType {
-  MoonDeck,
-  GameStream
 }
 
 export interface SessionOptions {

@@ -1,10 +1,8 @@
 import { AppDetails, DialogBody, DialogButton, DialogControlsSection, DialogControlsSectionHeader, Field, Navigation } from "@decky/ui";
-import { BuddyProxy, SettingsManager, getAllExternalAppDetails, logger } from "../../lib";
+import { BuddyProxy, SettingsManager, getAllGamestreamAppDetails, logger } from "../../lib";
 import { FC, ReactNode, useEffect, useState } from "react";
 import { LabelWithIcon, SunshineAppsSyncButton, ToggleField } from "../shared";
 import { useCurrentHostSettings, useCurrentSettings } from "../../hooks";
-import { BatchResOverrideButton } from "./batchresoverridebutton";
-import { ControllerConfigButton } from "./controllerconfigbutton";
 import { HostOff } from "../icons";
 import { PurgeButton } from "./purgebutton";
 
@@ -20,7 +18,7 @@ export const SunshineAppsView: FC<Props> = ({ settingsManager, buddyProxy }) => 
 
   const refreshApps = (): void => {
     (async () => {
-      let data = await getAllExternalAppDetails();
+      let data = await getAllGamestreamAppDetails();
       data = data.sort((a, b) => a.strDisplayName < b.strDisplayName ? -1 : a.strDisplayName > b.strDisplayName ? 1 : 0);
       setShortcuts(data);
     })().catch((e) => logger.critical(e));
@@ -47,7 +45,7 @@ export const SunshineAppsView: FC<Props> = ({ settingsManager, buddyProxy }) => 
           description="Steam client might be restarted afterwards!"
           childrenContainerWidth="fixed"
         >
-          <SunshineAppsSyncButton shortcuts={shortcuts} buddyProxy={buddyProxy} settings={settings} hostSettings={hostSettings} refreshApps={refreshApps} />
+          <SunshineAppsSyncButton shortcuts={shortcuts} buddyProxy={buddyProxy} hostSettings={hostSettings} refreshApps={refreshApps} />
         </Field>
         <ToggleField
           label="Show button in Quick Access Menu"
@@ -76,63 +74,6 @@ export const SunshineAppsView: FC<Props> = ({ settingsManager, buddyProxy }) => 
             </Field>
           );
         })}
-      </DialogControlsSection>;
-  }
-
-  let controllerConfigButton: ReactNode = null;
-  if (hostSettings) {
-    controllerConfigButton =
-      <DialogControlsSection>
-        <DialogControlsSectionHeader>External controller Steam Input</DialogControlsSectionHeader>
-        <Field
-          description={
-            <>
-              <div>Choose which Steam Input option to use for the external controllers.</div>
-              <br />
-              <div>Disabling Steam Input is preferable in most cases as the Moonlight can then see the actual controller instead of a generic XBox one that Steam exposes.</div>
-              <br />
-              <div>This means that the motion data becomes available for PS4/Dualsense controllers and the rumble works better in most cases.</div>
-            </>
-          }
-          focusable={true}
-        />
-        <Field
-          label="Selected Steam Input option"
-          childrenContainerWidth="fixed"
-        >
-          <ControllerConfigButton hostSettings={hostSettings} shortcuts={shortcuts} settingsManager={settingsManager} />
-        </Field>
-      </DialogControlsSection>;
-  }
-
-  let batchResOverrideButton: ReactNode = null;
-  if (hostSettings) {
-    batchResOverrideButton =
-      <DialogControlsSection>
-        <DialogControlsSectionHeader>App Resolution Override</DialogControlsSectionHeader>
-        <Field
-          description={
-            <>
-              <div>If you are planning on using external display, you probably need to use this.</div>
-              <div>Steam shortcut's resolution property needs to be set for all Sunshine apps to match the Moonlight client resolution.</div>
-              <div>Otherwise the gamescope may try to apply scaling and you might get a blurry text/image.</div>
-              <br />
-              <div>Note: this is already automatically done for MoonDeck-Steam apps, for synced Sunshine apps you must do it manually.</div>
-            </>
-          }
-          focusable={true}
-        />
-        <Field
-          label="Select and apply resolution"
-          childrenContainerWidth="fixed"
-          description={
-            <>
-              Override for newly added apps (last used): {hostSettings.sunshineApps.lastSelectedOverride}
-            </>
-          }
-        >
-          <BatchResOverrideButton hostSettings={hostSettings} shortcuts={shortcuts} settingsManager={settingsManager} />
-        </Field>
       </DialogControlsSection>;
   }
 
@@ -167,8 +108,6 @@ export const SunshineAppsView: FC<Props> = ({ settingsManager, buddyProxy }) => 
         </Field>
       </DialogControlsSection>
       {syncButton}
-      {controllerConfigButton}
-      {batchResOverrideButton}
       {shortcutsList}
     </DialogBody>
   );

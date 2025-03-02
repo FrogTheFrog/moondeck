@@ -82,8 +82,8 @@ export interface HostResolution {
 
 export interface SunshineAppsSettings {
   showQuickAccessButton: boolean;
-  lastSelectedOverride: string;
-  lastSelectedControllerConfig: keyof typeof ControllerConfigValues;
+  lastSelectedOverride: string; // TODO: remove
+  lastSelectedControllerConfig: keyof typeof ControllerConfigValues; // TODO: remove
 }
 
 export interface HostSettings {

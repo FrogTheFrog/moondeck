@@ -1,5 +1,6 @@
 import { AppDetails, LifetimeNotification } from "@decky/ui";
 import { SteamClientEx, getAllNonSteamAppIds, getAppDetails, getCurrentDisplayMode } from "../steam-utils";
+import { call } from "@decky/api";
 import { logger } from "./logger";
 import { throttleAll } from "promise-throttle-all";
 export * from "../steam-utils";
@@ -14,8 +15,31 @@ export async function getCurrentDisplayModeString(): Promise<string | null> {
   return currentMode ? `${currentMode.width}x${currentMode.height}` : null;
 }
 
-export function getMoonDeckManagedMark(): string {
-  return "MOONDECK_MANAGED=1";
+let MoonDeckRunPath: string | null = null;
+export async function getMoonDeckRunPath(): Promise<string | null> {
+  if (MoonDeckRunPath !== null) {
+    return MoonDeckRunPath;
+  }
+
+  try {
+    MoonDeckRunPath = await call<[], string | null>("get_moondeckrun_path");
+  } catch (message) {
+    logger.critical("Error while getting moondeckrun.sh path: ", message);
+  }
+  return MoonDeckRunPath;
+}
+
+export function checkExecPathMatch(execPath: string, shortcutExe: string): boolean {
+  return new RegExp(`^${execPath}|"${execPath}"$`).test(shortcutExe);
+}
+
+export enum AppType {
+  MoonDeck,
+  GameStream
+}
+
+export function getMoonDeckManagedMark(appType: AppType): string {
+  return `MOONDECK_MANAGED=${appType}`;
 }
 
 export function getMoonDeckResMark(mode: string | null, useAutoResolution: boolean): string {
@@ -45,12 +69,8 @@ export function getMoonDeckAppIdMark(appId: number | null): string {
   return `${mark}=${appId}`;
 }
 
-export function getMoonDeckAppNameMark(appName: string | null): string {
+export function getMoonDeckAppNameMark(appName: string): string {
   const mark = "MOONDECK_STEAM_APP_NAME";
-  if (appName === null) {
-    return "";
-  }
-
   const escapedAppName = appName.replace("'", "'\\''");
   return `${mark}=${escapedAppName}`;
 }
@@ -106,9 +126,9 @@ export async function getAllMoonDeckAppDetails(): Promise<AppDetails[]> {
   }
 }
 
-export async function getAllExternalAppDetails(): Promise<AppDetails[]> {
+export async function getAllGamestreamAppDetails(): Promise<AppDetails[]> {
   try {
-    const externalApps: AppDetails[] = [];
+    const gamestreamApps: AppDetails[] = [];
 
     const appids = getAllNonSteamAppIds();
     // eslint-disable-next-line @typescript-eslint/promise-function-async
@@ -116,12 +136,12 @@ export async function getAllExternalAppDetails(): Promise<AppDetails[]> {
     const allDetails = await throttleAll(100, tasks);
 
     for (const details of allDetails) {
-      if (details?.strShortcutLaunchOptions.includes(getMoonDeckManagedMark())) {
-        externalApps.push(details);
+      if (details?.strShortcutLaunchOptions.includes(getMoonDeckManagedMark(AppType.GameStream))) {
+        gamestreamApps.push(details);
       }
     }
 
-    return externalApps;
+    return gamestreamApps;
   } catch (error) {
     logger.critical(error);
     return [];

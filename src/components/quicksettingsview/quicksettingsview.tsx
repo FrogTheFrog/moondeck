@@ -29,7 +29,7 @@ export const QuickSettingsView: FC<Props> = ({ connectivityManager, settingsMana
         ? <GameSessionPanel appData={appData} moonDeckAppLauncher={moonDeckAppLauncher} />
         : <>
             <HostStatusPanel currentHostSettings={currentHostSettings} currentSettings={currentSettings} settingsManager={settingsManager} serverStatus={serverStatus} serverRefreshStatus={serverRefreshStatus} buddyStatus={buddyStatus} buddyRefreshStatus={buddyRefreshStatus} />
-            <SunshineAppsPanel buddyProxy={connectivityManager.buddyProxy} currentHostSettings={currentHostSettings} currentSettings={currentSettings} />
+            <SunshineAppsPanel buddyProxy={connectivityManager.buddyProxy} currentHostSettings={currentHostSettings} />
             <HostAppPanel currentHostSettings={currentHostSettings} currentSettings={currentSettings} settingsManager={settingsManager} />
             <ResolutionPanel currentHostSettings={currentHostSettings} currentSettings={currentSettings} settingsManager={settingsManager} />
           </>

@@ -1,22 +1,12 @@
-import { AppType, MoonDeckAppProxy } from "./moondeckapp";
-import { ControllerConfigOption, SteamClientEx, getAppDetails, getCurrentDisplayModeString, getDisplayIdentifiers, getMoonDeckAppIdMark, getMoonDeckAppNameMark, getMoonDeckLinkedDisplayMark, getMoonDeckPythonMark, getMoonDeckResMark, getSystemNetworkStore, launchApp, registerForGameLifetime, registerForSuspendNotifictions, setAppHiddenState, setAppLaunchOptions, setAppResolutionOverride, setShortcutName, waitForNetworkConnection } from "./steamutils";
+import { AppType, ControllerConfigOption, SteamClientEx, checkExecPathMatch, getAppDetails, getCurrentDisplayModeString, getDisplayIdentifiers, getMoonDeckAppIdMark, getMoonDeckAppNameMark, getMoonDeckLinkedDisplayMark, getMoonDeckPythonMark, getMoonDeckResMark, getMoonDeckRunPath, getSystemNetworkStore, launchApp, registerForGameLifetime, registerForSuspendNotifictions, setAppHiddenState, setAppLaunchOptions, setAppResolutionOverride, setShortcutName, waitForNetworkConnection } from "./steamutils";
 import { ControllerConfigValues, Dimension, HostResolution, HostSettings, SettingsManager, networkReconnectAfterSuspendDefault } from "./settingsmanager";
 import { E_ALREADY_LOCKED, Mutex, tryAcquire } from "async-mutex";
 import { Subscription, pairwise } from "rxjs";
 import { AppDetails } from "@decky/ui";
 import { CommandProxy } from "./commandproxy";
+import { MoonDeckAppProxy } from "./moondeckapp";
 import { ShortcutManager } from "./shortcutmanager";
-import { call } from "@decky/api";
 import { logger } from "./logger";
-
-async function getMoonDeckRunPath(): Promise<string | null> {
-  try {
-    return await call<[], string | null>("get_moondeckrun_path");
-  } catch (message) {
-    logger.critical("Error while getting moondeckrun.sh path: ", message);
-  }
-  return null;
-}
 
 function getCustomDimension(display: string | null, hostResolution: Readonly<HostResolution>): string | null {
   const dimensions = hostResolution.dimensions;
@@ -81,7 +71,6 @@ export function updateControllerConfig(appId: number, controllerConfig: keyof ty
 export class MoonDeckAppLauncher {
   private unregisterLifetime: (() => void) | null = null;
   private unregisterSuspension: (() => void) | null = null;
-  private moonDeckRunPath: string | null = null;
   private subscription: Subscription | null = null;
   private readonly launchMutex = new Mutex();
   readonly moonDeckApp: MoonDeckAppProxy;
@@ -122,7 +111,7 @@ export class MoonDeckAppLauncher {
       return null;
     }
 
-    if (details.strShortcutExe !== `"${execPath}"`) {
+    if (checkExecPathMatch(execPath, details.strShortcutExe)) {
       logger.error(`Exec path does not match the expected one for ${appId}! ${details.strShortcutExe} vs ${execPath}`);
       return null;
     }
@@ -198,14 +187,6 @@ export class MoonDeckAppLauncher {
     }));
   }
 
-  private async getMoonDeckRunPath(): Promise<string | null> {
-    if (this.moonDeckRunPath === null) {
-      this.moonDeckRunPath = await getMoonDeckRunPath();
-    }
-
-    return this.moonDeckRunPath;
-  }
-
   constructor(
     private readonly settingsManager: SettingsManager,
     private readonly shortcutManager: ShortcutManager,
@@ -269,7 +250,7 @@ export class MoonDeckAppLauncher {
       try {
         logger.log(`Preparing to launch ${appName}.`);
 
-        const execPath = await this.getMoonDeckRunPath();
+        const execPath = await getMoonDeckRunPath();
         if (execPath === null) {
           logger.toast("Failed to get moondeckrun.sh path!", { output: "error" });
           return;
