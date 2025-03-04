@@ -1,5 +1,5 @@
 import { AppDetails, ConfirmModal, DialogButton, showModal } from "@decky/ui";
-import { AppType, BuddyProxy, HostSettings, addShortcut, checkExecPathMatch, getAllGamestreamAppDetails, getMoonDeckManagedMark, getMoonDeckRunPath, logger, removeShortcut, restartSteamClient, setAppLaunchOptions } from "../../lib";
+import { AppType, BuddyProxy, EnvVars, HostSettings, addShortcut, checkExecPathMatch, getAllGamestreamAppDetails, getEnvKeyValueString, getMoonDeckRunPath, logger, makeEnvKeyValue, removeShortcut, restartSteamClient, setAppLaunchOptions } from "../../lib";
 import { FC, useState } from "react";
 
 interface Props {
@@ -10,15 +10,22 @@ interface Props {
   refreshApps?: () => void;
 }
 
+function makeLaunchOptions(appName: string): string {
+  return `${makeEnvKeyValue(EnvVars.Managed, AppType.GameStream)} ${makeEnvKeyValue(EnvVars.AppName, appName)} %command%`;
+}
+
+async function updateLaunchOptions(appId: number, appName: string): Promise<boolean> {
+  if (!await setAppLaunchOptions(appId, makeLaunchOptions(appName))) {
+    logger.error(`Failed to set shortcut launch options for ${appName}!`);
+    return false;
+  }
+  return true;
+}
+
 async function addExternalShortcut(appName: string, moonlightExecPath: string): Promise<number | null> {
   const appId = await addShortcut(appName, moonlightExecPath);
   if (appId == null) {
     logger.error(`Failed to add ${appName} shortcut!`);
-    return null;
-  }
-
-  if (!await setAppLaunchOptions(appId, getMoonDeckManagedMark(AppType.GameStream))) {
-    logger.error(`Failed to set shortcut launch options for ${appName}!`);
     return null;
   }
 
@@ -63,7 +70,14 @@ async function syncShortcuts(shortcuts: AppDetails[], moonDeckHostApps: string[]
     } else if (!checkExecPathMatch(execPath, details.strShortcutExe)) {
       appsToRemove.push(details);
       appsToAdd.add(sunshineApp);
+    } else if (details.strDisplayName !== getEnvKeyValueString(details.strShortcutLaunchOptions, EnvVars.AppName)) {
+      appsToUpdate.push(details);
     }
+  }
+
+  // Update the launch options only
+  for (const details of appsToUpdate) {
+    success = await updateLaunchOptions(details.unAppID, details.strDisplayName) && success;
   }
 
   // Check which ones are no longer in the list and needs to be removed
@@ -76,7 +90,11 @@ async function syncShortcuts(shortcuts: AppDetails[], moonDeckHostApps: string[]
   // Actually generate shortcuts
   for (const app of appsToAdd) {
     const appId = await addExternalShortcut(app, execPath);
-    success = appId !== null && success;
+    if (appId !== null) {
+      success = await updateLaunchOptions(appId, app) && success;
+    } else {
+      success = false;
+    }
   }
 
   // Remove them bastards!

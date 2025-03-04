@@ -2,8 +2,23 @@ import { AppDetails, LifetimeNotification } from "@decky/ui";
 import { SteamClientEx, getAllNonSteamAppIds, getAppDetails, getCurrentDisplayMode } from "../steam-utils";
 import { call } from "@decky/api";
 import { logger } from "./logger";
+import { makeEnvKeyValue } from "./envutils";
 import { throttleAll } from "promise-throttle-all";
 export * from "../steam-utils";
+
+export enum EnvVars {
+  Managed = "MOONDECK_MANAGED",
+  AutoResolution = "MOONDECK_AUTO_RES",
+  LinkedDisplay = "MOONDECK_LINKED_DISPLAY",
+  SteamAppId = "MOONDECK_STEAM_APP_ID",
+  AppName = "MOONDECK_APP_NAME",
+  Python = "MOONDECK_PYTHON"
+}
+
+export enum AppType {
+  MoonDeck,
+  GameStream
+}
 
 export function registerForGameLifetime(callback: (data: LifetimeNotification) => void): () => void {
   const { unregister } = (SteamClient as SteamClientEx).GameSessions.RegisterForAppLifetimeNotifications(callback);
@@ -33,82 +48,6 @@ export function checkExecPathMatch(execPath: string, shortcutExe: string): boole
   return new RegExp(`^${execPath}|"${execPath}"$`).test(shortcutExe);
 }
 
-export enum AppType {
-  MoonDeck,
-  GameStream
-}
-
-export function getMoonDeckManagedMark(appType: AppType | null): string {
-  const mark = "MOONDECK_MANAGED";
-  if (appType === null) {
-    return mark;
-  }
-
-  return `${mark}=${appType}`;
-}
-
-export function getMoonDeckResMark(mode: string | null, useAutoResolution: boolean): string {
-  const mark = "MOONDECK_AUTO_RES";
-  if (mode === null || !useAutoResolution) {
-    return "";
-  }
-
-  return ` ${mark}="${mode}"`;
-}
-
-export function getMoonDeckLinkedDisplayMark(display: string | null): string {
-  const mark = "MOONDECK_LINKED_DISPLAY";
-  if (display === null) {
-    return "";
-  }
-
-  return ` ${mark}="${display}"`;
-}
-
-export function getMoonDeckAppIdMark(appId: number | null): string {
-  const mark = "MOONDECK_STEAM_APP_ID";
-  if (appId === null) {
-    return mark;
-  }
-
-  return `${mark}=${appId}`;
-}
-
-export function getMoonDeckAppNameMark(appName: string): string {
-  const mark = "MOONDECK_STEAM_APP_NAME";
-  const escapedAppName = appName.replace("'", "'\\''");
-  return `${mark}=${escapedAppName}`;
-}
-
-export function getMoonDeckPythonMark(path: string): string {
-  const mark = "MOONDECK_PYTHON";
-  if (path.trim().length === 0) {
-    return "";
-  }
-
-  return ` ${mark}="${path}"`;
-}
-
-export function getAppIdFromShortcut(value: string): number | null {
-  const regex = new RegExp(`(?:${getMoonDeckAppIdMark(null)}=(?<steamAppId>\\d+))`, "gi");
-  const matches = value.matchAll(regex);
-
-  let steamAppId: number | null = null;
-  for (const match of matches) {
-    if (match.groups != null) {
-      if (match.groups.steamAppId.length > 0) {
-        if (steamAppId !== null) {
-          return null;
-        }
-
-        steamAppId = Number(match.groups.steamAppId);
-      }
-    }
-  }
-
-  return steamAppId;
-}
-
 export async function getAllMoonDeckAppDetails(): Promise<AppDetails[]> {
   try {
     const moonDeckApps: AppDetails[] = [];
@@ -120,7 +59,13 @@ export async function getAllMoonDeckAppDetails(): Promise<AppDetails[]> {
 
     for (const details of allDetails) {
       if (details !== null) {
-        if (details.strShortcutExe.includes("moondeckrun.sh") && !details.strShortcutLaunchOptions.includes(getMoonDeckManagedMark(null))) {
+        const hasCorrectExec = details.strShortcutExe.includes("moondeckrun.sh");
+
+        // First check is needed for backwards compat.
+        const hasCorrectLaunchOptions = !details.strShortcutLaunchOptions.includes(EnvVars.Managed) ||
+           details.strShortcutLaunchOptions.includes(makeEnvKeyValue(EnvVars.Managed, AppType.MoonDeck));
+
+        if (hasCorrectExec && hasCorrectLaunchOptions) {
           moonDeckApps.push(details);
         }
       }
@@ -143,7 +88,7 @@ export async function getAllGamestreamAppDetails(): Promise<AppDetails[]> {
     const allDetails = await throttleAll(100, tasks);
 
     for (const details of allDetails) {
-      if (details?.strShortcutLaunchOptions.includes(getMoonDeckManagedMark(AppType.GameStream))) {
+      if (details?.strShortcutLaunchOptions.includes(makeEnvKeyValue(EnvVars.Managed, AppType.GameStream))) {
         gamestreamApps.push(details);
       }
     }

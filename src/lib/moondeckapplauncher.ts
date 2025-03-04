@@ -1,7 +1,8 @@
-import { AppType, ControllerConfigOption, SteamClientEx, checkExecPathMatch, getAppDetails, getCurrentDisplayModeString, getDisplayIdentifiers, getMoonDeckAppIdMark, getMoonDeckAppNameMark, getMoonDeckLinkedDisplayMark, getMoonDeckPythonMark, getMoonDeckResMark, getMoonDeckRunPath, getSystemNetworkStore, launchApp, registerForGameLifetime, registerForSuspendNotifictions, setAppHiddenState, setAppLaunchOptions, setAppResolutionOverride, setShortcutName, waitForNetworkConnection } from "./steamutils";
+import { AppType, ControllerConfigOption, EnvVars, SteamClientEx, checkExecPathMatch, getAppDetails, getCurrentDisplayModeString, getDisplayIdentifiers, getMoonDeckRunPath, getSystemNetworkStore, launchApp, registerForGameLifetime, registerForSuspendNotifictions, setAppHiddenState, setAppLaunchOptions, setAppResolutionOverride, setShortcutName, waitForNetworkConnection } from "./steamutils";
 import { ControllerConfigValues, Dimension, HostResolution, HostSettings, SettingsManager, networkReconnectAfterSuspendDefault } from "./settingsmanager";
 import { E_ALREADY_LOCKED, Mutex, tryAcquire } from "async-mutex";
 import { Subscription, pairwise } from "rxjs";
+import { getEnvKeyValueString, makeEnvKeyValue } from "./envutils";
 import { AppDetails } from "@decky/ui";
 import { CommandProxy } from "./commandproxy";
 import { MoonDeckAppProxy } from "./moondeckapp";
@@ -50,14 +51,33 @@ function getSelectedAppResolution(mode: string | null, display: string | null, h
   }
 }
 
-function getLaunchOptionsString(appId: number, appName: string, appType: AppType, displayMode: string | null, autoResolution: boolean, currentDisplay: string | null, pythonExecPath: string): string {
-  let launchOptions = "";
-  launchOptions += appType === AppType.MoonDeck ? getMoonDeckAppIdMark(appId) : getMoonDeckAppNameMark(appName);
-  launchOptions += getMoonDeckResMark(displayMode, autoResolution);
-  launchOptions += getMoonDeckLinkedDisplayMark(currentDisplay);
-  launchOptions += getMoonDeckPythonMark(pythonExecPath);
-  launchOptions += " %command%";
-  return launchOptions;
+function getLaunchOptionsString(currentValue: string, appId: number, appType: AppType, displayMode: string | null, autoResolution: boolean, currentDisplay: string | null, pythonExecPath: string): string | null {
+  const launchOptions: string[] = [];
+  launchOptions.push(makeEnvKeyValue(EnvVars.Managed, appType));
+
+  if (appType === AppType.MoonDeck) {
+    launchOptions.push(makeEnvKeyValue(EnvVars.SteamAppId, appId));
+  } else {
+    const appNameFromOptions = getEnvKeyValueString(currentValue, EnvVars.AppName);
+    if (appNameFromOptions === null) {
+      logger.error(`Failed to get app name from launch options for for ${appId}!`);
+      return null;
+    }
+
+    launchOptions.push(makeEnvKeyValue(EnvVars.AppName, appNameFromOptions));
+  }
+
+  if (autoResolution && displayMode !== null) {
+    launchOptions.push(makeEnvKeyValue(EnvVars.AutoResolution, displayMode));
+  }
+
+  if (currentDisplay !== null) {
+    launchOptions.push(makeEnvKeyValue(EnvVars.LinkedDisplay, currentDisplay));
+  }
+
+  launchOptions.push(makeEnvKeyValue(EnvVars.Python, pythonExecPath));
+  launchOptions.push("%command%");
+  return launchOptions.join(" ");
 }
 
 export function updateControllerConfig(appId: number, controllerConfig: keyof typeof ControllerConfigValues): void {
@@ -282,8 +302,8 @@ export class MoonDeckAppLauncher {
           return;
         }
 
-        const launchOptions = getLaunchOptionsString(appId, appName, appType, mode, hostSettings.resolution.automatic, currentDisplay, settings.pythonExecPath);
-        if (!await setAppLaunchOptions(details.unAppID, launchOptions)) {
+        const launchOptions = getLaunchOptionsString(details.strLaunchOptions, appId, appType, mode, hostSettings.resolution.automatic, currentDisplay, settings.pythonExecPath);
+        if (launchOptions === null || !await setAppLaunchOptions(details.unAppID, launchOptions)) {
           logger.toast("Failed to update shortcut launch options (needs restart?)!", { output: "error" });
           return;
         }

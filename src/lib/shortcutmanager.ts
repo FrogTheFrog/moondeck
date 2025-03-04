@@ -1,8 +1,9 @@
-import { addShortcut, getAllMoonDeckAppDetails, getAppIdFromShortcut, getAppStoreEx, removeShortcut, restartSteamClient } from "./steamutils";
+import { EnvVars, addShortcut, getAllMoonDeckAppDetails, getAppStoreEx, removeShortcut, restartSteamClient } from "./steamutils";
 import { AppOverviewPatcher } from "./appoverviewpatcher";
 import { BehaviorSubject } from "rxjs";
 import BiMap from "ts-bidirectional-map";
 import { ReadonlySubject } from "./readonlysubject";
+import { getEnvKeyValueNumber } from "./envutils";
 import { logger } from "./logger";
 
 export class ShortcutManager {
@@ -35,7 +36,7 @@ export class ShortcutManager {
         return;
       }
 
-      if (this.keyMapping?.hasValue(change.name) === false ?? false) {
+      if (this.keyMapping?.hasValue(change.name) === false) {
         return;
       }
 
@@ -51,7 +52,7 @@ export class ShortcutManager {
     let shortcutsRemoved = false;
     const details = await getAllMoonDeckAppDetails();
     for (const detail of details) {
-      const steamAppId = getAppIdFromShortcut(detail.strLaunchOptions);
+      const steamAppId = getEnvKeyValueNumber(detail.strLaunchOptions, EnvVars.SteamAppId);
       if (steamAppId === null || steamAppId in this.keyMapping) {
         shortcutsRemoved = true;
         await this.removeShortcut(detail.unAppID);
