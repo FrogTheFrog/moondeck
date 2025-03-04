@@ -5,7 +5,7 @@ export function makeEnvKeyValue(key: string, value: string | number): string {
     value = `${value}`;
   }
 
-  if (value.includes("'")) {
+  if (/[' ]/g.test(value)) {
     value = `'${value.replace(/'/g, "'\\''")}'`;
   }
 
