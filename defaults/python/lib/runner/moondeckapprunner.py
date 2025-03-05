@@ -85,7 +85,7 @@ class MoonDeckAppLauncher:
         async for req in pooler(client.get_streamed_app_data):
             data = req["data"]
             if data is None:
-                raise Result.AppLaunchAborted
+                raise RunnerError(Result.AppLaunchAborted)
 
             state = data["app_state"]
             if state == AppState.Updating:
