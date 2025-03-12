@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
-import { ConnectivityManager } from "../lib";
+import { useContext, useEffect, useState } from "react";
+import { MoonDeckContext } from "../contexts";
 import { Subscription } from "rxjs";
 
-export function useCommandExecutionStatus(connectivityManager: ConnectivityManager): boolean {
+export function useCommandExecutionStatus(): boolean {
+  const { connectivityManager } = useContext(MoonDeckContext);
   const [executionStatus, setExecutionStatus] = useState(connectivityManager.commandProxy.executing.value);
 
   useEffect(() => {

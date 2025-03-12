@@ -1,17 +1,18 @@
 import { DialogButton, Field, showModal } from "@decky/ui";
-import { FC, ReactNode, useState } from "react";
-import { SettingsManager, getDisplayIdentifiers, logger, stringifyDimension } from "../../lib";
+import { FC, ReactNode, useContext, useState } from "react";
+import { getDisplayIdentifiers, logger, stringifyDimension } from "../../lib";
 import { CurrentHostSettings } from "../../hooks";
 import { LinkedDisplayModal } from "./linkeddisplaymodal";
+import { MoonDeckContext } from "../../contexts";
 import { ToggleField } from "../shared";
 import { TrashMain } from "../icons";
 
 interface Props {
   hostSettings: CurrentHostSettings;
-  settingsManager: SettingsManager;
 }
 
-export const LinkedDisplayList: FC<Props> = ({ hostSettings, settingsManager }) => {
+export const LinkedDisplayList: FC<Props> = ({ hostSettings }) => {
+  const { settingsManager } = useContext(MoonDeckContext);
   const [linking, setLinking] = useState<boolean>(false);
   const hasCustomResolutions = hostSettings.resolution.dimensions.length > 0;
   const handleLinkClick = (): void => {
@@ -23,7 +24,7 @@ export const LinkedDisplayList: FC<Props> = ({ hostSettings, settingsManager }) 
         return;
       }
 
-      showModal(<LinkedDisplayModal closeModal={() => { setLinking(false); }} displays={displays.all} hostSettings={hostSettings} settingsManager={settingsManager} />);
+      showModal(<LinkedDisplayModal closeModal={() => { setLinking(false); }} displays={displays.all} hostSettings={hostSettings} />);
     }).catch((error) => {
       logger.critical(error);
       setLinking(false);

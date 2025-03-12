@@ -1,24 +1,20 @@
 import { BuddyStatusField, ServerStatusField, SettingsLoadingField } from "../shared";
-import { ConnectivityManager, SettingsManager } from "../../lib";
 import { DialogBody, DialogControlsSection, DialogControlsSectionHeader, Field } from "@decky/ui";
-import { FC, useState } from "react";
+import { FC, useContext, useState } from "react";
 import { useBuddyStatus, useCurrentSettings, useServerStatus } from "../../hooks";
 import { AddHostButton } from "./addhostbutton";
 import { BuddyPairButton } from "./buddypairbutton";
 import { HostForgetButton } from "./hostforgetbutton";
 import { HostScanButton } from "./hostscanbutton";
 import { HostSelectionDropdown } from "./hostselectiondropdown";
+import { MoonDeckContext } from "../../contexts";
 
-interface Props {
-  connectivityManager: ConnectivityManager;
-  settingsManager: SettingsManager;
-}
-
-export const HostSelectionView: FC<Props> = ({ connectivityManager, settingsManager }) => {
+export const HostSelectionView: FC = () => {
+  const { settingsManager } = useContext(MoonDeckContext);
   const [isScanning, setIsScanning] = useState(false);
-  const [serverStatus, serverRefreshStatus] = useServerStatus(connectivityManager);
-  const [buddyStatus, buddyRefreshStatus] = useBuddyStatus(connectivityManager);
-  const settings = useCurrentSettings(settingsManager);
+  const [serverStatus, serverRefreshStatus] = useServerStatus();
+  const [buddyStatus, buddyRefreshStatus] = useBuddyStatus();
+  const settings = useCurrentSettings();
 
   if (settings === null) {
     return <SettingsLoadingField />;
@@ -49,7 +45,6 @@ export const HostSelectionView: FC<Props> = ({ connectivityManager, settingsMana
             disabled={isScanning}
             isScanning={isScanning}
             setIsScanning={setIsScanning}
-            connectivityManager={connectivityManager}
           />
         </Field>
         <Field
@@ -59,7 +54,6 @@ export const HostSelectionView: FC<Props> = ({ connectivityManager, settingsMana
         >
           <AddHostButton
             disabled={isScanning}
-            connectivityManager={connectivityManager}
           />
         </Field>
         <Field
@@ -87,7 +81,6 @@ export const HostSelectionView: FC<Props> = ({ connectivityManager, settingsMana
           childrenContainerWidth="fixed"
         >
           <BuddyPairButton
-            connectivityManager={connectivityManager}
             disabled={isScanning || buddyStatus !== "NotPaired"} />
         </Field>
       </DialogControlsSection>

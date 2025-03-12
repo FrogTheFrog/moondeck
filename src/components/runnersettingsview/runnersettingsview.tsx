@@ -1,18 +1,16 @@
 import { DialogBody, DialogControlsSection, DialogControlsSectionHeader, Field } from "@decky/ui";
+import { FC, useContext } from "react";
 import { LabelWithIcon, NumericTextInput, ToggleField } from "../shared";
-import { SettingsManager, appLaunchDefault, appLaunchStabilityDefault, buddyRequestsDefault, initialConditionsDefault, networkReconnectAfterSuspendDefault, servicePingDefault, steamLaunchAfterSuspendDefault, steamLaunchDefault, steamReadinessDefault, streamEndDefault, streamReadinessDefault, wakeOnLanDefault } from "../../lib";
+import { appLaunchDefault, appLaunchStabilityDefault, buddyRequestsDefault, initialConditionsDefault, networkReconnectAfterSuspendDefault, servicePingDefault, steamLaunchAfterSuspendDefault, steamLaunchDefault, steamReadinessDefault, streamEndDefault, streamReadinessDefault, wakeOnLanDefault } from "../../lib";
 import { useCurrentHostSettings, useCurrentSettings } from "../../hooks";
-import { FC } from "react";
 import { HostOff } from "../icons";
+import { MoonDeckContext } from "../../contexts";
 import { PythonExecutableSection } from "./pythonexecutablesection";
 
-interface Props {
-  settingsManager: SettingsManager;
-}
-
-export const RunnerSettingsView: FC<Props> = ({ settingsManager }) => {
-  const userSettings = useCurrentSettings(settingsManager);
-  const hostSettings = useCurrentHostSettings(settingsManager);
+export const RunnerSettingsView: FC = () => {
+  const { settingsManager } = useContext(MoonDeckContext);
+  const userSettings = useCurrentSettings();
+  const hostSettings = useCurrentHostSettings();
   if (userSettings === null || hostSettings === null) {
     return (
       <DialogBody>
@@ -35,7 +33,7 @@ export const RunnerSettingsView: FC<Props> = ({ settingsManager }) => {
           value={userSettings.runnerDebugLogs}
           setValue={(value) => settingsManager.update((userSettings) => { userSettings.runnerDebugLogs = value; })}
         />
-        <PythonExecutableSection settingsManager={settingsManager} />
+        <PythonExecutableSection />
       </DialogControlsSection>
       <DialogControlsSection>
         <DialogControlsSectionHeader>Timeouts</DialogControlsSectionHeader>

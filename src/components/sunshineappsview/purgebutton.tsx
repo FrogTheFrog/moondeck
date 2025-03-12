@@ -1,14 +1,15 @@
-import { AppDetails, ConfirmModal, DialogButton, showModal } from "@decky/ui";
+import { ConfirmModal, DialogButton, showModal } from "@decky/ui";
 import { logger, removeShortcut, restartSteamClient } from "../../lib";
 import { FC } from "react";
+import { GameStreamAppInfo } from "../../hooks";
 
 interface Props {
-  shortcuts: AppDetails[];
+  shortcuts: GameStreamAppInfo[];
 }
 
-async function purgeShortcuts(shortcuts: AppDetails[]): Promise<void> {
-  for (const detail of shortcuts) {
-    await removeShortcut(detail.unAppID);
+async function purgeShortcuts(shortcuts: GameStreamAppInfo[]): Promise<void> {
+  for (const info of shortcuts) {
+    await removeShortcut(info.appId);
   }
 
   if (shortcuts.length > 0) {

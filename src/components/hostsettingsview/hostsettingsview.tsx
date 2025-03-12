@@ -1,18 +1,15 @@
 import { DialogBody, DialogControlsSection, DialogControlsSectionHeader, Field, Focusable } from "@decky/ui";
+import { FC, useContext } from "react";
 import { HostAppSelectionDropdown, LabelWithIcon, NumericTextInput, ToggleField } from "../shared";
 import { ModifyListButton, RemoveListEntryButton } from "../shared/indexedlist";
-import { FC } from "react";
 import { HostOff } from "../icons";
 import { ModifyHostAppModal } from "./modifyhostappmodal";
-import { SettingsManager } from "../../lib";
+import { MoonDeckContext } from "../../contexts";
 import { useCurrentHostSettings } from "../../hooks";
 
-interface Props {
-  settingsManager: SettingsManager;
-}
-
-export const HostSettingsView: FC<Props> = ({ settingsManager }) => {
-  const hostSettings = useCurrentHostSettings(settingsManager);
+export const HostSettingsView: FC = () => {
+  const { settingsManager } = useContext(MoonDeckContext);
+  const hostSettings = useCurrentHostSettings();
   if (hostSettings === null) {
     return (
       <DialogBody>
@@ -68,7 +65,7 @@ export const HostSettingsView: FC<Props> = ({ settingsManager }) => {
             <>
               <div>If disabled, Steam will remain open in bigpicture mode (no way to leave bigpicture without closing Steam without using the UI).</div>
               <br />
-              <div>Note: Nvidia Gamestream somehow closes the OLD bigpicture mode. Seems to be a bug.</div>
+              <div>Note: Nvidia GameStream somehow closes the OLD bigpicture mode. Seems to be a bug.</div>
             </>
           }
           value={hostSettings.closeSteamOnceSessionEnds}
@@ -76,7 +73,7 @@ export const HostSettingsView: FC<Props> = ({ settingsManager }) => {
         />
       </DialogControlsSection>
       <DialogControlsSection>
-        <DialogControlsSectionHeader>Gamestream App</DialogControlsSectionHeader>
+        <DialogControlsSectionHeader>GameStream App</DialogControlsSectionHeader>
         <Field
           description={
             <>

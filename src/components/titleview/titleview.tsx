@@ -2,7 +2,7 @@ import { DialogButton, Focusable, Navigation, staticClasses } from "@decky/ui";
 import { FC } from "react";
 import { SettingsMain } from "../icons";
 
-export const TitleView: FC<unknown> = () => {
+export const TitleView: FC = () => {
   const onSettingsClick = (): void => {
     Navigation.CloseSideMenus();
     Navigation.Navigate("/moondeck");

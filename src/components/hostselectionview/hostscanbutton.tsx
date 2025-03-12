@@ -1,15 +1,16 @@
-import { ConnectivityManager, GameStreamHost, logger } from "../../lib";
 import { DialogButton, Menu, MenuItem, showContextMenu } from "@decky/ui";
-import { Dispatch, FC } from "react";
+import { Dispatch, FC, useContext } from "react";
+import { GameStreamHost, logger } from "../../lib";
+import { MoonDeckContext } from "../../contexts";
 
 interface Props {
-  connectivityManager: ConnectivityManager;
   disabled: boolean;
   isScanning: boolean;
   setIsScanning: Dispatch<boolean>;
 }
 
-export const HostScanButton: FC<Props> = ({ connectivityManager, disabled, isScanning, setIsScanning }) => {
+export const HostScanButton: FC<Props> = ({ disabled, isScanning, setIsScanning }) => {
+  const { connectivityManager } = useContext(MoonDeckContext);
   const addOrUpdateHost = (host: GameStreamHost): void => {
     connectivityManager.serverProxy.updateHostSettings(host, true, false).catch((e) => logger.critical(e));
   };

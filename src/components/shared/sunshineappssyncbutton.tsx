@@ -1,18 +1,24 @@
 import { AppDetails, ConfirmModal, DialogButton, showModal } from "@decky/ui";
-import { BuddyProxy, ControllerConfigValues, HostSettings, UserSettings, addShortcut, getAllExternalAppDetails, getMoonDeckManagedMark, logger, removeShortcut, restartSteamClient, setAppLaunchOptions, setAppResolutionOverride, updateControllerConfig } from "../../lib";
-import { FC, useState } from "react";
+import { AppType, BuddyProxy, EnvVars, HostSettings, addShortcut, checkExecPathMatch, getAppDetailsForAppIds, getEnvKeyValueString, getMoonDeckRunPath, logger, makeEnvKeyValue, removeShortcut, restartSteamClient, setAppLaunchOptions } from "../../lib";
+import { FC, useContext, useState } from "react";
+import { ExternalAppShortcuts } from "../../lib/externalappshortcuts";
+import { MoonDeckContext } from "../../contexts";
 
 interface Props {
-  shortcuts?: AppDetails[];
-  buddyProxy: BuddyProxy;
-  settings: UserSettings;
   hostSettings: HostSettings;
   noConfirmationDialog?: boolean;
-  refreshApps?: () => void;
 }
 
-function makeExecPath(moonlightExecPath: string | null): string {
-  return moonlightExecPath === null ? "/usr/bin/flatpak" : moonlightExecPath;
+function makeLaunchOptions(appName: string): string {
+  return `${makeEnvKeyValue(EnvVars.AppType, AppType.GameStream)} ${makeEnvKeyValue(EnvVars.AppName, appName)} %command%`;
+}
+
+async function updateLaunchOptions(appId: number, appName: string): Promise<boolean> {
+  if (!await setAppLaunchOptions(appId, makeLaunchOptions(appName))) {
+    logger.error(`Failed to set shortcut launch options for ${appName}!`);
+    return false;
+  }
+  return true;
 }
 
 async function addExternalShortcut(appName: string, moonlightExecPath: string): Promise<number | null> {
@@ -25,32 +31,10 @@ async function addExternalShortcut(appName: string, moonlightExecPath: string): 
   return appId;
 }
 
-function makeLaunchOptions(appName: string, hostName: string, customExec: boolean): string {
-  const escapedHostName = hostName.replace("'", "'\\''");
-  const escapedAppName = appName.replace("'", "'\\''");
-  return `${getMoonDeckManagedMark()} %command% ${customExec ? "" : "run com.moonlight_stream.Moonlight"} stream '${escapedHostName}' '${escapedAppName}'`;
-}
-
-async function updateLaunchOptions(appId: number, appName: string, hostName: string, customExec: boolean): Promise<boolean> {
-  if (!await setAppLaunchOptions(appId, makeLaunchOptions(appName, hostName, customExec))) {
-    logger.error(`Failed to set shortcut launch options for ${appName}!`);
-    return false;
-  }
-  return true;
-}
-
-async function updateResolutionOverride(appId: number, appName: string, resolution: string): Promise<boolean> {
-  if (!await setAppResolutionOverride(appId, resolution)) {
-    logger.warn(`Failed to set app resolution override for ${appName} to ${resolution}!`);
-    return false;
-  }
-  return true;
-}
-
-async function syncShortcuts(shortcuts: AppDetails[], moonDeckHostApps: string[], hostName: string, buddyProxy: BuddyProxy, moonlightExecPath: string | null, resOverride: string, controllerConfig: keyof typeof ControllerConfigValues, refreshApps?: () => void): Promise<void> {
-  let sunshineApps = await buddyProxy.getGamestreamAppNames();
+async function syncShortcuts(moonDeckHostApps: string[], buddyProxy: BuddyProxy, externalAppShortcuts: ExternalAppShortcuts): Promise<void> {
+  let sunshineApps = await buddyProxy.getGameStreamAppNames();
   if (sunshineApps === null) {
-    logger.toast("Failed to get Gamestream app list!", { output: "error" });
+    logger.toast("Failed to get GameStream app list!", { output: "error" });
     return;
   }
 
@@ -61,13 +45,18 @@ async function syncShortcuts(shortcuts: AppDetails[], moonDeckHostApps: string[]
   // Filter out the custom MoonDeck host apps
   sunshineApps = sunshineApps.filter(app => !moonDeckHostApps.includes(app));
 
+  const currentAppDetails = await getAppDetailsForAppIds(Array.from(externalAppShortcuts.appInfo.value.keys()));
   const existingApps = new Map<string, AppDetails>();
-  for (const shortcut of shortcuts) {
+  for (const shortcut of currentAppDetails) {
     existingApps.set(shortcut.strDisplayName, shortcut);
   }
 
-  const customExec = moonlightExecPath !== null;
-  const execPath = makeExecPath(moonlightExecPath);
+  const execPath = await getMoonDeckRunPath();
+  if (execPath === null) {
+    logger.toast("Failed to get moondeckrun.sh path!", { output: "error" });
+    return;
+  }
+
   const appsToAdd = new Set<string>();
   const appsToUpdate: AppDetails[] = [];
   const appsToRemove: AppDetails[] = [];
@@ -78,12 +67,17 @@ async function syncShortcuts(shortcuts: AppDetails[], moonDeckHostApps: string[]
     const details = existingApps.get(sunshineApp);
     if (!details) {
       appsToAdd.add(sunshineApp);
-    } else if (!new RegExp(`^${execPath}|"${execPath}"$`).test(details.strShortcutExe)) {
+    } else if (!checkExecPathMatch(execPath, details.strShortcutExe)) {
       appsToRemove.push(details);
       appsToAdd.add(sunshineApp);
-    } else if (details.strShortcutLaunchOptions !== makeLaunchOptions(sunshineApp, hostName, customExec)) {
+    } else if (details.strDisplayName !== getEnvKeyValueString(details.strLaunchOptions, EnvVars.AppName)) {
       appsToUpdate.push(details);
     }
+  }
+
+  // Update the launch options only
+  for (const details of appsToUpdate) {
+    success = await updateLaunchOptions(details.unAppID, details.strDisplayName) && success;
   }
 
   // Check which ones are no longer in the list and needs to be removed
@@ -94,22 +88,15 @@ async function syncShortcuts(shortcuts: AppDetails[], moonDeckHostApps: string[]
   }
 
   // Actually generate shortcuts
+  const addedAppIds: Set<number> = new Set();
   for (const app of appsToAdd) {
     const appId = await addExternalShortcut(app, execPath);
     if (appId !== null) {
-      success = await updateLaunchOptions(appId, app, hostName, customExec) && success;
-      success = await updateResolutionOverride(appId, app, resOverride) && success;
-      if (success) {
-        updateControllerConfig(appId, controllerConfig);
-      }
+      addedAppIds.add(appId);
+      success = await updateLaunchOptions(appId, app) && success;
     } else {
       success = false;
     }
-  }
-
-  // Update the launch options only
-  for (const details of appsToUpdate) {
-    success = await updateLaunchOptions(details.unAppID, details.strDisplayName, hostName, customExec) && success;
   }
 
   // Remove them bastards!
@@ -121,11 +108,14 @@ async function syncShortcuts(shortcuts: AppDetails[], moonDeckHostApps: string[]
     if (appsToRemove.length > 0) {
       restartSteamClient();
     } else {
-      refreshApps?.();
+      const newDetails = await getAppDetailsForAppIds(Array.from(addedAppIds));
+      success = newDetails.length === addedAppIds.size && success;
+      externalAppShortcuts.processAppDetails(newDetails); // Proccess details regardless of success
+
       if (success) {
         logger.toast(`${appsToAdd.size + appsToUpdate.length}/${sunshineApps.length} app(s) were synced.`, { output: "log" });
       } else {
-        logger.toast("Some app(s) failed to sync synced.", { output: "error" });
+        logger.toast("Some app(s) failed to sync.", { output: "error" });
       }
     }
   } else {
@@ -133,7 +123,8 @@ async function syncShortcuts(shortcuts: AppDetails[], moonDeckHostApps: string[]
   }
 }
 
-export const SunshineAppsSyncButton: FC<Props> = ({ shortcuts, buddyProxy, settings, hostSettings, noConfirmationDialog, refreshApps }) => {
+export const SunshineAppsSyncButton: FC<Props> = ({ hostSettings, noConfirmationDialog }) => {
+  const { connectivityManager, externalAppShortcuts } = useContext(MoonDeckContext);
   const [syncing, setSyncing] = useState(false);
 
   const handleClick = (): void => {
@@ -141,14 +132,9 @@ export const SunshineAppsSyncButton: FC<Props> = ({ shortcuts, buddyProxy, setti
       (async () => {
         setSyncing(true);
         await syncShortcuts(
-          shortcuts ?? await getAllExternalAppDetails(),
           hostSettings.hostApp.apps,
-          hostSettings.hostName,
-          buddyProxy,
-          settings.useMoonlightExec ? settings.moonlightExecPath || null : null,
-          hostSettings.sunshineApps.lastSelectedOverride,
-          hostSettings.sunshineApps.lastSelectedControllerConfig,
-          refreshApps);
+          connectivityManager.buddyProxy,
+          externalAppShortcuts);
       })()
         .catch((e) => logger.critical(e))
         .finally(() => { setSyncing(false); });

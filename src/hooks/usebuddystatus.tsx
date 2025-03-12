@@ -1,8 +1,10 @@
-import { BuddyStatus, ConnectivityManager, logger } from "../lib";
+import { BuddyStatus, logger } from "../lib";
 import { Subscription, debounceTime } from "rxjs";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
+import { MoonDeckContext } from "../contexts";
 
-export function useBuddyStatus(connectivityManager: ConnectivityManager, observe?: boolean): [BuddyStatus, boolean] {
+export function useBuddyStatus(observe?: boolean): [BuddyStatus, boolean] {
+  const { connectivityManager } = useContext(MoonDeckContext);
   const [buddyStatus, setBuddyStatus] = useState(connectivityManager.buddyProxy.status.value);
   const [refreshStatus, setRefreshStatus] = useState(connectivityManager.buddyProxy.refreshing.value);
 

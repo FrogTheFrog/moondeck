@@ -86,6 +86,7 @@ export class ServerProxy {
         resolution: {
           automatic: currentSettings?.resolution.automatic ?? true,
           appResolutionOverride: currentSettings?.resolution.appResolutionOverride ?? "CustomResolution",
+          appResolutionOverrideForInternalDisplay: currentSettings?.resolution.appResolutionOverrideForInternalDisplay ?? false,
           passToMoonlight: currentSettings?.resolution.passToMoonlight ?? true,
           useCustomDimensions: currentSettings?.resolution.useCustomDimensions ?? false,
           useLinkedDisplays: currentSettings?.resolution.useLinkedDisplays ?? true,
@@ -113,9 +114,7 @@ export class ServerProxy {
           networkReconnectAfterSuspend: currentSettings?.runnerTimeouts.networkReconnectAfterSuspend ?? networkReconnectAfterSuspendDefault
         },
         sunshineApps: {
-          showQuickAccessButton: currentSettings?.sunshineApps.showQuickAccessButton ?? false,
-          lastSelectedOverride: currentSettings?.sunshineApps.lastSelectedOverride ?? "Default",
-          lastSelectedControllerConfig: currentSettings?.sunshineApps.lastSelectedControllerConfig ?? "Noop"
+          showQuickAccessButton: currentSettings?.sunshineApps.showQuickAccessButton ?? false
         }
       };
 

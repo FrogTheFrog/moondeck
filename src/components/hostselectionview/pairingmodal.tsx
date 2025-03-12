@@ -1,16 +1,17 @@
-import { ConnectivityManager, logger } from "../../lib";
-import { FC, useEffect } from "react";
+import { FC, useContext, useEffect } from "react";
 import { ModalRoot } from "@decky/ui";
+import { MoonDeckContext } from "../../contexts";
+import { logger } from "../../lib";
 import { useBuddyStatus } from "../../hooks";
 
 interface Props {
   closeModal: () => void;
-  connectivityManager: ConnectivityManager;
   pin: number;
 }
 
-export const PairingModal: FC<Props> = ({ closeModal, connectivityManager, pin }) => {
-  const [buddyStatus] = useBuddyStatus(connectivityManager);
+export const PairingModal: FC<Props> = ({ closeModal, pin }) => {
+  const { connectivityManager } = useContext(MoonDeckContext);
+  const [buddyStatus] = useBuddyStatus();
 
   const handleDismiss = (): void => {
     connectivityManager.serverProxy.abortPairing().catch((e) => logger.critical(e));

@@ -1,20 +1,18 @@
+import { AppType, UserSettings, isAppTypeSupported, logger } from "../../lib";
 import { Button, Focusable, appDetailsClasses, appDetailsHeaderClasses, basicAppDetailsSectionStylerClasses, joinClassNames, playSectionClasses, showModal, sleep } from "@decky/ui";
-import { CSSProperties, FC, useEffect, useRef, useState } from "react";
+import { CSSProperties, FC, useContext, useEffect, useRef, useState } from "react";
 import { OffsetStyle, achorPositionName } from "./offsetstyle";
-import { SettingsManager, UserSettings, isAppTypeSupported, logger } from "../../lib";
 import { useCurrentSettings, useMoonDeckAppData } from "../../hooks";
 import { ButtonStyle } from "./buttonstyle";
 import { ContainerStyle } from "./containerstyle";
 import { LaunchPromptModal } from "./launchpromptmodal";
-import { MoonDeckAppLauncher } from "../../lib/moondeckapplauncher";
+import { MoonDeckContext } from "../../contexts";
 import { MoonDeckMain } from "../icons";
 
 interface Props {
   appId: number;
   appName: string;
   appType: number;
-  settingsManager: SettingsManager;
-  moonDeckAppLauncher: MoonDeckAppLauncher;
 }
 
 interface ShellProps {
@@ -54,9 +52,10 @@ export const MoonDeckLaunchButtonShell: FC<ShellProps> = ({ onClick, buttonPosit
   );
 };
 
-const MoonDeckLaunchButton: FC<Props> = ({ appId, appName, appType, moonDeckAppLauncher, settingsManager }) => {
-  const appData = useMoonDeckAppData(moonDeckAppLauncher);
-  const settings = useCurrentSettings(settingsManager);
+const MoonDeckLaunchButton: FC<Props> = ({ appId, appName, appType }) => {
+  const { moonDeckAppLauncher } = useContext(MoonDeckContext);
+  const appData = useMoonDeckAppData();
+  const settings = useCurrentSettings();
 
   if (!isAppTypeSupported(appType) || settings === null || appData?.beingSuspended) {
     return null;
@@ -68,7 +67,7 @@ const MoonDeckLaunchButton: FC<Props> = ({ appId, appName, appType, moonDeckAppL
       buttonStyle={settings.buttonStyle}
       onClick={(onDone: () => void) => {
         const launchApp = async (): Promise<void> => {
-          await moonDeckAppLauncher.launchApp(appId, appName);
+          await moonDeckAppLauncher.launchApp(appId, appName, AppType.MoonDeck);
           await sleep(1000);
         };
 

@@ -1,7 +1,9 @@
-import { MoonDeckAppData, MoonDeckAppLauncher } from "../lib";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
+import { MoonDeckAppData } from "../lib";
+import { MoonDeckContext } from "../contexts";
 
-export function useMoonDeckAppData(moonDeckAppLauncher: MoonDeckAppLauncher): Readonly<MoonDeckAppData> | null {
+export function useMoonDeckAppData(): Readonly<MoonDeckAppData> | null {
+  const { moonDeckAppLauncher } = useContext(MoonDeckContext);
   const [appData, setAppData] = useState<Readonly<MoonDeckAppData> | null>(moonDeckAppLauncher.moonDeckApp.value);
 
   useEffect(() => {

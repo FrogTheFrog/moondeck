@@ -3,7 +3,7 @@ import { FC } from "react";
 import { HostOff } from "../icons";
 import { LabelWithIcon } from "./labelwithicon";
 
-export const SettingsLoadingField: FC<unknown> = () => {
+export const SettingsLoadingField: FC = () => {
   return (
     <DialogBody>
       <DialogControlsSection>

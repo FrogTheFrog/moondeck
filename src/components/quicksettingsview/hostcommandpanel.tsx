@@ -1,16 +1,17 @@
-import { BuddyStatus, ConnectivityManager, ServerStatus, logger } from "../../lib";
+import { BuddyStatus, ServerStatus, logger } from "../../lib";
 import { ButtonItem, PanelSection, PanelSectionRow } from "@decky/ui";
-import { FC } from "react";
+import { FC, useContext } from "react";
+import { MoonDeckContext } from "../../contexts";
 import { useCommandExecutionStatus } from "../../hooks";
 
 interface Props {
-  connectivityManager: ConnectivityManager;
   serverStatus: ServerStatus;
   buddyStatus: BuddyStatus;
 }
 
-export const HostCommandPanel: FC<Props> = ({ connectivityManager, serverStatus, buddyStatus }) => {
-  const executionStatus = useCommandExecutionStatus(connectivityManager);
+export const HostCommandPanel: FC<Props> = ({ serverStatus, buddyStatus }) => {
+  const { connectivityManager } = useContext(MoonDeckContext);
+  const executionStatus = useCommandExecutionStatus();
 
   return (
     <PanelSection title="COMMANDS" spinner={executionStatus}>

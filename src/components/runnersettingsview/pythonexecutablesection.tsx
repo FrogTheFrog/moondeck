@@ -1,16 +1,14 @@
 import { DialogButton, Field, Focusable } from "@decky/ui";
+import { FC, useContext } from "react";
 import { FilePickerRes, FileSelectionType, openFilePicker } from "@decky/api";
-import { SettingsManager, logger } from "../../lib";
 import { AnyTextInput } from "../shared";
-import { FC } from "react";
+import { MoonDeckContext } from "../../contexts";
+import { logger } from "../../lib";
 import { useCurrentSettings } from "../../hooks";
 
-interface Props {
-  settingsManager: SettingsManager;
-}
-
-export const PythonExecutableSection: FC<Props> = ({ settingsManager }) => {
-  const userSettings = useCurrentSettings(settingsManager);
+export const PythonExecutableSection: FC = () => {
+  const { settingsManager } = useContext(MoonDeckContext);
+  const userSettings = useCurrentSettings();
   if (userSettings === null) {
     return null;
   }

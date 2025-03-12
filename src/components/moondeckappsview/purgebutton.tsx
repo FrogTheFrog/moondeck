@@ -1,19 +1,20 @@
 import { ConfirmModal, DialogButton, showModal } from "@decky/ui";
-import { ShortcutManager, logger } from "../../lib";
-import { FC } from "react";
+import { FC, useContext } from "react";
+import { MoonDeckContext } from "../../contexts";
+import { logger } from "../../lib";
 
 interface Props {
   disabled: boolean;
-  shortcutManager: ShortcutManager;
 }
 
-export const PurgeButton: FC<Props> = ({ disabled, shortcutManager }) => {
+export const PurgeButton: FC<Props> = ({ disabled }) => {
+  const { moonDeckAppShortcuts } = useContext(MoonDeckContext);
   const handleClick = (): void => {
     showModal(
       <ConfirmModal
         strTitle="Are you sure you want to purge?"
         strDescription="This action cannot be undone."
-        onOK={() => { shortcutManager.purgeAllShortcuts().catch((e) => logger.critical(e)); }}
+        onOK={() => { moonDeckAppShortcuts.purgeAllShortcuts().catch((e) => logger.critical(e)); }}
       />
     );
   };

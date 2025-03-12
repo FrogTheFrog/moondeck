@@ -15,7 +15,7 @@ export async function getAppDetails(appId: number): Promise<AppDetails | null> {
       const { unregister } = (SteamClient as SteamClientEx).Apps.RegisterForAppDetails(appId, (details) => {
         clearTimeout(timeoutId);
         unregister();
-        resolve(details);
+        resolve(Object.keys(details).length > 0 ? details : null);
       });
 
       timeoutId = setTimeout(() => {

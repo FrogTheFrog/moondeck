@@ -1,16 +1,14 @@
 import { AnyTextInput, ToggleField } from "../shared";
 import { DialogButton, Field, Focusable } from "@decky/ui";
+import { FC, useContext } from "react";
 import { FilePickerRes, FileSelectionType, openFilePicker } from "@decky/api";
-import { SettingsManager, logger } from "../../lib";
-import { FC } from "react";
+import { MoonDeckContext } from "../../contexts";
+import { logger } from "../../lib";
 import { useCurrentSettings } from "../../hooks";
 
-interface Props {
-  settingsManager: SettingsManager;
-}
-
-export const MoonlightExecutableSelection: FC<Props> = ({ settingsManager }) => {
-  const userSettings = useCurrentSettings(settingsManager);
+export const MoonlightExecutableSelection: FC = () => {
+  const { settingsManager } = useContext(MoonDeckContext);
+  const userSettings = useCurrentSettings();
   if (userSettings === null) {
     return null;
   }
