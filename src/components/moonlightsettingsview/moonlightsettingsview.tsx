@@ -168,8 +168,8 @@ export const MoonlightSettingsView: FC = () => {
           />
         </Field>
         <ToggleField
-          label="Also apply for internal display."
-          description="By default the override is only for internal displays, but this can be changed with this option."
+          label="Also apply to internal display"
+          description="By default the override is for external displays only, but this can be changed with this option."
           value={hostSettings.resolution.appResolutionOverrideForInternalDisplay}
           setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.resolution.appResolutionOverrideForInternalDisplay = value; })}
         />
