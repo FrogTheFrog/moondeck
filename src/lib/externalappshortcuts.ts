@@ -1,6 +1,6 @@
 import { AppType, EnvVars, addShortcut, checkExecPathMatch, getAppDetailsForAppIds, getAppStoreEx, getMoonDeckRunPath, removeShortcut, restartSteamClient, setAppLaunchOptions } from "./steamutils";
 import { HostSettings, SettingsManager } from "./settingsmanager";
-import { getEnvKeyValueNumber, getEnvKeyValueString, makeEnvKeyValue } from "./envutils";
+import { getEnvKeyValueString, makeEnvKeyValue } from "./envutils";
 import { AppDetails } from "@decky/ui";
 import { BehaviorSubject } from "rxjs";
 import { BuddyProxy } from "./buddyproxy";
@@ -37,7 +37,7 @@ interface GameStreamHostData {
 interface NonSteamHostData {
   appType: AppType.NonSteam;
   appName: string;
-  appId: number;
+  appId: string;
 }
 
 type HostData = GameStreamHostData | NonSteamHostData;
@@ -265,7 +265,7 @@ export class ExternalAppShortcuts {
               appsToUpdate.push({ appId: details.unAppID, data });
             }
           } else {
-            if (data.appId !== getEnvKeyValueNumber(details.strLaunchOptions, EnvVars.SteamAppId)) {
+            if (data.appId !== getEnvKeyValueString(details.strLaunchOptions, EnvVars.SteamAppId)) {
               appsToUpdate.push({ appId: details.unAppID, data });
             }
           }

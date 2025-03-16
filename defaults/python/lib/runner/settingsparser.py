@@ -26,7 +26,7 @@ class MoonDeckAppRunnerSettings(TypedDict):
     close_steam: bool
     timeouts: RunnerTimeouts
     moonlight_exec_path: Optional[str]
-    app_id: int
+    app_id: str
     debug_logs: bool
     runner_type: RunnerType.MoonDeck
 
@@ -39,7 +39,7 @@ class MoonlightOnlyRunnerSettings(TypedDict):
     address: str
     timeouts: RunnerTimeouts
     moonlight_exec_path: Optional[str]
-    app_id: int
+    app_id: str
     debug_logs: bool
     runner_type: RunnerType.MoonlightOnly
 
@@ -124,6 +124,9 @@ async def parse_settings() -> MoonDeckAppRunnerSettings | MoonlightOnlyRunnerSet
         raise RunnerError(Result.NoRunnerType)
     
     if env_settings["runner_type"] == RunnerType.MoonDeck:
+        if env_settings["app_id"] is None:
+            raise RunnerError(Result.NoAppId)
+
         return {
             "resolution": parse_resolution_settings(host_settings=host_settings, env_settings=env_settings),
             "host_app": parse_host_app_name(host_settings=host_settings),
@@ -141,6 +144,9 @@ async def parse_settings() -> MoonDeckAppRunnerSettings | MoonlightOnlyRunnerSet
             "runner_type": RunnerType.MoonDeck
         }
     else:
+        if env_settings["app_name"] is None:
+            raise RunnerError(Result.NoAppName)
+
         return {
             "resolution": parse_resolution_settings(host_settings=host_settings, env_settings=env_settings),
             "host_app": env_settings["app_name"],

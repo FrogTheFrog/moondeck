@@ -41,7 +41,7 @@ class AppState(Enum):
 
 
 class StreamedAppData(TypedDict):
-    app_id: int
+    app_id: str
     app_state: AppState
 
 
@@ -144,7 +144,7 @@ class BuddyRequests(contextlib.AbstractAsyncContextManager):
             data = await resp.json(encoding="utf-8")
             return utils.from_dict(ResultLikeResponse, data)
 
-    async def post_launch_steam_app(self, app_id: int):
+    async def post_launch_steam_app(self, app_id: str):
         data = {
             "app_id": app_id
         }

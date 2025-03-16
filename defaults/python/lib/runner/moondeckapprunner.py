@@ -75,7 +75,7 @@ class MoonDeckAppLauncher:
             if req["result"]:
                 break
 
-    async def wait_for_app_to_be_launched(client: BuddyClient, app_id: int, timeouts: RunnerTimeouts):
+    async def wait_for_app_to_be_launched(client: BuddyClient, app_id: str, timeouts: RunnerTimeouts):
         logger.info(f"Waiting for app {app_id} to be launched in Steam")
         pooler = TimedPooler(retries=timeouts["appLaunch"],
                              error_on_retry_out=Result.AppLaunchFailed)
@@ -135,7 +135,7 @@ class MoonDeckAppLauncher:
             pooler.retries = 1
 
     @classmethod
-    async def launch(cls, client: BuddyClient, app_id: int, timeouts: RunnerTimeouts):
+    async def launch(cls, client: BuddyClient, app_id: str, timeouts: RunnerTimeouts):
         try:
             await cls.wait_for_stream_to_be_ready(client=client,
                                                   timeouts=timeouts)
@@ -187,7 +187,7 @@ class MoonDeckAppRunner:
                     return
 
     @staticmethod
-    async def wait_for_initial_conditions(client: BuddyClient, app_id: int, timeouts: RunnerTimeouts):
+    async def wait_for_initial_conditions(client: BuddyClient, app_id: str, timeouts: RunnerTimeouts):
         logger.info("Waiting for a initial stream conditions to be satisfied")
         
         pooler = TimedPooler(retries=timeouts["initialConditions"])

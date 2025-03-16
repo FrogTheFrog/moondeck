@@ -187,7 +187,7 @@ class BuddyClient(contextlib.AbstractAsyncContextManager):
 
         return await self._try_request(request(), IsSteamReadyResult.Failed)
 
-    async def launch_app(self, app_id: int):
+    async def launch_app(self, app_id: str):
         async def request():
             result = await self.say_hello()
             if result:

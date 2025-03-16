@@ -107,7 +107,7 @@ export class BuddyProxy {
     return await getGameStreamAppNames(address, buddyPort, clientId, 3);
   }
 
-  async getNonSteamAppData(): Promise<Array<{ appId: number; appName: string }> | null> {
+  async getNonSteamAppData(): Promise<Array<{ appId: string; appName: string }> | null> {
     return null;
   }
 }
