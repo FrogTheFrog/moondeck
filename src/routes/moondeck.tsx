@@ -6,6 +6,7 @@ import { HostSelectionView } from "../components/hostselectionview";
 import { HostSettingsView } from "../components/hostsettingsview";
 import { MoonDeckAppsView } from "../components/moondeckappsview";
 import { MoonlightSettingsView } from "../components/moonlightsettingsview";
+import { NonSteamAppsView } from "../components/nonsteamappsview/nonsteamappsview";
 import { RunnerSettingsView } from "../components/runnersettingsview";
 import { SetupGuideView } from "../components/setupguideview";
 import { SidebarNavigation } from "@decky/ui";
@@ -59,12 +60,17 @@ const MoonDeckRouter: FC<object> = () => {
         {
           title: "MoonDeck Apps",
           content: <MoonDeckAppsView />,
-          route: "/moondeck/shortcuts"
+          route: "/moondeck/moondeck-apps"
         },
         {
           title: "Sunshine Apps",
           content: <SunshineAppsView />,
-          route: "/moondeck/external-shortcuts"
+          route: "/moondeck/sunshine-apps"
+        },
+        {
+          title: "Non-Steam Apps",
+          content: <NonSteamAppsView />,
+          route: "/moondeck/non-steam-apps"
         },
         "separator",
         {

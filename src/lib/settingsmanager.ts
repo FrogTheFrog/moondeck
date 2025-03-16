@@ -85,6 +85,10 @@ export interface SunshineAppsSettings {
   showQuickAccessButton: boolean;
 }
 
+export interface NonSteamAppsSettings {
+  showQuickAccessButton: boolean;
+}
+
 export interface HostSettings {
   hostInfoPort: number;
   buddyPort: number;
@@ -98,6 +102,7 @@ export interface HostSettings {
   hostApp: HostApp;
   runnerTimeouts: RunnerTimeouts;
   sunshineApps: SunshineAppsSettings;
+  nonSteamApps: NonSteamAppsSettings;
 }
 
 export interface GameSessionSettings {

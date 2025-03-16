@@ -58,6 +58,10 @@ class SunshineAppsSettings(TypedDict):
     showQuickAccessButton: bool
 
 
+class NonSteamAppsSettings(TypedDict):
+    showQuickAccessButton: bool
+
+
 class HostSettings(TypedDict):
     hostInfoPort: int
     buddyPort: int
@@ -71,6 +75,7 @@ class HostSettings(TypedDict):
     hostApp: HostApp
     runnerTimeouts: RunnerTimeouts
     sunshineApps: SunshineAppsSettings
+    nonSteamApps: NonSteamAppsSettings
 
 
 class GameSessionSettings(TypedDict):
@@ -310,6 +315,10 @@ class SettingsManager:
                 del data["hostSettings"][host]["sunshineApps"]["lastSelectedOverride"]
                 del data["hostSettings"][host]["sunshineApps"]["lastSelectedControllerConfig"]
                 data["hostSettings"][host]["resolution"]["appResolutionOverrideForInternalDisplay"] = False
+        if data["version"] == 27:
+            data["version"] = 28
+            for host in data["hostSettings"].keys():
+                data["hostSettings"][host]["nonSteamApps"] = { "showQuickAccessButton": False }
         return data
 
 

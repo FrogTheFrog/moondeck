@@ -6,6 +6,16 @@ export const ChangelogView: FC = () => {
     <DialogBody>
       <DialogControlsSection>
         <Field
+          label="1.10.0"
+          description={
+            <>
+              <div>&bull; Added non-Steam app syncing support.</div>
+              <div>&bull; Bumped MoonDeckBuddy minimum version to v1.8.0.</div>
+            </>
+          }
+          focusable={true}
+        />
+        <Field
           label="1.9.1"
           description={
             <>

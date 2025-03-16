@@ -61,7 +61,7 @@ def get_runner_type() -> Optional[RunnerType]:
     app_type = os.environ.get("MOONDECK_APP_TYPE")
     try:
         app_type = int(app_type) if app_type is not None else None
-        if app_type == 0:
+        if app_type == 0 or app_type == 2:
             return RunnerType.MoonDeck
         if app_type == 1:
             return RunnerType.MoonlightOnly

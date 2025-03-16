@@ -1,11 +1,11 @@
 import { useBuddyStatus, useCurrentHostSettings, useCurrentSettings, useMoonDeckAppData, useServerStatus } from "../../hooks";
+import { ExternalAppsPanel } from "./externalappspanel";
 import { FC } from "react";
 import { GameSessionPanel } from "./gamesessionpanel";
 import { HostAppPanel } from "./hostapppanel";
 import { HostCommandPanel } from "./hostcommandpanel";
 import { HostStatusPanel } from "./hoststatuspanel";
 import { ResolutionPanel } from "./resolutionpanel";
-import { SunshineAppsPanel } from "./sunshineappspanel";
 import { useQuickAccessVisible } from "@decky/api";
 
 export const QuickSettingsView: FC = () => {
@@ -22,7 +22,7 @@ export const QuickSettingsView: FC = () => {
         ? <GameSessionPanel appData={appData} />
         : <>
             <HostStatusPanel currentHostSettings={currentHostSettings} currentSettings={currentSettings} serverStatus={serverStatus} serverRefreshStatus={serverRefreshStatus} buddyStatus={buddyStatus} buddyRefreshStatus={buddyRefreshStatus} />
-            <SunshineAppsPanel currentHostSettings={currentHostSettings} />
+            <ExternalAppsPanel currentHostSettings={currentHostSettings} />
             <HostAppPanel currentHostSettings={currentHostSettings} currentSettings={currentSettings} />
             <ResolutionPanel currentHostSettings={currentHostSettings} currentSettings={currentSettings} />
           </>

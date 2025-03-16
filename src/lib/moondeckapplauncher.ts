@@ -67,14 +67,22 @@ function getLaunchOptionsString(currentValue: string, appId: number, appType: Ap
 
   if (appType === AppType.MoonDeck) {
     launchOptions.push(makeEnvKeyValue(EnvVars.SteamAppId, appId));
-  } else {
+  } else if (appType === AppType.GameStream) {
     const appNameFromOptions = getEnvKeyValueString(currentValue, EnvVars.AppName);
     if (appNameFromOptions === null) {
-      logger.error(`Failed to get app name from launch options for for ${appId}!`);
+      logger.error(`Failed to get app name from launch options for ${appId}!`);
       return null;
     }
 
     launchOptions.push(makeEnvKeyValue(EnvVars.AppName, appNameFromOptions));
+  } else {
+    const appIdFromOptions = getEnvKeyValueString(currentValue, EnvVars.SteamAppId);
+    if (appIdFromOptions === null) {
+      logger.error(`Failed to get app id from launch options for ${appId}!`);
+      return null;
+    }
+
+    launchOptions.push(makeEnvKeyValue(EnvVars.SteamAppId, appIdFromOptions));
   }
 
   if (autoResolution && displayMode !== null) {

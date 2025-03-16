@@ -25,9 +25,9 @@ export function getDefaultContext(makeNew = false): MoonDeckContextType {
   const context = (getDefaultContext as any).defaultValue as MoonDeckContextType;
   if (makeNew) {
     context.moonDeckAppShortcuts = new MoonDeckAppShortcuts();
-    context.externalAppShortcuts = new ExternalAppShortcuts();
     context.settingsManager = new SettingsManager();
     context.connectivityManager = new ConnectivityManager(context.settingsManager);
+    context.externalAppShortcuts = new ExternalAppShortcuts(context.connectivityManager.buddyProxy, context.settingsManager);
     context.moonDeckAppLauncher = new MoonDeckAppLauncher(context.settingsManager, context.moonDeckAppShortcuts, context.externalAppShortcuts, context.connectivityManager.commandProxy);
   }
   return context;

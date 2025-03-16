@@ -115,6 +115,9 @@ export class ServerProxy {
         },
         sunshineApps: {
           showQuickAccessButton: currentSettings?.sunshineApps.showQuickAccessButton ?? false
+        },
+        nonSteamApps: {
+          showQuickAccessButton: currentSettings?.sunshineApps.showQuickAccessButton ?? false
         }
       };
 
