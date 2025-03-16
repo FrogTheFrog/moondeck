@@ -13,28 +13,29 @@ export const ExternalAppsPanel: FC<Props> = ({ currentHostSettings }) => {
     return null;
   }
 
-  let sunshineView = null;
-  if (!currentHostSettings.sunshineApps.showQuickAccessButton) {
-    sunshineView =
-      <PanelSectionRow>
-        <Field
-          childrenContainerWidth="fixed"
-          spacingBetweenLabelAndChild="none"
-        >
-          <ExternalAppsSyncButton text="Sync Sunshine" appType={AppType.GameStream} noConfirmationDialog={true} />
-        </Field>
-      </PanelSectionRow>;
-  }
-
   let nonSteamView = null;
-  if (!currentHostSettings.nonSteamApps.showQuickAccessButton) {
+  if (currentHostSettings.nonSteamApps.showQuickAccessButton) {
     nonSteamView =
       <PanelSectionRow>
         <Field
           childrenContainerWidth="fixed"
           spacingBetweenLabelAndChild="none"
         >
-          <ExternalAppsSyncButton text="Sync NonSteam" appType={AppType.NonSteam} noConfirmationDialog={true} />
+          <ExternalAppsSyncButton text="Sync Non-Steam Apps" appType={AppType.NonSteam} noConfirmationDialog={true} />
+        </Field>
+      </PanelSectionRow>;
+  }
+
+  let sunshineView = null;
+  if (currentHostSettings.sunshineApps.showQuickAccessButton) {
+    sunshineView =
+      <PanelSectionRow>
+        <Field
+          childrenContainerWidth="fixed"
+          spacingBetweenLabelAndChild="none"
+          bottomSeparator={nonSteamView ? "none" : "standard"}
+        >
+          <ExternalAppsSyncButton text="Sync Sunshine Apps" appType={AppType.GameStream} noConfirmationDialog={true} />
         </Field>
       </PanelSectionRow>;
   }

@@ -108,6 +108,6 @@ export class BuddyProxy {
   }
 
   async getNonSteamAppData(): Promise<Array<{ appId: string; appName: string }> | null> {
-    return null;
+    return [{ appId: "14580418465253818368", appName: "Test" }];
   }
 }
