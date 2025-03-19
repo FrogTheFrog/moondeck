@@ -216,3 +216,7 @@ class Plugin:
         except Exception:
             logger.exception("Unhandled exception")
             return None
+        
+    @utils.async_scope_log(logger.info)
+    async def get_non_steam_app_data(self, address: str, buddy_port: int, client_id: str, user_id: str):
+        return None
