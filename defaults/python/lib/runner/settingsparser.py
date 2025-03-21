@@ -1,5 +1,3 @@
-import os
-
 from typing import Optional, TypedDict
 
 from .envparser import EnvSettings, parse_env_settings, RunnerType
@@ -23,6 +21,7 @@ class MoonDeckAppRunnerSettings(TypedDict):
     host_port:int
     buddy_port: int
     client_id: str
+    big_picture_mode: bool
     close_steam: bool
     timeouts: RunnerTimeouts
     moonlight_exec_path: Optional[str]
@@ -136,6 +135,7 @@ async def parse_settings() -> MoonDeckAppRunnerSettings | MoonlightOnlyRunnerSet
             "host_port": host_settings["hostInfoPort"],
             "buddy_port": host_settings["buddyPort"],
             "client_id": user_settings["clientId"],
+            "big_picture_mode": True, # TODO
             "close_steam": host_settings["closeSteamOnceSessionEnds"],
             "timeouts": host_settings["runnerTimeouts"],
             "moonlight_exec_path": user_settings["moonlightExecPath"] if user_settings["useMoonlightExec"] else None,

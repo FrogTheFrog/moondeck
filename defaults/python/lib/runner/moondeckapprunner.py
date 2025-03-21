@@ -2,7 +2,7 @@ import asyncio
 from typing import Optional
 
 from .settingsparser import MoonDeckAppRunnerSettings
-from ..buddyrequests import AppState, StreamState
+from ..buddyrequests import AppState, SteamUiMode, StreamState
 from ..runnerresult import Result, RunnerError
 from ..hostinfo import get_server_info
 from ..logger import logger
@@ -66,13 +66,15 @@ class MoonDeckAppLauncher:
             if state == StreamState.Streaming:
                 break
 
-    async def wait_for_steam_to_be_ready(client: BuddyClient, timeouts: RunnerTimeouts):
+    async def wait_for_steam_to_be_ready(client: BuddyClient, big_picture_mode: bool, timeouts: RunnerTimeouts):
         logger.info("Waiting for Steam to be ready")
         pooler = TimedPooler(retries=timeouts["steamReadiness"],
                              error_on_retry_out=Result.SteamDidNotReadyUpInTime)
 
-        async for req in pooler(client.is_steam_ready):
-            if req["result"]:
+        desired_mode = SteamUiMode.BigPicture if big_picture_mode else SteamUiMode.Desktop
+        async for req in pooler(client.get_steam_ui_mode):
+            mode = req["mode"]
+            if mode == desired_mode:
                 break
 
     async def wait_for_app_to_be_launched(client: BuddyClient, app_id: str, timeouts: RunnerTimeouts):
@@ -135,18 +137,22 @@ class MoonDeckAppLauncher:
             pooler.retries = 1
 
     @classmethod
-    async def launch(cls, client: BuddyClient, app_id: str, timeouts: RunnerTimeouts):
+    async def launch(cls, client: BuddyClient, big_picture_mode: bool, app_id: str, timeouts: RunnerTimeouts):
         try:
             await cls.wait_for_stream_to_be_ready(client=client,
                                                   timeouts=timeouts)
             
+            logger.info(f"Sending request to launch Steam if needed (forcing big picture mode: {big_picture_mode})")
+            RunnerError.maybe_raise(await client.launch_steam(big_picture_mode))
+
+            await cls.wait_for_steam_to_be_ready(client=client,
+                                                 big_picture_mode=big_picture_mode,
+                                                 timeouts=timeouts)
+
             retry_launch_sequence = True
             while retry_launch_sequence:
                 logger.info(f"Sending request to launch app {app_id}")
                 RunnerError.maybe_raise(await client.launch_app(app_id))
-
-                await cls.wait_for_steam_to_be_ready(client=client,
-                                                     timeouts=timeouts)
                 
                 retry_launch_sequence = await cls.wait_for_app_to_be_launched(client=client,
                                                                               app_id=app_id,
@@ -277,6 +283,7 @@ class MoonDeckAppRunner:
 
             proxy_task = asyncio.create_task(proxy.wait())
             launch_task = asyncio.create_task(MoonDeckAppLauncher.launch(client=client,
+                                                                         big_picture_mode=settings["big_picture_mode"],
                                                                          app_id=settings["app_id"],
                                                                          timeouts=settings["timeouts"]))
 

@@ -40,6 +40,12 @@ class AppState(Enum):
     Updating = 2
 
 
+class SteamUiMode(Enum):
+    Unknown = 0
+    Desktop = 1
+    BigPicture = 2
+
+
 class StreamedAppData(TypedDict):
     app_id: str
     app_state: AppState
@@ -71,6 +77,10 @@ class StreamStateResponse(TypedDict):
 
 class StreamedAppDataResponse(TypedDict):
     data: Optional[StreamedAppData]
+
+
+class SteamUiModeResponse(TypedDict):
+    mode: SteamUiMode
 
 
 OsType = Literal["Windows", "Linux", "Other"]
@@ -139,8 +149,17 @@ class BuddyRequests(contextlib.AbstractAsyncContextManager):
             data = await resp.json(encoding="utf-8")
             return utils.from_dict(ResultLikeResponse, data)
 
-    async def get_is_steam_ready(self):
-        async with self.__session.get(f"{self.base_url}/isSteamReady") as resp:
+    async def get_steam_ui_mode(self):
+        async with self.__session.get(f"{self.base_url}/steamUiMode") as resp:
+            data = await resp.json(encoding="utf-8")
+            return utils.from_dict(SteamUiModeResponse, data)
+
+    async def post_launch_steam(self, big_picture_mode: bool):
+        data = {
+            "big_picture_mode": big_picture_mode
+        }
+
+        async with self.__session.post(f"{self.base_url}/launchSteam", json=data) as resp:
             data = await resp.json(encoding="utf-8")
             return utils.from_dict(ResultLikeResponse, data)
 
