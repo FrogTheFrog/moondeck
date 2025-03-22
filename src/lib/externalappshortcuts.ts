@@ -62,7 +62,7 @@ async function getHostData(appType: ExternalAppType, buddyProxy: BuddyProxy, hos
 
   const nonSteamApps = await buddyProxy.getNonSteamAppData();
   if (nonSteamApps === null) {
-    logger.toast("Failed to get NonSteam app data!", { output: "error" });
+    logger.toast("Failed to get Non-Steam app data!", { output: "error" });
     return null;
   }
 

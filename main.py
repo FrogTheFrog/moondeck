@@ -15,7 +15,6 @@ add_plugin_to_path()
 
 import asyncio
 import pathlib
-import python.lib.runnerresult as runnerresult
 import python.lib.hostinfo as hostinfo
 import python.lib.constants as constants
 import python.lib.utils as utils
@@ -23,8 +22,10 @@ import python.lib.utils as utils
 from typing import Any, Dict
 from python.lib.settings import settings_manager, UserSettings
 from python.lib.logger import logger, set_log_filename
+from python.lib.buddyrequests import SteamUiMode
 from python.lib.buddyclient import BuddyClient, HelloResult, PcStateChange
-from python.lib.utils import wake_on_lan, change_moondeck_runner_ready_state
+from python.lib.utils import wake_on_lan, change_moondeck_runner_ready_state, TimedPooler
+from python.lib.runnerresult import Result, RunnerError, set_result, get_result
 # autopep8: on
 
 set_log_filename(constants.LOG_FILE, rotate=True)
@@ -32,7 +33,7 @@ set_log_filename(constants.LOG_FILE, rotate=True)
 
 class Plugin:
     def __cleanup_states(self):
-        runnerresult.set_result(None)
+        set_result(None)
         change_moondeck_runner_ready_state(False)
 
     @utils.async_scope_log(logger.info)
@@ -49,9 +50,9 @@ class Plugin:
 
     @utils.async_scope_log(logger.info)
     async def get_runner_result(self):
-        result = runnerresult.get_result()
+        result = get_result()
         # Cleanup is needed to differentiate between moondeck launches
-        runnerresult.set_result(None)
+        set_result(None)
         return result
 
     @utils.async_scope_log(logger.info)
@@ -218,5 +219,32 @@ class Plugin:
             return None
         
     @utils.async_scope_log(logger.info)
-    async def get_non_steam_app_data(self, address: str, buddy_port: int, client_id: str, user_id: str):
-        return None
+    async def get_non_steam_app_data(self, address: str, buddy_port: int, client_id: str, user_id: str,
+                                     buddy_timeout: float, ready_timeout: int):
+        try:
+            async with BuddyClient(address, buddy_port, client_id, buddy_timeout) as client:
+                logger.info(f"Sending request to launch Steam if needed")
+                RunnerError.maybe_raise(await client.launch_steam(big_picture_mode=False))
+
+                logger.info("Waiting for Steam to be ready")
+                pooler = TimedPooler(retries=ready_timeout,
+                                     error_on_retry_out=Result.SteamDidNotReadyUpInTime)
+
+                async for req in pooler(client.get_steam_ui_mode):
+                    mode = req["mode"]
+                    if mode != SteamUiMode.Unknown:
+                        break
+
+                data = await client.get_non_steam_app_data(user_id=user_id)
+                if data and not isinstance(data, list):
+                    raise RunnerError(data)
+
+                return data
+
+        except RunnerError as err:
+            logger.error(f"While retrieving non-Steam app data: {err.result}")
+            return None
+
+        except Exception:
+            logger.exception("Unhandled exception")
+            return None

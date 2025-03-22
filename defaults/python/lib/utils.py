@@ -1,3 +1,4 @@
+import asyncio
 import copy
 import inspect
 import socket
@@ -6,9 +7,10 @@ import pathlib
 
 from enum import Enum
 from functools import wraps
-from typing import Any, Dict, List, Literal, Type, Union, TypeVar, get_args, get_origin, is_typeddict
+from typing import Any, Dict, List, Literal, Optional, Type, Union, TypeVar, get_args, get_origin, is_typeddict
 from externals.wakeonlan import send_magic_packet
 
+from .runnerresult import RunnerError
 from .logger import logger
 from .constants import RUNNER_READY_FILE
 
@@ -167,3 +169,44 @@ def change_moondeck_runner_ready_state(make_ready):
         path.touch(exist_ok=True)
     else:
         path.unlink(missing_ok=True)
+
+
+class TimedPooler:
+
+    def __init__(self, retries: int, error_on_retry_out: Optional[Enum] = None, delay: float = 1) -> None:
+        self.delay = delay
+        self.retries = retries
+        self.error_on_retry_out = error_on_retry_out
+        self._first_run = False
+
+    def __call__(self, *requests):
+        return TimedPoolerGenerator(self, *requests)
+
+
+class TimedPoolerGenerator:
+    def __init__(self, pooler: TimedPooler, *requests) -> None:
+        assert len(requests) > 0
+        self.pooler = pooler
+        self.requests = requests
+
+    def __aiter__(self):
+        return self
+
+    async def __anext__(self):
+        if self.pooler.retries <= 0:
+            if self.pooler.error_on_retry_out is not None:
+                raise RunnerError(self.pooler.error_on_retry_out)
+            raise StopAsyncIteration
+
+        if not self.pooler._first_run:
+            await asyncio.sleep(self.pooler.delay)
+
+        self.pooler.retries -= 1
+        self.pooler._first_run = False
+
+        responses = await asyncio.gather(*[req() for req in self.requests])
+        for request in responses:
+            if not isinstance(request, dict):
+                raise RunnerError(request)
+
+        return responses if len(responses) > 1 else responses[0]

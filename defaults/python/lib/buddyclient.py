@@ -81,6 +81,10 @@ class GetGameStreamAppNamesResult(Enum):
     Failed = "Failed to get gamestream app names via Buddy!"
 
 
+class GetNonSteamAppDataResult(Enum):
+    Failed = "Failed to get non-Steam app data via Buddy!"
+
+
 class BuddyClient(contextlib.AbstractAsyncContextManager):
 
     def __init__(self, address: str, port: int, client_id: str, timeout: float) -> None:
@@ -302,3 +306,14 @@ class BuddyClient(contextlib.AbstractAsyncContextManager):
             return resp["appNames"]
 
         return await self._try_request(request(), GetGameStreamAppNamesResult.Failed)
+    
+    async def get_non_steam_app_data(self, user_id: str):
+        async def request():
+            result = await self.say_hello()
+            if result:
+                return result
+
+            resp = await self.__requests.get_non_steam_app_data(user_id=user_id)
+            return resp["data"]
+
+        return await self._try_request(request(), GetNonSteamAppDataResult.Failed)

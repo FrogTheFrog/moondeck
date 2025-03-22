@@ -11,6 +11,7 @@ export const ChangelogView: FC = () => {
             <>
               <div>&bull; Added non-Steam app syncing support.</div>
               <div>&bull; Bumped MoonDeckBuddy minimum version to v1.8.0.</div>
+              <div>&bull; Moved some Buddy related settings to a dedicated settings tab.</div>
             </>
           }
           focusable={true}

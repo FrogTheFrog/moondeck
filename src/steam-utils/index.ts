@@ -6,6 +6,7 @@ export * from "./getAppResolutionOverride";
 export * from "./getAppStoreEx";
 export * from "./getCollectionStore";
 export * from "./getCurrentDisplayMode";
+export * from "./getCurrentUserSteamId";
 export * from "./getDisplayIdentifiers";
 export * from "./getGameId";
 export * from "./getSystemDisplayManagerStore";

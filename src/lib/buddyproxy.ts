@@ -1,8 +1,9 @@
-import { OsType, SettingsManager } from "./settingsmanager";
+import { OsType, RunnerTimeouts, SettingsManager } from "./settingsmanager";
 import { BehaviorSubject } from "rxjs";
 import { Mutex } from "async-mutex";
 import { ReadonlySubject } from "./readonlysubject";
 import { call } from "@decky/api";
+import { getCurrentUserSteamId } from "../steam-utils";
 import { logger } from "./logger";
 
 export type BuddyStatus = "VersionMismatch" | "Restarting" | "ShuttingDown" | "Suspending" | "NoClientId" | "NotPaired" | "Pairing" | "SslVerificationFailed" | "Exception" | "Offline" | "Online";
@@ -14,6 +15,7 @@ interface ClientInfo {
   address: string;
   buddyPort: number;
   clientId: string;
+  timeouts: RunnerTimeouts;
 }
 
 interface BuddyInfo {
@@ -44,9 +46,9 @@ async function getGameStreamAppNames(info: ClientInfo, timeout: number): Promise
   return null;
 }
 
-async function getNonSteamAppData(info: ClientInfo, userId: string): Promise<NonSteamAppData> {
+async function getNonSteamAppData(info: ClientInfo, userId: string, buddyTimeout: number, readyTimeout: number): Promise<NonSteamAppData> {
   try {
-    return await call<[string, number, string, string], NonSteamAppData>("get_non_steam_app_data", info.address, info.buddyPort, info.clientId, userId);
+    return await call<[string, number, string, string, number, number], NonSteamAppData>("get_non_steam_app_data", info.address, info.buddyPort, info.clientId, userId, buddyTimeout, readyTimeout);
   } catch (message) {
     logger.critical("Error while fetching non-steam app data: ", message);
   }
@@ -83,12 +85,13 @@ export class BuddyProxy {
     const address = hostSettings?.address ?? null;
     const buddyPort = hostSettings?.buddy.port ?? null;
     const clientId = this.settingsManager.settings.value?.clientId ?? null;
+    const timeouts = hostSettings?.runnerTimeouts ?? null;
 
-    if (hostId === null || address === null || buddyPort === null || clientId === null) {
+    if (hostId === null || address === null || buddyPort === null || clientId === null || timeouts === null) {
       return null;
     }
 
-    return { hostId, address, buddyPort, clientId };
+    return { hostId, address, buddyPort, clientId, timeouts };
   }
 
   constructor(settingsManager: SettingsManager) {
@@ -136,6 +139,11 @@ export class BuddyProxy {
       return null;
     }
 
-    return await getNonSteamAppData(clientInfo, "some id lol");
+    const userId = getCurrentUserSteamId();
+    if (userId === null) {
+      return null;
+    }
+
+    return await getNonSteamAppData(clientInfo, userId, 3, clientInfo.timeouts.steamReadiness);
   }
 }

@@ -1,5 +1,4 @@
 import asyncio
-from typing import Optional
 
 from .settingsparser import MoonDeckAppRunnerSettings
 from ..buddyrequests import AppState, SteamUiMode, StreamState
@@ -10,47 +9,7 @@ from ..wolsplashscreen import WolSplashScreen
 from ..settings import RunnerTimeouts
 from ..moonlightproxy import MoonlightProxy
 from ..buddyclient import BuddyClient, HelloResult
-
-
-class TimedPooler:
-
-    def __init__(self, retries: int, error_on_retry_out: Optional[Result] = None, delay: float = 1) -> None:
-        self.delay = delay
-        self.retries = retries
-        self.error_on_retry_out = error_on_retry_out
-        self._first_run = False
-
-    def __call__(self, *requests):
-        return TimedPoolerGenerator(self, *requests)
-
-
-class TimedPoolerGenerator:
-    def __init__(self, pooler: TimedPooler, *requests) -> None:
-        assert len(requests) > 0
-        self.pooler = pooler
-        self.requests = requests
-
-    def __aiter__(self):
-        return self
-
-    async def __anext__(self):
-        if self.pooler.retries <= 0:
-            if self.pooler.error_on_retry_out is not None:
-                raise RunnerError(self.pooler.error_on_retry_out)
-            raise StopAsyncIteration
-
-        if not self.pooler._first_run:
-            await asyncio.sleep(self.pooler.delay)
-
-        self.pooler.retries -= 1
-        self.pooler._first_run = False
-
-        responses = await asyncio.gather(*[req() for req in self.requests])
-        for request in responses:
-            if not isinstance(request, dict):
-                raise RunnerError(request)
-
-        return responses if len(responses) > 1 else responses[0]
+from ..utils import TimedPooler
 
 
 class MoonDeckAppLauncher:

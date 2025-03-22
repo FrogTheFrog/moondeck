@@ -46,6 +46,11 @@ class SteamUiMode(Enum):
     BigPicture = 2
 
 
+class NonSteamAppDataItem(TypedDict):
+    app_id: str
+    app_name: str
+
+
 class StreamedAppData(TypedDict):
     app_id: str
     app_state: AppState
@@ -69,6 +74,10 @@ class ResultLikeResponse(TypedDict):
 
 class GameStreamAppNamesResponse(TypedDict):
     appNames: Optional[List[str]]
+
+
+class NonSteamAppDataResponse(TypedDict):
+    appNames: Optional[List[NonSteamAppDataItem]]
 
 
 class StreamStateResponse(TypedDict):
@@ -212,6 +221,15 @@ class BuddyRequests(contextlib.AbstractAsyncContextManager):
             return utils.from_dict(ResultLikeResponse, data)
 
     async def get_gamestream_app_names(self):
-        async with self.__session.get(f"{self.base_url}/gamestreamAppNames") as resp:
+        async with self.__session.get(f"{self.base_url}/gameStreamAppNames") as resp:
             data = await resp.json(encoding="utf-8")
             return utils.from_dict(GameStreamAppNamesResponse, data)
+        
+    async def get_non_steam_app_data(self, user_id: str):
+        data = {
+            "user_id": user_id
+        }
+
+        async with self.__session.get(f"{self.base_url}/nonSteamAppData", json=data) as resp:
+            data = await resp.json(encoding="utf-8")
+            return utils.from_dict(NonSteamAppDataResponse, data)

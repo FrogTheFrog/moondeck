@@ -28,7 +28,7 @@ export const NonSteamAppsView: FC = () => {
         <DialogControlsSectionHeader>Sync with Buddy</DialogControlsSectionHeader>
         <Field
           label="Sync all Non-Steam apps via Buddy"
-          description="Steam client might be restarted afterwards!"
+          description="Steam client will be started on the running host if needed and the SteamDeck client might be restarted afterwards!"
           childrenContainerWidth="fixed"
         >
           <ExternalAppsSyncButton text="Sync Apps" appType={AppType.NonSteam} />
