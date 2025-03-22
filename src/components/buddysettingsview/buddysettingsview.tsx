@@ -1,13 +1,13 @@
 import { DialogBody, DialogControlsSection, DialogControlsSectionHeader, Field, Focusable } from "@decky/ui";
 import { FC, useContext } from "react";
-import { HostAppSelectionDropdown, LabelWithIcon, NumericTextInput, ToggleField } from "../shared";
+import { HostAppSelectionDropdown, LabelWithIcon, ToggleField } from "../shared";
 import { ModifyListButton, RemoveListEntryButton } from "../shared/indexedlist";
 import { HostOff } from "../icons";
 import { ModifyHostAppModal } from "./modifyhostappmodal";
 import { MoonDeckContext } from "../../contexts";
 import { useCurrentHostSettings } from "../../hooks";
 
-export const HostSettingsView: FC = () => {
+export const BuddySettingsView: FC = () => {
   const { settingsManager } = useContext(MoonDeckContext);
   const hostSettings = useCurrentHostSettings();
   if (hostSettings === null) {
@@ -25,47 +25,17 @@ export const HostSettingsView: FC = () => {
 
   return (
     <DialogBody>
+      <Field
+        description="These settings only apply for MoonDeck and NonSteam apps."
+        focusable={true}
+      />
       <DialogControlsSection>
         <DialogControlsSectionHeader>General</DialogControlsSectionHeader>
-        <Field label="MoonDeck client ID" focusable={true}>
-          {hostSettings.clientId}
-        </Field>
-        <Field label="GameStream client ID" focusable={true}>
-          {hostSettings.currentHostId}
-        </Field>
-        <Field label="Operating System" focusable={true}>
-          {hostSettings.os}
-        </Field>
-        <Field label="Hostname" focusable={true}>
-          {hostSettings.hostName}
-        </Field>
-        <Field label="MAC address" focusable={true}>
-          {hostSettings.mac}
-        </Field>
-        <Field label="Address" focusable={true}>
-          {hostSettings.address}
-        </Field>
-        <Field label="Address type" focusable={true}>
-          {hostSettings.staticAddress ? "Static" : "Dynamic"}
-        </Field>
-        <Field label="Host info port" focusable={true}>
-          {hostSettings.hostInfoPort}
-        </Field>
-        <Field label="Buddy port" childrenContainerWidth="fixed">
-          <NumericTextInput
-            min={1}
-            max={65535}
-            value={hostSettings.buddyPort}
-            setValue={(value) => { settingsManager.updateHost((hostSettings) => { hostSettings.buddyPort = value; }); }}
-          />
-        </Field>
         <ToggleField
           label="Automatically close Steam on host when gaming session ends"
           description={
             <>
               <div>If disabled, Steam will remain open in bigpicture mode (no way to leave bigpicture without closing Steam without using the UI).</div>
-              <br />
-              <div>Note: Nvidia GameStream somehow closes the OLD bigpicture mode. Seems to be a bug.</div>
             </>
           }
           value={hostSettings.closeSteamOnceSessionEnds}

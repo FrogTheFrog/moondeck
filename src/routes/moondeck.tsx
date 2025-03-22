@@ -1,9 +1,10 @@
+import { BuddySettingsView } from "../components/buddysettingsview";
 import { ButtonStyleView } from "../components/buttonstyleview";
 import { ChangelogView } from "../components/changelogview";
 import { FC } from "react";
 import { GameSessionView } from "../components/gamesessionview";
+import { HostInfoView } from "../components/hostinfoview";
 import { HostSelectionView } from "../components/hostselectionview";
-import { HostSettingsView } from "../components/hostsettingsview";
 import { MoonDeckAppsView } from "../components/moondeckappsview";
 import { MoonlightSettingsView } from "../components/moonlightsettingsview";
 import { NonSteamAppsView } from "../components/nonsteamappsview/nonsteamappsview";
@@ -42,14 +43,19 @@ const MoonDeckRouter: FC<object> = () => {
           route: "/moondeck/host-selection"
         },
         {
-          title: "Host Settings",
-          content: <HostSettingsView />,
-          route: "/moondeck/host-settings"
+          title: "Host Info",
+          content: <HostInfoView />,
+          route: "/moondeck/host-info"
         },
         {
           title: "Moonlight Settings",
           content: <MoonlightSettingsView />,
           route: "/moondeck/resolution-settings"
+        },
+        {
+          title: "Buddy Settings",
+          content: <BuddySettingsView />,
+          route: "/moondeck/buddy-settings"
         },
         {
           title: "Runner Settings",

@@ -1,7 +1,7 @@
-import { BuddyStatusField, ServerStatusField, SettingsLoadingField } from "../shared";
+import { BuddyStatusField, NumericTextInput, ServerStatusField, SettingsLoadingField } from "../shared";
 import { DialogBody, DialogControlsSection, DialogControlsSectionHeader, Field } from "@decky/ui";
 import { FC, useContext, useState } from "react";
-import { useBuddyStatus, useCurrentSettings, useServerStatus } from "../../hooks";
+import { useBuddyStatus, useCurrentHostSettings, useCurrentSettings, useServerStatus } from "../../hooks";
 import { AddHostButton } from "./addhostbutton";
 import { BuddyPairButton } from "./buddypairbutton";
 import { HostForgetButton } from "./hostforgetbutton";
@@ -15,9 +15,33 @@ export const HostSelectionView: FC = () => {
   const [serverStatus, serverRefreshStatus] = useServerStatus();
   const [buddyStatus, buddyRefreshStatus] = useBuddyStatus();
   const settings = useCurrentSettings();
+  const hostSettings = useCurrentHostSettings();
 
   if (settings === null) {
     return <SettingsLoadingField />;
+  }
+
+  let buddySettings = null;
+  if (hostSettings) {
+    buddySettings =
+      <DialogControlsSection>
+        <DialogControlsSectionHeader>MoonDeck Buddy</DialogControlsSectionHeader>
+        <BuddyStatusField label="Status" status={buddyStatus} isRefreshing={buddyRefreshStatus} />
+        <Field label="Buddy port" childrenContainerWidth="fixed">
+          <NumericTextInput
+            min={1}
+            max={65535}
+            value={hostSettings.buddyPort}
+            setValue={(value) => { settingsManager.updateHost((hostSettings) => { hostSettings.buddyPort = value; }); }}
+          />
+        </Field>
+        <Field
+          label="Pair with Buddy"
+          childrenContainerWidth="fixed"
+        >
+          <BuddyPairButton disabled={isScanning || buddyStatus !== "NotPaired"} />
+        </Field>
+      </DialogControlsSection>;
   }
 
   return (
@@ -73,17 +97,7 @@ export const HostSelectionView: FC = () => {
           />
         </Field>
       </DialogControlsSection>
-      <DialogControlsSection>
-        <DialogControlsSectionHeader>MoonDeck Buddy</DialogControlsSectionHeader>
-        <BuddyStatusField label="Status" status={buddyStatus} isRefreshing={buddyRefreshStatus} />
-        <Field
-          label="Pair with Buddy"
-          childrenContainerWidth="fixed"
-        >
-          <BuddyPairButton
-            disabled={isScanning || buddyStatus !== "NotPaired"} />
-        </Field>
-      </DialogControlsSection>
+      {buddySettings}
     </DialogBody>
   );
 };
