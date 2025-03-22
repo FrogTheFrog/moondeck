@@ -54,6 +54,13 @@ class HostResolution(TypedDict):
     dimensions: List[Dimension]
 
 
+class BuddySettings(TypedDict):
+    bigPictureMode: bool
+    port: int
+    closeSteamOnceSessionEnds: bool
+    hostApp: HostApp
+
+
 class SunshineAppsSettings(TypedDict):
     showQuickAccessButton: bool
 
@@ -64,16 +71,14 @@ class NonSteamAppsSettings(TypedDict):
 
 class HostSettings(TypedDict):
     hostInfoPort: int
-    buddyPort: int
     address: str
     staticAddress: bool
     hostName: str
     mac: str
     os: OsType
-    closeSteamOnceSessionEnds: bool
     resolution: HostResolution
-    hostApp: HostApp
     runnerTimeouts: RunnerTimeouts
+    buddy: BuddySettings
     sunshineApps: SunshineAppsSettings
     nonSteamApps: NonSteamAppsSettings
 
@@ -319,6 +324,18 @@ class SettingsManager:
             data["version"] = 28
             for host in data["hostSettings"].keys():
                 data["hostSettings"][host]["nonSteamApps"] = { "showQuickAccessButton": False }
+        if data["version"] == 28:
+            data["version"] = 29
+            for host in data["hostSettings"].keys():
+                data["hostSettings"][host]["buddy"] = { 
+                    "bigPictureMode": True,
+                    "port": data["hostSettings"][host]["buddyPort"],
+                    "closeSteamOnceSessionEnds": data["hostSettings"][host]["closeSteamOnceSessionEnds"],
+                    "hostApp": data["hostSettings"][host]["hostApp"],
+                }
+                del data["hostSettings"][host]["buddyPort"]
+                del data["hostSettings"][host]["closeSteamOnceSessionEnds"]
+                del data["hostSettings"][host]["hostApp"]
         return data
 
 

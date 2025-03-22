@@ -81,6 +81,13 @@ export interface HostResolution {
   dimensions: Dimension[];
 }
 
+export interface BuddySettings {
+  bigPictureMode: boolean;
+  port: number;
+  closeSteamOnceSessionEnds: boolean;
+  hostApp: HostApp;
+}
+
 export interface SunshineAppsSettings {
   showQuickAccessButton: boolean;
 }
@@ -91,16 +98,14 @@ export interface NonSteamAppsSettings {
 
 export interface HostSettings {
   hostInfoPort: number;
-  buddyPort: number;
   address: string;
   staticAddress: boolean;
   hostName: string;
   mac: string;
   os: OsType;
-  closeSteamOnceSessionEnds: boolean;
   resolution: HostResolution;
-  hostApp: HostApp;
   runnerTimeouts: RunnerTimeouts;
+  buddy: BuddySettings;
   sunshineApps: SunshineAppsSettings;
   nonSteamApps: NonSteamAppsSettings;
 }

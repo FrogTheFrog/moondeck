@@ -50,7 +50,7 @@ async function getHostData(appType: ExternalAppType, buddyProxy: BuddyProxy, hos
       return null;
     }
 
-    const moonDeckHostApps = hostSettings.hostApp.apps;
+    const moonDeckHostApps = hostSettings.buddy.hostApp.apps;
     if (!moonDeckHostApps.includes("MoonDeckStream")) {
       moonDeckHostApps.push("MoonDeckStream");
     }

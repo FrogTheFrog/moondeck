@@ -47,7 +47,7 @@ export const HostInfoView: FC = () => {
           {hostSettings.hostInfoPort}
         </Field>
         <Field label="Buddy port" focusable={true}>
-          {hostSettings.buddyPort}
+          {hostSettings.buddy.port}
         </Field>
       </DialogControlsSection>
     </DialogBody>

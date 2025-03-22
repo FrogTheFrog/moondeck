@@ -76,13 +76,11 @@ export class ServerProxy {
       const currentSettings = settings.hostSettings[host.uniqueId] ?? null;
       const hostSettings: HostSettings = {
         hostInfoPort: host.port,
-        buddyPort: currentSettings?.buddyPort ?? 59999,
         address: host.address,
         staticAddress: staticAddress ?? (currentSettings?.staticAddress ?? false),
         hostName: host.hostName,
         mac: currentSettings?.mac ?? "00:00:00:00:00:00",
         os: currentSettings?.os ?? "Other",
-        closeSteamOnceSessionEnds: currentSettings?.closeSteamOnceSessionEnds ?? false,
         resolution: {
           automatic: currentSettings?.resolution.automatic ?? true,
           appResolutionOverride: currentSettings?.resolution.appResolutionOverride ?? "CustomResolution",
@@ -95,10 +93,7 @@ export class ServerProxy {
           defaultFps: currentSettings?.resolution.defaultFps ?? null,
           dimensions: currentSettings?.resolution.dimensions ?? []
         },
-        hostApp: {
-          selectedAppIndex: currentSettings?.hostApp.selectedAppIndex ?? -1,
-          apps: currentSettings?.hostApp.apps ?? []
-        },
+
         runnerTimeouts: {
           buddyRequests: currentSettings?.runnerTimeouts.buddyRequests ?? buddyRequestsDefault,
           servicePing: currentSettings?.runnerTimeouts.servicePing ?? servicePingDefault,
@@ -112,6 +107,15 @@ export class ServerProxy {
           steamLaunch: currentSettings?.runnerTimeouts.steamLaunch ?? steamLaunchDefault,
           steamLaunchAfterSuspend: currentSettings?.runnerTimeouts.steamLaunchAfterSuspend ?? steamLaunchAfterSuspendDefault,
           networkReconnectAfterSuspend: currentSettings?.runnerTimeouts.networkReconnectAfterSuspend ?? networkReconnectAfterSuspendDefault
+        },
+        buddy: {
+          bigPictureMode: currentSettings?.buddy.bigPictureMode ?? true,
+          port: currentSettings?.buddy.port ?? 59999,
+          closeSteamOnceSessionEnds: currentSettings?.buddy.closeSteamOnceSessionEnds ?? false,
+          hostApp: {
+            selectedAppIndex: currentSettings?.buddy.hostApp.selectedAppIndex ?? -1,
+            apps: currentSettings?.buddy.hostApp.apps ?? []
+          }
         },
         sunshineApps: {
           showQuickAccessButton: currentSettings?.sunshineApps.showQuickAccessButton ?? false
@@ -187,7 +191,7 @@ export class ServerProxy {
     const hostSettings = this.settingsManager.hostSettings;
 
     const address = hostSettings?.address ?? null;
-    const buddyPort = hostSettings?.buddyPort ?? null;
+    const buddyPort = hostSettings?.buddy.port ?? null;
     const clientId = this.settingsManager.settings.value?.clientId ?? null;
 
     if (address === null || buddyPort === null || clientId === null) {
@@ -203,7 +207,7 @@ export class ServerProxy {
     const hostSettings = this.settingsManager.hostSettings;
 
     const address = hostSettings?.address ?? null;
-    const buddyPort = hostSettings?.buddyPort ?? null;
+    const buddyPort = hostSettings?.buddy.port ?? null;
     const clientId = this.settingsManager.settings.value?.clientId ?? null;
 
     if (address === null || buddyPort === null || clientId === null) {

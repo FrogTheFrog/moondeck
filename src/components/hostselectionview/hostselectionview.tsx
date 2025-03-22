@@ -31,8 +31,8 @@ export const HostSelectionView: FC = () => {
           <NumericTextInput
             min={1}
             max={65535}
-            value={hostSettings.buddyPort}
-            setValue={(value) => { settingsManager.updateHost((hostSettings) => { hostSettings.buddyPort = value; }); }}
+            value={hostSettings.buddy.port}
+            setValue={(value) => { settingsManager.updateHost((hostSettings) => { hostSettings.buddy.port = value; }); }}
           />
         </Field>
         <Field

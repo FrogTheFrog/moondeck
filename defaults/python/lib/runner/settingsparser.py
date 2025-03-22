@@ -92,9 +92,9 @@ def parse_resolution_settings(host_settings: HostSettings, env_settings: EnvSett
 
 def parse_host_app_name(host_settings: HostSettings) -> str:
     host_app: str = "MoonDeckStream"
-    app_list = host_settings["hostApp"]["apps"]
+    app_list = host_settings["buddy"]["hostApp"]["apps"]
     if len(app_list) > 0:
-        index = host_settings["hostApp"]["selectedAppIndex"]
+        index = host_settings["buddy"]["hostApp"]["selectedAppIndex"]
         if index >= 0 and index < len(app_list):
             host_app = app_list[index]
         else:
@@ -133,10 +133,10 @@ async def parse_settings() -> MoonDeckAppRunnerSettings | MoonlightOnlyRunnerSet
             "mac": host_settings["mac"],
             "address": host_settings["address"],
             "host_port": host_settings["hostInfoPort"],
-            "buddy_port": host_settings["buddyPort"],
+            "buddy_port": host_settings["buddy"]["port"],
             "client_id": user_settings["clientId"],
-            "big_picture_mode": True, # TODO
-            "close_steam": host_settings["closeSteamOnceSessionEnds"],
+            "big_picture_mode": host_settings["buddy"]["bigPictureMode"],
+            "close_steam": host_settings["buddy"]["closeSteamOnceSessionEnds"],
             "timeouts": host_settings["runnerTimeouts"],
             "moonlight_exec_path": user_settings["moonlightExecPath"] if user_settings["useMoonlightExec"] else None,
             "app_id": env_settings["app_id"],

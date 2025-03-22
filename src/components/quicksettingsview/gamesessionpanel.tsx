@@ -35,50 +35,37 @@ export const GameSessionPanel: FC<Props> = ({ appData }) => {
       .finally(() => setIsDisabled(false));
   };
 
-  if (appData.appType === AppType.MoonDeck) {
-    return (
-      <>
-        <PanelSection title="Game Session">
-          <PanelSectionRow>
-            <ToggleField
-              label="AppId as game title"
-              disabled={isDisabled}
-              checked={appData.sessionOptions.nameSetToAppId}
-              onChange={() => handleNameChange()} />
-          </PanelSectionRow>
-        </PanelSection>
-        <PanelSection title="Kill Session">
-          <PanelSectionRow>
-            <Field
-              bottomSeparator="none"
-              description="Last somewhat graceful resort for when MoonDeck or host misbehaves." />
-          </PanelSectionRow>
-          <PanelSectionRow>
-            <ButtonItem
-              disabled={isDisabled}
-              layout="below"
-              bottomSeparator="none"
-              onClick={() => handleTermination()}
-            >
-              Exit MoonDeck runner
-            </ButtonItem>
-          </PanelSectionRow>
-          <PanelSectionRow>
-            <ButtonItem
-              disabled={isDisabled}
-              layout="below"
-              onClick={() => handleSteamClose()}
-            >
-              Close Steam on host
-            </ButtonItem>
-          </PanelSectionRow>
-        </PanelSection>
-      </>
-    );
+  let gameSession = null;
+  if (appData.appType !== AppType.GameStream) {
+    gameSession =
+      <PanelSection title="Game Session">
+        <PanelSectionRow>
+          <ToggleField
+            label="AppId as game title"
+            disabled={isDisabled}
+            checked={appData.sessionOptions.nameSetToAppId}
+            onChange={() => handleNameChange()} />
+        </PanelSectionRow>
+      </PanelSection>;
+  }
+
+  let closeSteam = null;
+  if (appData.appType !== AppType.GameStream) {
+    closeSteam =
+      <PanelSectionRow>
+        <ButtonItem
+          disabled={isDisabled}
+          layout="below"
+          onClick={() => handleSteamClose()}
+        >
+          Close Steam on host
+        </ButtonItem>
+      </PanelSectionRow>;
   }
 
   return (
     <>
+      {gameSession}
       <PanelSection title="Kill Session">
         <PanelSectionRow>
           <Field
@@ -89,12 +76,13 @@ export const GameSessionPanel: FC<Props> = ({ appData }) => {
           <ButtonItem
             disabled={isDisabled}
             layout="below"
-            bottomSeparator="none"
+            bottomSeparator={closeSteam ? "none" : "standard"}
             onClick={() => handleTermination()}
           >
             Exit MoonDeck runner
           </ButtonItem>
         </PanelSectionRow>
+        {closeSteam}
       </PanelSection>
     </>
   );

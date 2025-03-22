@@ -32,14 +32,16 @@ export const BuddySettingsView: FC = () => {
       <DialogControlsSection>
         <DialogControlsSectionHeader>General</DialogControlsSectionHeader>
         <ToggleField
+          label="Launch big picture mode"
+          description="If enabled, Buddy will open Steam in big picture mode before starting the app."
+          value={hostSettings.buddy.bigPictureMode}
+          setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.buddy.bigPictureMode = value; })}
+        />
+        <ToggleField
           label="Automatically close Steam on host when gaming session ends"
-          description={
-            <>
-              <div>If disabled, Steam will remain open in bigpicture mode (no way to leave bigpicture without closing Steam without using the UI).</div>
-            </>
-          }
-          value={hostSettings.closeSteamOnceSessionEnds}
-          setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.closeSteamOnceSessionEnds = value; })}
+          description="If disabled, Steam will remain open in big picture mode (no way to leave big picture without closing Steam without using the UI)."
+          value={hostSettings.buddy.closeSteamOnceSessionEnds}
+          setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.buddy.closeSteamOnceSessionEnds = value; })}
         />
       </DialogControlsSection>
       <DialogControlsSection>
@@ -62,9 +64,9 @@ export const BuddySettingsView: FC = () => {
           bottomSeparator="none"
         >
           <HostAppSelectionDropdown
-            currentIndex={hostSettings.hostApp.selectedAppIndex}
-            currentList={hostSettings.hostApp.apps}
-            setIndex={(value) => { settingsManager.updateHost((hostSettings) => { hostSettings.hostApp.selectedAppIndex = value; }); }}
+            currentIndex={hostSettings.buddy.hostApp.selectedAppIndex}
+            currentList={hostSettings.buddy.hostApp.apps}
+            setIndex={(value) => { settingsManager.updateHost((hostSettings) => { hostSettings.buddy.hostApp.selectedAppIndex = value; }); }}
           />
         </Field>
         <Field
@@ -74,33 +76,33 @@ export const BuddySettingsView: FC = () => {
           <Focusable style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
             <ModifyListButton
               modal={ModifyHostAppModal}
-              currentList={hostSettings.hostApp.apps}
+              currentList={hostSettings.buddy.hostApp.apps}
               currentIndex={null}
               updateList={(list, index) => {
                 settingsManager.updateHost((hostSettings) => {
-                  hostSettings.hostApp.apps = list;
-                  hostSettings.hostApp.selectedAppIndex = index;
+                  hostSettings.buddy.hostApp.apps = list;
+                  hostSettings.buddy.hostApp.selectedAppIndex = index;
                 });
               }}
             />
             <ModifyListButton
               modal={ModifyHostAppModal}
-              currentList={hostSettings.hostApp.apps}
-              currentIndex={hostSettings.hostApp.selectedAppIndex}
+              currentList={hostSettings.buddy.hostApp.apps}
+              currentIndex={hostSettings.buddy.hostApp.selectedAppIndex}
               updateList={(list, index) => {
                 settingsManager.updateHost((hostSettings) => {
-                  hostSettings.hostApp.apps = list;
-                  hostSettings.hostApp.selectedAppIndex = index;
+                  hostSettings.buddy.hostApp.apps = list;
+                  hostSettings.buddy.hostApp.selectedAppIndex = index;
                 });
               }}
             />
             <RemoveListEntryButton
-              currentList={hostSettings.hostApp.apps}
-              currentIndex={hostSettings.hostApp.selectedAppIndex}
+              currentList={hostSettings.buddy.hostApp.apps}
+              currentIndex={hostSettings.buddy.hostApp.selectedAppIndex}
               updateList={(list, index) => {
                 settingsManager.updateHost((hostSettings) => {
-                  hostSettings.hostApp.apps = list;
-                  hostSettings.hostApp.selectedAppIndex = index;
+                  hostSettings.buddy.hostApp.apps = list;
+                  hostSettings.buddy.hostApp.selectedAppIndex = index;
                 });
               }}
             />

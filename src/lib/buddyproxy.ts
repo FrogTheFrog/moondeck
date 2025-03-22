@@ -81,7 +81,7 @@ export class BuddyProxy {
     const hostSettings = this.settingsManager.hostSettings;
     const hostId = this.settingsManager.settings.value?.currentHostId ?? null;
     const address = hostSettings?.address ?? null;
-    const buddyPort = hostSettings?.buddyPort ?? null;
+    const buddyPort = hostSettings?.buddy.port ?? null;
     const clientId = this.settingsManager.settings.value?.clientId ?? null;
 
     if (hostId === null || address === null || buddyPort === null || clientId === null) {
