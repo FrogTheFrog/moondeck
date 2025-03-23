@@ -1,8 +1,8 @@
-import { AppType, getCurrentUserSteamId } from "../../lib";
 import { DialogBody, DialogButton, DialogControlsSection, DialogControlsSectionHeader, Field, Navigation } from "@decky/ui";
 import { ExternalAppsPurgeButton, ExternalAppsSyncButton, LabelWithIcon, ToggleField } from "../shared";
 import { FC, ReactNode, useContext } from "react";
 import { useCurrentHostSettings, useCurrentSettings, useNonSteamAppShortcuts } from "../../hooks";
+import { AppType } from "../../lib";
 import { HostOff } from "../icons";
 import { MoonDeckContext } from "../../contexts";
 
@@ -76,7 +76,7 @@ export const NonSteamAppsView: FC = () => {
               <div>MoonDeck will try to preserve shortcuts if their identifier or executable does not change. This should keep any custom artwork added to the shortcuts.</div>
               <div>If this cannot be done, the shortcuts will be removed and new ones created.</div>
               <br />
-              <div>The userdata directory on the host will be infered from the following user id: {getCurrentUserSteamId()}</div>
+              <div>All synced apps will be added to the MoonDeck library collection.</div>
             </>
           }
           focusable={true}

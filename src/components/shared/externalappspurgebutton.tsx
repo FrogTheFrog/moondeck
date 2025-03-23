@@ -25,8 +25,8 @@ export const ExternalAppsPurgeButton: FC<Props> = ({ appType, disabled }) => {
   };
 
   return (
-    <DialogButton disabled={syncing || disabled} onClick={() => handleClick()}>
-      Purge
+    <DialogButton disabled={syncing !== null || disabled} onClick={() => handleClick()}>
+      {syncing !== null && (syncing.purge && syncing.appType === appType) ? `${syncing.current}/${syncing.max}` : "Purge"}
     </DialogButton>
   );
 };

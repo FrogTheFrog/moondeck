@@ -1,4 +1,6 @@
+export * from "./addAppsToCollection";
 export * from "./addShortcut";
+export * from "./getOrCreateCollection";
 export * from "./getAllNonSteamAppIds";
 export * from "./getAppDetails";
 export * from "./getAppResolutionOverride";
@@ -15,6 +17,8 @@ export * from "./registerForDisplayStateChanges";
 export * from "./registerForGameLaunchIntercept";
 export * from "./registerForLoginStateChange";
 export * from "./registerForSuspendNotifications";
+export * from "./removeAppsFromCollection";
+export * from "./removeCollection";
 export * from "./removeShortcut";
 export * from "./restartSteamClient";
 export * from "./setAppHiddenState";

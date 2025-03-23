@@ -1,4 +1,4 @@
-import { AppType, EnvVars, addShortcut, checkExecPathMatch, getAppDetailsForAppIds, getAppStoreEx, getMoonDeckRunPath, removeShortcut, restartSteamClient, setAppLaunchOptions } from "./steamutils";
+import { AppType, EnvVars, addAppsToCollection, addShortcut, checkExecPathMatch, getAppDetailsForAppIds, getAppStoreEx, getMoonDeckRunPath, getOrCreateCollection, removeAppsFromCollection, removeShortcut, restartSteamClient, setAppLaunchOptions } from "./steamutils";
 import { HostSettings, SettingsManager } from "./settingsmanager";
 import { getEnvKeyValueString, makeEnvKeyValue } from "./envutils";
 import { AppDetails } from "@decky/ui";
@@ -104,11 +104,17 @@ export class ExternalAppShortcuts {
   private unregisterCallback: (() => void) | null = null;
   private doneInitializing = false;
   private readonly appInfoSubject = new BehaviorSubject<Map<number, ExternalAppInfo>>(new Map());
-  private readonly syncingSubject = new BehaviorSubject<boolean>(false);
+  private readonly syncingSubject = new BehaviorSubject<{ purge: boolean; appType: ExternalAppType; current: number; max: string } | null>(null);
   private readonly managedApps: Map<number, ManagedApp> = new Map();
 
   readonly appInfo = new ReadonlySubject(this.appInfoSubject);
   readonly syncing = new ReadonlySubject(this.syncingSubject);
+
+  private incrementSyncSubject(): void {
+    if (this.syncingSubject.value !== null) {
+      this.syncingSubject.next({ ...this.syncingSubject.value, current: this.syncingSubject.value.current + 1 });
+    }
+  }
 
   private initAppStoreObservable(): void {
     const appStoreEx = getAppStoreEx();
@@ -164,6 +170,21 @@ export class ExternalAppShortcuts {
     this.appInfoSubject.next(new Map([...this.appInfoSubject.value, ...appInfo]));
   }
 
+  private async removeApps(appIds: number[]): Promise<boolean> {
+    let success = true;
+    const updatedMap = new Map([...this.appInfoSubject.value]);
+
+    for (const appId of appIds) {
+      this.incrementSyncSubject();
+      success = await removeShortcut(appId) && success;
+      updatedMap.delete(appId);
+      this.managedApps.delete(appId);
+    }
+
+    this.appInfoSubject.next(updatedMap);
+    return success;
+  }
+
   constructor(private readonly buddyProxy: BuddyProxy, private readonly settingsManager: SettingsManager) {
   }
 
@@ -213,7 +234,7 @@ export class ExternalAppShortcuts {
     }
 
     try {
-      this.syncingSubject.next(true);
+      this.syncingSubject.next({ purge: false, appType, current: 0, max: "?" });
 
       const hostSettings = this.settingsManager.hostSettings;
       if (hostSettings === null) {
@@ -259,7 +280,6 @@ export class ExternalAppShortcuts {
       }
 
       const appsToAdd: HostData[] = [];
-      const appsToUpdate: Array<{ appId: number; data: HostData }> = [];
       const appsToRemove: number[] = [];
       let success = true;
 
@@ -274,11 +294,6 @@ export class ExternalAppShortcuts {
         }
       }
 
-      // Update the launch options only
-      for (const { appId, data } of appsToUpdate) {
-        success = await updateLaunchOptions(appId, data) && success;
-      }
-
       // Check which ones are no longer in the list and needs to be removed
       for (const [key, details] of existingApps) {
         if (!hostData.find((data) => `${data.entryType}_${data.entryId}` === key)) {
@@ -286,9 +301,12 @@ export class ExternalAppShortcuts {
         }
       }
 
+      this.syncingSubject.next({ purge: false, appType, current: 0, max: `${appsToAdd.length + appsToRemove.length}` });
+
       // Actually generate shortcuts
       const addedAppIds: Set<number> = new Set();
       for (const app of appsToAdd) {
+        this.incrementSyncSubject();
         const appId = await addExternalShortcut(app.appName, execPath);
         if (appId !== null) {
           addedAppIds.add(appId);
@@ -299,31 +317,32 @@ export class ExternalAppShortcuts {
       }
 
       // Remove them bastards!
-      for (const appId of appsToRemove) {
-        success = await removeShortcut(appId) && success;
-      }
+      await this.removeApps(appsToRemove);
 
-      if (appsToAdd.length > 0 || appsToUpdate.length > 0 || appsToRemove.length > 0) {
+      if (appsToAdd.length > 0 || appsToRemove.length > 0) {
         if (appsToRemove.length > 0) {
+          await this.updateCollection();
           restartSteamClient();
         } else {
           const newDetails = await getAppDetailsForAppIds(Array.from(addedAppIds));
           success = newDetails.length === addedAppIds.size && success;
           this.processAppDetails(newDetails); // Proccess details regardless of success
+          await this.updateCollection();
 
           if (success) {
-            logger.toast(`${appsToAdd.length + appsToUpdate.length}/${hostData.length} app(s) were synced.`, { output: "log" });
+            logger.toast(`${appsToAdd.length}/${hostData.length} app(s) were synced.`, { output: "log" });
           } else {
             logger.toast("Some app(s) failed to sync.", { output: "error" });
           }
         }
       } else {
+        await this.updateCollection();
         logger.toast("Apps are in sync.", { output: "log" });
       }
     } catch (error) {
       logger.critical(error);
     } finally {
-      this.syncingSubject.next(false);
+      this.syncingSubject.next(null);
     }
   }
 
@@ -338,22 +357,35 @@ export class ExternalAppShortcuts {
     }
 
     try {
-      this.syncingSubject.next(true);
+      this.syncingSubject.next({ purge: true, appType, current: 0, max: "?" });
 
       const appIds = Array.from(this.appInfo.value)
         .filter(([, info]) => info.appType === appType)
         .map(([appId]) => appId);
-      for (const appId of appIds) {
-        await removeShortcut(appId);
-      }
 
+      this.syncingSubject.next({ purge: true, appType, current: 0, max: `${appIds.length}` });
+
+      await this.removeApps(appIds);
       if (appIds.length > 0) {
+        await this.updateCollection();
         restartSteamClient();
       }
     } catch (error) {
       logger.critical(error);
     } finally {
-      this.syncingSubject.next(false);
+      this.syncingSubject.next(null);
+    }
+  }
+
+  async updateCollection(): Promise<void> {
+    const collectionTag = "MoonDeck";
+    const collection = await getOrCreateCollection(collectionTag, true);
+    if (collection !== null || this.managedApps.size > 0) {
+      const collectionApps = collection ? Array.from(collection.apps.keys()) : [];
+      const someRandomApps = collectionApps.filter((appId) => !this.managedApps.has(appId));
+
+      await addAppsToCollection(collectionTag, Array.from(this.managedApps.keys()));
+      await removeAppsFromCollection(collectionTag, someRandomApps);
     }
   }
 }

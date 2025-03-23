@@ -1,5 +1,4 @@
 import { SteamClientEx } from "./shared";
-import { getAppDetails } from "./getAppDetails";
 import { logger } from "../lib/logger";
 import { waitForAppDetails } from "./waitForAppDetails";
 
@@ -21,7 +20,7 @@ import { waitForAppDetails } from "./waitForAppDetails";
  * @returns True if the shortcut name was changed (or already matches), false otherwise.
  */
 export async function setShortcutName(appId: number, value: string): Promise<boolean> {
-  const details = await waitForAppDetails(appId, (details) => details !== null) ? await getAppDetails(appId) : null;
+  const { details } = await waitForAppDetails(appId, (details) => details !== null);
   if (details == null) {
     logger.error(`Could not set shortcut name for ${appId} - does not exist!`);
     return false;
@@ -33,7 +32,7 @@ export async function setShortcutName(appId: number, value: string): Promise<boo
 
   try {
     (SteamClient as SteamClientEx).Apps.SetShortcutName(appId, value);
-    if (!await waitForAppDetails(appId, (details) => details !== null && details.strDisplayName === value)) {
+    if (!(await waitForAppDetails(appId, (details) => details?.strDisplayName === value)).matchesPredicate) {
       logger.error(`Could not set shortcut name for ${appId}!`);
       return false;
     }

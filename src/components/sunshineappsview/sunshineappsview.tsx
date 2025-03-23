@@ -75,6 +75,8 @@ export const SunshineAppsView: FC = () => {
               <br />
               <div>MoonDeck will try to preserve shortcuts if their identifier or executable does not change. This should keep any custom artwork added to the shortcuts.</div>
               <div>If this cannot be done, the shortcuts will be removed and new ones created.</div>
+              <br />
+              <div>All synced apps will be added to the MoonDeck library collection.</div>
             </>
           }
           focusable={true}

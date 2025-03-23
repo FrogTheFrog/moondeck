@@ -64,18 +64,17 @@ export class MoonDeckAppShortcuts {
     return moonDeckApps;
   }
 
-  async init(allDetails: AppDetails[]): Promise<void> {
+  init(allDetails: AppDetails[]): void {
     this.initAppStoreObservable();
     this.appOverviewPatcher.init();
     this.keyMapping = new BiMap();
 
     const appInfo: Map<number, MoonDeckAppInfo> = new Map();
-    let shortcutsRemoved = false;
+    let shortcutsPurgeIsNeeded = false;
     for (const details of this.filterMoonDeckApps(allDetails)) {
       const steamAppId = getEnvKeyValueNumber(details.strLaunchOptions, EnvVars.SteamAppId);
       if (steamAppId === null || steamAppId in this.keyMapping) {
-        shortcutsRemoved = true;
-        await this.removeShortcut(details.unAppID);
+        shortcutsPurgeIsNeeded = true;
         continue;
       }
 
@@ -85,8 +84,8 @@ export class MoonDeckAppShortcuts {
     }
 
     this.appInfoSubject.next(appInfo);
-    if (shortcutsRemoved) {
-      logger.toast("Shortcuts were removed! Restart Steam Client!", { output: "error" });
+    if (shortcutsPurgeIsNeeded) {
+      logger.toast("MoonDeck cache is corrupted! Please purge all MoonDeck apps!", { output: "error" });
     }
     this.doneInitializing = true;
   }

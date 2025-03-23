@@ -39,8 +39,8 @@ export const ExternalAppsSyncButton: FC<Props> = ({ text, appType, noConfirmatio
   };
 
   return (
-    <DialogButton disabled={syncing} onClick={() => handleClick()}>
-      {text}
+    <DialogButton disabled={syncing !== null} onClick={() => handleClick()}>
+      {syncing !== null && (!syncing.purge && syncing.appType === appType) ? `${syncing.current}/${syncing.max}` : text}
     </DialogButton>
   );
 };
