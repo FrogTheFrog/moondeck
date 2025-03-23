@@ -1,5 +1,4 @@
 import { SteamClientEx } from "./shared";
-import { collectionStoreInvalidation } from "./collectionStoreInvalidation";
 import { getAppStoreEx } from "./getAppStoreEx";
 import { getCollectionStore } from "./getCollectionStore";
 import { logger } from "../lib/logger";
@@ -45,7 +44,6 @@ export async function removeShortcut(appId: number): Promise<boolean> {
     logger.log(`Removing shortcut for ${appId}.`);
     (SteamClient as SteamClientEx).Apps.RemoveShortcut(appId);
 
-    collectionStoreInvalidation();
     for (const collection of collectionStore.userCollections) {
       if (collection.bAllowsDragAndDrop && collection.apps.has(appId)) {
         logger.log("Removing ", appId, " from ", collection);
@@ -53,7 +51,6 @@ export async function removeShortcut(appId: number): Promise<boolean> {
       }
     }
 
-    collectionStoreInvalidation();
     if (!await waitForAppOverview(appId, (overview) => overview === null)) {
       logger.error(`Could not remove shortcut for ${appId}!`);
       return false;

@@ -32,12 +32,16 @@ export interface ManagedApp {
 interface GameStreamHostData {
   appType: AppType.GameStream;
   appName: string;
+  entryId: string;
+  entryType: EnvVars.AppName;
 }
 
 interface NonSteamHostData {
   appType: AppType.NonSteam;
   appName: string;
   appId: string;
+  entryId: string;
+  entryType: EnvVars.SteamAppId;
 }
 
 type HostData = GameStreamHostData | NonSteamHostData;
@@ -57,7 +61,7 @@ async function getHostData(appType: ExternalAppType, buddyProxy: BuddyProxy, hos
 
     // Filter out the custom MoonDeck host apps
     gameStreamApps = gameStreamApps.filter(app => !moonDeckHostApps.includes(app));
-    return gameStreamApps.map((appName) => { return { appType: AppType.GameStream, appName }; });
+    return gameStreamApps.map((appName) => { return { appType: AppType.GameStream, appName, entryId: appName, entryType: EnvVars.AppName }; });
   }
 
   const nonSteamApps = await buddyProxy.getNonSteamAppData();
@@ -66,19 +70,13 @@ async function getHostData(appType: ExternalAppType, buddyProxy: BuddyProxy, hos
     return null;
   }
 
-  return nonSteamApps.map(({ appId, appName }) => { return { appType: AppType.NonSteam, appId, appName }; });
+  return nonSteamApps.map(({ appId, appName }) => { return { appType: AppType.NonSteam, appId, appName, entryId: appId, entryType: EnvVars.SteamAppId }; });
 }
 
 function makeLaunchOptions(data: HostData): string {
   const launchOptions: string[] = [];
   launchOptions.push(`${makeEnvKeyValue(EnvVars.AppType, data.appType)}`);
-
-  if (data.appType === AppType.GameStream) {
-    launchOptions.push(`${makeEnvKeyValue(EnvVars.AppName, data.appName)}`);
-  } else {
-    launchOptions.push(`${makeEnvKeyValue(EnvVars.SteamAppId, data.appId)}`);
-  }
-
+  launchOptions.push(`${makeEnvKeyValue(data.entryType, data.entryId)}`);
   launchOptions.push("%command%");
   return launchOptions.join(" ");
 }
@@ -242,7 +240,22 @@ export class ExternalAppShortcuts {
 
       const existingApps = new Map<string, AppDetails>();
       for (const shortcut of currentAppDetails) {
-        existingApps.set(shortcut.strDisplayName, shortcut);
+        if (appType === AppType.GameStream) {
+          const appName = getEnvKeyValueString(shortcut.strLaunchOptions, EnvVars.AppName);
+          if (appName !== null) {
+            existingApps.set(`${EnvVars.AppName}_${appName}`, shortcut);
+            continue;
+          }
+        } else if (appType === AppType.NonSteam) {
+          const appId = getEnvKeyValueString(shortcut.strLaunchOptions, EnvVars.SteamAppId);
+          if (appId !== null) {
+            existingApps.set(`${EnvVars.SteamAppId}_${appId}`, shortcut);
+            continue;
+          }
+        }
+
+        // Add app to the map so that it's deleted later
+        existingApps.set(`${shortcut.unAppID}`, shortcut);
       }
 
       const appsToAdd: HostData[] = [];
@@ -252,22 +265,12 @@ export class ExternalAppShortcuts {
 
       // Check which apps need to be added or updated
       for (const data of hostData) {
-        const details = existingApps.get(data.appName);
+        const details = existingApps.get(`${data.entryType}_${data.entryId}`);
         if (!details) {
           appsToAdd.push(data);
         } else if (!checkExecPathMatch(execPath, details.strShortcutExe)) {
           appsToRemove.push(details.unAppID);
           appsToAdd.push(data);
-        } else {
-          if (data.appType === AppType.GameStream) {
-            if (data.appName !== getEnvKeyValueString(details.strLaunchOptions, EnvVars.AppName)) {
-              appsToUpdate.push({ appId: details.unAppID, data });
-            }
-          } else {
-            if (data.appId !== getEnvKeyValueString(details.strLaunchOptions, EnvVars.SteamAppId)) {
-              appsToUpdate.push({ appId: details.unAppID, data });
-            }
-          }
         }
       }
 
@@ -277,8 +280,8 @@ export class ExternalAppShortcuts {
       }
 
       // Check which ones are no longer in the list and needs to be removed
-      for (const [name, details] of existingApps) {
-        if (!hostData.find((data) => data.appName === name)) {
+      for (const [key, details] of existingApps) {
+        if (!hostData.find((data) => `${data.entryType}_${data.entryId}` === key)) {
           appsToRemove.push(details.unAppID);
         }
       }

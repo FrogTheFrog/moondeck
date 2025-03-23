@@ -1,4 +1,3 @@
-import { collectionStoreInvalidation } from "./collectionStoreInvalidation";
 import { getCollectionStore } from "./getCollectionStore";
 import { logger } from "../lib/logger";
 import { waitForAppOverview } from "./waitForAppOverview";
@@ -27,14 +26,11 @@ export async function setAppHiddenState(appId: number, hide: boolean): Promise<b
   }
 
   try {
-    collectionStoreInvalidation();
     if (collectionStore.BIsHidden(appId) === hide) {
       return true;
     }
 
     collectionStore.SetAppsAsHidden([appId], hide);
-    collectionStoreInvalidation();
-
     if (!await waitForPredicate(3, 250, () => collectionStore.BIsHidden(appId) === hide)) {
       logger.error(`Could not set hidden state for app ${appId} - state did not change!`);
       return false;
