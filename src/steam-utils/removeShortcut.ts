@@ -46,7 +46,7 @@ export async function removeShortcut(appId: number): Promise<boolean> {
 
     for (const collection of collectionStore.userCollections) {
       if (collection.bAllowsDragAndDrop && collection.apps.has(appId)) {
-        logger.log("Removing ", appId, " from ", collection);
+        logger.log("Removing ", appId, " from ", collection.displayName);
         collection.AsDragDropCollection().RemoveApps([overview]);
       }
     }

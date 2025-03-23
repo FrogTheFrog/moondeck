@@ -13,6 +13,7 @@ export interface Collection {
     has: (appId: number) => boolean;
   };
   bAllowsDragAndDrop: boolean;
+  displayName: string;
 }
 
 export interface CollectionStore {
