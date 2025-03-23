@@ -70,7 +70,7 @@ async function getHostData(appType: ExternalAppType, buddyProxy: BuddyProxy, hos
     return null;
   }
 
-  return nonSteamApps.map(({ appId, appName }) => { return { appType: AppType.NonSteam, appId, appName, entryId: appId, entryType: EnvVars.SteamAppId }; });
+  return nonSteamApps.map(({ app_id: appId, app_name: appName }) => { return { appType: AppType.NonSteam, appId, appName, entryId: appId, entryType: EnvVars.SteamAppId }; });
 }
 
 function makeLaunchOptions(data: HostData): string {

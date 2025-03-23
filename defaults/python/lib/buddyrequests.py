@@ -77,7 +77,7 @@ class GameStreamAppNamesResponse(TypedDict):
 
 
 class NonSteamAppDataResponse(TypedDict):
-    appNames: Optional[List[NonSteamAppDataItem]]
+    data: Optional[List[NonSteamAppDataItem]]
 
 
 class StreamStateResponse(TypedDict):

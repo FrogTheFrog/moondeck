@@ -8,7 +8,7 @@ import { logger } from "./logger";
 
 export type BuddyStatus = "VersionMismatch" | "Restarting" | "ShuttingDown" | "Suspending" | "NoClientId" | "NotPaired" | "Pairing" | "SslVerificationFailed" | "Exception" | "Offline" | "Online";
 export type GameStreamAppNames = string[] | null;
-export type NonSteamAppData = Array<{ appId: string; appName: string }> | null;
+export type NonSteamAppData = Array<{ app_id: string; app_name: string }> | null;
 
 interface ClientInfo {
   hostId: string;
