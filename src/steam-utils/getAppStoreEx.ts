@@ -5,6 +5,7 @@ export interface AppStoreOverview {
   gameid: string;
   appid: number;
   rt_last_time_locally_played?: number;
+  is_available_on_current_platform?: boolean;
 }
 
 interface AppStore {

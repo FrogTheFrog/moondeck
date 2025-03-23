@@ -7,6 +7,7 @@ export interface Collection {
   };
   Save: () => Promise<void>;
   Delete: () => Promise<void>;
+  allApps: AppStoreOverview[];
   apps: {
     keys: () => IterableIterator<number>;
     has: (appId: number) => boolean;

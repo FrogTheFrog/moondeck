@@ -125,7 +125,10 @@ export class ExternalAppShortcuts {
 
     this.unobserveCallback = appStoreEx.observe((change) => {
       if (change.type === "delete") {
+        const updatedMap = new Map([...this.appInfoSubject.value]);
+        updatedMap.delete(change.name);
         this.managedApps.delete(change.name);
+        this.appInfoSubject.next(updatedMap);
       }
     });
   }
