@@ -316,15 +316,14 @@ export class ExternalAppShortcuts {
       await this.removeApps(appsToRemove);
 
       if (appsToAdd.length > 0 || appsToRemove.length > 0) {
+        const newDetails = await getAppDetailsForAppIds(Array.from(addedAppIds));
+        success = newDetails.length === addedAppIds.size && success;
+        this.processAppDetails(newDetails); // Proccess details regardless of success
+        await this.updateCollection();
+
         if (appsToRemove.length > 0) {
-          await this.updateCollection();
           restartSteamClient();
         } else {
-          const newDetails = await getAppDetailsForAppIds(Array.from(addedAppIds));
-          success = newDetails.length === addedAppIds.size && success;
-          this.processAppDetails(newDetails); // Proccess details regardless of success
-          await this.updateCollection();
-
           if (success) {
             logger.toast(`${appsToAdd.length}/${hostData.length} app(s) were synced.`, { output: "log" });
           } else {
