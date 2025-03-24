@@ -1,7 +1,8 @@
+import { AppType, logger } from "../../lib";
 import { ConfirmModal, DialogButton, showModal } from "@decky/ui";
 import { FC, useContext } from "react";
 import { MoonDeckContext } from "../../contexts";
-import { logger } from "../../lib";
+import { useAppSyncState } from "../../hooks";
 
 interface Props {
   disabled: boolean;
@@ -9,6 +10,8 @@ interface Props {
 
 export const PurgeButton: FC<Props> = ({ disabled }) => {
   const { moonDeckAppShortcuts } = useContext(MoonDeckContext);
+  const syncState = useAppSyncState();
+
   const handleClick = (): void => {
     showModal(
       <ConfirmModal
@@ -20,8 +23,8 @@ export const PurgeButton: FC<Props> = ({ disabled }) => {
   };
 
   return (
-    <DialogButton disabled={disabled} onClick={() => handleClick()}>
-      Purge
+    <DialogButton disabled={syncState.syncing || disabled} onClick={() => handleClick()}>
+      {syncState.formatText(true, AppType.MoonDeck, "Purge")}
     </DialogButton>
   );
 };

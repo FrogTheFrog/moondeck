@@ -2,6 +2,7 @@ import { AppType, EnvVars, addAppsToCollection, addShortcut, checkExecPathMatch,
 import { HostSettings, SettingsManager } from "./settingsmanager";
 import { getEnvKeyValueString, makeEnvKeyValue } from "./envutils";
 import { AppDetails } from "@decky/ui";
+import { AppSyncState } from "./appsyncstate";
 import { BehaviorSubject } from "rxjs";
 import { BuddyProxy } from "./buddyproxy";
 import { ReadonlySubject } from "./readonlysubject";
@@ -104,17 +105,9 @@ export class ExternalAppShortcuts {
   private unregisterCallback: (() => void) | null = null;
   private doneInitializing = false;
   private readonly appInfoSubject = new BehaviorSubject<Map<number, ExternalAppInfo>>(new Map());
-  private readonly syncingSubject = new BehaviorSubject<{ purge: boolean; appType: ExternalAppType; current: number; max: string } | null>(null);
   private readonly managedApps: Map<number, ManagedApp> = new Map();
 
   readonly appInfo = new ReadonlySubject(this.appInfoSubject);
-  readonly syncing = new ReadonlySubject(this.syncingSubject);
-
-  private incrementSyncSubject(): void {
-    if (this.syncingSubject.value !== null) {
-      this.syncingSubject.next({ ...this.syncingSubject.value, current: this.syncingSubject.value.current + 1 });
-    }
-  }
 
   private initAppStoreObservable(): void {
     const appStoreEx = getAppStoreEx();
@@ -178,7 +171,7 @@ export class ExternalAppShortcuts {
     const updatedMap = new Map([...this.appInfoSubject.value]);
 
     for (const appId of appIds) {
-      this.incrementSyncSubject();
+      this.appSyncState.incrementCount();
       success = await removeShortcut(appId) && success;
       updatedMap.delete(appId);
       this.managedApps.delete(appId);
@@ -188,7 +181,7 @@ export class ExternalAppShortcuts {
     return success;
   }
 
-  constructor(private readonly buddyProxy: BuddyProxy, private readonly settingsManager: SettingsManager) {
+  constructor(private readonly appSyncState: AppSyncState, private readonly buddyProxy: BuddyProxy, private readonly settingsManager: SettingsManager) {
   }
 
   init(allDetails: AppDetails[]): void {
@@ -232,12 +225,12 @@ export class ExternalAppShortcuts {
       return;
     }
 
-    if (this.syncingSubject.value) {
+    if (this.appSyncState.getState().syncing) {
       return;
     }
 
     try {
-      this.syncingSubject.next({ purge: false, appType, current: 0, max: "?" });
+      this.appSyncState.setState(false, appType);
 
       const hostSettings = this.settingsManager.hostSettings;
       if (hostSettings === null) {
@@ -304,12 +297,12 @@ export class ExternalAppShortcuts {
         }
       }
 
-      this.syncingSubject.next({ purge: false, appType, current: 0, max: `${appsToAdd.length + appsToRemove.length}` });
+      this.appSyncState.setMax(appsToAdd.length + appsToRemove.length);
 
       // Actually generate shortcuts
       const addedAppIds: Set<number> = new Set();
       for (const app of appsToAdd) {
-        this.incrementSyncSubject();
+        this.appSyncState.incrementCount();
         const appId = await addExternalShortcut(app.appName, execPath);
         if (appId !== null) {
           addedAppIds.add(appId);
@@ -345,7 +338,7 @@ export class ExternalAppShortcuts {
     } catch (error) {
       logger.critical(error);
     } finally {
-      this.syncingSubject.next(null);
+      this.appSyncState.resetState();
     }
   }
 
@@ -355,18 +348,18 @@ export class ExternalAppShortcuts {
       return;
     }
 
-    if (this.syncingSubject.value) {
+    if (this.appSyncState.getState().syncing) {
       return;
     }
 
     try {
-      this.syncingSubject.next({ purge: true, appType, current: 0, max: "?" });
+      this.appSyncState.setState(true, appType);
 
       const appIds = Array.from(this.appInfo.value)
         .filter(([, info]) => info.appType === appType)
         .map(([appId]) => appId);
 
-      this.syncingSubject.next({ purge: true, appType, current: 0, max: `${appIds.length}` });
+      this.appSyncState.setMax(appIds.length);
 
       await this.removeApps(appIds);
       if (appIds.length > 0) {
@@ -376,7 +369,7 @@ export class ExternalAppShortcuts {
     } catch (error) {
       logger.critical(error);
     } finally {
-      this.syncingSubject.next(null);
+      this.appSyncState.resetState();
     }
   }
 

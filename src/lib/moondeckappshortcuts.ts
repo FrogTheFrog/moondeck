@@ -2,6 +2,7 @@ import { AppType, EnvVars, addShortcut, getAppStoreEx, removeShortcut, restartSt
 import { getEnvKeyValueNumber, makeEnvKeyValue } from "./envutils";
 import { AppDetails } from "@decky/ui";
 import { AppOverviewPatcher } from "./appoverviewpatcher";
+import { AppSyncState } from "./appsyncstate";
 import { BehaviorSubject } from "rxjs";
 import BiMap from "ts-bidirectional-map";
 import { ReadonlySubject } from "./readonlysubject";
@@ -15,8 +16,6 @@ export interface MoonDeckAppInfo {
 export class MoonDeckAppShortcuts {
   private unobserveCallback: (() => void) | null = null;
   private keyMapping: BiMap<number, number> | null = null;
-  private moondeckPurge = false;
-  private doneInitializing = false;
   private readonly appInfoSubject = new BehaviorSubject<Map<number, MoonDeckAppInfo>>(new Map());
   private readonly appOverviewPatcher = new AppOverviewPatcher({
     rt_last_time_locally_played: (currentValue, newValue) => typeof currentValue !== "number" || (typeof newValue === "number" && newValue > currentValue)
@@ -64,6 +63,9 @@ export class MoonDeckAppShortcuts {
     return moonDeckApps;
   }
 
+  constructor(private readonly appSyncState: AppSyncState) {
+  }
+
   init(allDetails: AppDetails[]): void {
     this.initAppStoreObservable();
     this.appOverviewPatcher.init();
@@ -87,11 +89,9 @@ export class MoonDeckAppShortcuts {
     if (shortcutsPurgeIsNeeded) {
       logger.toast("MoonDeck cache is corrupted! Please purge all MoonDeck apps!", { output: "error" });
     }
-    this.doneInitializing = true;
   }
 
   deinit(): void {
-    this.doneInitializing = false;
     this.appOverviewPatcher.deinit();
 
     if (this.unobserveCallback !== null) {
@@ -151,23 +151,36 @@ export class MoonDeckAppShortcuts {
   }
 
   async purgeAllShortcuts(): Promise<void> {
-    if (this.moondeckPurge) {
+    if (this.initializing) {
+      logger.toast("Plugin is still initializing!", { output: "error" });
       return;
     }
 
-    this.moondeckPurge = true;
-    const appIds = Array.from(this.appInfoSubject.value.keys());
-    for (const appId of appIds) {
-      await this.removeShortcut(appId);
+    if (this.appSyncState.getState().syncing) {
+      return;
     }
-    this.moondeckPurge = false;
 
-    if (appIds.length > 0) {
-      restartSteamClient();
+    try {
+      this.appSyncState.setState(true, AppType.MoonDeck);
+
+      const appIds = Array.from(this.appInfoSubject.value.keys());
+      this.appSyncState.setMax(appIds.length);
+
+      for (const appId of appIds) {
+        await this.removeShortcut(appId);
+      }
+
+      if (appIds.length > 0) {
+        restartSteamClient();
+      }
+    } catch (error) {
+      logger.critical(error);
+    } finally {
+      this.appSyncState.resetState();
     }
   }
 
   get initializing(): boolean {
-    return !this.doneInitializing;
+    return this.keyMapping === null;
   }
 }

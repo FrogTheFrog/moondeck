@@ -3,7 +3,7 @@ import { FC, useContext } from "react";
 import { ExternalAppType } from "../../lib/externalappshortcuts";
 import { MoonDeckContext } from "../../contexts";
 import { logger } from "../../lib";
-import { useExternalAppsSyncing } from "../../hooks";
+import { useAppSyncState } from "../../hooks";
 
 interface Props {
   text: string;
@@ -13,14 +13,14 @@ interface Props {
 
 export const ExternalAppsSyncButton: FC<Props> = ({ text, appType, noConfirmationDialog }) => {
   const { externalAppShortcuts } = useContext(MoonDeckContext);
-  const syncing = useExternalAppsSyncing();
+  const syncState = useAppSyncState();
 
   const handleClick = (): void => {
     const onOk = (): void => {
       externalAppShortcuts.syncShortcuts(appType).catch((e) => logger.critical(e));
     };
 
-    if (syncing) {
+    if (syncState.syncing) {
       return;
     }
 
@@ -39,8 +39,8 @@ export const ExternalAppsSyncButton: FC<Props> = ({ text, appType, noConfirmatio
   };
 
   return (
-    <DialogButton disabled={syncing !== null} onClick={() => handleClick()}>
-      {syncing !== null && (!syncing.purge && syncing.appType === appType) ? `${syncing.current}/${syncing.max}` : text}
+    <DialogButton disabled={syncState.syncing} onClick={() => handleClick()}>
+      {syncState.formatText(false, appType, text)}
     </DialogButton>
   );
 };

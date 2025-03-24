@@ -8,4 +8,4 @@ export * from "./usecurrentsettings";
 export * from "./usemoondeckappshortcuts";
 export * from "./usegamestreamappshortcuts";
 export * from "./usenonsteamappshortcuts";
-export * from "./useexternalappssyncing";
+export * from "./useappsyncstate";

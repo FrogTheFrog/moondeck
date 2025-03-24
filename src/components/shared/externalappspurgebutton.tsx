@@ -3,7 +3,7 @@ import { FC, useContext } from "react";
 import { ExternalAppType } from "../../lib/externalappshortcuts";
 import { MoonDeckContext } from "../../contexts";
 import { logger } from "../../lib";
-import { useExternalAppsSyncing } from "../../hooks";
+import { useAppSyncState } from "../../hooks";
 
 interface Props {
   appType: ExternalAppType;
@@ -12,7 +12,7 @@ interface Props {
 
 export const ExternalAppsPurgeButton: FC<Props> = ({ appType, disabled }) => {
   const { externalAppShortcuts } = useContext(MoonDeckContext);
-  const syncing = useExternalAppsSyncing();
+  const syncState = useAppSyncState();
 
   const handleClick = (): void => {
     showModal(
@@ -25,8 +25,8 @@ export const ExternalAppsPurgeButton: FC<Props> = ({ appType, disabled }) => {
   };
 
   return (
-    <DialogButton disabled={syncing !== null || disabled} onClick={() => handleClick()}>
-      {syncing !== null && (syncing.purge && syncing.appType === appType) ? `${syncing.current}/${syncing.max}` : "Purge"}
+    <DialogButton disabled={syncState.syncing || disabled} onClick={() => handleClick()}>
+      {syncState.formatText(true, appType, "Purge")}
     </DialogButton>
   );
 };
