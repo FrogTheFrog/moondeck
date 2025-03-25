@@ -16,7 +16,8 @@ export enum EnvVars {
 
 export enum AppType {
   MoonDeck,
-  GameStream
+  GameStream,
+  NonSteam
 }
 
 export function registerForGameLifetime(callback: (data: LifetimeNotification) => void): () => void {

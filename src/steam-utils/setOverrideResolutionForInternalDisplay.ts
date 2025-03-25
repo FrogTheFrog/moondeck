@@ -1,5 +1,4 @@
 import { SteamClientEx } from "./shared";
-import { getAppDetails } from "./getAppDetails";
 import { logger } from "../lib/logger";
 import { waitForAppDetails } from "./waitForAppDetails";
 
@@ -7,7 +6,7 @@ import { waitForAppDetails } from "./waitForAppDetails";
  * Set the resolution override for internal display to the desired value.
  */
 export async function setOverrideResolutionForInternalDisplay(appId: number, value: boolean): Promise<boolean> {
-  const details = await waitForAppDetails(appId, (details) => details !== null) ? await getAppDetails(appId) : null;
+  const { details } = await waitForAppDetails(appId, (details) => details !== null);
   if (details == null) {
     logger.log(`Could not set override resolution for internal display for ${appId} - does not exist!`);
     return false;
@@ -19,7 +18,7 @@ export async function setOverrideResolutionForInternalDisplay(appId: number, val
 
   try {
     (SteamClient as SteamClientEx).Apps.ToggleOverrideResolutionForInternalDisplay(appId);
-    if (!await waitForAppDetails(appId, (details) => details !== null && details.bOverrideInternalResolution === value)) {
+    if (!(await waitForAppDetails(appId, (details) => details?.bOverrideInternalResolution === value)).matchesPredicate) {
       logger.error(`Could not set override resolution for internal display for ${appId}!`);
       return false;
     }

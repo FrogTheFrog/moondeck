@@ -17,7 +17,7 @@ export const HostAppPanel: FC<Props> = ({ currentSettings, currentHostSettings }
     return null;
   }
 
-  if (!currentSettings.enableMoondeckShortcuts || currentHostSettings.hostApp.apps.length < 2) {
+  if (!currentSettings.enableMoondeckShortcuts || currentHostSettings.buddy.hostApp.apps.length < 2) {
     return null;
   }
 
@@ -29,9 +29,9 @@ export const HostAppPanel: FC<Props> = ({ currentSettings, currentHostSettings }
           spacingBetweenLabelAndChild="none"
         >
           <HostAppSelectionDropdown
-            currentIndex={currentHostSettings.hostApp.selectedAppIndex}
-            currentList={currentHostSettings.hostApp.apps}
-            setIndex={(value) => { settingsManager.updateHost((hostSettings) => { hostSettings.hostApp.selectedAppIndex = value; }); }}
+            currentIndex={currentHostSettings.buddy.hostApp.selectedAppIndex}
+            currentList={currentHostSettings.buddy.hostApp.apps}
+            setIndex={(value) => { settingsManager.updateHost((hostSettings) => { hostSettings.buddy.hostApp.selectedAppIndex = value; }); }}
           />
         </Field>
       </PanelSectionRow>

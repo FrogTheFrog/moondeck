@@ -1,11 +1,13 @@
+import { BuddySettingsView } from "../components/buddysettingsview";
 import { ButtonStyleView } from "../components/buttonstyleview";
 import { ChangelogView } from "../components/changelogview";
 import { FC } from "react";
 import { GameSessionView } from "../components/gamesessionview";
+import { HostInfoView } from "../components/hostinfoview";
 import { HostSelectionView } from "../components/hostselectionview";
-import { HostSettingsView } from "../components/hostsettingsview";
 import { MoonDeckAppsView } from "../components/moondeckappsview";
 import { MoonlightSettingsView } from "../components/moonlightsettingsview";
+import { NonSteamAppsView } from "../components/nonsteamappsview/nonsteamappsview";
 import { RunnerSettingsView } from "../components/runnersettingsview";
 import { SetupGuideView } from "../components/setupguideview";
 import { SidebarNavigation } from "@decky/ui";
@@ -41,14 +43,20 @@ const MoonDeckRouter: FC<object> = () => {
           route: "/moondeck/host-selection"
         },
         {
-          title: "Host Settings",
-          content: <HostSettingsView />,
-          route: "/moondeck/host-settings"
+          title: "Host Info",
+          content: <HostInfoView />,
+          route: "/moondeck/host-info"
         },
+        "separator",
         {
           title: "Moonlight Settings",
           content: <MoonlightSettingsView />,
           route: "/moondeck/resolution-settings"
+        },
+        {
+          title: "Buddy Settings",
+          content: <BuddySettingsView />,
+          route: "/moondeck/buddy-settings"
         },
         {
           title: "Runner Settings",
@@ -59,12 +67,17 @@ const MoonDeckRouter: FC<object> = () => {
         {
           title: "MoonDeck Apps",
           content: <MoonDeckAppsView />,
-          route: "/moondeck/shortcuts"
+          route: "/moondeck/moondeck-apps"
         },
         {
           title: "Sunshine Apps",
           content: <SunshineAppsView />,
-          route: "/moondeck/external-shortcuts"
+          route: "/moondeck/sunshine-apps"
+        },
+        {
+          title: "Non-Steam Apps",
+          content: <NonSteamAppsView />,
+          route: "/moondeck/non-steam-apps"
         },
         "separator",
         {

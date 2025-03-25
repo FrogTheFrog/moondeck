@@ -1,4 +1,3 @@
-import { collectionStoreInvalidation } from "./collectionStoreInvalidation";
 import { getCollectionStore } from "./getCollectionStore";
 import { logger } from "../lib/logger";
 
@@ -13,8 +12,9 @@ export function getAllNonSteamAppIds(): number[] {
       return [];
     }
 
-    collectionStoreInvalidation();
-    return Array.from(collectionStore.deckDesktopApps.apps.keys());
+    return Array.from(collectionStore.deckDesktopApps.allApps)
+      .filter((app) => app.is_available_on_current_platform)
+      .map((app) => app.appid);
   } catch (error) {
     logger.critical(error);
     return [];

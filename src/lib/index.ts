@@ -1,4 +1,5 @@
 export * from "./appoverviewpatcher";
+export * from "./appsyncstate";
 export * from "./asyncloop";
 export * from "./buddyproxy";
 export * from "./commandproxy";

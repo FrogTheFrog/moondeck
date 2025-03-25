@@ -1,9 +1,9 @@
 import { AppStartResult, AppType, ControllerConfigOption, EnvVars, SteamClientEx, checkExecPathMatch, getAppDetails, getCurrentDisplayModeString, getDisplayIdentifiers, getMoonDeckRunPath, getSystemNetworkStore, launchApp, registerForGameLaunchIntercept, registerForGameLifetime, registerForSuspendNotifictions, setAppHiddenState, setAppLaunchOptions, setAppResolutionOverride, setOverrideResolutionForInternalDisplay, setShortcutName, waitForNetworkConnection } from "./steamutils";
 import { ControllerConfigValues, Dimension, HostResolution, HostSettings, SettingsManager, networkReconnectAfterSuspendDefault } from "./settingsmanager";
-import { E_ALREADY_LOCKED, Mutex, tryAcquire } from "async-mutex";
 import { Subscription, pairwise } from "rxjs";
 import { getEnvKeyValueString, makeEnvKeyValue } from "./envutils";
 import { AppDetails } from "@decky/ui";
+import { AppSyncState } from "./appsyncstate";
 import { CommandProxy } from "./commandproxy";
 import { ExternalAppShortcuts } from "./externalappshortcuts";
 import { MoonDeckAppProxy } from "./moondeckapp";
@@ -67,14 +67,22 @@ function getLaunchOptionsString(currentValue: string, appId: number, appType: Ap
 
   if (appType === AppType.MoonDeck) {
     launchOptions.push(makeEnvKeyValue(EnvVars.SteamAppId, appId));
-  } else {
+  } else if (appType === AppType.GameStream) {
     const appNameFromOptions = getEnvKeyValueString(currentValue, EnvVars.AppName);
     if (appNameFromOptions === null) {
-      logger.error(`Failed to get app name from launch options for for ${appId}!`);
+      logger.error(`Failed to get app name from launch options for ${appId}!`);
       return null;
     }
 
     launchOptions.push(makeEnvKeyValue(EnvVars.AppName, appNameFromOptions));
+  } else {
+    const appIdFromOptions = getEnvKeyValueString(currentValue, EnvVars.SteamAppId);
+    if (appIdFromOptions === null) {
+      logger.error(`Failed to get app id from launch options for ${appId}!`);
+      return null;
+    }
+
+    launchOptions.push(makeEnvKeyValue(EnvVars.SteamAppId, appIdFromOptions));
   }
 
   if (autoResolution && displayMode !== null) {
@@ -107,7 +115,6 @@ export class MoonDeckAppLauncher {
   private unregisterInterceptor: (() => void) | null = null;
   private interceptedLaunch = false;
   private subscription: Subscription | null = null;
-  private readonly launchMutex = new Mutex();
   readonly moonDeckApp: MoonDeckAppProxy;
 
   private async ensureAppDetails(steamAppId: number, execPath: string, appName: string, appType: AppType): Promise<AppDetails | null> {
@@ -255,6 +262,7 @@ export class MoonDeckAppLauncher {
   }
 
   constructor(
+    private readonly appSyncState: AppSyncState,
     private readonly settingsManager: SettingsManager,
     private readonly moonDeckAppShortcuts: MoonDeckAppShortcuts,
     private readonly externalAppShortcuts: ExternalAppShortcuts,
@@ -321,89 +329,90 @@ export class MoonDeckAppLauncher {
       return;
     }
 
+    if (this.appSyncState.getState().syncing) {
+      logger.toast("Currently syncing syncing/purging apps!");
+      return;
+    }
+
     try {
-      tryAcquire(this.launchMutex);
-      try {
-        logger.log(`Preparing to launch ${appName}.`);
+      this.appSyncState.setState(false, AppType.MoonDeck);
+      this.appSyncState.setMax(1);
+      this.appSyncState.incrementCount();
 
-        const execPath = await getMoonDeckRunPath();
-        if (execPath === null) {
-          logger.toast("Failed to get moondeckrun.sh path!", { output: "error" });
-          return;
-        }
+      logger.log(`Preparing to launch ${appName}.`);
 
-        const details = await this.ensureAppDetails(appId, execPath, appName, appType);
-        if (details === null) {
-          logger.toast("Failed to create shortcut (needs restart?)!", { output: "error" });
-          return;
-        }
-
-        if (!await setShortcutName(details.unAppID, appName)) {
-          logger.toast("Failed to update shortcut name (needs restart?)!", { output: "error" });
-          return;
-        }
-
-        let currentDisplay: string | null = null;
-        if (hostSettings.resolution.useLinkedDisplays) {
-          const displays = await getDisplayIdentifiers();
-          if (displays === null) {
-            logger.toast("Failed to get display info from Steam!", { output: "error" });
-          }
-          currentDisplay = displays?.current ?? null;
-        }
-
-        const mode = await getCurrentDisplayModeString();
-        if (!await setAppResolutionOverride(details.unAppID, getSelectedAppResolution(mode, currentDisplay, hostSettings))) {
-          logger.toast("Failed to set app resolution override (needs restart?)!", { output: "error" });
-          return;
-        }
-
-        if (!await setOverrideResolutionForInternalDisplay(details.unAppID, true)) {
-          logger.toast("Failed to set app resolution override for internal display (needs restart?)!", { output: "error" });
-          return;
-        }
-
-        const launchOptions = getLaunchOptionsString(details.strLaunchOptions, appId, appType, mode, hostSettings.resolution.automatic, currentDisplay, settings.pythonExecPath);
-        if (launchOptions === null || !await setAppLaunchOptions(details.unAppID, launchOptions)) {
-          logger.toast("Failed to update shortcut launch options (needs restart?)!", { output: "error" });
-          return;
-        }
-
-        updateControllerConfig(details.unAppID, settings.gameSession.controllerConfig);
-
-        let sessionOptions = this.moonDeckApp.value?.sessionOptions ?? null;
-        if (sessionOptions === null) {
-          sessionOptions = {
-            nameSetToAppId: settings.gameSession.autoApplyAppId
-          };
-        }
-
-        this.moonDeckApp.setApp(appId, details.unAppID, appName, appType, sessionOptions);
-        await this.moonDeckApp.clearRunnerResult();
-
-        const launchTimeout = afterSuspend ? hostSettings.runnerTimeouts.steamLaunchAfterSuspend : hostSettings.runnerTimeouts.steamLaunch;
-        const launchResult = await launchApp(details.unAppID, launchTimeout * 1000);
-        if (launchResult !== AppStartResult.Started) {
-          if (launchResult === AppStartResult.TimeoutOrError) {
-            logger.toast("Failed to launch shortcut!", { output: "error" });
-            await this.moonDeckApp.killApp();
-          }
-          await this.moonDeckApp.clearApp();
-          return;
-        }
-
-        await this.moonDeckApp.applySessionOptions();
-      } catch (error) {
-        logger.toast("Exception while trying to launch shortcut!", { output: null });
-        logger.critical(error);
-      } finally {
-        this.launchMutex.release();
+      const execPath = await getMoonDeckRunPath();
+      if (execPath === null) {
+        logger.toast("Failed to get moondeckrun.sh path!", { output: "error" });
+        return;
       }
+
+      const details = await this.ensureAppDetails(appId, execPath, appName, appType);
+      if (details === null) {
+        logger.toast("Failed to create shortcut (needs restart?)!", { output: "error" });
+        return;
+      }
+
+      if (!await setShortcutName(details.unAppID, appName)) {
+        logger.toast("Failed to update shortcut name (needs restart?)!", { output: "error" });
+        return;
+      }
+
+      let currentDisplay: string | null = null;
+      if (hostSettings.resolution.useLinkedDisplays) {
+        const displays = await getDisplayIdentifiers();
+        if (displays === null) {
+          logger.toast("Failed to get display info from Steam!", { output: "error" });
+        }
+        currentDisplay = displays?.current ?? null;
+      }
+
+      const mode = await getCurrentDisplayModeString();
+      if (!await setAppResolutionOverride(details.unAppID, getSelectedAppResolution(mode, currentDisplay, hostSettings))) {
+        logger.toast("Failed to set app resolution override (needs restart?)!", { output: "error" });
+        return;
+      }
+
+      if (!await setOverrideResolutionForInternalDisplay(details.unAppID, true)) {
+        logger.toast("Failed to set app resolution override for internal display (needs restart?)!", { output: "error" });
+        return;
+      }
+
+      const launchOptions = getLaunchOptionsString(details.strLaunchOptions, appId, appType, mode, hostSettings.resolution.automatic, currentDisplay, settings.pythonExecPath);
+      if (launchOptions === null || !await setAppLaunchOptions(details.unAppID, launchOptions)) {
+        logger.toast("Failed to update shortcut launch options (needs restart?)!", { output: "error" });
+        return;
+      }
+
+      updateControllerConfig(details.unAppID, settings.gameSession.controllerConfig);
+
+      let sessionOptions = this.moonDeckApp.value?.sessionOptions ?? null;
+      if (sessionOptions === null) {
+        sessionOptions = {
+          nameSetToAppId: settings.gameSession.autoApplyAppId
+        };
+      }
+
+      this.moonDeckApp.setApp(appId, details.unAppID, appName, appType, sessionOptions);
+      await this.moonDeckApp.clearRunnerResult();
+
+      const launchTimeout = afterSuspend ? hostSettings.runnerTimeouts.steamLaunchAfterSuspend : hostSettings.runnerTimeouts.steamLaunch;
+      const launchResult = await launchApp(details.unAppID, launchTimeout * 1000);
+      if (launchResult !== AppStartResult.Started) {
+        if (launchResult === AppStartResult.TimeoutOrError) {
+          logger.toast("Failed to launch shortcut!", { output: "error" });
+          await this.moonDeckApp.killApp();
+        }
+        await this.moonDeckApp.clearApp();
+        return;
+      }
+
+      await this.moonDeckApp.applySessionOptions();
     } catch (error) {
-      if (error !== E_ALREADY_LOCKED) {
-        logger.toast("Exception while trying to launch shortcut!", { output: null });
-        logger.critical(error);
-      }
+      logger.toast("Exception while trying to launch shortcut!", { output: null });
+      logger.critical(error);
+    } finally {
+      this.appSyncState.resetState();
     }
   }
 }

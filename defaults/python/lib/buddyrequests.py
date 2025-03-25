@@ -40,8 +40,19 @@ class AppState(Enum):
     Updating = 2
 
 
+class SteamUiMode(Enum):
+    Unknown = 0
+    Desktop = 1
+    BigPicture = 2
+
+
+class NonSteamAppDataItem(TypedDict):
+    app_id: str
+    app_name: str
+
+
 class StreamedAppData(TypedDict):
-    app_id: int
+    app_id: str
     app_state: AppState
 
 
@@ -65,12 +76,20 @@ class GameStreamAppNamesResponse(TypedDict):
     appNames: Optional[List[str]]
 
 
+class NonSteamAppDataResponse(TypedDict):
+    data: Optional[List[NonSteamAppDataItem]]
+
+
 class StreamStateResponse(TypedDict):
     state: StreamState
 
 
 class StreamedAppDataResponse(TypedDict):
     data: Optional[StreamedAppData]
+
+
+class SteamUiModeResponse(TypedDict):
+    mode: SteamUiMode
 
 
 OsType = Literal["Windows", "Linux", "Other"]
@@ -139,12 +158,21 @@ class BuddyRequests(contextlib.AbstractAsyncContextManager):
             data = await resp.json(encoding="utf-8")
             return utils.from_dict(ResultLikeResponse, data)
 
-    async def get_is_steam_ready(self):
-        async with self.__session.get(f"{self.base_url}/isSteamReady") as resp:
+    async def get_steam_ui_mode(self):
+        async with self.__session.get(f"{self.base_url}/steamUiMode") as resp:
+            data = await resp.json(encoding="utf-8")
+            return utils.from_dict(SteamUiModeResponse, data)
+
+    async def post_launch_steam(self, big_picture_mode: bool):
+        data = {
+            "big_picture_mode": big_picture_mode
+        }
+
+        async with self.__session.post(f"{self.base_url}/launchSteam", json=data) as resp:
             data = await resp.json(encoding="utf-8")
             return utils.from_dict(ResultLikeResponse, data)
 
-    async def post_launch_steam_app(self, app_id: int):
+    async def post_launch_steam_app(self, app_id: str):
         data = {
             "app_id": app_id
         }
@@ -193,6 +221,15 @@ class BuddyRequests(contextlib.AbstractAsyncContextManager):
             return utils.from_dict(ResultLikeResponse, data)
 
     async def get_gamestream_app_names(self):
-        async with self.__session.get(f"{self.base_url}/gamestreamAppNames") as resp:
+        async with self.__session.get(f"{self.base_url}/gameStreamAppNames") as resp:
             data = await resp.json(encoding="utf-8")
             return utils.from_dict(GameStreamAppNamesResponse, data)
+        
+    async def get_non_steam_app_data(self, user_id: str):
+        data = {
+            "user_id": user_id
+        }
+
+        async with self.__session.get(f"{self.base_url}/nonSteamAppData", json=data) as resp:
+            data = await resp.json(encoding="utf-8")
+            return utils.from_dict(NonSteamAppDataResponse, data)

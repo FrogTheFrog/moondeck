@@ -16,7 +16,7 @@ export default definePlugin(() => {
       const allAppDetails = await getAllNonSteamAppDetails();
 
       externalAppShortcuts.init(allAppDetails);
-      await moonDeckAppShortcuts.init(allAppDetails);
+      moonDeckAppShortcuts.init(allAppDetails);
       settingsManager.init();
       connectivityManager.init();
       moonDeckAppLauncher.init();

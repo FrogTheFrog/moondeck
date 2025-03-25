@@ -44,7 +44,7 @@ export const GameSessionView: FC = () => {
           focusable={true}
         />
         <ToggleField
-          label="Automatic title switch to AppId"
+          label="Automatic title switch to AppId (MoonDeck app only)"
           description={
             <>
               <div>Switch the game title to AppId after it launches. This will give access to community layouts for the controller and the friends will see what you're playing (you can also switch midgame from right panel and with some finesse export the layouts that way).</div>

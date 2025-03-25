@@ -42,8 +42,13 @@ class ChangePcStateResult(Enum):
     Failed = "Failed to change PC state via Buddy!"
 
 
-class IsSteamReadyResult(Enum):
-    Failed = "Failed to get Steam readiness via Buddy!"
+class SteamUiModeResult(Enum):
+    Failed = "Failed to get Steam UI mode via Buddy!"
+
+
+class LaunchSteamResult(Enum):
+    BuddyRefused = "Buddy refused to launch Steam. Check the logs on host!"
+    Failed = "Failed to launch Steam via Buddy!"
 
 
 class LaunchSteamAppResult(Enum):
@@ -74,6 +79,10 @@ class EndStreamResult(Enum):
 
 class GetGameStreamAppNamesResult(Enum):
     Failed = "Failed to get gamestream app names via Buddy!"
+
+
+class GetNonSteamAppDataResult(Enum):
+    Failed = "Failed to get non-Steam app data via Buddy!"
 
 
 class BuddyClient(contextlib.AbstractAsyncContextManager):
@@ -177,17 +186,31 @@ class BuddyClient(contextlib.AbstractAsyncContextManager):
 
         return await self._try_request(request(), AbortPairingResult.Failed)
 
-    async def is_steam_ready(self):
+    async def get_steam_ui_mode(self):
         async def request():
             result = await self.say_hello()
             if result:
                 return result
 
-            return await self.__requests.get_is_steam_ready()
+            return await self.__requests.get_steam_ui_mode()
 
-        return await self._try_request(request(), IsSteamReadyResult.Failed)
+        return await self._try_request(request(), SteamUiModeResult.Failed)
 
-    async def launch_app(self, app_id: int):
+    async def launch_steam(self, big_picture_mode: bool):
+        async def request():
+            result = await self.say_hello()
+            if result:
+                return result
+
+            resp = await self.__requests.post_launch_steam(big_picture_mode)
+            if not resp["result"]:
+                return LaunchSteamResult.BuddyRefused
+
+            return None
+
+        return await self._try_request(request(), LaunchSteamResult.Failed)
+
+    async def launch_app(self, app_id: str):
         async def request():
             result = await self.say_hello()
             if result:
@@ -283,3 +306,14 @@ class BuddyClient(contextlib.AbstractAsyncContextManager):
             return resp["appNames"]
 
         return await self._try_request(request(), GetGameStreamAppNamesResult.Failed)
+    
+    async def get_non_steam_app_data(self, user_id: str):
+        async def request():
+            result = await self.say_hello()
+            if result:
+                return result
+
+            resp = await self.__requests.get_non_steam_app_data(user_id=user_id)
+            return resp["data"]
+
+        return await self._try_request(request(), GetNonSteamAppDataResult.Failed)

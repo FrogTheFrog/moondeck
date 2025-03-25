@@ -1,6 +1,5 @@
 import { AppDetails } from "@decky/ui";
-import { SteamClientEx } from "./shared";
-import { logger } from "../lib/logger";
+import { waitForAppDetails } from "./waitForAppDetails";
 
 /**
  * Tries to retrieve the app details from Steam.
@@ -9,23 +8,5 @@ import { logger } from "../lib/logger";
  * @returns AppDetails if succeeded or null otherwise.
  */
 export async function getAppDetails(appId: number): Promise<AppDetails | null> {
-  return await new Promise((resolve) => {
-    let timeoutId: NodeJS.Timeout | undefined;
-    try {
-      const { unregister } = (SteamClient as SteamClientEx).Apps.RegisterForAppDetails(appId, (details) => {
-        clearTimeout(timeoutId);
-        unregister();
-        resolve(Object.keys(details).length > 0 ? details : null);
-      });
-
-      timeoutId = setTimeout(() => {
-        unregister();
-        resolve(null);
-      }, 1000);
-    } catch (error) {
-      clearTimeout(timeoutId);
-      logger.critical(error);
-      resolve(null);
-    }
-  });
+  return (await waitForAppDetails(appId, (_) => true)).details;
 }

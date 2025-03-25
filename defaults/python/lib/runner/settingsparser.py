@@ -1,5 +1,3 @@
-import os
-
 from typing import Optional, TypedDict
 
 from .envparser import EnvSettings, parse_env_settings, RunnerType
@@ -23,10 +21,11 @@ class MoonDeckAppRunnerSettings(TypedDict):
     host_port:int
     buddy_port: int
     client_id: str
+    big_picture_mode: bool
     close_steam: bool
     timeouts: RunnerTimeouts
     moonlight_exec_path: Optional[str]
-    app_id: int
+    app_id: str
     debug_logs: bool
     runner_type: RunnerType.MoonDeck
 
@@ -39,7 +38,7 @@ class MoonlightOnlyRunnerSettings(TypedDict):
     address: str
     timeouts: RunnerTimeouts
     moonlight_exec_path: Optional[str]
-    app_id: int
+    app_id: str
     debug_logs: bool
     runner_type: RunnerType.MoonlightOnly
 
@@ -93,9 +92,9 @@ def parse_resolution_settings(host_settings: HostSettings, env_settings: EnvSett
 
 def parse_host_app_name(host_settings: HostSettings) -> str:
     host_app: str = "MoonDeckStream"
-    app_list = host_settings["hostApp"]["apps"]
+    app_list = host_settings["buddy"]["hostApp"]["apps"]
     if len(app_list) > 0:
-        index = host_settings["hostApp"]["selectedAppIndex"]
+        index = host_settings["buddy"]["hostApp"]["selectedAppIndex"]
         if index >= 0 and index < len(app_list):
             host_app = app_list[index]
         else:
@@ -124,6 +123,9 @@ async def parse_settings() -> MoonDeckAppRunnerSettings | MoonlightOnlyRunnerSet
         raise RunnerError(Result.NoRunnerType)
     
     if env_settings["runner_type"] == RunnerType.MoonDeck:
+        if env_settings["app_id"] is None:
+            raise RunnerError(Result.NoAppId)
+
         return {
             "resolution": parse_resolution_settings(host_settings=host_settings, env_settings=env_settings),
             "host_app": parse_host_app_name(host_settings=host_settings),
@@ -131,9 +133,10 @@ async def parse_settings() -> MoonDeckAppRunnerSettings | MoonlightOnlyRunnerSet
             "mac": host_settings["mac"],
             "address": host_settings["address"],
             "host_port": host_settings["hostInfoPort"],
-            "buddy_port": host_settings["buddyPort"],
+            "buddy_port": host_settings["buddy"]["port"],
             "client_id": user_settings["clientId"],
-            "close_steam": host_settings["closeSteamOnceSessionEnds"],
+            "big_picture_mode": host_settings["buddy"]["bigPictureMode"],
+            "close_steam": host_settings["buddy"]["closeSteamOnceSessionEnds"],
             "timeouts": host_settings["runnerTimeouts"],
             "moonlight_exec_path": user_settings["moonlightExecPath"] if user_settings["useMoonlightExec"] else None,
             "app_id": env_settings["app_id"],
@@ -141,6 +144,9 @@ async def parse_settings() -> MoonDeckAppRunnerSettings | MoonlightOnlyRunnerSet
             "runner_type": RunnerType.MoonDeck
         }
     else:
+        if env_settings["app_name"] is None:
+            raise RunnerError(Result.NoAppName)
+
         return {
             "resolution": parse_resolution_settings(host_settings=host_settings, env_settings=env_settings),
             "host_app": env_settings["app_name"],

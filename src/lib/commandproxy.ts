@@ -51,7 +51,7 @@ export class CommandProxy {
       if (this.buddyProxy.status.value === "Online") {
         const hostSettings = this.settingsManager.hostSettings;
         const address = hostSettings?.address ?? null;
-        const buddyPort = hostSettings?.buddyPort ?? null;
+        const buddyPort = hostSettings?.buddy.port ?? null;
         const clientId = this.settingsManager.settings.value?.clientId ?? null;
 
         if (address !== null && buddyPort !== null && clientId !== null) {
@@ -114,7 +114,7 @@ export class CommandProxy {
       if (this.buddyProxy.status.value === "Online") {
         const hostSettings = this.settingsManager.hostSettings;
         const address = hostSettings?.address ?? null;
-        const buddyPort = hostSettings?.buddyPort ?? null;
+        const buddyPort = hostSettings?.buddy.port ?? null;
         const clientId = this.settingsManager.settings.value?.clientId ?? null;
 
         if (address !== null && buddyPort !== null && clientId !== null) {

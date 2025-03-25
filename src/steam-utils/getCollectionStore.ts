@@ -2,13 +2,18 @@ import { AppStoreOverview } from "./getAppStoreEx";
 
 export interface Collection {
   AsDragDropCollection: () => {
+    AddApps: (overviews: AppStoreOverview[]) => void;
     RemoveApps: (overviews: AppStoreOverview[]) => void;
   };
+  Save: () => Promise<void>;
+  Delete: () => Promise<void>;
+  allApps: AppStoreOverview[];
   apps: {
     keys: () => IterableIterator<number>;
     has: (appId: number) => boolean;
   };
   bAllowsDragAndDrop: boolean;
+  displayName: string;
 }
 
 export interface CollectionStore {
@@ -16,7 +21,9 @@ export interface CollectionStore {
   userCollections: Collection[];
   BIsHidden: (appId: number) => boolean;
   SetAppsAsHidden: (appIds: number[], hide: boolean) => void;
-  WarmCache?: () => void;
+  GetCollection: (collectionId: string) => Collection | undefined;
+  GetCollectionIDByUserTag: (tag: string) => string | null;
+  NewUnsavedCollection: (tag: string, filter: unknown | undefined, overviews: AppStoreOverview[]) => Collection | undefined;
 }
 
 /**

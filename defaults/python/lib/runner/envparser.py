@@ -18,7 +18,7 @@ class MoonDeckResolution(TypedDict):
 class EnvSettings(TypedDict):
     auto_resolution: Optional[MoonDeckResolution]
     linked_display: Optional[str]
-    app_id: Optional[int]
+    app_id: Optional[str]
     app_name: Optional[str]
     runner_type: Optional[RunnerType]
 
@@ -46,13 +46,8 @@ def get_linked_display() -> Optional[str]:
         logger.exception("While getting linked display")
         return None
 
-def get_app_id() -> Optional[int]:
-    app_id = os.environ.get("MOONDECK_STEAM_APP_ID")
-    try:
-        return int(app_id) if app_id is not None else app_id
-    except:
-        logger.exception("While getting app id")
-        return None
+def get_app_id() -> Optional[str]:
+    return os.environ.get("MOONDECK_STEAM_APP_ID")
     
 def get_app_name() -> Optional[str]:
     return os.environ.get("MOONDECK_APP_NAME")
@@ -61,7 +56,7 @@ def get_runner_type() -> Optional[RunnerType]:
     app_type = os.environ.get("MOONDECK_APP_TYPE")
     try:
         app_type = int(app_type) if app_type is not None else None
-        if app_type == 0:
+        if app_type == 0 or app_type == 2:
             return RunnerType.MoonDeck
         if app_type == 1:
             return RunnerType.MoonlightOnly

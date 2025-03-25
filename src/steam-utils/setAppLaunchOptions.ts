@@ -1,5 +1,4 @@
 import { SteamClientEx } from "./shared";
-import { getAppDetails } from "./getAppDetails";
 import { logger } from "../lib/logger";
 import { waitForAppDetails } from "./waitForAppDetails";
 
@@ -11,7 +10,7 @@ import { waitForAppDetails } from "./waitForAppDetails";
  * @returns True if the launch options were changed (or already match), false otherwise.
  */
 export async function setAppLaunchOptions(appId: number, value: string): Promise<boolean> {
-  const details = await waitForAppDetails(appId, (details) => details !== null) ? await getAppDetails(appId) : null;
+  const { details } = await waitForAppDetails(appId, (details) => details !== null);
   if (details == null) {
     logger.log(`Could not set app launch options for ${appId} - does not exist!`);
     return false;
@@ -23,7 +22,7 @@ export async function setAppLaunchOptions(appId: number, value: string): Promise
 
   try {
     (SteamClient as SteamClientEx).Apps.SetAppLaunchOptions(appId, value);
-    if (!await waitForAppDetails(appId, (details) => details !== null && details.strLaunchOptions === value)) {
+    if (!(await waitForAppDetails(appId, (details) => details?.strLaunchOptions === value)).matchesPredicate) {
       logger.error(`Could not set app launch options for ${appId}!`);
       return false;
     }

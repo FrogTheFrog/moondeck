@@ -6,6 +6,19 @@ export const ChangelogView: FC = () => {
     <DialogBody>
       <DialogControlsSection>
         <Field
+          label="1.10.0"
+          description={
+            <>
+              <div>&bull; Added non-Steam app syncing support.</div>
+              <div>&bull; Bumped MoonDeckBuddy minimum version to v1.8.0.</div>
+              <div>&bull; Moved some Buddy related settings to a dedicated settings tab.</div>
+              <div>&bull; Configuration for whether to for big picture mode or not has been moved from Buddy to MoonDeck.</div>
+              <div>&bull; All synced Sunshine and Non-Steam apps will be added to the MoonDeck library collection.</div>
+            </>
+          }
+          focusable={true}
+        />
+        <Field
           label="1.9.1"
           description={
             <>
