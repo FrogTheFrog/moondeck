@@ -32,14 +32,13 @@ export const BuddySettingsView: FC = () => {
       <DialogControlsSection>
         <DialogControlsSectionHeader>General</DialogControlsSectionHeader>
         <ToggleField
-          label="Launch big picture mode"
+          label="Launch in big picture mode"
           description="If enabled, Buddy will open Steam in big picture mode before starting the app."
           value={hostSettings.buddy.bigPictureMode}
           setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.buddy.bigPictureMode = value; })}
         />
         <ToggleField
           label="Automatically close Steam on host when gaming session ends"
-          description="If disabled, Steam will remain open in big picture mode (no way to leave big picture without closing Steam without using the UI)."
           value={hostSettings.buddy.closeSteamOnceSessionEnds}
           setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.buddy.closeSteamOnceSessionEnds = value; })}
         />

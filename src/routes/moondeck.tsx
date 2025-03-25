@@ -47,6 +47,7 @@ const MoonDeckRouter: FC<object> = () => {
           content: <HostInfoView />,
           route: "/moondeck/host-info"
         },
+        "separator",
         {
           title: "Moonlight Settings",
           content: <MoonlightSettingsView />,
