@@ -373,7 +373,7 @@ export class MoonDeckAppLauncher {
         return;
       }
 
-      if (!await setOverrideResolutionForInternalDisplay(details.unAppID, true)) {
+      if (!await setOverrideResolutionForInternalDisplay(details.unAppID, hostSettings.resolution.appResolutionOverrideForInternalDisplay)) {
         logger.toast("Failed to set app resolution override for internal display (needs restart?)!", { output: "error" });
         return;
       }

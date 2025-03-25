@@ -36,7 +36,7 @@ export const GameSessionPanel: FC<Props> = ({ appData }) => {
   };
 
   let gameSession = null;
-  if (appData.appType !== AppType.GameStream) {
+  if (appData.appType === AppType.MoonDeck) {
     gameSession =
       <PanelSection title="Game Session">
         <PanelSectionRow>
