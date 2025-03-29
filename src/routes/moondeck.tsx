@@ -18,8 +18,6 @@ import { routerHook } from "@decky/api";
 const MoonDeckRouter: FC<object> = () => {
   return (
     <SidebarNavigation
-      title="MoonDeck"
-      showTitle={true}
       pages={[
         {
           title: "Setup Guide",
