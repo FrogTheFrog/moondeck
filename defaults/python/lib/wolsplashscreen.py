@@ -139,9 +139,13 @@ class WolSplashScreen:
 
         logger.info(f"WolSplashScreen.__aenter__ :: 3")
         self.root = tk.Tk()
+        logger.info(f"WolSplashScreen.__aenter__ :: 3.1")
         self.root.config(bg=BG_COLOR)
+        logger.info(f"WolSplashScreen.__aenter__ :: 3.2")
         self.root.minsize(width=1280, height=720)
+        logger.info(f"WolSplashScreen.__aenter__ :: 3.3")
         self.root.attributes('-fullscreen', True)
+        logger.info(f"WolSplashScreen.__aenter__ :: 3.4")
         self.root.bind("<Destroy>", self.__on_destroy)
         logger.info(f"WolSplashScreen.__aenter__ :: 4")
 
