@@ -1,6 +1,7 @@
 import asyncio
 import contextlib
 import os
+import shutil
 
 from typing import Optional, TypedDict
 from asyncio.subprocess import Process
@@ -22,7 +23,6 @@ class ResolutionDimensions(TypedDict):
 
 class MoonlightProxy(contextlib.AbstractAsyncContextManager):
 
-    flatpak = "/usr/bin/flatpak"
     flatpak_moonlight = "com.moonlight_stream.Moonlight"
 
     def __init__(self, hostname: str, host_app: str, audio: Optional[str], resolution: Optional[ResolutionDimensions], exec_path: Optional[str]) -> None: 
@@ -44,8 +44,12 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
             return
 
         if self.exec_path is None:
-            exec = self.flatpak
+            exec = self.__get_flatpak_exec()
             args = ["run", "--arch=x86_64", "--command=moonlight", self.flatpak_moonlight]
+
+            if exec is None:
+                logger.error("flatpak is not installed!")
+                return
         else:
             exec = self.exec_path
             args = []
@@ -97,8 +101,12 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
         await asyncio.wait({process_task, log_task}, return_when=asyncio.ALL_COMPLETED)
 
     async def terminate_all_instances(self, kill_all: bool):
-        if self.exec_path is None or kill_all: 
-            kill_proc = await asyncio.create_subprocess_exec(MoonlightProxy.flatpak, "kill", MoonlightProxy.flatpak_moonlight,
+        if self.exec_path is None or kill_all:
+            flatpak_exec = self.__get_flatpak_exec()
+            if flatpak_exec is None:
+                return
+
+            kill_proc = await asyncio.create_subprocess_exec(flatpak_exec, "kill", MoonlightProxy.flatpak_moonlight,
                                                              stdout=asyncio.subprocess.PIPE,
                                                              stderr=asyncio.subprocess.PIPE)
             output, _ = await kill_proc.communicate()
@@ -124,10 +132,15 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
 
     async def is_moonlight_installed(self):
         if self.exec_path is None:
-            kill_proc = await asyncio.create_subprocess_exec(MoonlightProxy.flatpak, "list",
+            flatpak_exec = self.__get_flatpak_exec()
+            if flatpak_exec is None:
+                logger.error("flatpak is not installed!")
+                return False
+
+            list_proc = await asyncio.create_subprocess_exec(flatpak_exec, "list",
                                                              stdout=asyncio.subprocess.PIPE,
                                                              stderr=asyncio.subprocess.PIPE)
-            output, _ = await kill_proc.communicate()
+            output, _ = await list_proc.communicate()
             if output:
                 return output.decode().find(MoonlightProxy.flatpak_moonlight) != -1
         else:
@@ -140,3 +153,6 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
                 logger.info(f"\"{self.exec_path}\" is not a valid file!")
 
         return False
+    
+    def __get_flatpak_exec(self):
+        return shutil.which("flatpak")
