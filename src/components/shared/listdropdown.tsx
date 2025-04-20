@@ -8,9 +8,10 @@ interface Props<T> {
   disabled?: boolean;
   focusable?: boolean;
   singleItemSelection?: boolean;
+  stringifySimpleLabels?: boolean;
   optionList: Readonly<Array<Option<T>>>;
   label: string;
-  value: T;
+  value: T | null;
   setValue: (value: T) => void;
 }
 
@@ -19,7 +20,7 @@ function stringifyLabel(value: string): string {
   return separatedValue.charAt(0).toUpperCase() + separatedValue.slice(1);
 }
 
-export const ListDropdown: <T>(props: Props<T>) => ReactElement<Props<T>> = ({ disabled, focusable, singleItemSelection, optionList, label, value, setValue }) => {
+export const ListDropdown: <T>(props: Props<T>) => ReactElement<Props<T>> = ({ disabled, focusable, singleItemSelection, stringifySimpleLabels, optionList, label, value, setValue }) => {
   const [options, setOptions] = useState<DropdownOption[]>([]);
 
   useEffect(() => {
@@ -27,7 +28,7 @@ export const ListDropdown: <T>(props: Props<T>) => ReactElement<Props<T>> = ({ d
       const dropdownOptions: DropdownOption[] = [];
       for (const option of optionList) {
         if (typeof option === "string") {
-          dropdownOptions.push({ data: option, label: stringifyLabel(option) });
+          dropdownOptions.push({ data: option, label: stringifySimpleLabels === false ? option : stringifyLabel(option) });
         } else {
           dropdownOptions.push({ data: option.id, label: option.label });
         }

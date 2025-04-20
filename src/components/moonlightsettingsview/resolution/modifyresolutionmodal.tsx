@@ -1,8 +1,8 @@
 import { DialogButton, Field, ModalRoot } from "@decky/ui";
-import { Dimension, HostResolution, minBitrate, minFps, stringifyDimension } from "../../lib";
+import { Dimension, HostResolution, minBitrate, minFps, stringifyDimension } from "../../../lib";
 import { useEffect, useState } from "react";
-import { IndexedListModal } from "../shared/indexedlist";
-import { NumericTextInput } from "../shared";
+import { IndexedListModal } from "../../shared/indexedlist";
+import { NumericTextInput } from "../../shared";
 
 function isValidIndex(index: number | null, listSize: number): boolean {
   return index !== null && index >= 0 && index < listSize;

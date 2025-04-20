@@ -11,6 +11,7 @@ from .buddyrequests import OsType
 
 
 ControllerConfigOption = Literal["Disable", "Default", "Enable", "Noop"]
+AudioOption = Literal["stereo", "5.1-surround", "7.1-surround"]
 
 
 class RunnerTimeouts(TypedDict):
@@ -45,13 +46,18 @@ class HostResolution(TypedDict):
     automatic: bool
     appResolutionOverride: Literal["CustomResolution", "DisplayResolution", "Native", "Default"]
     appResolutionOverrideForInternalDisplay: bool
-    passToMoonlight: bool
     useCustomDimensions: bool
     useLinkedDisplays: bool
     selectedDimensionIndex: int
     defaultBitrate: Optional[int]
     defaultFps: Optional[int]
     dimensions: List[Dimension]
+
+
+class AudioSettings(TypedDict):
+    defaultOption: Optional[AudioOption]
+    useLinkedAudio: bool
+    linkedAudio: Dict[AudioOption, list[str]]
 
 
 class BuddySettings(TypedDict):
@@ -77,7 +83,9 @@ class HostSettings(TypedDict):
     mac: str
     os: OsType
     resolution: HostResolution
+    audio: AudioSettings
     runnerTimeouts: RunnerTimeouts
+    passToMoonlight: bool
     buddy: BuddySettings
     sunshineApps: SunshineAppsSettings
     nonSteamApps: NonSteamAppsSettings
@@ -336,6 +344,19 @@ class SettingsManager:
                 del data["hostSettings"][host]["buddyPort"]
                 del data["hostSettings"][host]["closeSteamOnceSessionEnds"]
                 del data["hostSettings"][host]["hostApp"]
+        if data["version"] == 29:
+            data["version"] = 30
+            for host in data["hostSettings"].keys():
+                data["hostSettings"][host]["audio"] = { 
+                    "defaultOption": None,
+                    "useLinkedAudio": True,
+                    "linkedAudio": {}
+                }
+        if data["version"] == 30:
+            data["version"] = 31
+            for host in data["hostSettings"].keys():
+                data["hostSettings"][host]["passToMoonlight"] = data["hostSettings"][host]["resolution"]["passToMoonlight"]
+                del data["hostSettings"][host]["resolution"]["passToMoonlight"]
         return data
 
 

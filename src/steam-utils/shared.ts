@@ -18,6 +18,18 @@ export enum ControllerConfigOption {
 }
 export type ControllerConfigValue = `${ControllerConfigOption}` extends `${infer T extends number}` ? T : never;
 
+export interface SteamAudioDevice {
+  id: number;
+  sName: string;
+  bHasOutput: boolean;
+}
+
+export interface SteamAudioData {
+  activeOutputDeviceId: number;
+  overrideOutputDeviceId: number;
+  vecDevices: SteamAudioDevice[];
+}
+
 export interface SteamClientEx {
   Apps: {
     AddShortcut: (appName: string, execPath: string, args: string, cmdLine: string) => Promise<number | undefined | null>;
@@ -46,6 +58,9 @@ export interface SteamClientEx {
     StartRestart: (param: boolean) => void;
   };
   System: {
+    Audio: {
+      GetDevices: () => Promise<SteamAudioData>;
+    };
     DisplayManager: {
       RegisterForStateChanges: (callback: () => void) => { unregister: () => void };
     };

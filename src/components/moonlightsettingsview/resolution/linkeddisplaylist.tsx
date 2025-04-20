@@ -1,11 +1,11 @@
 import { DialogButton, Field, showModal } from "@decky/ui";
 import { FC, ReactNode, useContext, useState } from "react";
-import { getDisplayIdentifiers, logger, stringifyDimension } from "../../lib";
-import { CurrentHostSettings } from "../../hooks";
+import { getDisplayIdentifiers, logger, stringifyDimension } from "../../../lib";
+import { CurrentHostSettings } from "../../../hooks";
 import { LinkedDisplayModal } from "./linkeddisplaymodal";
-import { MoonDeckContext } from "../../contexts";
-import { ToggleField } from "../shared";
-import { TrashMain } from "../icons";
+import { MoonDeckContext } from "../../../contexts";
+import { ToggleField } from "../../shared";
+import { TrashMain } from "../../icons";
 
 interface Props {
   hostSettings: CurrentHostSettings;

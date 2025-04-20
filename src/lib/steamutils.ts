@@ -8,6 +8,7 @@ export * from "../steam-utils";
 export enum EnvVars {
   AppType = "MOONDECK_APP_TYPE",
   AutoResolution = "MOONDECK_AUTO_RES",
+  LinkedAudio = "MOONDECK_LINKED_AUDIO",
   LinkedDisplay = "MOONDECK_LINKED_DISPLAY",
   SteamAppId = "MOONDECK_STEAM_APP_ID",
   AppName = "MOONDECK_APP_NAME",

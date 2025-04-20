@@ -1,6 +1,6 @@
-import { HostResolution, appResolutionOverrideValues } from "../../lib";
+import { HostResolution, appResolutionOverrideValues } from "../../../lib";
 import { FC } from "react";
-import { ListDropdown } from "../shared";
+import { ListDropdown } from "../../shared";
 
 interface Props {
   currentOverride: HostResolution["appResolutionOverride"];

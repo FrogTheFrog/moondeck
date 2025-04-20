@@ -1,9 +1,9 @@
 import { DialogButton, Field, ModalRoot } from "@decky/ui";
 import { FC, useContext, useState } from "react";
-import { CurrentHostSettings } from "../../hooks";
-import { IndexedListDropdown } from "../shared/indexedlist";
-import { MoonDeckContext } from "../../contexts";
-import { ResolutionSelectionDropdown } from "../shared";
+import { CurrentHostSettings } from "../../../hooks";
+import { IndexedListDropdown } from "../../shared/indexedlist";
+import { MoonDeckContext } from "../../../contexts";
+import { ResolutionSelectionDropdown } from "../../shared";
 
 interface Props {
   closeModal: () => void;

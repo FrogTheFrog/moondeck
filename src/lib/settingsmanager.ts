@@ -11,6 +11,7 @@ export const horizontalAlignmentValues = ["top", "bottom"] as const;
 export const verticalAlignmentValues = ["left", "right"] as const;
 export const minBitrate = 0 as const;
 export const minFps = 0 as const;
+export const audioOptions = ["stereo", "5.1-surround", "7.1-surround"] as const;
 
 export enum ControllerConfigValues {
   Disable = "Disable Steam Input",
@@ -72,13 +73,18 @@ export interface HostResolution {
   automatic: boolean;
   appResolutionOverride: typeof appResolutionOverrideValues[number];
   appResolutionOverrideForInternalDisplay: boolean;
-  passToMoonlight: boolean;
   useCustomDimensions: boolean;
   useLinkedDisplays: boolean;
   selectedDimensionIndex: number;
   defaultBitrate: number | null;
   defaultFps: number | null;
   dimensions: Dimension[];
+}
+
+export interface AudioSettings {
+  defaultOption: typeof audioOptions[number] | null;
+  useLinkedAudio: boolean;
+  linkedAudio: { [key in typeof audioOptions[number]]?: string[] };
 }
 
 export interface BuddySettings {
@@ -104,6 +110,8 @@ export interface HostSettings {
   mac: string;
   os: OsType;
   resolution: HostResolution;
+  audio: AudioSettings;
+  passToMoonlight: boolean;
   runnerTimeouts: RunnerTimeouts;
   buddy: BuddySettings;
   sunshineApps: SunshineAppsSettings;

@@ -5,6 +5,7 @@ export * from "./getAllNonSteamAppIds";
 export * from "./getAppDetails";
 export * from "./getAppResolutionOverride";
 export * from "./getAppStoreEx";
+export * from "./getAudioDevices";
 export * from "./getCollectionStore";
 export * from "./getCurrentDisplayMode";
 export * from "./getCurrentUserSteamId";

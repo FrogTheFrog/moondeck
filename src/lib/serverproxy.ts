@@ -85,7 +85,6 @@ export class ServerProxy {
           automatic: currentSettings?.resolution.automatic ?? true,
           appResolutionOverride: currentSettings?.resolution.appResolutionOverride ?? "CustomResolution",
           appResolutionOverrideForInternalDisplay: currentSettings?.resolution.appResolutionOverrideForInternalDisplay ?? false,
-          passToMoonlight: currentSettings?.resolution.passToMoonlight ?? true,
           useCustomDimensions: currentSettings?.resolution.useCustomDimensions ?? false,
           useLinkedDisplays: currentSettings?.resolution.useLinkedDisplays ?? true,
           selectedDimensionIndex: currentSettings?.resolution.selectedDimensionIndex ?? -1,
@@ -93,7 +92,12 @@ export class ServerProxy {
           defaultFps: currentSettings?.resolution.defaultFps ?? null,
           dimensions: currentSettings?.resolution.dimensions ?? []
         },
-
+        audio: {
+          defaultOption: currentSettings?.audio.defaultOption ?? null,
+          useLinkedAudio: currentSettings?.audio.useLinkedAudio ?? true,
+          linkedAudio: currentSettings?.audio.linkedAudio ?? {}
+        },
+        passToMoonlight: currentSettings?.passToMoonlight ?? true,
         runnerTimeouts: {
           buddyRequests: currentSettings?.runnerTimeouts.buddyRequests ?? buddyRequestsDefault,
           servicePing: currentSettings?.runnerTimeouts.servicePing ?? servicePingDefault,

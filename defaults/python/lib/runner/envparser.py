@@ -17,6 +17,7 @@ class MoonDeckResolution(TypedDict):
 
 class EnvSettings(TypedDict):
     auto_resolution: Optional[MoonDeckResolution]
+    linked_audio: Optional[str]
     linked_display: Optional[str]
     app_id: Optional[str]
     app_name: Optional[str]
@@ -34,7 +35,18 @@ def get_auto_resolution() -> Optional[MoonDeckResolution]:
     except:
         logger.exception("While getting auto resolution")
         return None
-    
+
+def get_linked_audio() -> Optional[str]:
+    value = os.environ.get("MOONDECK_LINKED_AUDIO")
+    try:
+        if value is None:
+            return None
+        
+        return str(value)
+    except:
+        logger.exception("While getting linked audio")
+        return None
+
 def get_linked_display() -> Optional[str]:
     value = os.environ.get("MOONDECK_LINKED_DISPLAY")
     try:
@@ -69,6 +81,7 @@ def get_runner_type() -> Optional[RunnerType]:
 def parse_env_settings() -> EnvSettings:
     return {
         "auto_resolution": get_auto_resolution(),
+        "linked_audio": get_linked_audio(),
         "linked_display": get_linked_display(),
         "app_id": get_app_id(),
         "app_name": get_app_name(),

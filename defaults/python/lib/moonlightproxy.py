@@ -24,8 +24,9 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
     flatpak = "/usr/bin/flatpak"
     flatpak_moonlight = "com.moonlight_stream.Moonlight"
 
-    def __init__(self, hostname: str, host_app: str, resolution: Optional[ResolutionDimensions], exec_path: Optional[str]) -> None: 
+    def __init__(self, hostname: str, host_app: str, audio: Optional[str], resolution: Optional[ResolutionDimensions], exec_path: Optional[str]) -> None: 
         self.hostname = hostname
+        self.audio = audio
         self.resolution = resolution
         self.host_app = host_app
         self.exec_path = exec_path
@@ -47,6 +48,9 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
         else:
             exec = self.exec_path
             args = []
+
+        if self.audio:
+            args += ["--audio-config", self.audio]
 
         if self.resolution:
             if self.resolution["size"]:

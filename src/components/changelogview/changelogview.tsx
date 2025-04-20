@@ -6,6 +6,15 @@ export const ChangelogView: FC = () => {
     <DialogBody>
       <DialogControlsSection>
         <Field
+          label="1.10.1"
+          description={
+            <>
+              <div>&bull; Added audio device and Moonlight audio option linking feature.</div>
+            </>
+          }
+          focusable={true}
+        />
+        <Field
           label="1.10.0"
           description={
             <>

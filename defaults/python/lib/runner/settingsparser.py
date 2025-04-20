@@ -7,13 +7,9 @@ from ..moonlightproxy import ResolutionDimensions
 from ..logger import logger
 
 
-class ResolutionSettings(TypedDict):
-    dimensions: ResolutionDimensions
-    pass_to_moonlight: bool
-
-
 class MoonDeckAppRunnerSettings(TypedDict):
-    resolution: ResolutionSettings
+    audio: Optional[str]
+    resolution: ResolutionDimensions
     host_app: str
     hostname: str
     mac: str
@@ -31,7 +27,8 @@ class MoonDeckAppRunnerSettings(TypedDict):
 
 
 class MoonlightOnlyRunnerSettings(TypedDict):
-    resolution: ResolutionSettings
+    audio: Optional[str]
+    resolution: ResolutionDimensions
     host_app: str
     hostname: str
     mac: str
@@ -43,7 +40,21 @@ class MoonlightOnlyRunnerSettings(TypedDict):
     runner_type: RunnerType.MoonlightOnly
 
 
-def parse_resolution_settings(host_settings: HostSettings, env_settings: EnvSettings) -> ResolutionSettings:
+def parse_audio_settings(host_settings: HostSettings, env_settings: EnvSettings) -> Optional[str]:
+    audio_option = host_settings["audio"]["defaultOption"]
+
+    if host_settings["audio"]["useLinkedAudio"]:
+        linked_audio_device = env_settings["linked_audio"]
+        if linked_audio_device:
+            for option, devices in host_settings["audio"]["linkedAudio"].items():
+                if linked_audio_device in devices:
+                    logger.info(f"Using linked audio device \"{linked_audio_device}\".")
+                    audio_option = option
+
+    logger.info(f"Parsed audio option: {audio_option}")
+    return audio_option
+
+def parse_resolution_settings(host_settings: HostSettings, env_settings: EnvSettings) -> ResolutionDimensions:
     dimensions: ResolutionDimensions = { 
         "size": None,
         "bitrate": host_settings["resolution"]["defaultBitrate"],
@@ -82,13 +93,9 @@ def parse_resolution_settings(host_settings: HostSettings, env_settings: EnvSett
             dimensions["size"] = { "width": auto_resolution["width"], "height": auto_resolution["height"] }
         else:
             logger.warning(f"Cannot use automatic resolution! MoonDeck did not pass resolution. Still continuing...")
-        
-    res_change: ResolutionSettings = { 
-        "dimensions": dimensions,
-        "pass_to_moonlight": host_settings["resolution"]["passToMoonlight"]
-    }
-    logger.info(f"Parsed resolution settings: {res_change}")
-    return res_change
+ 
+    logger.info(f"Parsed resolution settings: {dimensions}")
+    return dimensions
 
 def parse_host_app_name(host_settings: HostSettings) -> str:
     host_app: str = "MoonDeckStream"
@@ -122,12 +129,18 @@ async def parse_settings() -> MoonDeckAppRunnerSettings | MoonlightOnlyRunnerSet
     if env_settings["runner_type"] is None:
         raise RunnerError(Result.NoRunnerType)
     
+    pass_to_moonlight = host_settings["passToMoonlight"]
+    if not pass_to_moonlight:
+        logger.info("Settings will NOT be passed to Moonlight")
+    
     if env_settings["runner_type"] == RunnerType.MoonDeck:
         if env_settings["app_id"] is None:
             raise RunnerError(Result.NoAppId)
 
         return {
+            "audio": parse_audio_settings(host_settings=host_settings, env_settings=env_settings),
             "resolution": parse_resolution_settings(host_settings=host_settings, env_settings=env_settings),
+            "pass_to_moonlight": pass_to_moonlight,
             "host_app": parse_host_app_name(host_settings=host_settings),
             "hostname": host_settings["hostName"],
             "mac": host_settings["mac"],
@@ -148,7 +161,9 @@ async def parse_settings() -> MoonDeckAppRunnerSettings | MoonlightOnlyRunnerSet
             raise RunnerError(Result.NoAppName)
 
         return {
+            "audio": parse_audio_settings(host_settings=host_settings, env_settings=env_settings),
             "resolution": parse_resolution_settings(host_settings=host_settings, env_settings=env_settings),
+            "pass_to_moonlight": pass_to_moonlight,
             "host_app": env_settings["app_name"],
             "hostname": host_settings["hostName"],
             "mac": host_settings["mac"],

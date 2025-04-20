@@ -227,7 +227,8 @@ class MoonDeckAppRunner:
         moonlight_proxy = MoonlightProxy(
             settings["hostname"],
             settings["host_app"],
-            settings["resolution"]["dimensions"] if settings["resolution"]["pass_to_moonlight"] else None,
+            settings["audio"] if settings["pass_to_moonlight"] else None,
+            settings["resolution"] if settings["pass_to_moonlight"] else None,
             settings["moonlight_exec_path"])
 
         async with buddy_client as client, moonlight_proxy as proxy:
