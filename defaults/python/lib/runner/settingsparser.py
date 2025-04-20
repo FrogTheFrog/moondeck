@@ -58,7 +58,8 @@ def parse_resolution_settings(host_settings: HostSettings, env_settings: EnvSett
     dimensions: ResolutionDimensions = { 
         "size": None,
         "bitrate": host_settings["resolution"]["defaultBitrate"],
-        "fps": host_settings["resolution"]["defaultFps"]
+        "fps": host_settings["resolution"]["defaultFps"],
+        "hdr": host_settings["resolution"]["defaultHdr"]
     }
     dimension_list = host_settings["resolution"]["dimensions"]
 
@@ -68,6 +69,8 @@ def parse_resolution_settings(host_settings: HostSettings, env_settings: EnvSett
             dimensions["bitrate"] = dimension["bitrate"]
         if dimension["fps"] is not None:
             dimensions["fps"] = dimension["fps"]
+        if dimension["hdr"] is not None:
+            dimensions["hdr"] = dimension["hdr"]
 
     if host_settings["resolution"]["useLinkedDisplays"] and len(dimension_list) > 0:
         linked_display = env_settings["linked_display"]

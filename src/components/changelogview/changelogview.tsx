@@ -10,6 +10,7 @@ export const ChangelogView: FC = () => {
           description={
             <>
               <div>&bull; Added audio device and Moonlight audio option linking feature.</div>
+              <div>&bull; Added HDR toggle option (including custom resolutions).</div>
             </>
           }
           focusable={true}

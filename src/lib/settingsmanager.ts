@@ -66,6 +66,7 @@ export interface Dimension {
   height: number;
   bitrate: number | null;
   fps: number | null;
+  hdr: boolean | null;
   linkedDisplays: string[];
 }
 
@@ -78,6 +79,7 @@ export interface HostResolution {
   selectedDimensionIndex: number;
   defaultBitrate: number | null;
   defaultFps: number | null;
+  defaultHdr: boolean | null;
   dimensions: Dimension[];
 }
 
@@ -155,9 +157,15 @@ export interface UserSettings {
 }
 
 export function stringifyDimension(value: Dimension): string {
-  const fps = value.fps === null ? "" : `x${value.fps}`;
-  const bitrate = value.bitrate === null ? "" : ` (${value.bitrate} kbps)`;
-  return `${value.width}x${value.height}${fps}${bitrate}`;
+  const fps = value.fps === null ? "" : `@${value.fps}`;
+  const other: string[] = [];
+  if (value.bitrate !== null) {
+    other.push(`${value.bitrate} kbps`);
+  }
+  if (value.hdr !== null) {
+    other.push(value.hdr ? "HDR On" : "HDR Off");
+  }
+  return `${value.width}x${value.height}${fps}${other.length > 0 ? ` (${other.join(", ")})` : ""}`;
 }
 
 async function getHomeDir(): Promise<string | null> {

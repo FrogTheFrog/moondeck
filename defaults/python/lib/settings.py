@@ -39,6 +39,7 @@ class Dimension(TypedDict):
     height: int
     bitrate: Optional[int]
     fps: Optional[int]
+    hdr: Optional[bool]
     linkedDisplays: List[str]
 
 
@@ -51,6 +52,7 @@ class HostResolution(TypedDict):
     selectedDimensionIndex: int
     defaultBitrate: Optional[int]
     defaultFps: Optional[int]
+    defaultHdr: Optional[bool]
     dimensions: List[Dimension]
 
 
@@ -357,6 +359,12 @@ class SettingsManager:
             for host in data["hostSettings"].keys():
                 data["hostSettings"][host]["passToMoonlight"] = data["hostSettings"][host]["resolution"]["passToMoonlight"]
                 del data["hostSettings"][host]["resolution"]["passToMoonlight"]
+        if data["version"] == 31:
+            data["version"] = 32
+            for host in data["hostSettings"].keys():
+                data["hostSettings"][host]["resolution"]["defaultHdr"] = None
+                for i in range(len(data["hostSettings"][host]["resolution"]["dimensions"])):
+                    data["hostSettings"][host]["resolution"]["dimensions"][i]["hdr"] = None
         return data
 
 

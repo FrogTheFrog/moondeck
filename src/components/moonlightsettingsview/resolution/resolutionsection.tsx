@@ -4,6 +4,7 @@ import { ModifyListButton, RemoveListEntryButton } from "../../shared/indexedlis
 import { NumericTextInput, ResolutionSelectionDropdown, ToggleField } from "../../shared";
 import { minBitrate, minFps } from "../../../lib";
 import { CurrentHostSettings } from "../../../hooks";
+import { HdrSelectionDropdown } from "./hdrselectiondropdown";
 import { LinkedDisplayList } from "./linkeddisplaylist";
 import { ModifyResolutionModal } from "./modifyresolutionmodal";
 import { MoonDeckContext } from "../../../contexts";
@@ -40,6 +41,16 @@ export const ResolutionSection: FC<Props> = ({ hostSettings }) => {
           optional={true}
           value={hostSettings.resolution.defaultFps}
           setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.resolution.defaultFps = value; })}
+        />
+      </Field>
+      <Field
+        label="Default HDR"
+        description="HDR to be applied when starting stream. Will be overridden by the one from custom resolution if provided."
+        childrenContainerWidth="fixed"
+      >
+        <HdrSelectionDropdown
+          value={hostSettings.resolution.defaultHdr}
+          setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.resolution.defaultHdr = value; })}
         />
       </Field>
       <ToggleField

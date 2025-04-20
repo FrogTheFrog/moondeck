@@ -2,7 +2,7 @@ import { FC } from "react";
 import { ListDropdown } from "./listdropdown";
 import { audioOptions } from "../../lib";
 
-const NoopText = "Don't override Moonlight";
+const NoopText = "Don't override";
 const AudioDropdownValuesWithNoop = [...audioOptions, NoopText] as const;
 const AudioDropdownValuesWithoutNoop = [...audioOptions] as const;
 const DefaultText = "Select audio option";

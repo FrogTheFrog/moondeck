@@ -90,6 +90,7 @@ export class ServerProxy {
           selectedDimensionIndex: currentSettings?.resolution.selectedDimensionIndex ?? -1,
           defaultBitrate: currentSettings?.resolution.defaultBitrate ?? null,
           defaultFps: currentSettings?.resolution.defaultFps ?? null,
+          defaultHdr: currentSettings?.resolution.defaultHdr ?? null,
           dimensions: currentSettings?.resolution.dimensions ?? []
         },
         audio: {

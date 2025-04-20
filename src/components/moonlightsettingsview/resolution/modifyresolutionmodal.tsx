@@ -1,6 +1,7 @@
 import { DialogButton, Field, ModalRoot } from "@decky/ui";
 import { Dimension, HostResolution, minBitrate, minFps, stringifyDimension } from "../../../lib";
 import { useEffect, useState } from "react";
+import { HdrSelectionDropdown } from "./hdrselectiondropdown";
 import { IndexedListModal } from "../../shared/indexedlist";
 import { NumericTextInput } from "../../shared";
 
@@ -15,6 +16,7 @@ export const ModifyResolutionModal: IndexedListModal<HostResolution["dimensions"
   const [height, setHeight] = useState<number | null>(initialValue?.height ?? null);
   const [bitrate, setBitrate] = useState<number | null>(initialValue?.bitrate ?? null);
   const [fps, setFps] = useState<number | null>(initialValue?.fps ?? null);
+  const [hdr, setHdr] = useState<boolean | null>(initialValue?.hdr ?? null);
   const [widthIsValid, setWidthIsValid] = useState<boolean>(false);
   const [heightIsValid, setHeightIsValid] = useState<boolean>(false);
   const [bitrateIsValid, setBitrateIsValid] = useState<boolean>(false);
@@ -22,16 +24,16 @@ export const ModifyResolutionModal: IndexedListModal<HostResolution["dimensions"
   const [resolution, setResolution] = useState<HostResolution["dimensions"][number] | null>(null);
 
   useEffect(() => {
-    if (typeof width === "number" && typeof height === "number" && (typeof bitrate === "number" || bitrate === null) && (typeof fps === "number" || fps === null)) {
-      setResolution({ width, height, bitrate, fps, linkedDisplays: initialValue?.linkedDisplays ?? [] });
+    if (typeof width === "number" && typeof height === "number" && (typeof bitrate === "number" || bitrate === null) && (typeof fps === "number" || fps === null) && (typeof hdr === "boolean" || hdr === null)) {
+      setResolution({ width, height, bitrate, fps, hdr, linkedDisplays: initialValue?.linkedDisplays ?? [] });
     } else {
       setResolution(null);
     }
-  }, [width, height, bitrate, fps]);
+  }, [width, height, bitrate, fps, hdr]);
 
   const handleClick = (): void => {
     if (resolution !== null) {
-      const compareWithListItems = (target: Dimension) => (item: Dimension): boolean => item.height === target.height && item.width === target.width && item.bitrate === target.bitrate && item.fps === target.fps;
+      const compareWithListItems = (target: Dimension) => (item: Dimension): boolean => item.height === target.height && item.width === target.width && item.bitrate === target.bitrate && item.fps === target.fps && item.hdr === target.hdr;
       const newList = [...currentList];
 
       if (initialValue != null) {
@@ -102,7 +104,6 @@ export const ModifyResolutionModal: IndexedListModal<HostResolution["dimensions"
       <Field
         label="FPS (optional)"
         childrenContainerWidth="fixed"
-        bottomSeparator="none"
       >
         <NumericTextInput
           min={minFps}
@@ -110,6 +111,15 @@ export const ModifyResolutionModal: IndexedListModal<HostResolution["dimensions"
           value={fps}
           setValue={setFps}
           setIsValid={setFpsIsValid}
+        />
+      </Field>
+      <Field
+        label="HDR"
+        childrenContainerWidth="fixed"
+      >
+        <HdrSelectionDropdown
+          value={hdr}
+          setValue={setHdr}
         />
       </Field>
       <Field

@@ -3,7 +3,7 @@ import typing
 
 
 BUDDY_API_VERSION = 6
-CONFIG_VERSION_LITERAL = typing.Literal[31]
+CONFIG_VERSION_LITERAL = typing.Literal[32]
 CONFIG_DIR = str(pathlib.Path.home() / ".config" / "moondeck")
 CONFIG_FILENAME = "settings.json"
 LOG_FILE = "/tmp/moondeck.log"
