@@ -11,6 +11,7 @@ export const ChangelogView: FC = () => {
             <>
               <div>&bull; Added audio device and Moonlight audio option linking feature.</div>
               <div>&bull; Added HDR toggle option (including custom resolutions).</div>
+              <div>&bull; It is now checked whether the flatpak is installed or not.</div>
             </>
           }
           focusable={true}
