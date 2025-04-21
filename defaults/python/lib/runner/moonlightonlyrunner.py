@@ -1,8 +1,8 @@
 from .settingsparser import MoonlightOnlyRunnerSettings
+from .wolsplashscreen import WolSplashScreen
 from ..runnerresult import Result, RunnerError
 from ..hostinfo import get_server_info
 from ..logger import logger
-from ..wolsplashscreen import WolSplashScreen
 from ..settings import RunnerTimeouts
 from ..moonlightproxy import MoonlightProxy
 
