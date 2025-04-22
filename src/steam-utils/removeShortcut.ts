@@ -2,6 +2,7 @@ import { SteamClientEx } from "./shared";
 import { getAppStoreEx } from "./getAppStoreEx";
 import { getCollectionStore } from "./getCollectionStore";
 import { logger } from "../lib/logger";
+import { waitForAppDetails } from "./waitForAppDetails";
 import { waitForAppOverview } from "./waitForAppOverview";
 
 /**
@@ -52,7 +53,12 @@ export async function removeShortcut(appId: number): Promise<boolean> {
     }
 
     if (!await waitForAppOverview(appId, (overview) => overview === null)) {
-      logger.error(`Could not remove shortcut for ${appId}!`);
+      logger.error(`Could not remove shortcut for ${appId} - overview still exists!`);
+      return false;
+    }
+
+    if (!await waitForAppDetails(appId, (details) => details === null)) {
+      logger.error(`Could not remove shortcut for ${appId} - details still exist!`);
       return false;
     }
 
