@@ -86,7 +86,7 @@ class LoadingLabel:
 
 class Canvas(pyglet.window.Window):
     def __init__(self):
-        super().__init__(fullscreen=True, caption="MoonDeck WOL Splash")
+        super().__init__(fullscreen=True, visible=False, caption="MoonDeck WOL Splash")
 
         self.label = LoadingLabel(width=self.width, height=self.height, text="Checking connection to the host...")
         self.bar = LoadingBar(width=self.width, height=self.height)
@@ -101,6 +101,9 @@ class Canvas(pyglet.window.Window):
         self.clear()
         self.label.draw()
         self.bar.draw()
+
+        if not self.visible:
+            self.set_visible(True)
     
     def handle_resize(self, width, height):
         size = {"width": width, "height": height}
