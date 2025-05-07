@@ -1,27 +1,28 @@
-""" Multicast DNS Service Discovery for Python, v0.14-wmcbrine
-    Copyright 2003 Paul Scott-Murphy, 2014 William McBrine
+"""Multicast DNS Service Discovery for Python, v0.14-wmcbrine
+Copyright 2003 Paul Scott-Murphy, 2014 William McBrine
 
-    This module provides a framework for the use of DNS Service Discovery
-    using IP multicast.
+This module provides a framework for the use of DNS Service Discovery
+using IP multicast.
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+This library is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 2.1 of the License, or (at your option) any later version.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-    Lesser General Public License for more details.
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+Lesser General Public License for more details.
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301
-    USA
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301
+USA
 """
 
+from __future__ import annotations
+
 import time
-from typing import Optional, Set, Tuple, Union
 
 from .._core import Zeroconf
 from .._services import ServiceListener
@@ -37,7 +38,7 @@ class ZeroconfServiceTypes(ServiceListener):
 
     def __init__(self) -> None:
         """Keep track of found services in a set."""
-        self.found_services: Set[str] = set()
+        self.found_services: set[str] = set()
 
     def add_service(self, zc: Zeroconf, type_: str, name: str) -> None:
         """Service added."""
@@ -52,11 +53,11 @@ class ZeroconfServiceTypes(ServiceListener):
     @classmethod
     def find(
         cls,
-        zc: Optional[Zeroconf] = None,
-        timeout: Union[int, float] = 5,
+        zc: Zeroconf | None = None,
+        timeout: int | float = 5,
         interfaces: InterfacesType = InterfaceChoice.All,
-        ip_version: Optional[IPVersion] = None,
-    ) -> Tuple[str, ...]:
+        ip_version: IPVersion | None = None,
+    ) -> tuple[str, ...]:
         """
         Return all of the advertised services on any local networks.
 
