@@ -15,7 +15,7 @@ add_plugin_to_path()
 
 from lib.runner.moondeckapprunner import MoonDeckAppRunner
 from lib.runner.moonlightonlyrunner import MoonlightOnlyRunner
-from lib.logger import logger, set_log_filename, enable_debug_level
+from lib.logger import logger, set_logger_settings, enable_debug_level
 from lib.utils import is_moondeck_runner_ready
 from lib.runner.settingsparser import parse_settings, RunnerType
 
@@ -24,7 +24,7 @@ import lib.constants as constants
 import lib.runnerresult as runnerresult
 # autopep8: on
 
-set_log_filename(constants.RUNNER_LOG_FILE, rotate=False)
+set_logger_settings(constants.RUNNER_LOG_FILE, rotate=False)
 
 async def main():
     try:
