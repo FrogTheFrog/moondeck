@@ -21,14 +21,14 @@ import python.lib.utils as utils
 
 from typing import Any, Dict
 from python.lib.settings import settings_manager, UserSettings
-from python.lib.logger import logger, set_log_filename
+from python.lib.logger import logger, set_logger_settings
 from python.lib.buddyrequests import SteamUiMode
 from python.lib.buddyclient import BuddyClient, HelloResult, PcStateChange
 from python.lib.utils import wake_on_lan, change_moondeck_runner_ready_state, TimedPooler
 from python.lib.runnerresult import Result, RunnerError, set_result, get_result
 # autopep8: on
 
-set_log_filename(constants.LOG_FILE, rotate=True)
+set_logger_settings(constants.LOG_FILE, rotate=True)
 
 
 class Plugin:
