@@ -15,7 +15,7 @@ async def execute(settings: CliSettings, timeout: float, dry: bool, json: bool, 
         if len(hosts) == 0:
             logger.info("No hosts were found")
         else:
-            logger.info(f"Available hosts:")
+            logger.info("Available hosts:")
             for idx, host in enumerate(hosts):
                 log_gamestream_host(host)
                 if idx + 1 != len(hosts):
