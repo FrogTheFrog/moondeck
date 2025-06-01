@@ -7,7 +7,7 @@ import pathlib
 
 from enum import Enum
 from functools import wraps
-from typing import Any, Dict, List, Literal, Optional, Type, Union, TypeVar, get_args, get_origin, is_typeddict
+from typing import Any, List, Literal, Optional, Type, TypedDict, Union, TypeVar, get_args, get_origin, is_typeddict
 from externals.wakeonlan import send_magic_packet
 
 from .runnerresult import RunnerError
@@ -15,7 +15,12 @@ from .logger import logger
 from .constants import RUNNER_READY_FILE
 
 
+class AnyTypedDict(TypedDict, total=False):
+    pass
+
+
 T = TypeVar("T")
+TD = TypeVar("TD", bound=AnyTypedDict)
 
 
 def is_typed_dict(data_type):
@@ -61,7 +66,7 @@ def from_list(item_type: Type[T], data: List[Any]) -> List[T]:
     return verified_data
 
 
-def from_dict(output_type: Type[T], data: Dict[str, Any]) -> T:
+def from_dict(output_type: Type[T], data: AnyTypedDict) -> T:
     assert isinstance(data, dict), f"Expected dict (\"{output_type}\"), got {data}"
     
     def get_annotations(data_type, data):
@@ -86,13 +91,13 @@ def from_dict(output_type: Type[T], data: Dict[str, Any]) -> T:
 
         actual_type = get_args(key_type) or key_type
         if is_enum_like(actual_type):
-            verified_data[key] = actual_type[data[key]]
+            verified_data[key] = actual_type[data[key]] # type: ignore
             continue
         elif is_dict_like(key_type):
-            verified_data[key] = from_dict(actual_type, data[key])
+            verified_data[key] = from_dict(actual_type, data[key]) # type: ignore
             continue
         elif is_list_like(key_type):
-            verified_data[key] = from_list(actual_type[0], data[key])
+            verified_data[key] = from_list(actual_type[0], data[key]) # type: ignore
             continue
         elif is_literal_like(key_type):
             if data[key] not in actual_type:
@@ -102,7 +107,7 @@ def from_dict(output_type: Type[T], data: Dict[str, Any]) -> T:
 
         verified_data[key] = copy.deepcopy(data[key])
 
-    return output_type(**verified_data) if is_typed_dict(output_type) else verified_data
+    return output_type(**verified_data) if is_typed_dict(output_type) else verified_data # type: ignore
 
 
 # Decorator for loging the entry/exit and the result
@@ -143,7 +148,7 @@ def wake_on_lan(address: str, mac: str):
         infos = [info]
     else:
         infos = [(x[0], x[4][0]) for x in socket.getaddrinfo(address, default_port, family=socket.AF_UNSPEC)
-                 if x[0] in [socket.AF_INET, socket.AF_INET6]]
+                 if x[0] in [socket.AF_INET, socket.AF_INET6] and isinstance(x[4][0], str)]
 
     if not infos:
         raise Exception(f"WOL failed - {address} does not have any IPv4 or IPv6 interfaces!") 

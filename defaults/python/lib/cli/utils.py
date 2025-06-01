@@ -2,7 +2,7 @@ import inspect
 import functools
 
 
-def ignore_unmatched_kwargs(f):
+def cmd_entry(f):
     """
     Make function ignore unmatched kwargs.
     If the function already has the catch all **kwargs, do nothing.

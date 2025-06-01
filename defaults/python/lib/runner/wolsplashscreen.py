@@ -20,7 +20,7 @@ class LoadingBar:
 
         for _ in range(15):
             self.blocks.append(pyglet.shapes.Rectangle(x=0, y=0, width=0, height=0,
-                                                       color=INACTIVE_COLOR, batch=self.batch))
+                                                       color=INACTIVE_COLOR, batch=self.batch)) # type: ignore
 
         self.resize(width, height)
 
@@ -156,7 +156,7 @@ class WolSplashScreen:
 
     def update(self, buddy_status, server_status) -> bool:
         logger.info(f"Buddy: {buddy_status}, Server: {server_status}")
-        if self.close_flag:
+        if self.close_flag or self.timeout_end is None:
             return False
 
         if ((buddy_status is None or buddy_status) and server_status) or (datetime.now(timezone.utc) > self.timeout_end):

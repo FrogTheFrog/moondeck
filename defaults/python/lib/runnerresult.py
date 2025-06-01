@@ -9,6 +9,7 @@ from .logger import logger
 class Result(Enum):
     ClosedPrematurely = "MoonDeck runner closed prematurely!"
     RunnerNotReady = "MoonDeck plugin has not finished loading!"
+    NoSettings = "Failed to read MoonDeck settings!"
     NoAppId = "Failed to parse app id!"
     NoAppName = "Failed to parse app name!"
     NoRunnerType = "Failed to parse runner type!"

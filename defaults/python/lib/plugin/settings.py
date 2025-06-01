@@ -1,13 +1,9 @@
-import pathlib
 import uuid
-import copy
-import json
-from . import constants
-from . import utils
+from .. import constants
 
-from typing import Any, Dict, List, Literal, Optional, TypedDict, get_args
-from .logger import logger
-from .buddyrequests import OsType
+from typing import Dict, List, Literal, Optional, TypedDict, get_args
+from ..buddyrequests import OsType
+from ..settingsmanager import SettingsManager
 
 
 ControllerConfigOption = Literal["Disable", "Default", "Enable", "Noop"]
@@ -45,7 +41,8 @@ class Dimension(TypedDict):
 
 class HostResolution(TypedDict):
     automatic: bool
-    appResolutionOverride: Literal["CustomResolution", "DisplayResolution", "Native", "Default"]
+    appResolutionOverride: Literal["CustomResolution",
+                                   "DisplayResolution", "Native", "Default"]
     appResolutionOverrideForInternalDisplay: bool
     useCustomDimensions: bool
     useLinkedDisplays: bool
@@ -114,7 +111,7 @@ class ButtonStyleSettings(TypedDict):
 
 
 class UserSettings(TypedDict):
-    version: constants.CONFIG_VERSION_LITERAL
+    version: Literal[32]
     clientId: str
     currentHostId: Optional[str]
     gameSession: GameSessionSettings
@@ -129,77 +126,39 @@ class UserSettings(TypedDict):
     pythonExecPath: str
 
 
-class SettingsManager:
-    async def get(self):
-        settings: Optional[UserSettings] = None
-        try:
-            with open(f"{constants.CONFIG_DIR}/{constants.CONFIG_FILENAME}", "r") as file:
-                data: Dict[str, Any] = json.load(file)
-                try:
-                    settings = utils.from_dict(UserSettings, data)
-                except Exception:
-                    try:
-                        if not settings:
-                            settings = utils.from_dict(UserSettings, self._migrate_settings(data))
-                            await self.set(settings)
-                    except Exception:
-                        logger.exception("failed to parse user settings")
-                        
+class UserSettingsManager(SettingsManager[UserSettings]):
+    def _default_settings(self):
+        return UserSettings({
+            "version": get_args(UserSettings.__annotations__["version"])[0],
+            "clientId": str(uuid.uuid4()),
+            "currentHostId": None,
+            "gameSession": {
+                "autoApplyAppId": False,
+                "resumeAfterSuspend": False,
+                "controllerConfig": "Noop"
+            },
+            "buttonPosition": {
+                "horizontalAlignment": "bottom",
+                "verticalAlignment": "right",
+                "offsetX": "",
+                "offsetY": "",
+                "offsetForHltb": False,
+                "zIndex": ""
+            },
+            "buttonStyle": {
+                "showFocusRing": True,
+                "theme": "Clean"
+            },
+            "enableMoondeckShortcuts": True,
+            "enableMoondeckButtonPrompt": False,
+            "hostSettings": {},
+            "runnerDebugLogs": False,
+            "useMoonlightExec": False,
+            "moonlightExecPath": "",
+            "pythonExecPath": ""
+        })
 
-        except FileNotFoundError:
-            pass
-        except Exception:
-            logger.exception("failed to load settings")
-            pass
-
-        if settings:
-            return settings
-        else:
-            return await self.set(utils.from_dict(UserSettings, {
-                "version": get_args(constants.CONFIG_VERSION_LITERAL)[0],
-                "clientId": str(uuid.uuid4()),
-                "currentHostId": None,
-                "gameSession": {
-                    "autoApplyAppId": False,
-                    "resumeAfterSuspend": False,
-                    "controllerConfig": "Noop"
-                },
-                "buttonPosition": {
-                    "horizontalAlignment": "bottom",
-                    "verticalAlignment": "right",
-                    "offsetX": "",
-                    "offsetY": "",
-                    "offsetForHltb": False,
-                    "zIndex": ""
-                },
-                "buttonStyle": {
-                    "showFocusRing": True,
-                    "theme": "Clean"
-                },
-                "enableMoondeckShortcuts": True,
-                "enableMoondeckButtonPrompt": False,
-                "hostSettings": {},
-                "runnerDebugLogs": False,
-                "useMoonlightExec": False,
-                "moonlightExecPath": "",
-                "pythonExecPath": ""}))
-
-    async def set(self, settings: UserSettings):
-        try:
-            pathlib.Path(constants.CONFIG_DIR).mkdir(
-                parents=True, exist_ok=True)
-            with open(f"{constants.CONFIG_DIR}/{constants.CONFIG_FILENAME}", "w") as file:
-                json.dump(settings, file,
-                          ensure_ascii=False, allow_nan=False,
-                          indent=4)
-        except Exception:
-            logger.exception("failed to save settings")
-
-        self.__data = copy.deepcopy(settings)
-        return copy.deepcopy(self.__data)
-
-    @staticmethod
-    def _migrate_settings(data: Dict[str, Any]) -> Dict[str, Any]:
+    def _migrate_settings(self, data: dict):
         if data["version"] == 1:
             data["version"] = 2
             for host in data["hostSettings"].keys():
@@ -239,7 +198,8 @@ class SettingsManager:
         if data["version"] == 7:
             data["version"] = 8
             for host in data["hostSettings"].keys():
-                data["hostSettings"][host]["hostApp"] = { "selectedAppIndex": -1, "apps": [] }
+                data["hostSettings"][host]["hostApp"] = {
+                    "selectedAppIndex": -1, "apps": []}
         if data["version"] == 8:
             data["version"] = 9
             for host in data["hostSettings"].keys():
@@ -255,7 +215,8 @@ class SettingsManager:
         if data["version"] == 11:
             data["version"] = 12
             for host in data["hostSettings"].keys():
-                data["hostSettings"][host]["runnerTimeouts"] = { "buddyRequests": 5, "servicePing": 5, "initialConditions": 30, "streamReadiness": 30, "appLaunch": 30, "appLaunchStability": 15, "appUpdate": 5 }
+                data["hostSettings"][host]["runnerTimeouts"] = {
+                    "buddyRequests": 5, "servicePing": 5, "initialConditions": 30, "streamReadiness": 30, "appLaunch": 30, "appLaunchStability": 15, "appUpdate": 5}
                 data["hostSettings"][host]["runnerDebugLogs"] = False
                 data["hostSettings"][host]["resolution"]["defaultFps"] = None
                 for i in range(len(data["hostSettings"][host]["resolution"]["dimensions"])):
@@ -269,7 +230,8 @@ class SettingsManager:
             for host in data["hostSettings"].keys():
                 data["hostSettings"][host]["resolution"]["useLinkedDisplays"] = True
                 for i in range(len(data["hostSettings"][host]["resolution"]["dimensions"])):
-                    data["hostSettings"][host]["resolution"]["dimensions"][i]["linkedDisplays"] = []
+                    data["hostSettings"][host]["resolution"]["dimensions"][i]["linkedDisplays"] = [
+                    ]
         if data["version"] == 14:
             data["version"] = 15
             for host in data["hostSettings"].keys():
@@ -278,7 +240,7 @@ class SettingsManager:
             data["version"] = 16
             for host in data["hostSettings"].keys():
                 del data["hostSettings"][host]["runnerDebugLogs"]
-            
+
             data["runnerDebugLogs"] = False
             data["useMoonlightExec"] = False
             data["moonlightExecPath"] = ""
@@ -292,7 +254,8 @@ class SettingsManager:
         if data["version"] == 18:
             data["version"] = 19
             for host in data["hostSettings"].keys():
-                data["hostSettings"][host]["sunshineApps"] = { "showQuickAccessButton": False, "lastSelectedOverride": "Default" }
+                data["hostSettings"][host]["sunshineApps"] = {
+                    "showQuickAccessButton": False, "lastSelectedOverride": "Default"}
         if data["version"] == 19:
             data["version"] = 20
             data["enableMoondeckShortcuts"] = True
@@ -333,11 +296,12 @@ class SettingsManager:
         if data["version"] == 27:
             data["version"] = 28
             for host in data["hostSettings"].keys():
-                data["hostSettings"][host]["nonSteamApps"] = { "showQuickAccessButton": False }
+                data["hostSettings"][host]["nonSteamApps"] = {
+                    "showQuickAccessButton": False}
         if data["version"] == 28:
             data["version"] = 29
             for host in data["hostSettings"].keys():
-                data["hostSettings"][host]["buddy"] = { 
+                data["hostSettings"][host]["buddy"] = {
                     "bigPictureMode": True,
                     "port": data["hostSettings"][host]["buddyPort"],
                     "closeSteamOnceSessionEnds": data["hostSettings"][host]["closeSteamOnceSessionEnds"],
@@ -349,7 +313,7 @@ class SettingsManager:
         if data["version"] == 29:
             data["version"] = 30
             for host in data["hostSettings"].keys():
-                data["hostSettings"][host]["audio"] = { 
+                data["hostSettings"][host]["audio"] = {
                     "defaultOption": None,
                     "useLinkedAudio": True,
                     "linkedAudio": {}
@@ -365,7 +329,6 @@ class SettingsManager:
                 data["hostSettings"][host]["resolution"]["defaultHdr"] = None
                 for i in range(len(data["hostSettings"][host]["resolution"]["dimensions"])):
                     data["hostSettings"][host]["resolution"]["dimensions"][i]["hdr"] = None
-        return data
 
 
-settings_manager = SettingsManager()
+settings_manager = UserSettingsManager(constants.CONFIG_FILE)
