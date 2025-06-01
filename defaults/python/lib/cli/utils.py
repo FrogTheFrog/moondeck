@@ -3,7 +3,7 @@ import functools
 import copy
 
 from typing import cast
-from lib.cli.settings import CliSettingsManager
+from lib.cli.settings import CliSettingsManager, CliSettings
 from lib.gamestreaminfo import GameStreamHost
 from lib.logger import logger
 
@@ -58,17 +58,44 @@ def settings_watcher(f):
         settings_manager = cast(CliSettingsManager, kwargs["settings_manager"])
 
         initial_settings, _ = await settings_manager.read()
-        settings = copy.deepcopy(initial_settings or settings_manager._default_settings())
-        
-        kwargs["settings"] = settings
-        result = await f(*args, **kwargs)
-        
+        settings = copy.deepcopy(
+            initial_settings or settings_manager._default_settings())
+
+        result = await f(*args, settings=settings, **kwargs)
+
         if not dry and initial_settings != settings:
             await settings_manager.write(settings)
 
         return result
 
     return async_wrapper
+
+
+def host_pattern_matcher(match_one):
+    """
+    Will search for host(-s) matching the pattern and add the results to kwargs.
+    Must be paired with settings_watcher.
+    """
+    def decorator(f):
+        @functools.wraps(f)
+        async def async_wrapper(*args, **kwargs):
+            settings: CliSettings = cast(CliSettings, kwargs["settings"])
+            pattern = cast(str, kwargs["pattern"])
+
+            host_ids = [k for k, v in settings['hosts'].items()
+                        if k == pattern or v["address"] == pattern or v['hostName'] == pattern]
+            
+            if match_one:
+                if len(host_ids) > 0:
+                    logger.error(f"More than 1 host has matched {pattern} pattern!")
+                    return 1
+                
+                return await f(*args, host_id=None if len(host_ids) == 0 else host_ids[0], **kwargs)
+
+            return await f(*args, host_ids=host_ids, **kwargs)
+
+        return async_wrapper
+    return decorator
 
 
 def log_gamestream_host(host: GameStreamHost):

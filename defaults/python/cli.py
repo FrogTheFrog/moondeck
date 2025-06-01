@@ -20,6 +20,7 @@ from lib.cli.settings import CliSettingsManager
 
 from lib.cli.cmd.host.scan import execute as cmd_host_scan
 from lib.cli.cmd.host.add import execute as cmd_host_add
+from lib.cli.cmd.host.remove import execute as cmd_host_remove
 
 import argparse
 import sys
@@ -78,7 +79,7 @@ async def main():
         host_subparsers = host_parser.add_subparsers(
             dest="command", help="command to execute")
 
-        # -------- Setup scan command
+        # -------- Setup `scan` command
         scan_parser = host_subparsers.add_parser(
             "scan", help="scan for available hosts")
         scan_parser.add_argument(
@@ -90,8 +91,8 @@ async def main():
         scan_parser.add_argument(
             "--prune", action="store_true",
             help="remove any previously scanned hosts from the config that were not found during scan")
-        
-        # -------- Setup add command
+
+        # -------- Setup `add` command
         add_parser = host_subparsers.add_parser(
             "add", help="manually add reachable GameStream host (will replace scanned one)")
         add_parser.add_argument(
@@ -100,6 +101,16 @@ async def main():
             "port", type=int, help="the HTTP port of the server")
         add_parser.add_argument(
             "--timeout", type=float, default=5.0, help="connection timeout in seconds")
+        add_parser.add_argument(
+            "--dry", action="store_true", help="do not save any changes")
+        add_parser.add_argument(
+            "--json", action="store_true", help="print the output in JSON format")
+
+        # -------- Setup `remove` command
+        add_parser = host_subparsers.add_parser(
+            "remove", help="remove host(-s) from config")
+        add_parser.add_argument(
+            "pattern", type=str, help="host id, name or address")
         add_parser.add_argument(
             "--dry", action="store_true", help="do not save any changes")
         add_parser.add_argument(
@@ -119,16 +130,15 @@ async def main():
         cmds = {
             "host": {
                 "scan": cmd_host_scan,
-                "add": cmd_host_add
+                "add": cmd_host_add,
+                "remove": cmd_host_remove
             }
         }
 
         cmd = cmds.get(parser_args["group"], {}).get(
             parser_args["command"], None)
         if cmd is not None:
-            parser_args["settings_manager"] = CliSettingsManager(
-                parser_args["config_file"])
-            sys.exit(await cmd(**parser_args))
+            sys.exit(await cmd(settings_manager=CliSettingsManager(parser_args["config_file"]), **parser_args))
 
         raise Exception(
             f"Unhandled parser branch {parser_args["group"]}->{parser_args["command"]}")
