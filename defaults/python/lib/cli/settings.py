@@ -5,18 +5,19 @@ from ..settingsmanager import SettingsManager
 
 
 class HostSettings(TypedDict):
-    hostInfoPort: int
     address: str
-    staticAddress: bool
+    manualAddress: bool
+    infoPort: int
+    buddyPort: Optional[int]
     hostName: str
-    mac: str
+    mac: Optional[str]
 
 
 class CliSettings(TypedDict):
     version: Literal[1]
     clientId: str
-    currentHostId: Optional[str]
-    hostSettings: Dict[str, HostSettings]
+    defaultHost: Optional[str]
+    hosts: Dict[str, HostSettings]
 
 
 class CliSettingsManager(SettingsManager[CliSettings]):
@@ -24,8 +25,8 @@ class CliSettingsManager(SettingsManager[CliSettings]):
         return CliSettings({
             "version": get_args(CliSettings.__annotations__["version"])[0],
             "clientId": str(uuid.uuid4()),
-            "currentHostId": None,
-            "hostSettings": {}
+            "defaultHost": None,
+            "hosts": {}
         })
 
     def _migrate_settings(self, data: dict):
