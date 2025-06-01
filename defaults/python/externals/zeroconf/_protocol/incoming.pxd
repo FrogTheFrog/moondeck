@@ -7,8 +7,6 @@ cdef cython.uint MAX_DNS_LABELS
 cdef cython.uint DNS_COMPRESSION_POINTER_LEN
 cdef cython.uint MAX_NAME_LENGTH
 
-cdef object current_time_millis
-
 cdef cython.uint _TYPE_A
 cdef cython.uint _TYPE_CNAME
 cdef cython.uint _TYPE_PTR
@@ -22,11 +20,6 @@ cdef cython.uint _FLAGS_QR_MASK
 cdef cython.uint _FLAGS_TC
 cdef cython.uint _FLAGS_QR_QUERY
 cdef cython.uint _FLAGS_QR_RESPONSE
-
-cdef object UNPACK_3H
-cdef object UNPACK_6H
-cdef object UNPACK_HH
-cdef object UNPACK_HHiH
 
 cdef object DECODE_EXCEPTIONS
 
@@ -43,6 +36,7 @@ from .._dns cimport (
     DNSService,
     DNSText,
 )
+from .._utils.time cimport current_time_millis
 
 
 cdef class DNSIncoming:
@@ -51,65 +45,90 @@ cdef class DNSIncoming:
     cdef public unsigned int flags
     cdef cython.uint offset
     cdef public bytes data
+    cdef const unsigned char [:] view
     cdef unsigned int _data_len
-    cdef public cython.dict name_cache
-    cdef public cython.list questions
+    cdef cython.dict _name_cache
+    cdef cython.list _questions
     cdef cython.list _answers
-    cdef public object id
-    cdef public cython.uint num_questions
-    cdef public cython.uint num_answers
-    cdef public cython.uint num_authorities
-    cdef public cython.uint num_additionals
-    cdef public object valid
-    cdef public object now
+    cdef public cython.uint id
+    cdef cython.uint _num_questions
+    cdef cython.uint _num_answers
+    cdef cython.uint _num_authorities
+    cdef cython.uint _num_additionals
+    cdef public bint valid
+    cdef public double now
     cdef public object scope_id
     cdef public object source
+    cdef bint _has_qu_question
 
     @cython.locals(
         question=DNSQuestion
     )
-    cpdef has_qu_question(self)
+    cpdef bint has_qu_question(self)
+
+    cpdef bint is_query(self)
+
+    cpdef bint is_probe(self)
+
+    cpdef list answers(self)
+
+    cpdef bint is_response(self)
 
     @cython.locals(
-        off=cython.uint,
-        label_idx=cython.uint,
-        length=cython.uint,
-        link=cython.uint,
-        link_data=cython.uint
+        off="unsigned int",
+        label_idx="unsigned int",
+        length="unsigned int",
+        link="unsigned int",
+        link_data="unsigned int",
+        link_py_int=object,
+        linked_labels=cython.list
     )
-    cdef _decode_labels_at_offset(self, unsigned int off, cython.list labels, cython.set seen_pointers)
+    cdef unsigned int _decode_labels_at_offset(self, unsigned int off, cython.list labels, cython.set seen_pointers)
 
-    cdef _read_header(self)
+    @cython.locals(offset="unsigned int")
+    cdef void _read_header(self)
 
-    cdef _initial_parse(self)
+    cdef void _initial_parse(self)
 
     @cython.locals(
-        end=cython.uint,
-        length=cython.uint
+        end="unsigned int",
+        length="unsigned int",
+        offset="unsigned int"
     )
-    cdef _read_others(self)
+    cdef void _read_others(self)
 
+    @cython.locals(offset="unsigned int", question=DNSQuestion)
     cdef _read_questions(self)
 
-    cdef bytes _read_character_string(self)
+    @cython.locals(
+        length="unsigned int",
+    )
+    cdef str _read_character_string(self)
 
-    cdef _read_string(self, unsigned int length)
+    cdef bytes _read_string(self, unsigned int length)
 
     @cython.locals(
-        name_start=cython.uint
+        name_start="unsigned int",
+        offset="unsigned int",
+        address_rec=DNSAddress,
+        pointer_rec=DNSPointer,
+        text_rec=DNSText,
+        srv_rec=DNSService,
+        hinfo_rec=DNSHinfo,
+        nsec_rec=DNSNsec,
     )
-    cdef _read_record(self, object domain, unsigned int type_, object class_, object ttl, unsigned int length)
+    cdef _read_record(self, str domain, unsigned int type_, unsigned int class_, unsigned int ttl, unsigned int length)
 
     @cython.locals(
-        offset=cython.uint,
-        offset_plus_one=cython.uint,
-        offset_plus_two=cython.uint,
-        window=cython.uint,
-        bit=cython.uint,
-        byte=cython.uint,
-        i=cython.uint,
-        bitmap_length=cython.uint,
+        offset="unsigned int",
+        offset_plus_one="unsigned int",
+        offset_plus_two="unsigned int",
+        window="unsigned int",
+        bit="unsigned int",
+        byte="unsigned int",
+        i="unsigned int",
+        bitmap_length="unsigned int",
     )
-    cdef _read_bitmap(self, unsigned int end)
+    cdef list _read_bitmap(self, unsigned int end)
 
-    cdef _read_name(self)
+    cdef str _read_name(self)

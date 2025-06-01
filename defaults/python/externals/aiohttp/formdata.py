@@ -1,4 +1,5 @@
 import io
+import warnings
 from typing import Any, Iterable, List, Optional
 from urllib.parse import urlencode
 
@@ -22,10 +23,12 @@ class FormData:
         fields: Iterable[Any] = (),
         quote_fields: bool = True,
         charset: Optional[str] = None,
+        *,
+        default_to_multipart: bool = False,
     ) -> None:
         self._writer = multipart.MultipartWriter("form-data")
         self._fields: List[Any] = []
-        self._is_multipart = False
+        self._is_multipart = default_to_multipart
         self._is_processed = False
         self._quote_fields = quote_fields
         self._charset = charset
@@ -53,14 +56,17 @@ class FormData:
         if isinstance(value, io.IOBase):
             self._is_multipart = True
         elif isinstance(value, (bytes, bytearray, memoryview)):
+            msg = (
+                "In v4, passing bytes will no longer create a file field. "
+                "Please explicitly use the filename parameter or pass a BytesIO object."
+            )
             if filename is None and content_transfer_encoding is None:
+                warnings.warn(msg, DeprecationWarning)
                 filename = name
 
         type_options: MultiDict[str] = MultiDict({"name": name})
         if filename is not None and not isinstance(filename, str):
-            raise TypeError(
-                "filename must be an instance of str. " "Got: %s" % filename
-            )
+            raise TypeError("filename must be an instance of str. Got: %s" % filename)
         if filename is None and isinstance(value, io.IOBase):
             filename = guess_filename(value, name)
         if filename is not None:
@@ -71,7 +77,7 @@ class FormData:
         if content_type is not None:
             if not isinstance(content_type, str):
                 raise TypeError(
-                    "content_type must be an instance of str. " "Got: %s" % content_type
+                    "content_type must be an instance of str. Got: %s" % content_type
                 )
             headers[hdrs.CONTENT_TYPE] = content_type
             self._is_multipart = True
@@ -81,7 +87,11 @@ class FormData:
                     "content_transfer_encoding must be an instance"
                     " of str. Got: %s" % content_transfer_encoding
                 )
-            headers[hdrs.CONTENT_TRANSFER_ENCODING] = content_transfer_encoding
+            msg = (
+                "content_transfer_encoding is deprecated. "
+                "To maintain compatibility with v4 please pass a BytesPayload."
+            )
+            warnings.warn(msg, DeprecationWarning)
             self._is_multipart = True
 
         self._fields.append((type_options, headers, value))
@@ -121,7 +131,7 @@ class FormData:
         if charset == "utf-8":
             content_type = "application/x-www-form-urlencoded"
         else:
-            content_type = "application/x-www-form-urlencoded; " "charset=%s" % charset
+            content_type = "application/x-www-form-urlencoded; charset=%s" % charset
 
         return payload.BytesPayload(
             urlencode(data, doseq=True, encoding=charset).encode(),
