@@ -16,7 +16,7 @@ add_plugin_to_path()
 from pathlib import Path
 
 from lib.logger import logger, set_logger_settings
-from lib.cli.settings import CmdSettingsManager
+from lib.cli.settings import CliSettingsManager
 from lib.cli.cmd.host.scan import execute as cmd_host_scan
 
 import argparse
@@ -106,7 +106,8 @@ async def main():
         cmd = cmds.get(parser_args["group"], {}).get(
             parser_args["command"], None)
         if cmd is not None:
-            sys.exit(await cmd(settings=CmdSettingsManager(parser_args["config_file"]), **parser_args))
+            parser_args["settings_manager"] = CliSettingsManager(parser_args["config_file"])
+            sys.exit(await cmd(**parser_args))
 
         raise Exception(
             f"Unhandled parser branch {parser_args["group"]}->{parser_args["command"]}")
