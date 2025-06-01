@@ -9,7 +9,7 @@ def add_plugin_to_path():
     plugin_dir = get_plugin_dir()
     directories = [["./"], ["lib"], ["externals"]]
     for dir in directories:
-        sys.path.append(str(plugin_dir.joinpath(*dir)))
+        sys.path.insert(0, str(plugin_dir.joinpath(*dir)))
 
 add_plugin_to_path()
 
@@ -110,6 +110,10 @@ async def main():
 
         raise Exception(
             f"Unhandled parser branch {parser_args["group"]}->{parser_args["command"]}")
+
+    except asyncio.CancelledError:
+        logger.info("Interrupted...")
+        sys.exit(1)
 
     except Exception:
         logger.exception("Unhandled exception")
