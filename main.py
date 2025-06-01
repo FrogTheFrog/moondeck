@@ -15,7 +15,7 @@ add_plugin_to_path()
 
 import asyncio
 import pathlib
-import python.lib.hostinfo as hostinfo
+import python.lib.gamestreaminfo as gamestreaminfo
 import python.lib.constants as constants
 import python.lib.utils as utils
 
@@ -73,7 +73,7 @@ class Plugin:
     @utils.async_scope_log(logger.info)
     async def scan_for_hosts(self, timeout: float):
         try:
-            return await hostinfo.scan_for_hosts(timeout=timeout)
+            return await gamestreaminfo.scan_for_hosts(timeout=timeout)
         except Exception:
             logger.exception("Unhandled exception")
             return []
@@ -81,7 +81,7 @@ class Plugin:
     @utils.async_scope_log(logger.info)
     async def find_host(self, host_id: str, timeout: float):
         try:
-            return await hostinfo.find_host(host_id, timeout=timeout)
+            return await gamestreaminfo.find_host(host_id, timeout=timeout)
         except Exception:
             logger.exception("Unhandled exception")
             return None
@@ -89,7 +89,7 @@ class Plugin:
     @utils.async_scope_log(logger.info)
     async def get_server_info(self, address: str, port: int, timeout: float):
         try:
-            return await hostinfo.get_server_info(address, port, timeout=timeout)
+            return await gamestreaminfo.get_server_info(address, port, timeout=timeout)
         except Exception:
             logger.exception("Unhandled exception")
             return None
