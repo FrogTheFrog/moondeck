@@ -1,5 +1,4 @@
 import pathlib
-import typing
 
 
 BUDDY_API_VERSION = 6

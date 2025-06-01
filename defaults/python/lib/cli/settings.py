@@ -12,17 +12,17 @@ class HostSettings(TypedDict):
     mac: str
 
 
-class CmdSettings(TypedDict):
+class CliSettings(TypedDict):
     version: Literal[1]
     clientId: str
     currentHostId: Optional[str]
     hostSettings: Dict[str, HostSettings]
 
 
-class CmdSettingsManager(SettingsManager[CmdSettings]):
+class CliSettingsManager(SettingsManager[CliSettings]):
     def _default_settings(self):
-        return CmdSettings({
-            "version": get_args(CmdSettings.__annotations__["version"])[0],
+        return CliSettings({
+            "version": get_args(CliSettings.__annotations__["version"])[0],
             "clientId": str(uuid.uuid4()),
             "currentHostId": None,
             "hostSettings": {}

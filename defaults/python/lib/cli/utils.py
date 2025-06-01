@@ -1,5 +1,9 @@
 import inspect
 import functools
+import copy
+
+from typing import cast
+from lib.cli.settings import CliSettingsManager
 
 
 def cmd_entry(f):
@@ -37,5 +41,29 @@ def cmd_entry(f):
     @functools.wraps(f)
     async def async_wrapper(*args, **kwargs):
         return await f(*args, **filter_kwargs(**kwargs))
+
+    return async_wrapper
+
+
+def settings_watcher(f):
+    """
+    Loads settings automatically (or returns default if none is available).
+    If the settings are modified afterwards, the will be saved unless "dry" mode is enabled.
+    """
+    @functools.wraps(f)
+    async def async_wrapper(*args, **kwargs):
+        dry: bool = kwargs.get("dry", False)
+        settings_manager = cast(CliSettingsManager, kwargs["settings_manager"])
+
+        initial_settings, _ = await settings_manager.read()
+        settings = copy.deepcopy(initial_settings or settings_manager._default_settings())
+        
+        kwargs["settings"] = settings
+        result = await f(*args, **kwargs)
+        
+        if not dry and initial_settings != settings:
+            await settings_manager.write(settings)
+
+        return result
 
     return async_wrapper
