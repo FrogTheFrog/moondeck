@@ -1,24 +1,26 @@
-""" Multicast DNS Service Discovery for Python, v0.14-wmcbrine
-    Copyright 2003 Paul Scott-Murphy, 2014 William McBrine
+"""Multicast DNS Service Discovery for Python, v0.14-wmcbrine
+Copyright 2003 Paul Scott-Murphy, 2014 William McBrine
 
-    This module provides a framework for the use of DNS Service Discovery
-    using IP multicast.
+This module provides a framework for the use of DNS Service Discovery
+using IP multicast.
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+This library is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 2.1 of the License, or (at your option) any later version.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-    Lesser General Public License for more details.
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+Lesser General Public License for more details.
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301
-    USA
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301
+USA
 """
+
+from __future__ import annotations
 
 import re
 import socket
@@ -29,10 +31,9 @@ _UNREGISTER_TIME = 125  # ms
 _CHECK_TIME = 175  # ms
 _REGISTER_TIME = 225  # ms
 _LISTENER_TIME = 200  # ms
-_BROWSER_TIME = 1000  # ms
-_DUPLICATE_QUESTION_INTERVAL = _BROWSER_TIME - 1  # ms
-_DUPLICATE_PACKET_SUPPRESSION_INTERVAL = 1000
-_BROWSER_BACKOFF_LIMIT = 3600  # s
+_BROWSER_TIME = 10000  # ms
+_DUPLICATE_PACKET_SUPPRESSION_INTERVAL = 1000  # ms
+_DUPLICATE_QUESTION_INTERVAL = 999  # ms # Must be 1ms less than _DUPLICATE_PACKET_SUPPRESSION_INTERVAL
 _CACHE_CLEANUP_INTERVAL = 10  # s
 _LOADED_SYSTEM_TIMEOUT = 10  # s
 _STARTUP_TIMEOUT = 9  # s must be lower than _LOADED_SYSTEM_TIMEOUT
@@ -46,8 +47,8 @@ _ONE_SECOND = 1000  # ms
 
 # Some DNS constants
 
-_MDNS_ADDR = '224.0.0.251'
-_MDNS_ADDR6 = 'ff02::fb'
+_MDNS_ADDR = "224.0.0.251"
+_MDNS_ADDR6 = "ff02::fb"
 _MDNS_PORT = 5353
 _DNS_PORT = 53
 _DNS_HOST_TTL = 120  # two minute for host records (A, SRV etc) as-per RFC6762
@@ -56,7 +57,7 @@ _DNS_OTHER_TTL = 4500  # 75 minutes for non-host records (PTR, TXT etc) as-per R
 # ServiceBrowsers generating excessive queries refresh queries.
 # Apple uses a 15s minimum TTL, however we do not have the same
 # level of rate limit and safe guards so we use 1/4 of the recommended value
-_DNS_PTR_MIN_TTL = _DNS_OTHER_TTL / 4
+_DNS_PTR_MIN_TTL = 1125
 
 _DNS_PACKET_HEADER_LEN = 12
 
@@ -143,22 +144,18 @@ _TYPES = {
 
 _ADDRESS_RECORD_TYPES = {_TYPE_A, _TYPE_AAAA}
 
-_HAS_A_TO_Z = re.compile(r'[A-Za-z]')
-_HAS_ONLY_A_TO_Z_NUM_HYPHEN = re.compile(r'^[A-Za-z0-9\-]+$')
-_HAS_ONLY_A_TO_Z_NUM_HYPHEN_UNDERSCORE = re.compile(r'^[A-Za-z0-9\-\_]+$')
-_HAS_ASCII_CONTROL_CHARS = re.compile(r'[\x00-\x1f\x7f]')
+_HAS_A_TO_Z = re.compile(r"[A-Za-z]")
+_HAS_ONLY_A_TO_Z_NUM_HYPHEN = re.compile(r"^[A-Za-z0-9\-]+$")
+_HAS_ONLY_A_TO_Z_NUM_HYPHEN_UNDERSCORE = re.compile(r"^[A-Za-z0-9\-\_]+$")
+_HAS_ASCII_CONTROL_CHARS = re.compile(r"[\x00-\x1f\x7f]")
 
 _EXPIRE_REFRESH_TIME_PERCENT = 75
 
-_LOCAL_TRAILER = '.local.'
-_TCP_PROTOCOL_LOCAL_TRAILER = '._tcp.local.'
-_NONTCP_PROTOCOL_LOCAL_TRAILER = '._udp.local.'
+_LOCAL_TRAILER = ".local."
+_TCP_PROTOCOL_LOCAL_TRAILER = "._tcp.local."
+_NONTCP_PROTOCOL_LOCAL_TRAILER = "._udp.local."
 
 # https://datatracker.ietf.org/doc/html/rfc6763#section-9
 _SERVICE_TYPE_ENUMERATION_NAME = "_services._dns-sd._udp.local."
 
-try:
-    _IPPROTO_IPV6 = socket.IPPROTO_IPV6
-except AttributeError:
-    # Sigh: https://bugs.python.org/issue29515
-    _IPPROTO_IPV6 = 41
+_IPPROTO_IPV6 = socket.IPPROTO_IPV6

@@ -1,48 +1,49 @@
-""" Multicast DNS Service Discovery for Python, v0.14-wmcbrine
-    Copyright 2003 Paul Scott-Murphy, 2014 William McBrine
+"""Multicast DNS Service Discovery for Python, v0.14-wmcbrine
+Copyright 2003 Paul Scott-Murphy, 2014 William McBrine
 
-    This module provides a framework for the use of DNS Service Discovery
-    using IP multicast.
+This module provides a framework for the use of DNS Service Discovery
+using IP multicast.
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
-    version 2.1 of the License, or (at your option) any later version.
+This library is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 2.1 of the License, or (at your option) any later version.
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-    Lesser General Public License for more details.
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+Lesser General Public License for more details.
 
-    You should have received a copy of the GNU Lesser General Public
-    License along with this library; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301
-    USA
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301
+USA
 """
+
+from __future__ import annotations
+
 import asyncio
 import contextlib
-from types import TracebackType  # noqa # used in type hints
-from typing import Awaitable, Callable, Dict, List, Optional, Tuple, Type, Union
+from collections.abc import Awaitable
+from types import TracebackType  # used in type hints
+from typing import Callable
 
 from ._core import Zeroconf
 from ._dns import DNSQuestionType
+from ._exceptions import NotRunningException
 from ._services import ServiceListener
 from ._services.browser import _ServiceBrowserBase
-from ._services.info import ServiceInfo
+from ._services.info import AsyncServiceInfo, ServiceInfo
 from ._services.types import ZeroconfServiceTypes
 from ._utils.net import InterfaceChoice, InterfacesType, IPVersion
 from .const import _BROWSER_TIME, _MDNS_PORT, _SERVICE_TYPE_ENUMERATION_NAME
 
 __all__ = [
-    "AsyncZeroconf",
-    "AsyncServiceInfo",
     "AsyncServiceBrowser",
+    "AsyncServiceInfo",
+    "AsyncZeroconf",
     "AsyncZeroconfServiceTypes",
 ]
-
-
-class AsyncServiceInfo(ServiceInfo):
-    """An async version of ServiceInfo."""
 
 
 class AsyncServiceBrowser(_ServiceBrowserBase):
@@ -66,14 +67,14 @@ class AsyncServiceBrowser(_ServiceBrowserBase):
 
     def __init__(
         self,
-        zeroconf: 'Zeroconf',
-        type_: Union[str, list],
-        handlers: Optional[Union[ServiceListener, List[Callable[..., None]]]] = None,
-        listener: Optional[ServiceListener] = None,
-        addr: Optional[str] = None,
+        zeroconf: Zeroconf,
+        type_: str | list,
+        handlers: ServiceListener | list[Callable[..., None]] | None = None,
+        listener: ServiceListener | None = None,
+        addr: str | None = None,
         port: int = _MDNS_PORT,
         delay: int = _BROWSER_TIME,
-        question_type: Optional[DNSQuestionType] = None,
+        question_type: DNSQuestionType | None = None,
     ) -> None:
         super().__init__(zeroconf, type_, handlers, listener, addr, port, delay, question_type)
         self._async_start()
@@ -82,16 +83,17 @@ class AsyncServiceBrowser(_ServiceBrowserBase):
         """Cancel the browser."""
         self._async_cancel()
 
-    def async_update_records_complete(self) -> None:
-        """Called when a record update has completed for all handlers.
+    async def __aenter__(self) -> AsyncServiceBrowser:
+        return self
 
-        At this point the cache will have the new records.
-
-        This method will be run in the event loop.
-        """
-        for pending in self._pending_handlers.items():
-            self._fire_service_state_changed_event(pending)
-        self._pending_handlers.clear()
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> bool | None:
+        await self.async_cancel()
+        return None
 
 
 class AsyncZeroconfServiceTypes(ZeroconfServiceTypes):
@@ -100,11 +102,11 @@ class AsyncZeroconfServiceTypes(ZeroconfServiceTypes):
     @classmethod
     async def async_find(
         cls,
-        aiozc: Optional['AsyncZeroconf'] = None,
-        timeout: Union[int, float] = 5,
+        aiozc: AsyncZeroconf | None = None,
+        timeout: int | float = 5,
         interfaces: InterfacesType = InterfaceChoice.All,
-        ip_version: Optional[IPVersion] = None,
-    ) -> Tuple[str, ...]:
+        ip_version: IPVersion | None = None,
+    ) -> tuple[str, ...]:
         """
         Return all of the advertised services on any local networks.
 
@@ -147,9 +149,9 @@ class AsyncZeroconf:
         self,
         interfaces: InterfacesType = InterfaceChoice.All,
         unicast: bool = False,
-        ip_version: Optional[IPVersion] = None,
+        ip_version: IPVersion | None = None,
         apple_p2p: bool = False,
-        zc: Optional[Zeroconf] = None,
+        zc: Zeroconf | None = None,
     ) -> None:
         """Creates an instance of the Zeroconf class, establishing
         multicast communications, and listening.
@@ -172,12 +174,12 @@ class AsyncZeroconf:
             ip_version=ip_version,
             apple_p2p=apple_p2p,
         )
-        self.async_browsers: Dict[ServiceListener, AsyncServiceBrowser] = {}
+        self.async_browsers: dict[ServiceListener, AsyncServiceBrowser] = {}
 
     async def async_register_service(
         self,
         info: ServiceInfo,
-        ttl: Optional[int] = None,
+        ttl: int | None = None,
         allow_name_change: bool = False,
         cooperating_responders: bool = False,
         strict: bool = True,
@@ -227,22 +229,29 @@ class AsyncZeroconf:
         """Ends the background threads, and prevent this instance from
         servicing further queries."""
         if not self.zeroconf.done:
-            with contextlib.suppress(asyncio.TimeoutError):
-                await asyncio.wait_for(self.zeroconf.async_wait_for_start(), timeout=1)
+            with contextlib.suppress(NotRunningException):
+                await self.zeroconf.async_wait_for_start(timeout=1.0)
         await self.async_remove_all_service_listeners()
         await self.async_unregister_all_services()
         await self.zeroconf._async_close()  # pylint: disable=protected-access
 
     async def async_get_service_info(
-        self, type_: str, name: str, timeout: int = 3000, question_type: Optional[DNSQuestionType] = None
-    ) -> Optional[AsyncServiceInfo]:
+        self,
+        type_: str,
+        name: str,
+        timeout: int = 3000,
+        question_type: DNSQuestionType | None = None,
+    ) -> AsyncServiceInfo | None:
         """Returns network's service information for a particular
         name and type, or None if no service matches by the timeout,
-        which defaults to 3 seconds."""
-        info = AsyncServiceInfo(type_, name)
-        if await info.async_request(self.zeroconf, timeout, question_type):
-            return info
-        return None
+        which defaults to 3 seconds.
+
+        :param type_: fully qualified service type name
+        :param name: the name of the service
+        :param timeout: milliseconds to wait for a response
+        :param question_type: The type of questions to ask (DNSQuestionType.QM or DNSQuestionType.QU)
+        """
+        return await self.zeroconf.async_get_service_info(type_, name, timeout, question_type)
 
     async def async_add_service_listener(self, type_: str, listener: ServiceListener) -> None:
         """Adds a listener for a particular service type.  This object
@@ -263,14 +272,14 @@ class AsyncZeroconf:
             *(self.async_remove_service_listener(listener) for listener in list(self.async_browsers))
         )
 
-    async def __aenter__(self) -> 'AsyncZeroconf':
+    async def __aenter__(self) -> AsyncZeroconf:
         return self
 
     async def __aexit__(
         self,
-        exc_type: Optional[Type[BaseException]],
-        exc_val: Optional[BaseException],
-        exc_tb: Optional[TracebackType],
-    ) -> Optional[bool]:
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> bool | None:
         await self.async_close()
         return None

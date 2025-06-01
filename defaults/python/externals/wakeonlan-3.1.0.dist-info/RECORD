@@ -7,5 +7,5 @@ wakeonlan-3.1.0.dist-info/REQUESTED,sha256=47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG
 wakeonlan-3.1.0.dist-info/WHEEL,sha256=FMvqSimYX_P7y0a7UY-_Mc83r5zkBZsCYPm7Lr0Bsq4,88
 wakeonlan-3.1.0.dist-info/entry_points.txt,sha256=atYdSZ466xt7TcNn5XhOJDAK9_aup3aWyFzQRvZQAPg,44
 wakeonlan/__init__.py,sha256=urxoYsZgZTnxXYIQmn_51bAYEVMfZvXZ7BpH0u3OH_c,3968
-wakeonlan/__pycache__/__init__.cpython-311.pyc,,
+wakeonlan/__pycache__/__init__.cpython-313.pyc,,
 wakeonlan/py.typed,sha256=47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU,0
