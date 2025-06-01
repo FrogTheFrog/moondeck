@@ -35,11 +35,7 @@ def cmd_entry(f):
         }
 
     @functools.wraps(f)
-    def wrapper(*args, **kwargs):
-        return f(*args, **filter_kwargs(**kwargs))
-
-    @functools.wraps(f)
     async def async_wrapper(*args, **kwargs):
         return await f(*args, **filter_kwargs(**kwargs))
 
-    return async_wrapper if inspect.iscoroutinefunction(f) else wrapper
+    return async_wrapper
