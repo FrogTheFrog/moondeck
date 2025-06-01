@@ -1,8 +1,8 @@
-from typing import Optional, TypedDict
+from typing import Literal, Optional, TypedDict
 
 from .envparser import EnvSettings, parse_env_settings, RunnerType
 from ..runnerresult import RunnerError, Result
-from ..settings import Dimension, HostSettings, RunnerTimeouts, settings_manager
+from ..plugin.settings import Dimension, HostSettings, RunnerTimeouts, settings_manager
 from ..moonlightproxy import ResolutionDimensions
 from ..logger import logger
 
@@ -10,11 +10,12 @@ from ..logger import logger
 class MoonDeckAppRunnerSettings(TypedDict):
     audio: Optional[str]
     resolution: ResolutionDimensions
+    pass_to_moonlight: bool
     host_app: str
     hostname: str
     mac: str
     address: str
-    host_port:int
+    host_port: int
     buddy_port: int
     client_id: str
     big_picture_mode: bool
@@ -23,21 +24,22 @@ class MoonDeckAppRunnerSettings(TypedDict):
     moonlight_exec_path: Optional[str]
     app_id: str
     debug_logs: bool
-    runner_type: RunnerType.MoonDeck
+    runner_type: Literal[RunnerType.MoonDeck]
 
 
 class MoonlightOnlyRunnerSettings(TypedDict):
     audio: Optional[str]
     resolution: ResolutionDimensions
+    pass_to_moonlight: bool
     host_app: str
     hostname: str
     mac: str
     address: str
+    host_port: int
     timeouts: RunnerTimeouts
     moonlight_exec_path: Optional[str]
-    app_id: str
     debug_logs: bool
-    runner_type: RunnerType.MoonlightOnly
+    runner_type: Literal[RunnerType.MoonlightOnly]
 
 
 def parse_audio_settings(host_settings: HostSettings, env_settings: EnvSettings) -> Optional[str]:
@@ -116,8 +118,11 @@ def parse_host_app_name(host_settings: HostSettings) -> str:
 
 async def parse_settings() -> MoonDeckAppRunnerSettings | MoonlightOnlyRunnerSettings:
     logger.info("Getting current host settings")
-    user_settings = await settings_manager.get()
+    user_settings, _ = await settings_manager.read()
     host_settings = None
+
+    if user_settings is None:
+        raise RunnerError(Result.NoSettings)
 
     host_id = user_settings["currentHostId"]
     if host_id is not None and host_id in user_settings["hostSettings"]:
@@ -140,7 +145,7 @@ async def parse_settings() -> MoonDeckAppRunnerSettings | MoonlightOnlyRunnerSet
         if env_settings["app_id"] is None:
             raise RunnerError(Result.NoAppId)
 
-        return {
+        return MoonDeckAppRunnerSettings({
             "audio": parse_audio_settings(host_settings=host_settings, env_settings=env_settings),
             "resolution": parse_resolution_settings(host_settings=host_settings, env_settings=env_settings),
             "pass_to_moonlight": pass_to_moonlight,
@@ -158,12 +163,12 @@ async def parse_settings() -> MoonDeckAppRunnerSettings | MoonlightOnlyRunnerSet
             "app_id": env_settings["app_id"],
             "debug_logs": user_settings["runnerDebugLogs"],
             "runner_type": RunnerType.MoonDeck
-        }
+        })
     else:
         if env_settings["app_name"] is None:
             raise RunnerError(Result.NoAppName)
 
-        return {
+        return MoonlightOnlyRunnerSettings({
             "audio": parse_audio_settings(host_settings=host_settings, env_settings=env_settings),
             "resolution": parse_resolution_settings(host_settings=host_settings, env_settings=env_settings),
             "pass_to_moonlight": pass_to_moonlight,
@@ -176,4 +181,4 @@ async def parse_settings() -> MoonDeckAppRunnerSettings | MoonlightOnlyRunnerSet
             "moonlight_exec_path": user_settings["moonlightExecPath"] if user_settings["useMoonlightExec"] else None,
             "debug_logs": user_settings["runnerDebugLogs"],
             "runner_type": RunnerType.MoonlightOnly
-        }
+        })

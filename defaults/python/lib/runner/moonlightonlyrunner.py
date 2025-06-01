@@ -3,7 +3,7 @@ from .wolsplashscreen import WolSplashScreen
 from ..runnerresult import Result, RunnerError
 from ..hostinfo import get_server_info
 from ..logger import logger
-from ..settings import RunnerTimeouts
+from ..plugin.settings import RunnerTimeouts
 from ..moonlightproxy import MoonlightProxy
 
 

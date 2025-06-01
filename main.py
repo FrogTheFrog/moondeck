@@ -20,7 +20,7 @@ import python.lib.constants as constants
 import python.lib.utils as utils
 
 from typing import Any, Dict
-from python.lib.settings import settings_manager, UserSettings
+from python.lib.plugin.settings import settings_manager, UserSettings
 from python.lib.logger import logger, set_logger_settings
 from python.lib.buddyrequests import SteamUiMode
 from python.lib.buddyclient import BuddyClient, HelloResult, PcStateChange
@@ -58,17 +58,17 @@ class Plugin:
     @utils.async_scope_log(logger.info)
     async def get_user_settings(self):
         try:
-            return await settings_manager.get()
+            return await settings_manager.read_or_update()
         except Exception:
-            logger.exception("Unhandled exception")
+            logger.exception("Failed to get user settings")
             return None
 
     @utils.async_scope_log(logger.info)
-    async def set_user_settings(self, data: Dict[str, Any]):
+    async def set_user_settings(self, data: UserSettings):
         try:
-            await settings_manager.set(utils.from_dict(UserSettings, data))
+            await settings_manager.write(data)
         except Exception:
-            logger.exception("Unhandled exception")
+            logger.exception("Failed to set user settings")
 
     @utils.async_scope_log(logger.info)
     async def scan_for_hosts(self, timeout: float):

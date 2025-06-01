@@ -6,7 +6,7 @@ from ..buddyrequests import AppState, SteamUiMode, StreamState
 from ..runnerresult import Result, RunnerError
 from ..hostinfo import get_server_info
 from ..logger import logger
-from ..settings import RunnerTimeouts
+from ..plugin.settings import RunnerTimeouts
 from ..moonlightproxy import MoonlightProxy
 from ..buddyclient import BuddyClient, HelloResult
 from ..utils import TimedPooler
@@ -25,6 +25,7 @@ class MoonDeckAppLauncher:
             if state == StreamState.Streaming:
                 break
 
+    @staticmethod
     async def wait_for_steam_to_be_ready(client: BuddyClient, big_picture_mode: bool, timeouts: RunnerTimeouts):
         logger.info("Waiting for Steam to be ready")
         pooler = TimedPooler(retries=timeouts["steamReadiness"],
@@ -36,6 +37,7 @@ class MoonDeckAppLauncher:
             if mode == desired_mode:
                 break
 
+    @staticmethod
     async def wait_for_app_to_be_launched(client: BuddyClient, app_id: str, timeouts: RunnerTimeouts):
         logger.info(f"Waiting for app {app_id} to be launched in Steam")
         pooler = TimedPooler(retries=timeouts["appLaunch"],
