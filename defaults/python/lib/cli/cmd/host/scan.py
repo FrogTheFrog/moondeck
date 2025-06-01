@@ -1,6 +1,6 @@
 import json as jlib
 
-from lib.cli.utils import cmd_entry, settings_watcher
+from lib.cli.utils import cmd_entry, log_gamestream_host, settings_watcher
 from lib.gamestreaminfo import scan_for_hosts
 from lib.cli.settings import CliSettings
 from lib.logger import logger
@@ -17,10 +17,7 @@ async def execute(settings: CliSettings, timeout: float, dry: bool, json: bool, 
         else:
             logger.info(f"Available hosts:")
             for idx, host in enumerate(hosts):
-                logger.info(f"  ID       : {host['uniqueId']}")
-                logger.info(f"  HostName : {host['hostName']}")
-                logger.info(f"  Address  : {host['address']}")
-                logger.info(f"  Port     : {host['port']}")
+                log_gamestream_host(host)
                 if idx + 1 != len(hosts):
                     logger.info("  ----")
     

@@ -4,6 +4,8 @@ import copy
 
 from typing import cast
 from lib.cli.settings import CliSettingsManager
+from lib.gamestreaminfo import GameStreamHost
+from lib.logger import logger
 
 
 def cmd_entry(f):
@@ -67,3 +69,10 @@ def settings_watcher(f):
         return result
 
     return async_wrapper
+
+
+def log_gamestream_host(host: GameStreamHost):
+    logger.info(f"  ID       : {host['uniqueId']}")
+    logger.info(f"  HostName : {host['hostName']}")
+    logger.info(f"  Address  : {host['address']}")
+    logger.info(f"  Port     : {host['port']}")

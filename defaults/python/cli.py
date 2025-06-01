@@ -17,7 +17,9 @@ from pathlib import Path
 
 from lib.logger import logger, set_logger_settings
 from lib.cli.settings import CliSettingsManager
+
 from lib.cli.cmd.host.scan import execute as cmd_host_scan
+from lib.cli.cmd.host.add import execute as cmd_host_add
 
 import argparse
 import sys
@@ -85,8 +87,23 @@ async def main():
             "--dry", action="store_true", help="do not save any changes")
         scan_parser.add_argument(
             "--json", action="store_true", help="print the output in JSON format")
-        scan_parser.add_argument("--prune", action="store_true",
-                                 help="remove any previously scanned hosts from the config that were not found during scan")
+        scan_parser.add_argument(
+            "--prune", action="store_true",
+            help="remove any previously scanned hosts from the config that were not found during scan")
+        
+        # -------- Setup add command
+        add_parser = host_subparsers.add_parser(
+            "add", help="manually add reachable GameStream host (will replace scanned one)")
+        add_parser.add_argument(
+            "address", type=str, help="IP address or valid domain")
+        add_parser.add_argument(
+            "port", type=int, help="the HTTP port of the server")
+        add_parser.add_argument(
+            "--timeout", type=float, default=5.0, help="connection timeout in seconds")
+        add_parser.add_argument(
+            "--dry", action="store_true", help="do not save any changes")
+        add_parser.add_argument(
+            "--json", action="store_true", help="print the output in JSON format")
 
         # ---- Parse all of the commands
         parser_args, _ = parser.parse_known_args()  # Will exit if help is specified
@@ -101,7 +118,8 @@ async def main():
 
         cmds = {
             "host": {
-                "scan": cmd_host_scan
+                "scan": cmd_host_scan,
+                "add": cmd_host_add
             }
         }
 
