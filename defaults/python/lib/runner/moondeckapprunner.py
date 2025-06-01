@@ -4,7 +4,7 @@ from .settingsparser import MoonDeckAppRunnerSettings
 from .wolsplashscreen import WolSplashScreen
 from ..buddyrequests import AppState, SteamUiMode, StreamState
 from ..runnerresult import Result, RunnerError
-from ..hostinfo import get_server_info
+from ..gamestreaminfo import get_server_info
 from ..logger import logger
 from ..plugin.settings import RunnerTimeouts
 from ..moonlightproxy import MoonlightProxy
