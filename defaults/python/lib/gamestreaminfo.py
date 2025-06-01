@@ -76,7 +76,8 @@ class GameStreamListener(ServiceListener):
                 pass
 
 
-async def _scan_for_hosts(timeout: float = 5, unique_id: str | None = None):
+async def _scan_for_hosts(timeout: float, unique_id: str | None = None):
+    timeout = 0.1 if timeout <= 0 else timeout
     async with GameStreamListener(timeout, unique_id=unique_id) as listener:
         async with AsyncZeroconf(ip_version=IPVersion.V4Only) as aiozeroconf:
             async with AsyncServiceBrowser(aiozeroconf.zeroconf,
@@ -87,9 +88,7 @@ async def _scan_for_hosts(timeout: float = 5, unique_id: str | None = None):
 
 async def get_server_info(address: str, port: int, timeout: float):
     try:
-        timeout_kwargs = {}
-        if timeout:
-            timeout_kwargs.setdefault("timeout", aiohttp.ClientTimeout(total=timeout))
+        timeout = 0.1 if timeout <= 0 else timeout
 
         def get_host_id(data: str):
             if data:
@@ -101,7 +100,7 @@ async def get_server_info(address: str, port: int, timeout: float):
                 result = re.search("<hostname>(.*?)</hostname>", data)
                 return html.unescape(str(result.group(1))) if result else None
 
-        async with aiohttp.ClientSession(**timeout_kwargs) as session:
+        async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=timeout)) as session:
             async with session.get(f"http://{address}:{port}/serverinfo") as resp:
                 data = await resp.text(encoding="utf-8")
                 hostname = get_host_name(data)
@@ -117,8 +116,8 @@ async def get_server_info(address: str, port: int, timeout: float):
                     "uniqueId": unique_id
                 })
 
-    except aiohttp.ClientError as e:
-        logger.debug(f"Client error while executing get_server_info request: {e}")
+    except (aiohttp.ClientError, asyncio.TimeoutError) as e:
+        logger.debug(f"Error while executing get_server_info request: {e}")
         return None
 
 
