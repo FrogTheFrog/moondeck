@@ -80,11 +80,13 @@ async def main():
         scan_parser = host_subparsers.add_parser(
             "scan", help="scan for available hosts")
         scan_parser.add_argument(
-            "--timeout", type=float, default=5.0, help="Scan timeout in seconds")
+            "--timeout", type=float, default=5.0, help="scan timeout in seconds")
         scan_parser.add_argument(
-            "--dry", action="store_true", help="Do not save any changes")
-        scan_parser.add_argument("--overwrite", action="store_true",
-                                 help="Remove any hosts from the config that were not found during scan")
+            "--dry", action="store_true", help="do not save any changes")
+        scan_parser.add_argument(
+            "--json", action="store_true", help="print the output in JSON format")
+        scan_parser.add_argument("--prune", action="store_true",
+                                 help="remove any previously scanned hosts from the config that were not found during scan")
 
         # ---- Parse all of the commands
         parser_args, _ = parser.parse_known_args()  # Will exit if help is specified
@@ -106,7 +108,8 @@ async def main():
         cmd = cmds.get(parser_args["group"], {}).get(
             parser_args["command"], None)
         if cmd is not None:
-            parser_args["settings_manager"] = CliSettingsManager(parser_args["config_file"])
+            parser_args["settings_manager"] = CliSettingsManager(
+                parser_args["config_file"])
             sys.exit(await cmd(**parser_args))
 
         raise Exception(
