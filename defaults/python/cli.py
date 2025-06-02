@@ -21,6 +21,7 @@ from lib.cli.settings import CliSettingsManager
 from lib.cli.cmd.host.scan import execute as cmd_host_scan
 from lib.cli.cmd.host.add import execute as cmd_host_add
 from lib.cli.cmd.host.remove import execute as cmd_host_remove
+from lib.cli.cmd.host.list import execute as cmd_host_list
 
 import argparse
 import sys
@@ -107,13 +108,19 @@ async def main():
             "--json", action="store_true", help="print the output in JSON format")
 
         # -------- Setup `remove` command
-        add_parser = host_subparsers.add_parser(
+        remove_parser = host_subparsers.add_parser(
             "remove", help="remove host(-s) from config")
-        add_parser.add_argument(
+        remove_parser.add_argument(
             "pattern", type=str, help="host id, name or address")
-        add_parser.add_argument(
+        remove_parser.add_argument(
             "--dry", action="store_true", help="do not save any changes")
-        add_parser.add_argument(
+        remove_parser.add_argument(
+            "--json", action="store_true", help="print the output in JSON format")
+        
+        # -------- Setup `list` command
+        list_parser = host_subparsers.add_parser(
+            "list", help="remove host(-s) from config")
+        list_parser.add_argument(
             "--json", action="store_true", help="print the output in JSON format")
 
         # ---- Parse all of the commands
@@ -131,7 +138,8 @@ async def main():
             "host": {
                 "scan": cmd_host_scan,
                 "add": cmd_host_add,
-                "remove": cmd_host_remove
+                "remove": cmd_host_remove,
+                "list": cmd_host_list
             }
         }
 

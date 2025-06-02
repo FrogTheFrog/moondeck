@@ -5,9 +5,10 @@ from lib.gamestreaminfo import scan_for_hosts
 from lib.cli.settings import CliSettings
 from lib.logger import logger
 
-@settings_watcher
+@settings_watcher()
 @cmd_entry
 async def execute(settings: CliSettings, timeout: float, dry: bool, json: bool, prune: bool):
+    logger.info("Scanning for the hosts...")
     hosts = await scan_for_hosts(timeout=timeout)
     if json:
         logger.info(jlib.dumps(hosts, indent=2))
