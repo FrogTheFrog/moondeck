@@ -47,31 +47,33 @@ def cmd_entry(f):
     return async_wrapper
 
 
-def settings_watcher(f):
+def settings_watcher(dry: bool | None = None):
     """
     Loads settings automatically (or returns default if none is available).
     If the settings are modified afterwards, the will be saved unless "dry" mode is enabled.
     """
-    @functools.wraps(f)
-    async def async_wrapper(*args, **kwargs):
-        dry: bool = kwargs.get("dry", False)
-        settings_manager = cast(CliSettingsManager, kwargs["settings_manager"])
+    def decorator(f):
+        @functools.wraps(f)
+        async def async_wrapper(*args, **kwargs):
+            do_write: bool = kwargs.get("dry", False) if dry is None else dry
+            settings_manager = cast(CliSettingsManager, kwargs["settings_manager"])
 
-        initial_settings, _ = await settings_manager.read()
-        settings = copy.deepcopy(
-            initial_settings or settings_manager._default_settings())
+            initial_settings, _ = await settings_manager.read()
+            settings = copy.deepcopy(
+                initial_settings or settings_manager._default_settings())
 
-        result = await f(*args, settings=settings, **kwargs)
+            result = await f(*args, settings=settings, **kwargs)
 
-        if not dry and initial_settings != settings:
-            await settings_manager.write(settings)
+            if not do_write and initial_settings != settings:
+                await settings_manager.write(settings)
 
-        return result
+            return result
 
-    return async_wrapper
+        return async_wrapper
+    return decorator
 
 
-def host_pattern_matcher(match_one):
+def host_pattern_matcher(match_one: bool):
     """
     Will search for host(-s) matching the pattern and add the results to kwargs.
     Must be paired with settings_watcher.
@@ -82,8 +84,8 @@ def host_pattern_matcher(match_one):
             settings: CliSettings = cast(CliSettings, kwargs["settings"])
             pattern = cast(str, kwargs["pattern"])
 
-            host_ids = [k for k, v in settings['hosts'].items()
-                        if k == pattern or v["address"] == pattern or v['hostName'] == pattern]
+            host_ids = [k for k, v in settings["hosts"].items()
+                        if k == pattern or v["address"] == pattern or v["hostName"] == pattern]
             
             if match_one:
                 if len(host_ids) > 0:
@@ -99,7 +101,7 @@ def host_pattern_matcher(match_one):
 
 
 def log_gamestream_host(host: GameStreamHost):
-    logger.info(f"  ID       : {host['uniqueId']}")
-    logger.info(f"  HostName : {host['hostName']}")
-    logger.info(f"  Address  : {host['address']}")
-    logger.info(f"  Port     : {host['port']}")
+    logger.info(f"  ID        : {host["uniqueId"]}")
+    logger.info(f"  Host Name : {host["hostName"]}")
+    logger.info(f"  Address   : {host["address"]}")
+    logger.info(f"  Port      : {host["port"]}")

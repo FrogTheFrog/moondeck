@@ -5,9 +5,10 @@ from lib.gamestreaminfo import get_server_info
 from lib.cli.settings import CliSettings
 from lib.logger import logger
 
-@settings_watcher
+@settings_watcher()
 @cmd_entry
 async def execute(settings: CliSettings, timeout: float, dry: bool, json: bool, address: str, port: int):
+    logger.info("Getting server info...")
     host = await get_server_info(address=address, port=port, timeout=timeout)
     if json:
         logger.info(jlib.dumps(host, indent=2))
