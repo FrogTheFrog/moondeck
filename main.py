@@ -19,13 +19,13 @@ import python.lib.gamestreaminfo as gamestreaminfo
 import python.lib.constants as constants
 import python.lib.utils as utils
 
-from typing import Any, Dict
+from typing import cast
 from python.lib.plugin.settings import settings_manager, UserSettings
 from python.lib.logger import logger, set_logger_settings
-from python.lib.buddyrequests import SteamUiMode
-from python.lib.buddyclient import BuddyClient, HelloResult, PcStateChange
+from python.lib.buddyrequests import SteamUiMode, SteamUiModeResponse
+from python.lib.buddyclient import BuddyClient, PcStateChange, BuddyException
 from python.lib.utils import wake_on_lan, change_moondeck_runner_ready_state, TimedPooler
-from python.lib.runnerresult import Result, RunnerError, set_result, get_result
+from python.lib.runnerresult import Result, set_result, get_result
 # autopep8: on
 
 set_logger_settings(constants.LOG_FILE, rotate=True)
@@ -98,37 +98,39 @@ class Plugin:
     async def get_buddy_info(self, address: str, buddy_port: int, client_id: str, timeout: float):
         try:
             async with BuddyClient(address, buddy_port, client_id, timeout) as client:
-                info_or_status = await client.get_host_info()
-                if not isinstance(info_or_status, dict):
-                    return {"status": info_or_status.name, "info": None}
+                info = await client.get_host_info()
+                return {"status": "Online", "info": info}
 
-                return {"status": "Online", "info": info_or_status}
+        except BuddyException as err:
+            return {"status": err.result.name, "info": None}
 
         except Exception:
             logger.exception("Unhandled exception")
-            return HelloResult.Exception.name
+            return {"status": "Exception", "info": None}
 
     @utils.async_scope_log(logger.info)
     async def start_pairing(self, address: str, buddy_port: int, client_id: str, pin: int, timeout: float):
         try:
             async with BuddyClient(address, buddy_port, client_id, timeout) as client:
-                status = await client.start_pairing(pin)
-                if status:
-                    return status.name
-
+                await client.start_pairing(pin)
                 return "PairingStarted"
+
+        except BuddyException as err:
+            logger.exception("Buddy exception while pairing")
+            return err.result.name
 
         except Exception:
             logger.exception("Unhandled exception")
-            return HelloResult.Exception.name
+            return "Exception"
 
     @utils.async_scope_log(logger.info)
     async def abort_pairing(self, address: str, buddy_port: int, client_id: str, timeout: float):
         try:
             async with BuddyClient(address, buddy_port, client_id, timeout) as client:
-                status = await client.abort_pairing()
-                if status:
-                    logger.error(f"While aborting pairing: {status}")
+                await client.abort_pairing()
+
+        except BuddyException:
+            logger.exception("Buddy exception while aborting pairing")
 
         except Exception:
             logger.exception("Unhandled exception")
@@ -145,9 +147,10 @@ class Plugin:
         try:
             state_enum = PcStateChange[state]
             async with BuddyClient(address, buddy_port, client_id, timeout) as client:
-                status = await client.change_pc_state(state_enum)
-                if status:
-                    logger.error(f"While changing PC state to {state}: {status}")
+                await client.change_pc_state(state_enum)
+
+        except BuddyException:
+            logger.exception(f"Buddy exception while changing PC state to {state}")
 
         except Exception:
             logger.exception("Unhandled exception")
@@ -158,13 +161,15 @@ class Plugin:
             return str(get_plugin_dir().joinpath("python", "moondeckrun.sh"))
         except Exception:
             logger.exception("Unhandled exception")
+            return None
 
     @utils.async_scope_log(logger.info)
     async def get_home_dir(self):
         try:
-            return str(pathlib.Path("/home", constants.CURRENT_USER))
+            return str(pathlib.Path.home())
         except Exception:
             logger.exception("Unhandled exception")
+            return None
 
     @utils.async_scope_log(logger.info)
     async def kill_runner(self, app_id: int):
@@ -191,14 +196,16 @@ class Plugin:
 
         except Exception:
             logger.exception("Unhandled exception")
+            return False
 
     @utils.async_scope_log(logger.info)
     async def close_steam(self, address: str, buddy_port: int, client_id: str, timeout: float):
         try:
             async with BuddyClient(address, buddy_port, client_id, timeout) as client:
-                status = await client.close_steam()
-                if status:
-                    logger.error(f"While closing Steam on host PC: {status}")
+                await client.close_steam()
+
+        except BuddyException:
+            logger.exception("Buddy exception while closing steam")
 
         except Exception:
             logger.exception("Unhandled exception")
@@ -207,42 +214,37 @@ class Plugin:
     async def get_gamestream_app_names(self, address: str, buddy_port: int, client_id: str, timeout: float):
         try:
             async with BuddyClient(address, buddy_port, client_id, timeout) as client:
-                names_or_status = await client.get_gamestream_app_names()
-                if names_or_status and not isinstance(names_or_status, list):
-                    logger.error(f"While retrieving gamestream app names: {names_or_status}")
-                    return None
+                return await client.get_gamestream_app_names()
 
-                return names_or_status
+        except BuddyException:
+            logger.exception("Buddy exception while retrieving gamestream app names")
+            return None
 
         except Exception:
             logger.exception("Unhandled exception")
             return None
-        
+
     @utils.async_scope_log(logger.info)
     async def get_non_steam_app_data(self, address: str, buddy_port: int, client_id: str, user_id: str,
                                      buddy_timeout: float, ready_timeout: int):
         try:
             async with BuddyClient(address, buddy_port, client_id, buddy_timeout) as client:
                 logger.info(f"Sending request to launch Steam if needed")
-                RunnerError.maybe_raise(await client.launch_steam(big_picture_mode=False))
+                await client.launch_steam(big_picture_mode=False)
 
                 logger.info("Waiting for Steam to be ready")
                 pooler = TimedPooler(retries=ready_timeout,
-                                     error_on_retry_out=Result.SteamDidNotReadyUpInTime)
+                                     exception_on_retry_out=BuddyException(Result.SteamDidNotReadyUpInTime))
 
-                async for req in pooler(client.get_steam_ui_mode):
-                    mode = req["mode"]
+                async for req, in pooler(client.get_steam_ui_mode):
+                    mode = cast(SteamUiModeResponse, req)["mode"]
                     if mode != SteamUiMode.Unknown:
                         break
 
-                data = await client.get_non_steam_app_data(user_id=user_id)
-                if data and not isinstance(data, list):
-                    raise RunnerError(data)
+                return await client.get_non_steam_app_data(user_id=user_id)
 
-                return data
-
-        except RunnerError as err:
-            logger.error(f"While retrieving non-Steam app data: {err.result}")
+        except BuddyException:
+            logger.exception("While retrieving non-Steam app data")
             return None
 
         except Exception:

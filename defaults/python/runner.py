@@ -13,6 +13,7 @@ def add_plugin_to_path():
 
 add_plugin_to_path()
 
+from lib.buddyclient import BuddyException
 from lib.runner.moondeckapprunner import MoonDeckAppRunner
 from lib.runner.moonlightonlyrunner import MoonlightOnlyRunner
 from lib.logger import logger, set_logger_settings, enable_debug_level
@@ -48,6 +49,10 @@ async def main():
         runnerresult.set_result(None)
 
     except runnerresult.RunnerError as err:
+        runnerresult.set_result(err.result)
+
+    except BuddyException as err:
+        logger.exception("Buddy exception")
         runnerresult.set_result(err.result)
 
     except Exception:

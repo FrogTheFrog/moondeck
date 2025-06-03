@@ -7,10 +7,9 @@ import pathlib
 
 from enum import Enum
 from functools import wraps
-from typing import Any, List, Literal, Optional, Type, TypedDict, Union, TypeVar, get_args, get_origin, is_typeddict
+from typing import Any, Callable, Coroutine, List, Literal, Type, TypedDict, Union, TypeVar, get_args, get_origin, is_typeddict
 from externals.wakeonlan import send_magic_packet
 
-from .runnerresult import RunnerError
 from .logger import logger
 from .constants import RUNNER_READY_FILE
 
@@ -177,19 +176,18 @@ def change_moondeck_runner_ready_state(make_ready):
 
 
 class TimedPooler:
-
-    def __init__(self, retries: int, error_on_retry_out: Optional[Enum] = None, delay: float = 1) -> None:
+    def __init__(self, retries: int, exception_on_retry_out: Exception | None = None, delay: float = 1) -> None:
         self.delay = delay
         self.retries = retries
-        self.error_on_retry_out = error_on_retry_out
+        self.exception_on_retry_out = exception_on_retry_out
         self._first_run = False
 
-    def __call__(self, *requests):
+    def __call__(self, *requests: Callable[[], Coroutine[Any, Any, Any]]):
         return TimedPoolerGenerator(self, *requests)
 
 
 class TimedPoolerGenerator:
-    def __init__(self, pooler: TimedPooler, *requests) -> None:
+    def __init__(self, pooler: TimedPooler, *requests: Callable[[], Coroutine[Any, Any, Any]]) -> None:
         assert len(requests) > 0
         self.pooler = pooler
         self.requests = requests
@@ -199,8 +197,8 @@ class TimedPoolerGenerator:
 
     async def __anext__(self):
         if self.pooler.retries <= 0:
-            if self.pooler.error_on_retry_out is not None:
-                raise RunnerError(self.pooler.error_on_retry_out)
+            if self.pooler.exception_on_retry_out is not None:
+                raise self.pooler.exception_on_retry_out
             raise StopAsyncIteration
 
         if not self.pooler._first_run:
@@ -209,9 +207,13 @@ class TimedPoolerGenerator:
         self.pooler.retries -= 1
         self.pooler._first_run = False
 
-        responses = await asyncio.gather(*[req() for req in self.requests])
-        for request in responses:
-            if not isinstance(request, dict):
-                raise RunnerError(request)
+        tasks = [asyncio.create_task(req()) for req in self.requests]
+        try:
+            responses = await asyncio.gather(*tasks)
+        except Exception as err:
+            for task in tasks:
+                task.cancel()
 
-        return responses if len(responses) > 1 else responses[0]
+            raise err
+
+        return responses
