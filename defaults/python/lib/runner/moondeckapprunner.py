@@ -1,14 +1,15 @@
 import asyncio
 
+from typing import cast
 from .settingsparser import MoonDeckAppRunnerSettings
 from .wolsplashscreen import WolSplashScreen
-from ..buddyrequests import AppState, SteamUiMode, StreamState
+from ..buddyrequests import AppState, SteamUiMode, StreamState, StreamStateResponse, SteamUiModeResponse, StreamedAppDataResponse
 from ..runnerresult import Result, RunnerError
 from ..gamestreaminfo import get_server_info
 from ..logger import logger
 from ..plugin.settings import RunnerTimeouts
 from ..moonlightproxy import MoonlightProxy
-from ..buddyclient import BuddyClient, HelloResult
+from ..buddyclient import BuddyClient, BuddyException, HelloResult
 from ..utils import TimedPooler
 
 
@@ -17,10 +18,10 @@ class MoonDeckAppLauncher:
     async def wait_for_stream_to_be_ready(client: BuddyClient, timeouts: RunnerTimeouts):
         logger.info("Waiting for Buddy to be ready to launch games")
         pooler = TimedPooler(retries=timeouts["streamReadiness"],
-                             error_on_retry_out=Result.StreamFailedToStart)
+                             exception_on_retry_out=RunnerError(Result.StreamFailedToStart))
 
-        async for req in pooler(client.get_stream_state):
-            state = req["state"]
+        async for req, in pooler(client.get_stream_state):
+            state = cast(StreamStateResponse, req)["state"]
 
             if state == StreamState.Streaming:
                 break
@@ -29,11 +30,11 @@ class MoonDeckAppLauncher:
     async def wait_for_steam_to_be_ready(client: BuddyClient, big_picture_mode: bool, timeouts: RunnerTimeouts):
         logger.info("Waiting for Steam to be ready")
         pooler = TimedPooler(retries=timeouts["steamReadiness"],
-                             error_on_retry_out=Result.SteamDidNotReadyUpInTime)
+                             exception_on_retry_out=RunnerError(Result.SteamDidNotReadyUpInTime))
 
         desired_mode = SteamUiMode.BigPicture if big_picture_mode else SteamUiMode.Desktop
-        async for req in pooler(client.get_steam_ui_mode):
-            mode = req["mode"]
+        async for req, in pooler(client.get_steam_ui_mode):
+            mode = cast(SteamUiModeResponse, req)["mode"]
             if mode == desired_mode:
                 break
 
@@ -41,12 +42,12 @@ class MoonDeckAppLauncher:
     async def wait_for_app_to_be_launched(client: BuddyClient, app_id: str, timeouts: RunnerTimeouts):
         logger.info(f"Waiting for app {app_id} to be launched in Steam")
         pooler = TimedPooler(retries=timeouts["appLaunch"],
-                             error_on_retry_out=Result.AppLaunchFailed)
+                             exception_on_retry_out=RunnerError(Result.AppLaunchFailed))
 
         app_was_updating = False
         stability_counter = timeouts["appLaunchStability"]
-        async for req in pooler(client.get_streamed_app_data):
-            data = req["data"]
+        async for req, in pooler(client.get_streamed_app_data):
+            data = cast(StreamedAppDataResponse, req)["data"]
             if data is None:
                 raise RunnerError(Result.AppLaunchAborted)
 
@@ -85,8 +86,8 @@ class MoonDeckAppLauncher:
         logger.info("Waiting for app to close")
         pooler = TimedPooler(retries=1)
 
-        async for req in pooler(client.get_streamed_app_data):
-            data = req["data"]
+        async for req, in pooler(client.get_streamed_app_data):
+            data = cast(StreamedAppDataResponse, req)["data"]
             if data is None:
                 break
 
@@ -104,7 +105,7 @@ class MoonDeckAppLauncher:
                                                   timeouts=timeouts)
             
             logger.info(f"Sending request to launch Steam if needed (forcing big picture mode: {big_picture_mode})")
-            RunnerError.maybe_raise(await client.launch_steam(big_picture_mode))
+            await client.launch_steam(big_picture_mode)
 
             await cls.wait_for_steam_to_be_ready(client=client,
                                                  big_picture_mode=big_picture_mode,
@@ -113,7 +114,7 @@ class MoonDeckAppLauncher:
             retry_launch_sequence = True
             while retry_launch_sequence:
                 logger.info(f"Sending request to launch app {app_id}")
-                RunnerError.maybe_raise(await client.launch_app(app_id))
+                await client.launch_app(app_id)
                 
                 retry_launch_sequence = await cls.wait_for_app_to_be_launched(client=client,
                                                                               app_id=app_id,
@@ -122,10 +123,11 @@ class MoonDeckAppLauncher:
             await cls.wait_for_app_to_close(client=client)
 
         except Exception as err:
-            logger.info("Ending stream") 
-            result = await client.end_stream()
-            if result:
-                logger.error(f"Failed to end the stream: {result.value}")
+            logger.warning("Ending stream") 
+            try:
+                await client.end_stream()
+            except:
+                logger.exception("Failed to end the stream")
 
             raise err
 
@@ -136,12 +138,14 @@ class MoonDeckAppRunner:
 
         async with WolSplashScreen(client.address, mac, timeouts["wakeOnLan"]) as splash:
             while True:
-                buddy_result = await client.say_hello(force=True)
-                if buddy_result:
-                    if buddy_result != HelloResult.Offline:
-                        raise RunnerError(buddy_result)
-                
-                buddy_status = buddy_result != HelloResult.Offline
+                try:
+                    await client.say_hello(force=True)
+                    buddy_status = True
+                except BuddyException as err:
+                    buddy_status = False
+                    if err.result != HelloResult.Offline:
+                        raise RunnerError(err.result)
+
                 server_status = await get_server_info(address=client.address, 
                                                       port=host_port, 
                                                       timeout=timeouts["servicePing"]) is not None
@@ -159,11 +163,11 @@ class MoonDeckAppRunner:
         
         pooler = TimedPooler(retries=timeouts["initialConditions"])
         async for req1, req2 in pooler(client.get_stream_state, client.get_streamed_app_data):
-            state = req1["state"]
-            data = req2["data"]
+            state = cast(StreamStateResponse, req1)["state"]
+            data = cast(StreamedAppDataResponse, req2)["data"]
 
             if state == StreamState.StreamEnding:
-                pooler.error_on_retry_out = Result.StreamDidNotEnd
+                pooler.exception_on_retry_out = RunnerError(Result.StreamDidNotEnd)
 
             if state == StreamState.Streaming:
                 if data is None:
@@ -174,7 +178,7 @@ class MoonDeckAppRunner:
                     # Already streaming this very app
                     break
 
-                pooler.error_on_retry_out = Result.AnotherSteamAppIsStreaming
+                pooler.exception_on_retry_out = RunnerError(Result.AnotherSteamAppIsStreaming)
 
             # All other states are OK
             break
@@ -195,14 +199,14 @@ class MoonDeckAppRunner:
     async def wait_for_stream_to_stop(client: BuddyClient, timeouts: RunnerTimeouts):
         logger.info("Waiting for stream to stop")
         pooler = TimedPooler(retries=timeouts["streamEnd"],
-                             error_on_retry_out=Result.StreamDidNotEnd)
+                             exception_on_retry_out=RunnerError(Result.StreamDidNotEnd))
 
         # This is a special case where user can decide not to wait for the stream end
         if pooler.retries <= 0:
             return None
 
-        async for req in pooler(client.get_stream_state):
-            state = req["state"]
+        async for req, in pooler(client.get_stream_state):
+            state = cast(StreamStateResponse, req)["state"]
 
             if state == StreamState.NotStreaming:
                 break
@@ -210,11 +214,11 @@ class MoonDeckAppRunner:
     @classmethod
     async def end_successful_stream(cls, client: BuddyClient, close_steam: bool, timeouts: RunnerTimeouts):
         logger.info("App closed gracefully, ending stream if it's still open")
-        RunnerError.maybe_raise(await client.end_stream())
+        await client.end_stream()
 
         if close_steam:
             logger.info("Asking to close Steam if it's still open")
-            RunnerError.maybe_raise(await client.close_steam())
+            await client.close_steam()
             
         await cls.wait_for_stream_to_stop(client=client,
                                           timeouts=timeouts)

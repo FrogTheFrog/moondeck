@@ -4,14 +4,14 @@ import contextlib
 from . import constants
 
 from enum import Enum
-from typing import Optional
+from typing import Awaitable
 from .buddyrequests import BuddyRequests, PairingState, PcState, PcStateChange
 from .logger import logger
+from .utils import T
 
 
 class HelloResult(Enum):
     SslVerificationFailed = "SSL certificate could not be verified!"
-    Exception = "An exception was thrown, check the logs!"
     VersionMismatch = "MoonDeck/Buddy needs update!"
     Restarting = "Buddy is restarting the PC!"
     ShuttingDown = "Buddy is shutting down the PC!"
@@ -85,223 +85,180 @@ class GetNonSteamAppDataResult(Enum):
     Failed = "Failed to get non-Steam app data via Buddy!"
 
 
+class BuddyException(Exception):
+    def __init__(self, result: Enum):
+        super().__init__(result.value)
+        self.result = result
+
+
 class BuddyClient(contextlib.AbstractAsyncContextManager):
 
     def __init__(self, address: str, port: int, client_id: str, timeout: float) -> None:
         super().__init__()
-        self.address = address
-        self.port = port
-        self.client_id = client_id
-        self.timeout = timeout
-        self.__requests: Optional[BuddyRequests] = None
+        self.__address = address
+        self.__port = port
+        self.__requests = BuddyRequests(address, port, client_id, timeout)
         self.__hello_was_ok = False
 
+    @property
+    def address(self):
+        return self.__address
+    
+    @property
+    def port(self):
+        return self.__port
+
     async def __aenter__(self):
-        self.__requests = await BuddyRequests(self.address, self.port, self.client_id, self.timeout).__aenter__()
+        await self.__requests.__aenter__()
         return self
 
     async def __aexit__(self, *args):
-        requests = self.__requests
-        self.__requests = None
-        return await requests.__aexit__(*args)
+        return await self.__requests.__aexit__(*args)
 
-    async def _try_request(self, request, fallback_value):
+    async def _try_request(self, request: Awaitable[T], default_error_value: Enum):
         try:
             return await request
+        
         except asyncio.TimeoutError as e:
-            logger.debug(f"Timeout while executing request: {e}")
-            return fallback_value
+            raise BuddyException(default_error_value)
         except aiohttp.ClientSSLError as e:
-            logger.debug(f"Request failed: SSL Verification: {e}")
-            return HelloResult.SslVerificationFailed
+            raise BuddyException(HelloResult.SslVerificationFailed)
         except (aiohttp.ServerConnectionError, aiohttp.ClientConnectorError, aiohttp.ClientResponseError) as e:
-            logger.debug(f"Connection error while executing request: {e}")
-            return fallback_value
-        except aiohttp.ClientError as e:
-            logger.exception(f"Client error while executing request")
-            return HelloResult.Exception
-        except Exception as e:
-            logger.exception("Request failed: unknown exception raised.")
-            return HelloResult.Exception
+            raise BuddyException(default_error_value)
 
     async def say_hello(self, force=False):
         async def request():
             resp = await self.__requests.get_api_version()
             if resp["version"] != constants.BUDDY_API_VERSION:
-                return HelloResult.VersionMismatch
+                raise BuddyException(HelloResult.VersionMismatch)
 
             resp = await self.__requests.get_pairing_state()
             if resp["state"] == PairingState.NotPaired:
-                return HelloResult.NotPaired
+                raise BuddyException(HelloResult.NotPaired)
             elif resp["state"] == PairingState.Pairing:
-                return HelloResult.Pairing
+                raise BuddyException(HelloResult.Pairing)
 
             resp = await self.__requests.get_pc_state()
             if resp["state"] == PcState.Restarting:
-                return HelloResult.Restarting
+                raise BuddyException(HelloResult.Restarting)
             elif resp["state"] == PcState.ShuttingDown:
-                return HelloResult.ShuttingDown
+                raise BuddyException(HelloResult.ShuttingDown)
             elif resp["state"] == PcState.Suspending:
-                return HelloResult.Suspending
+                raise BuddyException(HelloResult.Suspending)
             
-            return None
-
         if self.__hello_was_ok and not force:
             return
 
-        result = await self._try_request(request(), HelloResult.Offline)
-        self.__hello_was_ok = not result
-
-        return result
+        self.__hello_was_ok = False
+        await self._try_request(request(), HelloResult.Offline)
+        self.__hello_was_ok = True
 
     async def start_pairing(self, pin: int):
         async def request():
-            result = await self.say_hello()
-            if not result:
-                return PairingResult.AlreadyPaired
-            elif result != HelloResult.NotPaired:
-                return result
+            try:
+                await self.say_hello()
+                raise BuddyException(PairingResult.AlreadyPaired)
+            except BuddyException as err:
+                if err.result != HelloResult.NotPaired:
+                    raise err
 
             resp = await self.__requests.post_start_pairing(pin)
             if not resp["result"]:
-                return PairingResult.BuddyRefused
-
-            return None
+                raise BuddyException(PairingResult.BuddyRefused)
 
         return await self._try_request(request(), PairingResult.Failed)
 
     async def abort_pairing(self):
         async def request():
-            result = await self.say_hello()
-            if not result:
-                return None
-            elif result != HelloResult.Pairing:
-                return result
+            try:
+                await self.say_hello()
+                return  # Already paired, so let's just asume success
+            except BuddyException as err:
+                if err.result != HelloResult.Pairing:
+                    raise err
 
             resp = await self.__requests.post_abort_pairing()
             if not resp["result"]:
-                return AbortPairingResult.BuddyRefused
-
-            return None
+                raise BuddyException(AbortPairingResult.BuddyRefused)
 
         return await self._try_request(request(), AbortPairingResult.Failed)
 
     async def get_steam_ui_mode(self):
         async def request():
-            result = await self.say_hello()
-            if result:
-                return result
-
+            await self.say_hello()
             return await self.__requests.get_steam_ui_mode()
 
         return await self._try_request(request(), SteamUiModeResult.Failed)
 
     async def launch_steam(self, big_picture_mode: bool):
         async def request():
-            result = await self.say_hello()
-            if result:
-                return result
-
+            await self.say_hello()
             resp = await self.__requests.post_launch_steam(big_picture_mode)
             if not resp["result"]:
-                return LaunchSteamResult.BuddyRefused
-
-            return None
+                raise BuddyException(LaunchSteamResult.BuddyRefused)
 
         return await self._try_request(request(), LaunchSteamResult.Failed)
 
     async def launch_app(self, app_id: str):
         async def request():
-            result = await self.say_hello()
-            if result:
-                return result
-
+            await self.say_hello()
             resp = await self.__requests.post_launch_steam_app(app_id)
             if not resp["result"]:
-                return LaunchSteamAppResult.BuddyRefused
-
-            return None
+                raise BuddyException(LaunchSteamAppResult.BuddyRefused)
 
         return await self._try_request(request(), LaunchSteamAppResult.Failed)
 
     async def close_steam(self):
         async def request():
-            result = await self.say_hello()
-            if result:
-                return result
-
+            await self.say_hello()
             resp = await self.__requests.post_close_steam()
             if not resp["result"]:
-                return CloseSteamResult.BuddyRefused
-
-            return None
+                raise BuddyException(CloseSteamResult.BuddyRefused)
 
         return await self._try_request(request(), CloseSteamResult.Failed)
 
     async def change_pc_state(self, state: PcStateChange):
         async def request():
-            result = await self.say_hello()
-            if result:
-                return result
-
+            await self.say_hello()
             resp = await self.__requests.post_change_pc_state(state)
             if not resp["result"]:
-                return ChangePcStateResult.BuddyRefused
-
-            return None
+                raise BuddyException(ChangePcStateResult.BuddyRefused)
 
         return await self._try_request(request(), ChangePcStateResult.Failed)
 
     async def get_host_info(self):
         async def request():
-            result = await self.say_hello()
-            if result:
-                return result
-
+            await self.say_hello()
             return await self.__requests.get_host_info()
 
         return await self._try_request(request(), GetHostInfoResult.Failed)
     
     async def get_stream_state(self):
         async def request():
-            result = await self.say_hello()
-            if result:
-                return result
-
+            await self.say_hello()
             return await self.__requests.get_stream_state()
 
         return await self._try_request(request(), StreamStateResult.Failed)
     
     async def get_streamed_app_data(self):
         async def request():
-            result = await self.say_hello()
-            if result:
-                return result
-
+            await self.say_hello()
             return await self.__requests.get_streamed_app_data()
 
         return await self._try_request(request(), StreamedAppDataResult.Failed)
 
     async def end_stream(self):
         async def request():
-            result = await self.say_hello()
-            if result:
-                return result
-
+            await self.say_hello()
             resp = await self.__requests.post_end_stream()
             if not resp["result"]:
-                return EndStreamResult.BuddyRefused
-
-            return None
+                raise BuddyException(EndStreamResult.BuddyRefused)
 
         return await self._try_request(request(), EndStreamResult.Failed)
 
     async def get_gamestream_app_names(self):
         async def request():
-            result = await self.say_hello()
-            if result:
-                return result
-
+            await self.say_hello()
             resp = await self.__requests.get_gamestream_app_names()
             return resp["appNames"]
 
@@ -309,10 +266,7 @@ class BuddyClient(contextlib.AbstractAsyncContextManager):
     
     async def get_non_steam_app_data(self, user_id: str):
         async def request():
-            result = await self.say_hello()
-            if result:
-                return result
-
+            await self.say_hello()
             resp = await self.__requests.get_non_steam_app_data(user_id=user_id)
             return resp["data"]
 

@@ -6,7 +6,7 @@ import { call } from "@decky/api";
 import { getCurrentUserSteamId } from "../steam-utils";
 import { logger } from "./logger";
 
-export type BuddyStatus = "VersionMismatch" | "Restarting" | "ShuttingDown" | "Suspending" | "NoClientId" | "NotPaired" | "Pairing" | "SslVerificationFailed" | "Exception" | "Offline" | "Online";
+export type BuddyStatus = "VersionMismatch" | "Restarting" | "ShuttingDown" | "Suspending" | "NotPaired" | "Pairing" | "SslVerificationFailed" | "Exception" | "Offline" | "Online";
 export type GameStreamAppNames = string[] | null;
 export type NonSteamAppData = Array<{ app_id: string; app_name: string }> | null;
 

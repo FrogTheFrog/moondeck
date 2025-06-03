@@ -29,40 +29,45 @@ def get_auto_resolution() -> Optional[MoonDeckResolution]:
     try:
         if value is None:
             return None
-        
+
         value = str(value).split("x")
-        return { "width": int(value[0]), "height": int(value[1]) }
+        return {"width": int(value[0]), "height": int(value[1])}
     except:
         logger.exception("While getting auto resolution")
         return None
+
 
 def get_linked_audio() -> Optional[str]:
     value = os.environ.get("MOONDECK_LINKED_AUDIO")
     try:
         if value is None:
             return None
-        
+
         return str(value)
     except:
         logger.exception("While getting linked audio")
         return None
+
 
 def get_linked_display() -> Optional[str]:
     value = os.environ.get("MOONDECK_LINKED_DISPLAY")
     try:
         if value is None:
             return None
-        
+
         return str(value)
     except:
         logger.exception("While getting linked display")
         return None
 
+
 def get_app_id() -> Optional[str]:
     return os.environ.get("MOONDECK_STEAM_APP_ID")
-    
+
+
 def get_app_name() -> Optional[str]:
     return os.environ.get("MOONDECK_APP_NAME")
+
 
 def get_runner_type() -> Optional[RunnerType]:
     app_type = os.environ.get("MOONDECK_APP_TYPE")
@@ -72,11 +77,12 @@ def get_runner_type() -> Optional[RunnerType]:
             return RunnerType.MoonDeck
         if app_type == 1:
             return RunnerType.MoonlightOnly
-        
+
         return None
     except:
         logger.exception("While getting app type")
         return None
+
 
 def parse_env_settings() -> EnvSettings:
     return {

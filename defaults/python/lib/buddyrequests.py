@@ -102,32 +102,28 @@ class BuddyRequests(contextlib.AbstractAsyncContextManager):
 
     def __init__(self, address: str, port: int, client_id: str, timeout: float) -> None:
         super().__init__()
-        self.base_url = f"https://{address}:{port}"
-        self.client_id = client_id
-        self.timeout = timeout
-        self.__session: Optional[aiohttp.ClientSession] = None
-
-    async def __aenter__(self):
-        timeout = aiohttp.ClientTimeout(total=self.timeout)
-        headers = {"authorization": f"basic {base64.b64encode(self.client_id.encode('utf-8')).decode('utf-8')}"}
-
+        
+        headers = {"authorization": f"basic {base64.b64encode(client_id.encode('utf-8')).decode('utf-8')}"}
         cafile = str(pathlib.Path(__file__).parent.resolve().joinpath("..", "ssl", "moondeck_cert.pem"))
         ssl_context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH, cafile=cafile)
         ssl_context.check_hostname = False
         connector = aiohttp.TCPConnector(ssl=ssl_context)
 
-        self.__session = await aiohttp.ClientSession(
-            timeout=timeout, 
+        self.base_url = f"https://{address}:{port}"
+        self.client_id = client_id
+        self.__session = aiohttp.ClientSession(
+            timeout=aiohttp.ClientTimeout(total=0.1 if timeout <= 0 else timeout), 
             raise_for_status=True, 
             headers=headers,
             connector=connector
-        ).__aenter__()
+        )
+
+    async def __aenter__(self):
+        await self.__session.__aenter__()
         return self
 
     async def __aexit__(self, *args):
-        session = self.__session
-        self.__session = None
-        return await session.__aexit__(*args)
+        return await self.__session.__aexit__(*args)
 
     async def get_api_version(self):
         async with self.__session.get(f"{self.base_url}/apiVersion") as resp:

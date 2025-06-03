@@ -32,10 +32,6 @@ export const StatusIndicatorsView: FC = () => {
           description="An exception has been raised in the backend. Need to check the logs!"
           focusable={true} />
         <Field
-          label={stringifyBuddyStatus("NoClientId")}
-          description="Trying to establish connection without client id. This should never happen! Need to create an issue in this case."
-          focusable={true} />
-        <Field
           label={stringifyBuddyStatus("NotPaired")}
           description="Connection is established, but MoonDeck and Buddy needs to be paired."
           focusable={true} />
