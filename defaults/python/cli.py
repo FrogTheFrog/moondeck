@@ -26,6 +26,8 @@ from lib.cli.cmd.host.add import execute as cmd_host_add
 from lib.cli.cmd.host.remove import execute as cmd_host_remove
 from lib.cli.cmd.host.list import execute as cmd_host_list
 from lib.cli.cmd.host.pair import execute as cmd_host_pair
+from lib.cli.cmd.host.set_default import execute as cmd_host_set_default
+from lib.cli.cmd.host.reset_default import execute as cmd_host_reset_default
 
 import sys
 import asyncio
@@ -173,9 +175,23 @@ async def main():
         pair_parser.add_argument(
             "--buddy-timeout", type=TIMEOUT_TYPE, default=DEFAULT_TIMEOUT, help="time for Buddy to respond to requests")
 
+        # -------- Setup `set-default` command
+        set_default_parser = host_subparsers.add_parser(
+            "set-default", help="set the default host to be used where it can be specified optionally")
+        set_default_parser.add_argument(
+            "host", type=str, help="host id, name or address")
+        
+        # -------- Setup `reset-default` command
+        host_subparsers.add_parser(
+            "reset-default", help="reset the default host to None")
+
         # ---- Parse all of the commands
-        parser_args, _ = parser.parse_known_args()  # Will exit if help is specified
+        parser_args, unrecognized_args = parser.parse_known_args()  # Will exit if help is specified
         parser_args = vars(parser_args)
+
+        if unrecognized_args:
+            parser.error(f"unrecognized arguments {unrecognized_args}")
+            return 1
 
         # ---- Delegate the commands
         if parser_args["group"] is None or parser_args.get("command", None) is None:
@@ -190,7 +206,9 @@ async def main():
                 "add": cmd_host_add,
                 "remove": cmd_host_remove,
                 "list": cmd_host_list,
-                "pair": cmd_host_pair
+                "pair": cmd_host_pair,
+                "set-default": cmd_host_set_default,
+                "reset-default": cmd_host_reset_default
             }
         }
 
