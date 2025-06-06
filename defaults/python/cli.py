@@ -197,8 +197,8 @@ async def main():
         parser_args = vars(parser_args)
 
         if unrecognized_args:
-            parser.error(f"unrecognized arguments {unrecognized_args}")
-            return 1
+            parser.exit(2, gettext(f"{parser.prog}: error: unrecognized arguments {unrecognized_args}"))
+            return 2
 
         # ---- Delegate the commands
         cmds = {
