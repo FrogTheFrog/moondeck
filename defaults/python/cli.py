@@ -14,6 +14,9 @@ def add_plugin_to_path():
 add_plugin_to_path()
 
 from pathlib import Path
+from argparse import ArgumentParser, ArgumentTypeError, HelpFormatter, SUPPRESS, OPTIONAL, ZERO_OR_MORE
+from gettext import gettext
+from random import randrange
 
 from lib.logger import logger, set_logger_settings
 from lib.cli.settings import CliSettingsManager
@@ -22,22 +25,57 @@ from lib.cli.cmd.host.scan import execute as cmd_host_scan
 from lib.cli.cmd.host.add import execute as cmd_host_add
 from lib.cli.cmd.host.remove import execute as cmd_host_remove
 from lib.cli.cmd.host.list import execute as cmd_host_list
+from lib.cli.cmd.host.pair import execute as cmd_host_pair
 
-import argparse
 import sys
 import asyncio
 # autopep8: on
 
 
-class ArgumentParserWithRedirect(argparse.ArgumentParser):
+def arg_type(value_type, min_value=None, max_value=None):
+    def checker(arg: str):
+        try:
+            f = value_type(arg)
+        except ValueError:
+            raise ArgumentTypeError(f"must be a valid {value_type}")
+        if (min_value is not None and f < min_value) or (max_value is not None and f > max_value):
+            raise ArgumentTypeError(
+                f"must be within [{min_value}, {max_value}]")
+        return f
+
+    return checker
+
+
+TIMEOUT_TYPE = arg_type(float, min_value=1)
+PORT_TYPE = arg_type(int, min_value=0, max_value=65535)
+PIN_TYPE = arg_type(int, min_value=1000, max_value=9999)
+
+DEFAULT_TIMEOUT = 5.0
+
+
+class CustomArgumentDefaultsHelpFormatter(HelpFormatter):
+    def _get_help_string(self, action):
+        help = action.help
+        if help is None:
+            help = ""
+
+        if "default:" not in help:
+            if action.default is not SUPPRESS:
+                defaulting_nargs = [OPTIONAL, ZERO_OR_MORE]
+                if action.option_strings or action.nargs in defaulting_nargs:
+                    help += gettext(" (default: %(default)s)")
+        return help
+
+
+class ArgumentParserWithRedirect(ArgumentParser):
     def __init__(self, *args, **kwargs):
         kwargs.setdefault("formatter_class",
-                          argparse.ArgumentDefaultsHelpFormatter)
+                          CustomArgumentDefaultsHelpFormatter)
         super().__init__(*args, **kwargs)
 
     def _print_message(self, message, file=None):
         if message:
-            message = message.rstrip('\n')
+            message = message.rstrip("\n")
             if file == sys.stderr:
                 logger.error(message)
             else:
@@ -99,9 +137,9 @@ async def main():
         add_parser.add_argument(
             "address", type=str, help="IP address or valid domain")
         add_parser.add_argument(
-            "port", type=int, help="the HTTP port of the server")
+            "port", type=PORT_TYPE, help="the HTTP port of the server")
         add_parser.add_argument(
-            "--timeout", type=float, default=5.0, help="connection timeout in seconds")
+            "--timeout", type=TIMEOUT_TYPE, default=5.0, help="connection timeout in seconds")
         add_parser.add_argument(
             "--dry", action="store_true", help="do not save any changes")
         add_parser.add_argument(
@@ -111,17 +149,29 @@ async def main():
         remove_parser = host_subparsers.add_parser(
             "remove", help="remove host(-s) from config")
         remove_parser.add_argument(
-            "pattern", type=str, help="host id, name or address")
+            "host", type=str, help="host id, name or address")
         remove_parser.add_argument(
             "--dry", action="store_true", help="do not save any changes")
         remove_parser.add_argument(
             "--json", action="store_true", help="print the output in JSON format")
-        
+
         # -------- Setup `list` command
         list_parser = host_subparsers.add_parser(
             "list", help="remove host(-s) from config")
         list_parser.add_argument(
             "--json", action="store_true", help="print the output in JSON format")
+
+        # -------- Setup `pair` command
+        pair_parser = host_subparsers.add_parser(
+            "pair", help="pair MoonDeck CLI with Buddy")
+        pair_parser.add_argument(
+            "host", type=str, help="host id, name or address")
+        pair_parser.add_argument(
+            "--pin", type=PIN_TYPE, default=randrange(1000, 9999), help="4-digit pin to use for pairing (default: random 4-digit pin)")
+        pair_parser.add_argument(
+            "--buddy-port", type=PORT_TYPE, default=59999, help="port to be used for Buddy")
+        pair_parser.add_argument(
+            "--buddy-timeout", type=TIMEOUT_TYPE, default=DEFAULT_TIMEOUT, help="time for Buddy to respond to requests")
 
         # ---- Parse all of the commands
         parser_args, _ = parser.parse_known_args()  # Will exit if help is specified
@@ -139,7 +189,8 @@ async def main():
                 "scan": cmd_host_scan,
                 "add": cmd_host_add,
                 "remove": cmd_host_remove,
-                "list": cmd_host_list
+                "list": cmd_host_list,
+                "pair": cmd_host_pair
             }
         }
 
