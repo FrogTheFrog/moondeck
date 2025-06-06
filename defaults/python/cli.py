@@ -27,7 +27,7 @@ from lib.cli.cmd.host.remove import execute as cmd_host_remove
 from lib.cli.cmd.host.list import execute as cmd_host_list
 from lib.cli.cmd.host.pair import execute as cmd_host_pair
 from lib.cli.cmd.host.set_default import execute as cmd_host_set_default
-from lib.cli.cmd.host.reset_default import execute as cmd_host_reset_default
+from lib.cli.cmd.host.clear_default import execute as cmd_host_clear_default
 
 import sys
 import asyncio
@@ -183,7 +183,7 @@ async def main():
         
         # -------- Setup `reset-default` command
         host_subparsers.add_parser(
-            "reset-default", help="reset the default host to None")
+            "clear-default", help="clear the default host")
 
         # ---- Parse all of the commands
         parser_args, unrecognized_args = parser.parse_known_args()  # Will exit if help is specified
@@ -208,7 +208,7 @@ async def main():
                 "list": cmd_host_list,
                 "pair": cmd_host_pair,
                 "set-default": cmd_host_set_default,
-                "reset-default": cmd_host_reset_default
+                "clear-default": cmd_host_clear_default
             }
         }
 
