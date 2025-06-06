@@ -17,6 +17,7 @@ from pathlib import Path
 from argparse import ArgumentParser, ArgumentTypeError, HelpFormatter, SUPPRESS, OPTIONAL, ZERO_OR_MORE
 from gettext import gettext
 from random import randrange
+from typing import Any, Awaitable, Callable, cast
 
 from lib.logger import logger, set_logger_settings
 from lib.cli.settings import CliSettingsManager
@@ -26,8 +27,8 @@ from lib.cli.cmd.host.add import execute as cmd_host_add
 from lib.cli.cmd.host.remove import execute as cmd_host_remove
 from lib.cli.cmd.host.list import execute as cmd_host_list
 from lib.cli.cmd.host.pair import execute as cmd_host_pair
-from lib.cli.cmd.host.set_default import execute as cmd_host_set_default
-from lib.cli.cmd.host.clear_default import execute as cmd_host_clear_default
+from lib.cli.cmd.host.default.set import execute as cmd_host_default_set
+from lib.cli.cmd.host.default.clear import execute as cmd_host_default_clear
 
 import sys
 import asyncio
@@ -111,14 +112,14 @@ async def main():
                             default=Path("config.json"), help="path to the config file")
 
         # ---- Setup subparser groups
-        group_subparsers = parser.add_subparsers(
-            dest="group", help="group of specialized commands")  # TODO: better wording
+        initial_subparsers = parser.add_subparsers(
+            dest="cmd1", help="command to execute")
 
         # ---- Setup host group
-        host_parser = group_subparsers.add_parser(
+        host_parser = initial_subparsers.add_parser(
             "host", help="host related commands")
         host_subparsers = host_parser.add_subparsers(
-            dest="command", help="command to execute")
+            dest="cmd2", help="command to execute")
 
         # -------- Setup `scan` command
         scan_parser = host_subparsers.add_parser(
@@ -175,15 +176,21 @@ async def main():
         pair_parser.add_argument(
             "--buddy-timeout", type=TIMEOUT_TYPE, default=DEFAULT_TIMEOUT, help="time for Buddy to respond to requests")
 
-        # -------- Setup `set-default` command
-        set_default_parser = host_subparsers.add_parser(
-            "set-default", help="set the default host to be used where it can be specified optionally")
+        # ------------ Setup default group
+        default_parser = host_subparsers.add_parser(
+            "default", help="set or clear the default host (to be used where it can be specified optionally)")
+        default_subparsers = default_parser.add_subparsers(
+            dest="cmd3", help="command to execute")
+        
+        # ---------------- Setup `set` command
+        set_default_parser = default_subparsers.add_parser(
+            "set", help="set the default host")
         set_default_parser.add_argument(
             "host", type=str, help="host id, name or address")
         
-        # -------- Setup `reset-default` command
-        host_subparsers.add_parser(
-            "clear-default", help="clear the default host")
+        # ---------------- Setup `clear` command
+        default_subparsers.add_parser(
+            "clear", help="clear the default host")
 
         # ---- Parse all of the commands
         parser_args, unrecognized_args = parser.parse_known_args()  # Will exit if help is specified
@@ -194,12 +201,6 @@ async def main():
             return 1
 
         # ---- Delegate the commands
-        if parser_args["group"] is None or parser_args.get("command", None) is None:
-            parser = ArgumentParserWithRedirect(
-                parents=[parser], add_help=False)
-            # Will exit since help is specified
-            parser.parse_known_args(sys.argv[1:] + ["--help"])
-
         cmds = {
             "host": {
                 "scan": cmd_host_scan,
@@ -207,18 +208,41 @@ async def main():
                 "remove": cmd_host_remove,
                 "list": cmd_host_list,
                 "pair": cmd_host_pair,
-                "set-default": cmd_host_set_default,
-                "clear-default": cmd_host_clear_default
+                "default": {
+                    "set": cmd_host_default_set,
+                    "clear": cmd_host_default_clear
+                }
             }
         }
 
-        cmd = cmds.get(parser_args["group"], {}).get(
-            parser_args["command"], None)
-        if cmd is not None:
-            sys.exit(await cmd(settings_manager=CliSettingsManager(parser_args["config_file"]), **parser_args))
+        cmd_levels = []
+        cmd_dict = cmds
+        while True:
+            next_level = len(cmd_levels) + 1
+            level_cmd = parser_args.get(f"cmd{next_level}", None)
+            if level_cmd is None:
+                parser = ArgumentParserWithRedirect(
+                    parents=[parser], add_help=False)
+                # Will exit since help is specified (will still return in case it changes in the future)
+                parser.parse_known_args(sys.argv[1:] + ["--help"])
+                return 2
+            
+            cmd_levels.append(level_cmd)
+            next_dict_value = cmd_dict.get(level_cmd, None)
+
+            if isinstance(next_dict_value, dict):
+                cmd_dict = next_dict_value
+                continue
+
+            if callable(next_dict_value):
+                cmd = cast(Callable[..., Awaitable[int]], next_dict_value)
+                sys.exit(await cmd(settings_manager=CliSettingsManager(parser_args["config_file"]), **parser_args))
+
+            # Unhandled cmd
+            break
 
         raise Exception(
-            f"Unhandled parser branch {parser_args["group"]}->{parser_args["command"]}")
+            f"Unhandled parser branch: {"->".join(cmd_levels)}")
 
     except asyncio.CancelledError:
         logger.info("Interrupted...")
