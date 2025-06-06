@@ -16,13 +16,13 @@ class HelloResult(Enum):
     Restarting = "Buddy is restarting the PC!"
     ShuttingDown = "Buddy is shutting down the PC!"
     Suspending = "Buddy is suspending the PC!"
-    Pairing = "MoonDeck/Buddy is pairing!"
+    Pairing = "MoonDeck/Buddy is already pairing!"
     NotPaired = "MoonDeck/Buddy needs pairing!"
     Offline = "Buddy is offline!"
 
 
 class PairingResult(Enum):
-    AlreadyPaired = "Deck is already paired with Buddy!"
+    AlreadyPaired = "MoonDeck is already paired with Buddy!"
     BuddyRefused = "Buddy refused to start pairing. Check the logs on host!"
     Failed = "Failed to start pairing with Buddy!"
 
@@ -107,6 +107,10 @@ class BuddyClient(contextlib.AbstractAsyncContextManager):
     @property
     def port(self):
         return self.__port
+    
+    @property
+    def hello_was_ok(self):
+        return self.__hello_was_ok
 
     async def __aenter__(self):
         await self.__requests.__aenter__()

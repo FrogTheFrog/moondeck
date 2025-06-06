@@ -6,6 +6,7 @@ from typing import cast
 from lib.cli.settings import CliSettingsManager, CliSettings
 from lib.gamestreaminfo import GameStreamHost
 from lib.logger import logger
+from lib.buddyclient import BuddyClient
 
 
 def cmd_entry(f):
@@ -70,6 +71,7 @@ def settings_watcher(dry: bool | None = None):
             return result
 
         return async_wrapper
+
     return decorator
 
 
@@ -82,21 +84,66 @@ def host_pattern_matcher(match_one: bool):
         @functools.wraps(f)
         async def async_wrapper(*args, **kwargs):
             settings: CliSettings = cast(CliSettings, kwargs["settings"])
-            pattern = cast(str, kwargs["pattern"])
+            pattern = cast(str, kwargs["host"])
 
             host_ids = [k for k, v in settings["hosts"].items()
                         if k == pattern or v["address"] == pattern or v["hostName"] == pattern]
             
             if match_one:
-                if len(host_ids) > 0:
+                if len(host_ids) > 1:
                     logger.error(f"More than 1 host has matched {pattern} pattern!")
                     return 1
                 
-                return await f(*args, host_id=None if len(host_ids) == 0 else host_ids[0], **kwargs)
+                if len(host_ids) == 0:
+                    logger.error(f"No host found that matches {pattern} pattern!")
+                    return 1
+                
+                return await f(*args, host_id=host_ids[0], **kwargs)
 
             return await f(*args, host_ids=host_ids, **kwargs)
 
         return async_wrapper
+
+    return decorator
+
+
+def buddy_session(auto_sync_mac: bool = True):
+    """
+    Create Buddy session and automatically sync some data.
+    Must be paired with host_pattern_matcher.
+    """
+    def decorator(f):
+        @functools.wraps(f)
+        async def async_wrapper(*args, **kwargs):
+            settings: CliSettings = cast(CliSettings, kwargs["settings"])
+            host_id = cast(str, kwargs["host_id"])
+            buddy_timeout = cast(int, kwargs["buddy_timeout"])
+            buddy_port: int | None = kwargs.get("buddy_port", settings["hosts"][host_id]["buddyPort"])
+
+            if buddy_port is None:
+                logger.error("Buddy port is not specified or not set in config!")
+                return 1
+
+            buddy_client = BuddyClient(
+                address=settings["hosts"][host_id]["address"],
+                port=buddy_port,
+                client_id=settings["clientId"],
+                timeout=buddy_timeout)
+
+            async with buddy_client as client:
+                result = await f(*args, buddy_client=client, **kwargs)
+
+                if auto_sync_mac and client.hello_was_ok:
+                    try:
+                        resp = await client.get_host_info()
+                        settings["hosts"][host_id]["mac"] = resp["mac"]
+                    except Exception as err:
+                        logger.debug(f"Exception while trying to update MAC from Buddy: {err}")                    
+
+                return result
+
+        return async_wrapper
+
     return decorator
 
 
