@@ -6,7 +6,7 @@ from lib.logger import logger
 from lib.buddyclient import BuddyClient, BuddyException, HelloResult, PairingResult
 
 
-@settings_watcher(dry=True)
+@settings_watcher()
 @host_pattern_matcher(match_one=True)
 @buddy_session()
 @cmd_entry
