@@ -17,7 +17,7 @@ from pathlib import Path
 from argparse import ArgumentParser, ArgumentTypeError, HelpFormatter, SUPPRESS, OPTIONAL, ZERO_OR_MORE
 from gettext import gettext
 from random import randrange
-from typing import Any, Awaitable, Callable, cast
+from typing import Awaitable, Callable, cast
 
 from lib.logger import logger, set_logger_settings
 from lib.buddyclient import BuddyException
@@ -33,6 +33,7 @@ from lib.cli.cmd.host.default.clear import execute as cmd_host_default_clear
 from lib.cli.cmd.host.wake import execute as cmd_host_wake
 from lib.cli.cmd.host.ping import execute as cmd_host_ping
 from lib.cli.cmd.host.shutdown import execute as cmd_host_shutdown
+from lib.cli.cmd.host.restart import execute as cmd_host_restart
 
 import sys
 import asyncio
@@ -221,6 +222,14 @@ async def main():
             "--host", type=str, help="host id, name or address (default: the \"default\" host)")
         shutdown_parser.add_argument(
             "--buddy-timeout", type=TIMEOUT_TYPE, default=1.0, help="time for Buddy to respond to requests (default: %(default)s second(s))")
+        
+        # -------- Setup `shutdown` command
+        restart_parser = host_subparsers.add_parser(
+            "restart", help="restart the paired host")
+        restart_parser.add_argument(
+            "--host", type=str, help="host id, name or address (default: the \"default\" host)")
+        restart_parser.add_argument(
+            "--buddy-timeout", type=TIMEOUT_TYPE, default=1.0, help="time for Buddy to respond to requests (default: %(default)s second(s))")
 
         # ---- Parse all of the commands
         parser_args, unrecognized_args = parser.parse_known_args()  # Will exit if help is specified
@@ -244,7 +253,8 @@ async def main():
                 },
                 "wake": cmd_host_wake,
                 "ping": cmd_host_ping,
-                "shutdown": cmd_host_shutdown
+                "shutdown": cmd_host_shutdown,
+                "restart": cmd_host_restart
             }
         }
 
