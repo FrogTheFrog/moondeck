@@ -30,6 +30,7 @@ from lib.cli.cmd.host.pair import execute as cmd_host_pair
 from lib.cli.cmd.host.default.set import execute as cmd_host_default_set
 from lib.cli.cmd.host.default.clear import execute as cmd_host_default_clear
 from lib.cli.cmd.host.wake import execute as cmd_host_wake
+from lib.cli.cmd.host.ping import execute as cmd_host_ping
 
 import sys
 import asyncio
@@ -53,8 +54,6 @@ def arg_type(value_type, min_value=None, max_value=None):
 TIMEOUT_TYPE = arg_type(float, min_value=1)
 PORT_TYPE = arg_type(int, min_value=0, max_value=65535)
 PIN_TYPE = arg_type(int, min_value=1000, max_value=9999)
-
-DEFAULT_TIMEOUT = 5.0
 
 
 class CustomArgumentDefaultsHelpFormatter(HelpFormatter):
@@ -175,7 +174,7 @@ async def main():
         pair_parser.add_argument(
             "--buddy-port", type=PORT_TYPE, default=59999, help="port to be used for Buddy")
         pair_parser.add_argument(
-            "--buddy-timeout", type=TIMEOUT_TYPE, default=DEFAULT_TIMEOUT, help="time for Buddy to respond to requests")
+            "--buddy-timeout", type=TIMEOUT_TYPE, default=5.0, help="time for Buddy to respond to requests")
 
         # ------------ Setup default group
         default_parser = host_subparsers.add_parser(
@@ -194,10 +193,22 @@ async def main():
             "clear", help="clear the default host")
         
         # -------- Setup `wake` command
-        pair_parser = host_subparsers.add_parser(
+        wake_parser = host_subparsers.add_parser(
             "wake", help="send WOL to the host")
-        pair_parser.add_argument(
+        wake_parser.add_argument(
             "--host", type=str, help="host id, name or address (default: the \"default\" host)")
+        
+        # -------- Setup `ping` command
+        ping_parser = host_subparsers.add_parser(
+            "ping", help="ping both Buddy and the GameStream server")
+        ping_parser.add_argument(
+            "--host", type=str, help="host id, name or address (default: the \"default\" host)")
+        ping_parser.add_argument(
+            "--buddy-timeout", type=TIMEOUT_TYPE, default=1.0, help="time for Buddy to respond to requests")
+        ping_parser.add_argument(
+            "--server-timeout", type=TIMEOUT_TYPE, default=1.0, help="time for GameStream server to respond to requests")
+        ping_parser.add_argument(
+            "--timeout", type=TIMEOUT_TYPE, default=60.0, help="how long to ping until both are \"online\"")
 
         # ---- Parse all of the commands
         parser_args, unrecognized_args = parser.parse_known_args()  # Will exit if help is specified
@@ -219,7 +230,8 @@ async def main():
                     "set": cmd_host_default_set,
                     "clear": cmd_host_default_clear
                 },
-                "wake": cmd_host_wake
+                "wake": cmd_host_wake,
+                "ping": cmd_host_ping
             }
         }
 

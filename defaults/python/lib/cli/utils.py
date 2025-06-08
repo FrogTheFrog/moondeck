@@ -1,12 +1,13 @@
+import asyncio
 import inspect
 import functools
 import copy
 
 from typing import cast
 from lib.cli.settings import CliSettingsManager, CliSettings
-from lib.gamestreaminfo import GameStreamHost
+from lib.gamestreaminfo import GameStreamHost, get_server_info
 from lib.logger import logger
-from lib.buddyclient import BuddyClient
+from lib.buddyclient import BuddyClient, BuddyException, HelloResult
 
 
 def cmd_entry(f):
@@ -121,7 +122,7 @@ def buddy_session(auto_sync_mac: bool = True):
         async def async_wrapper(*args, **kwargs):
             settings: CliSettings = cast(CliSettings, kwargs["settings"])
             host_id = cast(str, kwargs["host_id"])
-            buddy_timeout = cast(int, kwargs["buddy_timeout"])
+            buddy_timeout = cast(float, kwargs["buddy_timeout"])
             buddy_port: int | None = kwargs.get("buddy_port", settings["hosts"][host_id]["buddyPort"])
 
             if buddy_port is None:
@@ -149,6 +150,66 @@ def buddy_session(auto_sync_mac: bool = True):
         return async_wrapper
 
     return decorator
+
+
+async def check_connectivity(client: BuddyClient, info_port: int, host_id: str, server_timeout: float, timeout: float):
+    loop = asyncio.get_running_loop()
+    now = loop.time()
+    timeout_at = now + (0 if timeout <= 0 else timeout)
+
+    timeout_str_length = 0
+    def timeout_str(time):
+        timeout_in = timeout_at - time
+        timeout_in = timeout_in if timeout_in > 0 else 0
+        return f"{timeout_in:.2f}".rjust(timeout_str_length)
+    
+    timeout_str_length = len(timeout_str(time=now))
+
+    tasks: list[asyncio.Task] = []
+    buddy_status = False
+    server_status = False
+
+    def print_status():
+        def status_str(status):
+            return " online" if status else "offline"
+        
+        logger.info(f"  Buddy: {status_str(buddy_status)}, Server: {status_str(server_status)}, Timeout in: {timeout_str(time=loop.time())} second(-s)")
+
+    try:
+        logger.info(f"Checking connection to Buddy and GameStream server (timeout in: {timeout_str(time=now)}):")
+        async with asyncio.timeout_at(timeout_at):
+            while True:
+                async def get_buddy_status():
+                    try:
+                        await client.say_hello(force=True)
+                        buddy_status = True
+                    except BuddyException as err:
+                        buddy_status = False
+                        if err.result != HelloResult.Offline:
+                            raise err
+                        
+                    return buddy_status
+                
+                async def get_server_status():
+                    server_info = await get_server_info(address=client.address, 
+                                                    port=info_port, 
+                                                    timeout=server_timeout)
+                    return server_info is not None and server_info["uniqueId"] == host_id
+
+                tasks = [asyncio.create_task(req()) for req in [get_buddy_status, get_server_status]]
+                buddy_status, server_status = await asyncio.gather(*tasks)
+
+                print_status()
+                if buddy_status and server_status:
+                    return True
+    
+    except asyncio.TimeoutError:
+        print_status()
+        return False
+    
+    finally:
+        for task in tasks:
+            task.cancel()
 
 
 def log_gamestream_host(host: GameStreamHost):
