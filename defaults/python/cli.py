@@ -265,6 +265,22 @@ async def main():
                 "shutdown": cmd_host_shutdown,
                 "restart": cmd_host_restart,
                 "suspend": cmd_host_suspend
+            },
+            "app": {
+                "state": None,
+                "list": {
+                    "non-steam": None
+                },
+                "launch": None
+            },
+            "stream": {
+                "state": None,
+                "end": None
+            },
+            "steam": {
+                "state": None,
+                "launch": None,
+                "close": None
             }
         }
 
