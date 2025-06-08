@@ -26,7 +26,7 @@ class GameStreamListener(ServiceListener):
         self.__cancel_condition = asyncio.Condition()
 
     def add_service(self, zc: Zeroconf, type_: str, name: str):
-        task = asyncio.ensure_future(self.parse_info(zc, AsyncServiceInfo(type_, name)))
+        task = asyncio.create_task(self.parse_info(zc, AsyncServiceInfo(type_, name)))
         self.__tasks.add(task)
         task.add_done_callback(self.__tasks.discard)
 
@@ -116,7 +116,11 @@ async def get_server_info(address: str, port: int, timeout: float):
                     "uniqueId": unique_id
                 })
 
-    except (aiohttp.ClientError, asyncio.TimeoutError) as e:
+    except asyncio.TimeoutError:
+        logger.debug("Timeout")
+        return None
+
+    except aiohttp.ClientError as e:
         logger.debug(f"Error while executing get_server_info request: {e}")
         return None
 

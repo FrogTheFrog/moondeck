@@ -1,4 +1,4 @@
-from typing import Literal, Optional, TypedDict
+from typing import Literal, Optional, TypedDict, cast
 
 from .envparser import EnvSettings, parse_env_settings, RunnerType
 from ..runnerresult import RunnerError, Result
@@ -12,6 +12,7 @@ class MoonDeckAppRunnerSettings(TypedDict):
     resolution: ResolutionDimensions
     pass_to_moonlight: bool
     host_app: str
+    host_id: str
     hostname: str
     mac: str
     address: str
@@ -32,6 +33,7 @@ class MoonlightOnlyRunnerSettings(TypedDict):
     resolution: ResolutionDimensions
     pass_to_moonlight: bool
     host_app: str
+    host_id: str
     hostname: str
     mac: str
     address: str
@@ -150,6 +152,7 @@ async def parse_settings() -> MoonDeckAppRunnerSettings | MoonlightOnlyRunnerSet
             "resolution": parse_resolution_settings(host_settings=host_settings, env_settings=env_settings),
             "pass_to_moonlight": pass_to_moonlight,
             "host_app": parse_host_app_name(host_settings=host_settings),
+            "host_id": cast(str, host_id),
             "hostname": host_settings["hostName"],
             "mac": host_settings["mac"],
             "address": host_settings["address"],
@@ -173,6 +176,7 @@ async def parse_settings() -> MoonDeckAppRunnerSettings | MoonlightOnlyRunnerSet
             "resolution": parse_resolution_settings(host_settings=host_settings, env_settings=env_settings),
             "pass_to_moonlight": pass_to_moonlight,
             "host_app": env_settings["app_name"],
+            "host_id": cast(str, host_id),
             "hostname": host_settings["hostName"],
             "mac": host_settings["mac"],
             "address": host_settings["address"],

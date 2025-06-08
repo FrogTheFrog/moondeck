@@ -133,7 +133,7 @@ class MoonDeckAppLauncher:
 
 class MoonDeckAppRunner:
     @staticmethod
-    async def check_connectivity(client: BuddyClient, mac: str, host_port: int, timeouts: RunnerTimeouts):
+    async def check_connectivity(client: BuddyClient, mac: str, host_id: str, host_port: int, timeouts: RunnerTimeouts):
         logger.info("Checking connection to Buddy and GameStream server")
 
         async with WolSplashScreen(client.address, mac, timeouts["wakeOnLan"]) as splash:
@@ -146,9 +146,10 @@ class MoonDeckAppRunner:
                     if err.result != HelloResult.Offline:
                         raise RunnerError(err.result)
 
-                server_status = await get_server_info(address=client.address, 
-                                                      port=host_port, 
-                                                      timeout=timeouts["servicePing"]) is not None
+                server_info = await get_server_info(address=client.address, 
+                                                    port=host_port, 
+                                                    timeout=timeouts["servicePing"])
+                server_status = server_info is not None and server_info["uniqueId"] == host_id
                 
                 if not splash.update(buddy_status, server_status):
                     if not buddy_status:
@@ -240,6 +241,7 @@ class MoonDeckAppRunner:
         async with buddy_client as client, moonlight_proxy as proxy:
             await cls.check_connectivity(client=client, 
                                          mac=settings["mac"],
+                                         host_id=settings["host_id"],
                                          host_port=settings["host_port"],
                                          timeouts=settings["timeouts"])
             await cls.wait_for_initial_conditions(client=client,

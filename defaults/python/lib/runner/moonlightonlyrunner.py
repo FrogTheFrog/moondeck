@@ -9,14 +9,15 @@ from ..moonlightproxy import MoonlightProxy
 
 class MoonlightOnlyRunner:
     @staticmethod
-    async def check_connectivity(address: str, mac: str, host_port: int, timeouts: RunnerTimeouts):
+    async def check_connectivity(address: str, mac: str, host_id: str, host_port: int, timeouts: RunnerTimeouts):
         logger.info("Checking connection to GameStream server")
 
         async with WolSplashScreen(address, mac, timeouts["wakeOnLan"]) as splash:
             while True:
-                server_status = await get_server_info(address=address, 
-                                                      port=host_port, 
-                                                      timeout=timeouts["servicePing"]) is not None
+                server_info = await get_server_info(address=address, 
+                                                    port=host_port, 
+                                                    timeout=timeouts["servicePing"])
+                server_status = server_info is not None and server_info["uniqueId"] == host_id
                 
                 if not splash.update(None, server_status):
                     if not server_status:
@@ -47,6 +48,7 @@ class MoonlightOnlyRunner:
         async with moonlight_proxy as proxy:
             await cls.check_connectivity(address=settings["address"], 
                                          mac=settings["mac"],
+                                         host_id=settings["host_id"],
                                          host_port=settings["host_port"],
                                          timeouts=settings["timeouts"])
             await cls.start_moonlight(proxy=proxy)
