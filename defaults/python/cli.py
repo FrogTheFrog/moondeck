@@ -131,7 +131,7 @@ async def main():
         
         # -------- Setup `status` command
         status_parser = app_subparsers.add_parser(
-            "status", help="print the current status of an app launched by MoonDeck")
+            "status", help="print the current status of an app monitored by MoonDeck")
         status_parser.add_argument(
             "--host", type=str, help="host id, name or address (default: the \"default\" host)")
         status_parser.add_argument(

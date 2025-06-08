@@ -33,9 +33,9 @@ async def execute(buddy_client: BuddyClient, json: bool):
         logger.info(jlib.dumps(data, indent=2))
     else:
         if data["status"] is None:
-            logger.info("There is currently no app that has been launched by MoonDeck.")
+            logger.info("There is currently no app that is being monitored by MoonDeck.")
         else:
-            logger.info("App launched by MoonDeck:")
+            logger.info("App monitored by MoonDeck:")
             logger.info(F"  App ID    : {data["status"]["appId"]}")
             logger.info(F"  App State : {data["status"]["appState"]}")
 
