@@ -78,7 +78,7 @@ def settings_watcher(dry: bool | None = None):
 
 def host_pattern_matcher(match_one: bool):
     """
-    Will search for host(-s) matching the pattern and add the results to kwargs.
+    Will search for host(s) matching the pattern and add the results to kwargs.
     Must be paired with settings_watcher.
     """
     def decorator(f):
@@ -173,7 +173,7 @@ async def check_connectivity(client: BuddyClient, info_port: int, host_id: str, 
         def status_str(status):
             return " online" if status else "offline"
         
-        logger.info(f"  Buddy: {status_str(buddy_status)}, Server: {status_str(server_status)}, Timeout in: {timeout_str(time=loop.time())} second(-s)")
+        logger.info(f"  Buddy: {status_str(buddy_status)}, Server: {status_str(server_status)}, Timeout in: {timeout_str(time=loop.time())} second(s)")
 
     try:
         logger.info(f"Checking connection to Buddy and GameStream server (timeout in: {timeout_str(time=now)}):")

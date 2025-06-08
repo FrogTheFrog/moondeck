@@ -125,7 +125,7 @@ async def main():
         scan_parser = host_subparsers.add_parser(
             "scan", help="scan for available hosts")
         scan_parser.add_argument(
-            "--timeout", type=float, default=5.0, help="scan timeout in seconds")
+            "--timeout", type=float, default=5.0, help="scan timeout (default: %(default)s second(s))")
         scan_parser.add_argument(
             "--dry", action="store_true", help="do not save any changes")
         scan_parser.add_argument(
@@ -142,7 +142,7 @@ async def main():
         add_parser.add_argument(
             "port", type=PORT_TYPE, help="the HTTP port of the server")
         add_parser.add_argument(
-            "--timeout", type=TIMEOUT_TYPE, default=5.0, help="connection timeout in seconds")
+            "--timeout", type=TIMEOUT_TYPE, default=5.0, help="connection timeout (default: %(default)s second(s))")
         add_parser.add_argument(
             "--dry", action="store_true", help="do not save any changes")
         add_parser.add_argument(
@@ -150,7 +150,7 @@ async def main():
 
         # -------- Setup `remove` command
         remove_parser = host_subparsers.add_parser(
-            "remove", help="remove host(-s) from config")
+            "remove", help="remove host(s) from config")
         remove_parser.add_argument(
             "host", type=str, help="host id, name or address")
         remove_parser.add_argument(
@@ -160,7 +160,7 @@ async def main():
 
         # -------- Setup `list` command
         list_parser = host_subparsers.add_parser(
-            "list", help="remove host(-s) from config")
+            "list", help="remove host(s) from config")
         list_parser.add_argument(
             "--json", action="store_true", help="print the output in JSON format")
 
@@ -174,7 +174,7 @@ async def main():
         pair_parser.add_argument(
             "--buddy-port", type=PORT_TYPE, default=59999, help="port to be used for Buddy")
         pair_parser.add_argument(
-            "--buddy-timeout", type=TIMEOUT_TYPE, default=5.0, help="time for Buddy to respond to requests")
+            "--buddy-timeout", type=TIMEOUT_TYPE, default=5.0, help="time for Buddy to respond to requests (default: %(default)s second(s))")
 
         # ------------ Setup default group
         default_parser = host_subparsers.add_parser(
@@ -204,11 +204,11 @@ async def main():
         ping_parser.add_argument(
             "--host", type=str, help="host id, name or address (default: the \"default\" host)")
         ping_parser.add_argument(
-            "--buddy-timeout", type=TIMEOUT_TYPE, default=1.0, help="time for Buddy to respond to requests")
+            "--buddy-timeout", type=TIMEOUT_TYPE, default=1.0, help="time for Buddy to respond to requests (default: %(default)s second(s))")
         ping_parser.add_argument(
-            "--server-timeout", type=TIMEOUT_TYPE, default=1.0, help="time for GameStream server to respond to requests")
+            "--server-timeout", type=TIMEOUT_TYPE, default=1.0, help="time for GameStream server to respond to requests (default: %(default)s second(s))")
         ping_parser.add_argument(
-            "--timeout", type=TIMEOUT_TYPE, default=60.0, help="how long to ping until both are \"online\"")
+            "--timeout", type=TIMEOUT_TYPE, default=60.0, help="how long to continue pinging until both are \"online\" (default: %(default)s second(s))")
 
         # ---- Parse all of the commands
         parser_args, unrecognized_args = parser.parse_known_args()  # Will exit if help is specified
