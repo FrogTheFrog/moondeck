@@ -34,6 +34,7 @@ from lib.cli.cmd.host.wake import execute as cmd_host_wake
 from lib.cli.cmd.host.ping import execute as cmd_host_ping
 from lib.cli.cmd.host.shutdown import execute as cmd_host_shutdown
 from lib.cli.cmd.host.restart import execute as cmd_host_restart
+from lib.cli.cmd.host.suspend import execute as cmd_host_suspend
 
 import sys
 import asyncio
@@ -230,6 +231,14 @@ async def main():
             "--host", type=str, help="host id, name or address (default: the \"default\" host)")
         restart_parser.add_argument(
             "--buddy-timeout", type=TIMEOUT_TYPE, default=1.0, help="time for Buddy to respond to requests (default: %(default)s second(s))")
+        
+        # -------- Setup `suspend` command
+        suspend_parser = host_subparsers.add_parser(
+            "suspend", help="suspend the paired host")
+        suspend_parser.add_argument(
+            "--host", type=str, help="host id, name or address (default: the \"default\" host)")
+        suspend_parser.add_argument(
+            "--buddy-timeout", type=TIMEOUT_TYPE, default=1.0, help="time for Buddy to respond to requests (default: %(default)s second(s))")
 
         # ---- Parse all of the commands
         parser_args, unrecognized_args = parser.parse_known_args()  # Will exit if help is specified
@@ -254,7 +263,8 @@ async def main():
                 "wake": cmd_host_wake,
                 "ping": cmd_host_ping,
                 "shutdown": cmd_host_shutdown,
-                "restart": cmd_host_restart
+                "restart": cmd_host_restart,
+                "suspend": cmd_host_suspend
             }
         }
 
