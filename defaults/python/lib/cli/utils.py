@@ -192,8 +192,8 @@ async def check_connectivity(client: BuddyClient, info_port: int, host_id: str, 
                 
                 async def get_server_status():
                     server_info = await get_server_info(address=client.address, 
-                                                    port=info_port, 
-                                                    timeout=server_timeout)
+                                                        port=info_port, 
+                                                        timeout=server_timeout)
                     return server_info is not None and server_info["uniqueId"] == host_id
 
                 tasks = [asyncio.create_task(req()) for req in [get_buddy_status, get_server_status]]
