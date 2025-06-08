@@ -23,6 +23,8 @@ from lib.logger import logger, set_logger_settings
 from lib.buddyclient import BuddyException
 from lib.cli.settings import CliSettingsManager
 
+from lib.cli.cmd.app.status import execute as cmd_app_status
+
 from lib.cli.cmd.host.scan import execute as cmd_host_scan
 from lib.cli.cmd.host.add import execute as cmd_host_add
 from lib.cli.cmd.host.remove import execute as cmd_host_remove
@@ -121,7 +123,23 @@ async def main():
         initial_subparsers = parser.add_subparsers(
             dest="cmd1", help="command to execute")
 
-        # ---- Setup host group
+        # ---- Setup `app` group
+        app_parser = initial_subparsers.add_parser(
+            "app", help="app related commands")
+        app_subparsers = app_parser.add_subparsers(
+            dest="cmd2", help="command to execute")
+        
+        # -------- Setup `status` command
+        status_parser = app_subparsers.add_parser(
+            "status", help="print the current status of an app launched by MoonDeck")
+        status_parser.add_argument(
+            "--host", type=str, help="host id, name or address (default: the \"default\" host)")
+        status_parser.add_argument(
+            "--json", action="store_true", help="print the output in JSON format")
+        status_parser.add_argument(
+            "--buddy-timeout", type=TIMEOUT_TYPE, default=1.0, help="time for Buddy to respond to requests (default: %(default)s second(s))")
+
+        # ---- Setup `host` group
         host_parser = initial_subparsers.add_parser(
             "host", help="host related commands")
         host_subparsers = host_parser.add_subparsers(
@@ -182,7 +200,7 @@ async def main():
         pair_parser.add_argument(
             "--buddy-timeout", type=TIMEOUT_TYPE, default=5.0, help="time for Buddy to respond to requests (default: %(default)s second(s))")
 
-        # ------------ Setup default group
+        # ------------ Setup `default` group
         default_parser = host_subparsers.add_parser(
             "default", help="set or clear the default host (to be used where it can be specified optionally)")
         default_subparsers = default_parser.add_subparsers(
@@ -250,6 +268,13 @@ async def main():
 
         # ---- Delegate the commands
         cmds = {
+            "app": {
+                "launch": None,
+                "list": {
+                    "non-steam": None
+                },
+                "status": cmd_app_status
+            },
             "host": {
                 "scan": cmd_host_scan,
                 "add": cmd_host_add,
@@ -266,21 +291,14 @@ async def main():
                 "restart": cmd_host_restart,
                 "suspend": cmd_host_suspend
             },
-            "app": {
-                "state": None,
-                "list": {
-                    "non-steam": None
-                },
-                "launch": None
-            },
-            "stream": {
-                "state": None,
-                "end": None
-            },
             "steam": {
-                "state": None,
+                "status": None,
                 "launch": None,
                 "close": None
+            },
+            "stream": {
+                "status": None,
+                "end": None
             }
         }
 
