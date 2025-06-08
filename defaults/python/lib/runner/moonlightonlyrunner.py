@@ -3,20 +3,19 @@ from .wolsplashscreen import WolSplashScreen
 from ..runnerresult import Result, RunnerError
 from ..gamestreaminfo import get_server_info
 from ..logger import logger
-from ..plugin.settings import RunnerTimeouts
 from ..moonlightproxy import MoonlightProxy
 
 
 class MoonlightOnlyRunner:
     @staticmethod
-    async def check_connectivity(address: str, mac: str, host_id: str, host_port: int, timeouts: RunnerTimeouts):
+    async def check_connectivity(address: str, mac: str, host_id: str, host_port: int, wol_timeout: int, server_timeout: int):
         logger.info("Checking connection to GameStream server")
 
-        async with WolSplashScreen(address, mac, timeouts["wakeOnLan"]) as splash:
+        async with WolSplashScreen(address, mac, wol_timeout) as splash:
             while True:
                 server_info = await get_server_info(address=address, 
                                                     port=host_port, 
-                                                    timeout=timeouts["servicePing"])
+                                                    timeout=server_timeout)
                 server_status = server_info is not None and server_info["uniqueId"] == host_id
                 
                 if not splash.update(None, server_status):
@@ -50,6 +49,7 @@ class MoonlightOnlyRunner:
                                          mac=settings["mac"],
                                          host_id=settings["host_id"],
                                          host_port=settings["host_port"],
-                                         timeouts=settings["timeouts"])
+                                         wol_timeout=settings["timeouts"]["wakeOnLan"],
+                                         server_timeout=settings["timeouts"]["servicePing"])
             await cls.start_moonlight(proxy=proxy)
             await proxy.wait()
