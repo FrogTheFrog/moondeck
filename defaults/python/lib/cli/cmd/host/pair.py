@@ -48,7 +48,7 @@ async def execute(buddy_client: BuddyClient, settings: CliSettings, host_id: str
         try:
             logger.info("Aborting pairing...")
             await buddy_client.abort_pairing()
-        except Exception as abort_err:
-            logger.debug(f"Exception while aborting pairing: {abort_err}")
+        except Exception:
+            logger.debug("Exception while aborting pairing.", exc_info=True)
 
         raise err

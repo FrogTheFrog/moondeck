@@ -20,6 +20,7 @@ from random import randrange
 from typing import Any, Awaitable, Callable, cast
 
 from lib.logger import logger, set_logger_settings
+from lib.buddyclient import BuddyException
 from lib.cli.settings import CliSettingsManager
 
 from lib.cli.cmd.host.scan import execute as cmd_host_scan
@@ -31,6 +32,7 @@ from lib.cli.cmd.host.default.set import execute as cmd_host_default_set
 from lib.cli.cmd.host.default.clear import execute as cmd_host_default_clear
 from lib.cli.cmd.host.wake import execute as cmd_host_wake
 from lib.cli.cmd.host.ping import execute as cmd_host_ping
+from lib.cli.cmd.host.shutdown import execute as cmd_host_shutdown
 
 import sys
 import asyncio
@@ -86,6 +88,7 @@ class ArgumentParserWithRedirect(ArgumentParser):
 
 
 async def main():
+    verbose = False
     try:
         # ---- Setup early logging to at least print something out
         set_logger_settings(None, print_to_stdout=True)
@@ -101,10 +104,11 @@ async def main():
 
         # -------- Setup logging (as early as possible)
         parser_args, _ = parser.parse_known_args()
+        verbose = parser_args.verbose
         set_logger_settings(parser_args.log_file,
                             print_to_stdout=True,
                             log_preamble=f"Executing: {sys.argv[:]}, CWD: {Path.cwd()}",
-                            verbose=parser_args.verbose)
+                            verbose=verbose)
 
         # ---- General parser setup [finish]
         parser = ArgumentParserWithRedirect(parents=[parser])
@@ -209,6 +213,14 @@ async def main():
             "--server-timeout", type=TIMEOUT_TYPE, default=1.0, help="time for GameStream server to respond to requests (default: %(default)s second(s))")
         ping_parser.add_argument(
             "--timeout", type=TIMEOUT_TYPE, default=60.0, help="how long to continue pinging until both are \"online\" (default: %(default)s second(s))")
+        
+        # -------- Setup `shutdown` command
+        shutdown_parser = host_subparsers.add_parser(
+            "shutdown", help="shutdown the paired host")
+        shutdown_parser.add_argument(
+            "--host", type=str, help="host id, name or address (default: the \"default\" host)")
+        shutdown_parser.add_argument(
+            "--buddy-timeout", type=TIMEOUT_TYPE, default=1.0, help="time for Buddy to respond to requests (default: %(default)s second(s))")
 
         # ---- Parse all of the commands
         parser_args, unrecognized_args = parser.parse_known_args()  # Will exit if help is specified
@@ -231,7 +243,8 @@ async def main():
                     "clear": cmd_host_default_clear
                 },
                 "wake": cmd_host_wake,
-                "ping": cmd_host_ping
+                "ping": cmd_host_ping,
+                "shutdown": cmd_host_shutdown
             }
         }
 
@@ -263,6 +276,10 @@ async def main():
 
         raise Exception(
             f"Unhandled parser branch: {"->".join(cmd_levels)}")
+
+    except BuddyException as err:
+        logger.info(str(err), exc_info=verbose)
+        sys.exit(1)
 
     except asyncio.CancelledError:
         logger.info("Interrupted...")

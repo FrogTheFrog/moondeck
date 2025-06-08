@@ -100,9 +100,9 @@ def from_dict(output_type: Type[T], data: AnyTypedDict) -> T:
             continue
         elif is_literal_like(key_type):
             if data[key] not in actual_type:
-                raise TypeError(f"Value {data[key]} of \"{key}\" does not match the valid literal value(-s) {actual_type}")
+                raise TypeError(f"Value {data[key]} of \"{key}\" does not match the valid literal value(s) {actual_type}")
         elif not isinstance(data[key], actual_type):
-            raise TypeError(f"\"{key}\" value {data[key]} is not of valid type(-s) {actual_type}")
+            raise TypeError(f"\"{key}\" value {data[key]} is not of valid type(s) {actual_type}")
 
         verified_data[key] = copy.deepcopy(data[key])
 
