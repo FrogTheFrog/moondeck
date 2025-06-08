@@ -29,6 +29,7 @@ from lib.cli.cmd.host.list import execute as cmd_host_list
 from lib.cli.cmd.host.pair import execute as cmd_host_pair
 from lib.cli.cmd.host.default.set import execute as cmd_host_default_set
 from lib.cli.cmd.host.default.clear import execute as cmd_host_default_clear
+from lib.cli.cmd.host.wake import execute as cmd_host_wake
 
 import sys
 import asyncio
@@ -191,6 +192,12 @@ async def main():
         # ---------------- Setup `clear` command
         default_subparsers.add_parser(
             "clear", help="clear the default host")
+        
+        # -------- Setup `wake` command
+        pair_parser = host_subparsers.add_parser(
+            "wake", help="send WOL to the host")
+        pair_parser.add_argument(
+            "--host", type=str, help="host id, name or address (default: the \"default\" host)")
 
         # ---- Parse all of the commands
         parser_args, unrecognized_args = parser.parse_known_args()  # Will exit if help is specified
@@ -211,7 +218,8 @@ async def main():
                 "default": {
                     "set": cmd_host_default_set,
                     "clear": cmd_host_default_clear
-                }
+                },
+                "wake": cmd_host_wake
             }
         }
 
