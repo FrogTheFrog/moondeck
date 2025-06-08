@@ -84,7 +84,11 @@ def host_pattern_matcher(match_one: bool):
         @functools.wraps(f)
         async def async_wrapper(*args, **kwargs):
             settings: CliSettings = cast(CliSettings, kwargs["settings"])
-            pattern = cast(str, kwargs["host"])
+            pattern = cast(str | None, kwargs["host"] or settings["defaultHost"])
+
+            if pattern is None:
+                logger.error("Default host has not been set!")
+                return 1
 
             host_ids = [k for k, v in settings["hosts"].items()
                         if k == pattern or v["address"] == pattern or v["hostName"] == pattern]
