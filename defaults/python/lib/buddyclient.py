@@ -145,6 +145,8 @@ class BuddyClient(contextlib.AbstractAsyncContextManager):
                 raise BuddyException(HelloResult.ShuttingDown)
             elif resp["state"] == PcState.Suspending:
                 raise BuddyException(HelloResult.Suspending)
+            elif resp["state"] == PcState.Transient:
+                raise BuddyException(HelloResult.Offline)
             
         if self.__hello_was_ok and not force:
             return

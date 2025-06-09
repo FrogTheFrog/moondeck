@@ -7,9 +7,9 @@ from lib.logger import logger
 @host_pattern_matcher(match_one=True)
 @buddy_session()
 @cmd_entry
-async def execute(buddy_client: BuddyClient):
+async def execute(buddy_client: BuddyClient, delay: int):
     try:
-        await buddy_client.change_pc_state(PcStateChange.Suspend)
+        await buddy_client.change_pc_state(PcStateChange.Suspend, delay)
     except BuddyException as err:
         if err.result != HelloResult.Suspending:
             raise err

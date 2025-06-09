@@ -20,6 +20,7 @@ class PcState(Enum):
     Restarting = 1
     ShuttingDown = 2
     Suspending = 3
+    Transient = 4
 
 
 class PcStateChange(Enum):
@@ -206,7 +207,7 @@ class BuddyRequests(contextlib.AbstractAsyncContextManager):
         async with self.__session.get(f"{self.base_url}/streamState") as resp:
             data = await resp.json(encoding="utf-8")
             return utils.from_dict(StreamStateResponse, data)
-        
+
     async def get_streamed_app_data(self):
         async with self.__session.get(f"{self.base_url}/streamedAppData") as resp:
             data = await resp.json(encoding="utf-8")
