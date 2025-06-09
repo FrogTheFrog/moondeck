@@ -1,7 +1,7 @@
 import pathlib
 
 
-BUDDY_API_VERSION = 6
+BUDDY_API_VERSION = 7
 CONFIG_FILE = pathlib.Path.home() / ".config" / "moondeck" / "settings.json"
 LOG_FILE = "/tmp/moondeck.log"
 RUNNER_LOG_FILE = "/tmp/moondeck-runner.log"

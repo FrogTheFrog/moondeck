@@ -187,9 +187,10 @@ class BuddyRequests(contextlib.AbstractAsyncContextManager):
             data = await resp.json(encoding="utf-8")
             return utils.from_dict(PcStateResponse, data)
 
-    async def post_change_pc_state(self, state: PcStateChange):
+    async def post_change_pc_state(self, state: PcStateChange, delay_s: int):
         data = {
-            "state": state.name
+            "state": state.name,
+            "delay": delay_s
         }
 
         async with self.__session.post(f"{self.base_url}/changePcState", json=data) as resp:
@@ -215,11 +216,6 @@ class BuddyRequests(contextlib.AbstractAsyncContextManager):
         async with self.__session.post(f"{self.base_url}/endStream") as resp:
             data = await resp.json(encoding="utf-8")
             return utils.from_dict(ResultLikeResponse, data)
-
-    async def get_gamestream_app_names(self):
-        async with self.__session.get(f"{self.base_url}/gameStreamAppNames") as resp:
-            data = await resp.json(encoding="utf-8")
-            return utils.from_dict(GameStreamAppNamesResponse, data)
         
     async def get_non_steam_app_data(self, user_id: str):
         data = {

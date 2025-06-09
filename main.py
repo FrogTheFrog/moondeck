@@ -147,7 +147,7 @@ class Plugin:
         try:
             state_enum = PcStateChange[state]
             async with BuddyClient(address, buddy_port, client_id, timeout) as client:
-                await client.change_pc_state(state_enum)
+                await client.change_pc_state(state_enum, 10)
 
         except BuddyException:
             logger.exception(f"Buddy exception while changing PC state to {state}")
@@ -213,8 +213,8 @@ class Plugin:
     @utils.async_scope_log(logger.info)
     async def get_gamestream_app_names(self, address: str, buddy_port: int, client_id: str, timeout: float):
         try:
-            async with BuddyClient(address, buddy_port, client_id, timeout) as client:
-                return await client.get_gamestream_app_names()
+            # TODO: fix
+            return None
 
         except BuddyException:
             logger.exception("Buddy exception while retrieving gamestream app names")
