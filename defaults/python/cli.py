@@ -58,6 +58,7 @@ def arg_type(value_type, min_value=None, max_value=None):
 
 
 TIMEOUT_TYPE = arg_type(float, min_value=1)
+DELAY_TYPE = arg_type(int, min_value=1, max_value=30)
 PORT_TYPE = arg_type(int, min_value=0, max_value=65535)
 PIN_TYPE = arg_type(int, min_value=1000, max_value=9999)
 
@@ -231,6 +232,8 @@ async def main():
         ping_parser.add_argument(
             "--host", type=str, help="host id, name or address (default: the \"default\" host)")
         ping_parser.add_argument(
+            "--inverse", action="store_true", help="ping until both Buddy and GameStream server are \"offline\"")
+        ping_parser.add_argument(
             "--buddy-timeout", type=TIMEOUT_TYPE, default=1.0, help="time for Buddy to respond to requests (default: %(default)s second(s))")
         ping_parser.add_argument(
             "--server-timeout", type=TIMEOUT_TYPE, default=1.0, help="time for GameStream server to respond to requests (default: %(default)s second(s))")
@@ -243,6 +246,8 @@ async def main():
         shutdown_parser.add_argument(
             "--host", type=str, help="host id, name or address (default: the \"default\" host)")
         shutdown_parser.add_argument(
+            "--delay", type=DELAY_TYPE, default=10.0, help="how long Buddy should wait until executing the command (default: %(default)s second(s))")
+        shutdown_parser.add_argument(
             "--buddy-timeout", type=TIMEOUT_TYPE, default=1.0, help="time for Buddy to respond to requests (default: %(default)s second(s))")
         
         # -------- Setup `shutdown` command
@@ -251,6 +256,8 @@ async def main():
         restart_parser.add_argument(
             "--host", type=str, help="host id, name or address (default: the \"default\" host)")
         restart_parser.add_argument(
+            "--delay", type=DELAY_TYPE, default=10.0, help="how long Buddy should wait until executing the command (default: %(default)s second(s))")
+        restart_parser.add_argument(
             "--buddy-timeout", type=TIMEOUT_TYPE, default=1.0, help="time for Buddy to respond to requests (default: %(default)s second(s))")
         
         # -------- Setup `suspend` command
@@ -258,6 +265,8 @@ async def main():
             "suspend", help="suspend the paired host")
         suspend_parser.add_argument(
             "--host", type=str, help="host id, name or address (default: the \"default\" host)")
+        suspend_parser.add_argument(
+            "--delay", type=DELAY_TYPE, default=10.0, help="how long Buddy should wait until executing the command (default: %(default)s second(s))")
         suspend_parser.add_argument(
             "--buddy-timeout", type=TIMEOUT_TYPE, default=1.0, help="time for Buddy to respond to requests (default: %(default)s second(s))")
 

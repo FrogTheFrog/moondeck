@@ -7,12 +7,13 @@ from lib.buddyclient import BuddyClient
 @host_pattern_matcher(match_one=True)
 @buddy_session()
 @cmd_entry
-async def execute(buddy_client: BuddyClient, settings: CliSettings, host_id: str, server_timeout: float, timeout: int):
+async def execute(buddy_client: BuddyClient, settings: CliSettings, host_id: str, server_timeout: float, timeout: int, inverse: bool):
     if await check_connectivity(client=buddy_client,
                                 info_port=settings["hosts"][host_id]["infoPort"],
                                 host_id=host_id,
                                 server_timeout=server_timeout,
-                                timeout=timeout):
+                                timeout=timeout,
+                                inverse=inverse):
         return 0
 
     return 1

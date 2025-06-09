@@ -152,7 +152,7 @@ def buddy_session(auto_sync_mac: bool = True):
     return decorator
 
 
-async def check_connectivity(client: BuddyClient, info_port: int, host_id: str, server_timeout: float, timeout: float):
+async def check_connectivity(client: BuddyClient, info_port: int, host_id: str, server_timeout: float, timeout: float, inverse: bool = False):
     loop = asyncio.get_running_loop()
     now = loop.time()
     timeout_at = now + (0 if timeout <= 0 else timeout)
@@ -183,10 +183,8 @@ async def check_connectivity(client: BuddyClient, info_port: int, host_id: str, 
                     try:
                         await client.say_hello(force=True)
                         buddy_status = True
-                    except BuddyException as err:
+                    except BuddyException:
                         buddy_status = False
-                        if err.result != HelloResult.Offline:
-                            raise err
                         
                     return buddy_status
                 
@@ -200,7 +198,7 @@ async def check_connectivity(client: BuddyClient, info_port: int, host_id: str, 
                 buddy_status, server_status = await asyncio.gather(*tasks)
 
                 print_status()
-                if buddy_status and server_status:
+                if (not buddy_status and not server_status) if inverse else (buddy_status and server_status):
                     return True
     
     except asyncio.TimeoutError:
