@@ -14,7 +14,7 @@ def add_plugin_to_path():
 add_plugin_to_path()
 
 from pathlib import Path
-from argparse import ArgumentParser, ArgumentTypeError, HelpFormatter, SUPPRESS, OPTIONAL, ZERO_OR_MORE
+from argparse import _SubParsersAction, ArgumentParser, ArgumentTypeError, HelpFormatter, SUPPRESS, OPTIONAL, ZERO_OR_MORE
 from gettext import gettext
 from random import randrange
 from typing import Awaitable, Callable, cast
@@ -91,6 +91,23 @@ class ArgumentParserWithRedirect(ArgumentParser):
                 logger.info(message)
 
 
+def add_cmd_app(subparsers: _SubParsersAction):
+    app_parser = subparsers.add_parser(
+        "app", help="app related commands")
+    app_subparsers = app_parser.add_subparsers(
+        dest="cmd2", help="command to execute")
+    
+    # ---- Setup `status` command
+    status_parser = app_subparsers.add_parser(
+        "status", help="print the current status of an app monitored by MoonDeck")
+    status_parser.add_argument(
+        "--host", type=str, help="host id, name or address (default: the \"default\" host)")
+    status_parser.add_argument(
+        "--json", action="store_true", help="print the output in JSON format")
+    status_parser.add_argument(
+        "--buddy-timeout", type=TIMEOUT_TYPE, default=1.0, help="time for Buddy to respond to requests (default: %(default)s second(s))")
+
+
 async def main():
     verbose = False
     try:
@@ -119,25 +136,11 @@ async def main():
         parser.add_argument("--config-file", type=Path,
                             default=Path("config.json"), help="path to the config file")
 
-        # ---- Setup subparser groups
+        # ---- Setup subparsers
         initial_subparsers = parser.add_subparsers(
             dest="cmd1", help="command to execute")
 
-        # ---- Setup `app` group
-        app_parser = initial_subparsers.add_parser(
-            "app", help="app related commands")
-        app_subparsers = app_parser.add_subparsers(
-            dest="cmd2", help="command to execute")
-        
-        # -------- Setup `status` command
-        status_parser = app_subparsers.add_parser(
-            "status", help="print the current status of an app monitored by MoonDeck")
-        status_parser.add_argument(
-            "--host", type=str, help="host id, name or address (default: the \"default\" host)")
-        status_parser.add_argument(
-            "--json", action="store_true", help="print the output in JSON format")
-        status_parser.add_argument(
-            "--buddy-timeout", type=TIMEOUT_TYPE, default=1.0, help="time for Buddy to respond to requests (default: %(default)s second(s))")
+        add_cmd_app(initial_subparsers)
 
         # ---- Setup `host` group
         host_parser = initial_subparsers.add_parser(

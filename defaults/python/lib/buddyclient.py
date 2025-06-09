@@ -77,10 +77,6 @@ class EndStreamResult(Enum):
     Failed = "Failed to end stream via Buddy!"
 
 
-class GetGameStreamAppNamesResult(Enum):
-    Failed = "Failed to get gamestream app names via Buddy!"
-
-
 class GetNonSteamAppDataResult(Enum):
     Failed = "Failed to get non-Steam app data via Buddy!"
 
@@ -221,10 +217,10 @@ class BuddyClient(contextlib.AbstractAsyncContextManager):
 
         return await self._try_request(request(), CloseSteamResult.Failed)
 
-    async def change_pc_state(self, state: PcStateChange):
+    async def change_pc_state(self, state: PcStateChange, delay_s: int):
         async def request():
             await self.say_hello()
-            resp = await self.__requests.post_change_pc_state(state)
+            resp = await self.__requests.post_change_pc_state(state, delay_s)
             if not resp["result"]:
                 raise BuddyException(ChangePcStateResult.BuddyRefused)
 
@@ -259,14 +255,6 @@ class BuddyClient(contextlib.AbstractAsyncContextManager):
                 raise BuddyException(EndStreamResult.BuddyRefused)
 
         return await self._try_request(request(), EndStreamResult.Failed)
-
-    async def get_gamestream_app_names(self):
-        async def request():
-            await self.say_hello()
-            resp = await self.__requests.get_gamestream_app_names()
-            return resp["appNames"]
-
-        return await self._try_request(request(), GetGameStreamAppNamesResult.Failed)
     
     async def get_non_steam_app_data(self, user_id: str):
         async def request():
