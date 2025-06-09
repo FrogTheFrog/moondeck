@@ -5,6 +5,7 @@ from lib.gamestreaminfo import scan_for_hosts
 from lib.cli.settings import CliSettings
 from lib.logger import logger
 
+
 @settings_watcher()
 @cmd_entry
 async def execute(settings: CliSettings, timeout: float, dry: bool, json: bool, prune: bool):
