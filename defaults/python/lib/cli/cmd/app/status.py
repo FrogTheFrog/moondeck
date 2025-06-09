@@ -1,7 +1,7 @@
 import json as jlib
 
 from typing import TypedDict
-from lib.cli.utils import buddy_session, cmd_entry, host_pattern_matcher, settings_watcher, check_connectivity
+from lib.cli.utils import buddy_session, cmd_entry, host_pattern_matcher, settings_watcher
 from lib.buddyclient import BuddyClient
 from lib.logger import logger
 
@@ -36,7 +36,7 @@ async def execute(buddy_client: BuddyClient, json: bool):
             logger.info("There is currently no app that is being monitored by MoonDeck.")
         else:
             logger.info("App monitored by MoonDeck:")
-            logger.info(F"  App ID    : {data["status"]["appId"]}")
-            logger.info(F"  App State : {data["status"]["appState"]}")
+            logger.info(f"  App ID    : {data["status"]["appId"]}")
+            logger.info(f"  App State : {data["status"]["appState"]}")
 
     return 0

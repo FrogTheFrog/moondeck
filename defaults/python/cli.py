@@ -23,6 +23,7 @@ from lib.logger import logger, set_logger_settings
 from lib.buddyclient import BuddyException
 from lib.cli.settings import CliSettingsManager
 
+from lib.cli.cmd.app.list.non_steam import execute as cmd_app_list_non_steam
 from lib.cli.cmd.app.status import execute as cmd_app_status
 
 from lib.cli.cmd.host.scan import execute as cmd_host_scan
@@ -93,12 +94,31 @@ class ArgumentParserWithRedirect(ArgumentParser):
 
 
 def add_cmd_app(subparsers: _SubParsersAction):
+    # ---- Setup `app` group
     app_parser = subparsers.add_parser(
         "app", help="app related commands")
     app_subparsers = app_parser.add_subparsers(
         dest="cmd2", help="command to execute")
     
-    # ---- Setup `status` command
+    # -------- Setup `list` group
+    list_parser = app_subparsers.add_parser(
+        "list", help="get app lists from Buddy")
+    list_subparsers = list_parser.add_subparsers(
+        dest="cmd3", help="command to execute")
+    
+    # -------- Setup `non-steam` command
+    non_steam_parser = list_subparsers.add_parser(
+        "non-steam", help="print the list of non-Steam games on the host")
+    non_steam_parser.add_argument(
+        "user-id", type=str, help="the Steam user id in SteamID64 format to get apps for")
+    non_steam_parser.add_argument(
+        "--host", type=str, help="host id, name or address (default: the \"default\" host)")
+    non_steam_parser.add_argument(
+        "--json", action="store_true", help="print the output in JSON format")
+    non_steam_parser.add_argument(
+        "--buddy-timeout", type=TIMEOUT_TYPE, default=1.0, help="time for Buddy to respond to requests (default: %(default)s second(s))")
+    
+    # -------- Setup `status` command
     status_parser = app_subparsers.add_parser(
         "status", help="print the current status of an app monitored by MoonDeck")
     status_parser.add_argument(
@@ -272,7 +292,7 @@ async def main():
 
         # ---- Parse all of the commands
         parser_args, unrecognized_args = parser.parse_known_args()  # Will exit if help is specified
-        parser_args = vars(parser_args)
+        parser_args = { k.replace("-", "_"):v for k, v in vars(parser_args).items() }
 
         if unrecognized_args:
             parser.exit(2, gettext(f"{parser.prog}: error: unrecognized arguments {unrecognized_args}"))
@@ -283,7 +303,7 @@ async def main():
             "app": {
                 "launch": None,
                 "list": {
-                    "non-steam": None
+                    "non-steam": cmd_app_list_non_steam
                 },
                 "status": cmd_app_status
             },
