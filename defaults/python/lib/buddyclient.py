@@ -6,7 +6,6 @@ from . import constants
 from enum import Enum
 from typing import Awaitable
 from .buddyrequests import BuddyRequests, PairingState, PcState, PcStateChange
-from .logger import logger
 from .utils import T
 
 
