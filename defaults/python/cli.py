@@ -23,6 +23,8 @@ from lib.logger import logger, set_logger_settings
 from lib.buddyclient import BuddyException
 from lib.cli.settings import CliSettingsManager
 
+from lib.cli.cmd.app.clear import execute as cmd_app_clear
+from lib.cli.cmd.app.launch import execute as cmd_app_launch
 from lib.cli.cmd.app.list.non_steam import execute as cmd_app_list_non_steam
 from lib.cli.cmd.app.status import execute as cmd_app_status
 
@@ -38,6 +40,10 @@ from lib.cli.cmd.host.ping import execute as cmd_host_ping
 from lib.cli.cmd.host.shutdown import execute as cmd_host_shutdown
 from lib.cli.cmd.host.restart import execute as cmd_host_restart
 from lib.cli.cmd.host.suspend import execute as cmd_host_suspend
+
+from lib.cli.cmd.steam.close import execute as cmd_steam_close
+
+from lib.cli.cmd.stream.end import execute as cmd_stream_end
 
 import sys
 import asyncio
@@ -59,6 +65,7 @@ def arg_type(value_type, min_value=None, max_value=None):
 
 
 TIMEOUT_TYPE = arg_type(float, min_value=1)
+RETRY_TYPE = arg_type(int, min_value=1)
 DELAY_TYPE = arg_type(int, min_value=1, max_value=30)
 PORT_TYPE = arg_type(int, min_value=0, max_value=65535)
 PIN_TYPE = arg_type(int, min_value=1000, max_value=9999)
@@ -100,12 +107,56 @@ def add_cmd_app(subparsers: _SubParsersAction):
     app_subparsers = app_parser.add_subparsers(
         dest="cmd2", help="command to execute")
     
+    # -------- Setup `clear` command
+    clear_parser = app_subparsers.add_parser(
+        "clear", help="clear the monitored app on Buddy")
+    clear_parser.add_argument(
+        "--host", type=str, help="host id, name or address (default: the \"default\" host)")
+    clear_parser.add_argument(
+        "--buddy-timeout", type=TIMEOUT_TYPE, default=5.0, help="time for Buddy to respond to requests (default: %(default)s second(s))")
+    
     # -------- Setup `list` group
     list_parser = app_subparsers.add_parser(
         "list", help="get app lists from Buddy")
     list_subparsers = list_parser.add_subparsers(
         dest="cmd3", help="command to execute")
     
+    # -------- Setup `launch` command
+    launch_parser = app_subparsers.add_parser(
+        "launch", help="launch the app on host")
+    launch_parser.add_argument(
+        "app-id", type=str, help="the app id to launch")
+    launch_parser.add_argument(
+        "--host", type=str, help="host id, name or address (default: the \"default\" host)")
+    launch_parser.add_argument(
+        "--buddy-timeout", type=TIMEOUT_TYPE, default=5.0, help="time for Buddy to respond to requests (default: %(default)s second(s))")
+    launch_parser.add_argument(
+        "--simple", action="store_true", help="simply execute launch command directly without following the recommended workflow - this will make all of the optional args below here obsolete")
+    launch_parser.add_argument(
+        "--server-timeout", type=TIMEOUT_TYPE, default=5.0, help="time for GameStream server to respond to requests (default: %(default)s second(s))")
+    launch_parser.add_argument(
+        "--ping-timeout", type=TIMEOUT_TYPE, default=5.0, help="how long to continue pinging until Buddy and GameStream server are both \"online\" (default: %(default)s second(s))")
+    launch_parser.add_argument(
+        "--precheck-retries", type=RETRY_TYPE, default=30, help="how long to keep checking until initial launch conditions are met (default: %(default)s time(s))")
+    launch_parser.add_argument(
+        "--bpm", action="store_true", help="ensure that Steam is running in the Big Picture Mode")
+    launch_parser.add_argument(
+        "--no-stream", action="store_true", help="do not manage the lifetime of MoonDeckStream - will also make related args obsolete")
+    launch_parser.add_argument(
+        "--no-cleanup", action="store_true", help="do not end MoonDeckStream or clear monitored app data if launch fails")
+    launch_parser.add_argument(
+        "--close-steam", action="store_true", help="close Steam once the launched app has been ended at the end of successful session")
+    launch_parser.add_argument(
+        "--stream-rdy-retries", type=RETRY_TYPE, default=30, help="how long to keep checking until MoonDeckStream is running (default: %(default)s time(s))")
+    launch_parser.add_argument(
+        "--steam-rdy-retries", type=RETRY_TYPE, default=60, help="how long to keep checking until Steam is running and is also in BPM if requested (default: %(default)s time(s))")
+    launch_parser.add_argument(
+        "--stability-retries", type=RETRY_TYPE, default=15, help="how long to wait until app is considered as stable - to circumvent launchers (like EA) that make the app switch between \"Stopped\" and \"Running\" states (default: %(default)s time(s))")
+    launch_parser.add_argument(
+        "--launch-retries", type=RETRY_TYPE, default=30, help="how long to wait until app's state changes from \"Stopped\" (default: %(default)s time(s))")
+    launch_parser.add_argument(
+        "--stream-end-retries", type=RETRY_TYPE, default=15, help="how long to until the MoonDeckStream is ended at the end of successful session (default: %(default)s time(s))")
+
     # -------- Setup `non-steam` command
     non_steam_parser = list_subparsers.add_parser(
         "non-steam", help="print the list of non-Steam games on the host")
@@ -116,17 +167,51 @@ def add_cmd_app(subparsers: _SubParsersAction):
     non_steam_parser.add_argument(
         "--json", action="store_true", help="print the output in JSON format")
     non_steam_parser.add_argument(
-        "--buddy-timeout", type=TIMEOUT_TYPE, default=1.0, help="time for Buddy to respond to requests (default: %(default)s second(s))")
-    
+        "--buddy-timeout", type=TIMEOUT_TYPE, default=5.0, help="time for Buddy to respond to requests (default: %(default)s second(s))")
+
     # -------- Setup `status` command
     status_parser = app_subparsers.add_parser(
-        "status", help="print the current status of an app monitored by MoonDeck")
+        "status", help="print the current status of an app known to MoonDeck")
+    status_parser.add_argument(
+        "--app-id", type=str, help="the app id to get status for, if not specified, the monitored app will be queried")
     status_parser.add_argument(
         "--host", type=str, help="host id, name or address (default: the \"default\" host)")
     status_parser.add_argument(
         "--json", action="store_true", help="print the output in JSON format")
     status_parser.add_argument(
-        "--buddy-timeout", type=TIMEOUT_TYPE, default=1.0, help="time for Buddy to respond to requests (default: %(default)s second(s))")
+        "--buddy-timeout", type=TIMEOUT_TYPE, default=5.0, help="time for Buddy to respond to requests (default: %(default)s second(s))")
+
+
+def add_cmd_steam(subparsers: _SubParsersAction):
+    # ---- Setup `steam` group
+    steam_parser = subparsers.add_parser(
+        "steam", help="Steam related commands")
+    steam_subparsers = steam_parser.add_subparsers(
+        dest="cmd2", help="command to execute")
+    
+    # -------- Setup `close` command
+    close_parser = steam_subparsers.add_parser(
+        "close", help="close Steam on host")
+    close_parser.add_argument(
+        "--host", type=str, help="host id, name or address (default: the \"default\" host)")
+    close_parser.add_argument(
+        "--buddy-timeout", type=TIMEOUT_TYPE, default=5.0, help="time for Buddy to respond to requests (default: %(default)s second(s))")
+
+
+def add_cmd_stream(subparsers: _SubParsersAction):
+    # ---- Setup `stream` group
+    stream_parser = subparsers.add_parser(
+        "stream", help="stream related commands")
+    stream_subparsers = stream_parser.add_subparsers(
+        dest="cmd2", help="command to execute")
+    
+    # -------- Setup `clear` command
+    end_parser = stream_subparsers.add_parser(
+        "end", help="end the MoonDeckStream process on host (doing this also clears the monitored app on Buddy)")
+    end_parser.add_argument(
+        "--host", type=str, help="host id, name or address (default: the \"default\" host)")
+    end_parser.add_argument(
+        "--buddy-timeout", type=TIMEOUT_TYPE, default=5.0, help="time for Buddy to respond to requests (default: %(default)s second(s))")
 
 
 async def main():
@@ -162,6 +247,8 @@ async def main():
             dest="cmd1", help="command to execute")
 
         add_cmd_app(initial_subparsers)
+        add_cmd_steam(initial_subparsers)
+        add_cmd_stream(initial_subparsers)
 
         # ---- Setup `host` group
         host_parser = initial_subparsers.add_parser(
@@ -301,7 +388,8 @@ async def main():
         # ---- Delegate the commands
         cmds = {
             "app": {
-                "launch": None,
+                "clear": cmd_app_clear,
+                "launch": cmd_app_launch,
                 "list": {
                     "non-steam": cmd_app_list_non_steam
                 },
@@ -326,11 +414,11 @@ async def main():
             "steam": {
                 "status": None,
                 "launch": None,
-                "close": None
+                "close": cmd_steam_close
             },
             "stream": {
                 "status": None,
-                "end": None
+                "end": cmd_stream_end
             }
         }
 

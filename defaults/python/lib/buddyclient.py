@@ -72,6 +72,15 @@ class StreamedAppDataResult(Enum):
     Failed = "Failed to get streamed app data via Buddy!"
 
 
+class AppDataResult(Enum):
+    Failed = "Failed to get app data via Buddy!"
+
+
+class ClearStreamedAppDataResult(Enum):
+    BuddyRefused = "Buddy refused to clear streamed app data. Check the logs on host!"
+    Failed = "Failed to clear streamed app data via Buddy!"
+
+
 class EndStreamResult(Enum):
     BuddyRefused = "Buddy refused to end stream. Check the logs on host!"
     Failed = "Failed to end stream via Buddy!"
@@ -248,6 +257,22 @@ class BuddyClient(contextlib.AbstractAsyncContextManager):
             return await self.__requests.get_streamed_app_data()
 
         return await self._try_request(request(), StreamedAppDataResult.Failed)
+    
+    async def get_app_data(self, app_id: str):
+        async def request():
+            await self.say_hello()
+            return await self.__requests.get_app_data(app_id)
+
+        return await self._try_request(request(), AppDataResult.Failed)
+    
+    async def clear_streamed_app_data(self):
+        async def request():
+            await self.say_hello()
+            resp = await self.__requests.post_clear_streamed_app_data()
+            if not resp["result"]:
+                raise BuddyException(ClearStreamedAppDataResult.BuddyRefused)
+
+        return await self._try_request(request(), ClearStreamedAppDataResult.Failed)
 
     async def end_stream(self):
         async def request():
