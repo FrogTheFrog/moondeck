@@ -42,8 +42,11 @@ from lib.cli.cmd.host.restart import execute as cmd_host_restart
 from lib.cli.cmd.host.suspend import execute as cmd_host_suspend
 
 from lib.cli.cmd.steam.close import execute as cmd_steam_close
+from lib.cli.cmd.steam.launch import execute as cmd_steam_launch
+from lib.cli.cmd.steam.status import execute as cmd_steam_status
 
 from lib.cli.cmd.stream.end import execute as cmd_stream_end
+from lib.cli.cmd.stream.status import execute as cmd_stream_status
 
 import sys
 import asyncio
@@ -196,6 +199,26 @@ def add_cmd_steam(subparsers: _SubParsersAction):
         "--host", type=str, help="host id, name or address (default: the \"default\" host)")
     close_parser.add_argument(
         "--buddy-timeout", type=TIMEOUT_TYPE, default=5.0, help="time for Buddy to respond to requests (default: %(default)s second(s))")
+    
+    # -------- Setup `launch` command
+    launch_parser = steam_subparsers.add_parser(
+        "launch", help="launch Steam on host")
+    launch_parser.add_argument(
+        "--host", type=str, help="host id, name or address (default: the \"default\" host)")
+    launch_parser.add_argument(
+        "--buddy-timeout", type=TIMEOUT_TYPE, default=5.0, help="time for Buddy to respond to requests (default: %(default)s second(s))")
+    launch_parser.add_argument(
+        "--bpm", action="store_true", help="launch Steam in Big Picture Mode")
+    
+    # -------- Setup `status` command
+    status_parser = steam_subparsers.add_parser(
+        "status", help="print the current Steam status")
+    status_parser.add_argument(
+        "--host", type=str, help="host id, name or address (default: the \"default\" host)")
+    status_parser.add_argument(
+        "--json", action="store_true", help="print the output in JSON format")
+    status_parser.add_argument(
+        "--buddy-timeout", type=TIMEOUT_TYPE, default=5.0, help="time for Buddy to respond to requests (default: %(default)s second(s))")
 
 
 def add_cmd_stream(subparsers: _SubParsersAction):
@@ -205,12 +228,22 @@ def add_cmd_stream(subparsers: _SubParsersAction):
     stream_subparsers = stream_parser.add_subparsers(
         dest="cmd2", help="command to execute")
     
-    # -------- Setup `clear` command
+    # -------- Setup `end` command
     end_parser = stream_subparsers.add_parser(
         "end", help="end the MoonDeckStream process on host (doing this also clears the monitored app on Buddy)")
     end_parser.add_argument(
         "--host", type=str, help="host id, name or address (default: the \"default\" host)")
     end_parser.add_argument(
+        "--buddy-timeout", type=TIMEOUT_TYPE, default=5.0, help="time for Buddy to respond to requests (default: %(default)s second(s))")
+
+    # -------- Setup `status` command
+    status_parser = stream_subparsers.add_parser(
+        "status", help="print the current MoonDeckStream status")
+    status_parser.add_argument(
+        "--host", type=str, help="host id, name or address (default: the \"default\" host)")
+    status_parser.add_argument(
+        "--json", action="store_true", help="print the output in JSON format")
+    status_parser.add_argument(
         "--buddy-timeout", type=TIMEOUT_TYPE, default=5.0, help="time for Buddy to respond to requests (default: %(default)s second(s))")
 
 
@@ -412,13 +445,13 @@ async def main():
                 "suspend": cmd_host_suspend
             },
             "steam": {
-                "status": None,
-                "launch": None,
-                "close": cmd_steam_close
+                "close": cmd_steam_close,
+                "launch": cmd_steam_launch,
+                "status": cmd_steam_status
             },
             "stream": {
-                "status": None,
-                "end": cmd_stream_end
+                "end": cmd_stream_end,
+                "status": cmd_stream_status
             }
         }
 
