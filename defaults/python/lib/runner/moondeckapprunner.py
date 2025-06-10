@@ -98,10 +98,11 @@ class MoonDeckAppLauncher:
             pooler.retries = 1
 
     @classmethod
-    async def launch(cls, client: BuddyClient, big_picture_mode: bool, app_id: str, stream_rdy_timeout: int, steam_rdy_timeout: int, stability_timeout: int, launch_timeout: int):
+    async def launch(cls, client: BuddyClient, big_picture_mode: bool, app_id: str, stream_rdy_timeout: int, steam_rdy_timeout: int, stability_timeout: int, launch_timeout: int, cleanup_on_error: bool, manage_stream: bool):
         try:
-            await cls.wait_for_stream_to_be_ready(client=client,
-                                                  timeout=stream_rdy_timeout)
+            if manage_stream:
+                await cls.wait_for_stream_to_be_ready(client=client,
+                                                      timeout=stream_rdy_timeout)
             
             logger.info(f"Sending request to launch Steam if needed (forcing big picture mode: {big_picture_mode})")
             await client.launch_steam(big_picture_mode)
@@ -122,12 +123,20 @@ class MoonDeckAppLauncher:
 
             await cls.wait_for_app_to_close(client=client)
 
-        except Exception as err:
-            logger.warning("Ending stream") 
-            try:
-                await client.end_stream()
-            except:
-                logger.exception("Failed to end the stream")
+        except BaseException as err:
+            if cleanup_on_error:
+                if manage_stream:
+                    try:
+                        logger.warning("Ending stream") 
+                        await client.end_stream()
+                    except Exception:
+                        logger.exception("Failed to end the stream")
+                else:
+                    try:
+                        logger.warning("Clearing streamed app data") 
+                        await client.clear_streamed_app_data()
+                    except Exception:
+                        logger.exception("Failed to clear streamed app data")
 
             raise err
 
@@ -257,7 +266,9 @@ class MoonDeckAppRunner:
                                                                          stream_rdy_timeout=settings["timeouts"]["streamReadiness"],
                                                                          steam_rdy_timeout=settings["timeouts"]["steamReadiness"],
                                                                          stability_timeout=settings["timeouts"]["appLaunchStability"],
-                                                                         launch_timeout=settings["timeouts"]["appLaunch"]))
+                                                                         launch_timeout=settings["timeouts"]["appLaunch"],
+                                                                         cleanup_on_error=True,
+                                                                         manage_stream=True))
 
             done, _ = await asyncio.wait({proxy_task, launch_task}, return_when=asyncio.FIRST_COMPLETED)
             if proxy_task in done:

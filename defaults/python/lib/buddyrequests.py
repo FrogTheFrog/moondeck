@@ -57,6 +57,11 @@ class StreamedAppData(TypedDict):
     app_state: AppState
 
 
+class AppData(TypedDict):
+    app_id: str
+    app_state: AppState
+
+
 class ApiVersionResponse(TypedDict):
     version: int
 
@@ -87,6 +92,10 @@ class StreamStateResponse(TypedDict):
 
 class StreamedAppDataResponse(TypedDict):
     data: Optional[StreamedAppData]
+
+
+class AppDataResponse(TypedDict):
+    data: Optional[AppData]
 
 
 class SteamUiModeResponse(TypedDict):
@@ -212,6 +221,20 @@ class BuddyRequests(contextlib.AbstractAsyncContextManager):
         async with self.__session.get(f"{self.base_url}/streamedAppData") as resp:
             data = await resp.json(encoding="utf-8")
             return utils.from_dict(StreamedAppDataResponse, data)
+        
+    async def get_app_data(self, app_id: str):
+        data = {
+            "app_id": app_id
+        }
+
+        async with self.__session.get(f"{self.base_url}/appData", json=data) as resp:
+            data = await resp.json(encoding="utf-8")
+            return utils.from_dict(AppDataResponse, data)
+        
+    async def post_clear_streamed_app_data(self):
+        async with self.__session.post(f"{self.base_url}/clearStreamedAppData") as resp:
+            data = await resp.json(encoding="utf-8")
+            return utils.from_dict(ResultLikeResponse, data)
 
     async def post_end_stream(self):
         async with self.__session.post(f"{self.base_url}/endStream") as resp:
