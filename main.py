@@ -1,17 +1,22 @@
 # autopep8: off
-def get_plugin_dir():
-    from pathlib import Path
-    return Path(__file__).parent.resolve()
-
 def add_plugin_to_path():
     import sys
+    from pathlib import Path
 
-    plugin_dir = get_plugin_dir()
-    directories = [["./"], ["python"], ["python", "lib"], ["python", "externals"]]
+    sys_path_backup = sys.path
+    script_dir = Path(__file__).parent.resolve()
+    directories = [["python", "lib"], ["python", "externals"]]
     for dir in directories:
-        sys.path.append(str(plugin_dir.joinpath(*dir)))
+        sys.path.insert(0, str(script_dir.joinpath(*dir)))
 
-add_plugin_to_path()
+    def restore_path():
+        sys.path = sys_path_backup
+
+    return restore_path
+
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+restore_sys_path = add_plugin_to_path()  
+
 
 import asyncio
 import pathlib
@@ -26,6 +31,10 @@ from python.lib.buddyrequests import SteamUiMode, SteamUiModeResponse
 from python.lib.buddyclient import BuddyClient, PcStateChange, BuddyException
 from python.lib.utils import wake_on_lan, change_moondeck_runner_ready_state, TimedPooler
 from python.lib.runnerresult import Result, set_result, get_result
+
+
+restore_sys_path()
+# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 # autopep8: on
 
 set_logger_settings(constants.LOG_FILE, rotate=True)
@@ -158,7 +167,7 @@ class Plugin:
     @utils.async_scope_log(logger.info)
     async def get_moondeckrun_path(self):
         try:
-            return str(get_plugin_dir().joinpath("python", "moondeckrun.sh"))
+            return str(pathlib.Path(__file__).parent.resolve().joinpath("python", "moondeckrun.sh"))
         except Exception:
             logger.exception("Unhandled exception")
             return None

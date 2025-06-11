@@ -1,19 +1,27 @@
 from __future__ import annotations
 
 # autopep8: off
-def get_plugin_dir():
-    from pathlib import Path
-    return Path(__file__).parent.resolve()
-
 def add_plugin_to_path():
     import sys
+    from pathlib import Path
 
-    plugin_dir = get_plugin_dir()
-    directories = [["./"], ["lib"], ["externals"]]
+    sys_path_backup = sys.path
+    script_dir = Path(__file__).parent.resolve()
+    directories = [["lib"], ["externals"]]
     for dir in directories:
-        sys.path.insert(0, str(plugin_dir.joinpath(*dir)))
+        sys.path.insert(0, str(script_dir.joinpath(*dir)))
 
-add_plugin_to_path()
+    def restore_path():
+        sys.path = sys_path_backup
+
+    return restore_path
+
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+restore_sys_path = add_plugin_to_path()  
+
+
+import sys
+import asyncio
 
 from pathlib import Path
 from argparse import _SubParsersAction, ArgumentParser, ArgumentTypeError, HelpFormatter, SUPPRESS, OPTIONAL, ZERO_OR_MORE
@@ -50,8 +58,9 @@ from lib.cli.cmd.steam.status import execute as cmd_steam_status
 from lib.cli.cmd.stream.end import execute as cmd_stream_end
 from lib.cli.cmd.stream.status import execute as cmd_stream_status
 
-import sys
-import asyncio
+
+restore_sys_path()
+# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 # autopep8: on
 
 
