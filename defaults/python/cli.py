@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # autopep8: off
 def get_plugin_dir():
     from pathlib import Path
@@ -28,18 +30,18 @@ from lib.cli.cmd.app.launch import execute as cmd_app_launch
 from lib.cli.cmd.app.list.non_steam import execute as cmd_app_list_non_steam
 from lib.cli.cmd.app.status import execute as cmd_app_status
 
-from lib.cli.cmd.host.scan import execute as cmd_host_scan
 from lib.cli.cmd.host.add import execute as cmd_host_add
-from lib.cli.cmd.host.remove import execute as cmd_host_remove
+from lib.cli.cmd.host.default.clear import execute as cmd_host_default_clear
+from lib.cli.cmd.host.default.set import execute as cmd_host_default_set
 from lib.cli.cmd.host.list import execute as cmd_host_list
 from lib.cli.cmd.host.pair import execute as cmd_host_pair
-from lib.cli.cmd.host.default.set import execute as cmd_host_default_set
-from lib.cli.cmd.host.default.clear import execute as cmd_host_default_clear
-from lib.cli.cmd.host.wake import execute as cmd_host_wake
 from lib.cli.cmd.host.ping import execute as cmd_host_ping
-from lib.cli.cmd.host.shutdown import execute as cmd_host_shutdown
+from lib.cli.cmd.host.remove import execute as cmd_host_remove
 from lib.cli.cmd.host.restart import execute as cmd_host_restart
+from lib.cli.cmd.host.scan import execute as cmd_host_scan
+from lib.cli.cmd.host.shutdown import execute as cmd_host_shutdown
 from lib.cli.cmd.host.suspend import execute as cmd_host_suspend
+from lib.cli.cmd.host.wake import execute as cmd_host_wake
 
 from lib.cli.cmd.steam.close import execute as cmd_steam_close
 from lib.cli.cmd.steam.launch import execute as cmd_steam_launch
@@ -67,11 +69,26 @@ def arg_type(value_type, min_value=None, max_value=None):
     return checker
 
 
-TIMEOUT_TYPE = arg_type(float, min_value=1)
-RETRY_TYPE = arg_type(int, min_value=1)
-DELAY_TYPE = arg_type(int, min_value=1, max_value=30)
-PORT_TYPE = arg_type(int, min_value=0, max_value=65535)
-PIN_TYPE = arg_type(int, min_value=1000, max_value=9999)
+# Custom types
+TYPE_TIMEOUT = arg_type(float, min_value=1)
+TYPE_RETRY = arg_type(int, min_value=1)
+TYPE_PORT = arg_type(int, min_value=0, max_value=65535)
+TYPE_PIN = arg_type(int, min_value=1000, max_value=9999)
+TYPE_DELAY = arg_type(int, min_value=1, max_value=30)
+
+# Common descriptions
+DESC_HOST = "host id, name or address (default: the \"default\" host)"
+DESC_HOST_NON_OPT = "host id, name or address"
+DESC_BUDDY_TIMEOUT = "time for Buddy to respond to requests (default: %(default)s second(s))"
+DESC_SERVER_TIMEOUT = "time for GameStream server to respond to requests (default: %(default)s second(s))"
+DESC_PING_TIMEOUT = "how long to continue pinging until Buddy and GameStream server are both \"online\" (default: %(default)s second(s))"
+DESC_JSON = "print the output in JSON format"
+DESC_DRY = "do not save any changes"
+DESC_DELAY = "how long Buddy should wait until executing the command (default: %(default)s second(s))"
+
+# Common defaults
+DEF_TIMEOUT = 5.0
+DEF_DELAY = 10.0
 
 
 class CustomArgumentDefaultsHelpFormatter(HelpFormatter):
@@ -103,9 +120,9 @@ class ArgumentParserWithRedirect(ArgumentParser):
                 logger.info(message)
 
 
-def add_cmd_app(subparsers: _SubParsersAction):
+def add_cmd_app(main_subparsers: _SubParsersAction):
     # ---- Setup `app` group
-    app_parser = subparsers.add_parser(
+    app_parser = main_subparsers.add_parser(
         "app", help="app related commands")
     app_subparsers = app_parser.add_subparsers(
         dest="cmd2", help="command to execute")
@@ -114,9 +131,9 @@ def add_cmd_app(subparsers: _SubParsersAction):
     clear_parser = app_subparsers.add_parser(
         "clear", help="clear the monitored app on Buddy")
     clear_parser.add_argument(
-        "--host", type=str, help="host id, name or address (default: the \"default\" host)")
+        "--host", type=str, help=DESC_HOST)
     clear_parser.add_argument(
-        "--buddy-timeout", type=TIMEOUT_TYPE, default=5.0, help="time for Buddy to respond to requests (default: %(default)s second(s))")
+        "--buddy-timeout", type=TYPE_TIMEOUT, default=DEF_TIMEOUT, help=DESC_BUDDY_TIMEOUT)
     
     # -------- Setup `list` group
     list_parser = app_subparsers.add_parser(
@@ -130,17 +147,17 @@ def add_cmd_app(subparsers: _SubParsersAction):
     launch_parser.add_argument(
         "app-id", type=str, help="the app id to launch")
     launch_parser.add_argument(
-        "--host", type=str, help="host id, name or address (default: the \"default\" host)")
+        "--host", type=str, help=DESC_HOST)
     launch_parser.add_argument(
-        "--buddy-timeout", type=TIMEOUT_TYPE, default=5.0, help="time for Buddy to respond to requests (default: %(default)s second(s))")
+        "--buddy-timeout", type=TYPE_TIMEOUT, default=DEF_TIMEOUT, help=DESC_BUDDY_TIMEOUT)
     launch_parser.add_argument(
         "--simple", action="store_true", help="simply execute launch command directly without following the recommended workflow - this will make all of the optional args below here obsolete")
     launch_parser.add_argument(
-        "--server-timeout", type=TIMEOUT_TYPE, default=5.0, help="time for GameStream server to respond to requests (default: %(default)s second(s))")
+        "--server-timeout", type=TYPE_TIMEOUT, default=DEF_TIMEOUT, help=DESC_SERVER_TIMEOUT)
     launch_parser.add_argument(
-        "--ping-timeout", type=TIMEOUT_TYPE, default=5.0, help="how long to continue pinging until Buddy and GameStream server are both \"online\" (default: %(default)s second(s))")
+        "--ping-timeout", type=TYPE_TIMEOUT, default=60.0, help=DESC_PING_TIMEOUT)
     launch_parser.add_argument(
-        "--precheck-retries", type=RETRY_TYPE, default=30, help="how long to keep checking until initial launch conditions are met (default: %(default)s time(s))")
+        "--precheck-retries", type=TYPE_RETRY, default=30, help="how long to keep checking until initial launch conditions are met (default: %(default)s time(s))")
     launch_parser.add_argument(
         "--bpm", action="store_true", help="ensure that Steam is running in the Big Picture Mode")
     launch_parser.add_argument(
@@ -150,15 +167,15 @@ def add_cmd_app(subparsers: _SubParsersAction):
     launch_parser.add_argument(
         "--close-steam", action="store_true", help="close Steam once the launched app has been ended at the end of successful session")
     launch_parser.add_argument(
-        "--stream-rdy-retries", type=RETRY_TYPE, default=30, help="how long to keep checking until MoonDeckStream is running (default: %(default)s time(s))")
+        "--stream-rdy-retries", type=TYPE_RETRY, default=30, help="how long to keep checking until MoonDeckStream is running (default: %(default)s time(s))")
     launch_parser.add_argument(
-        "--steam-rdy-retries", type=RETRY_TYPE, default=60, help="how long to keep checking until Steam is running and is also in BPM if requested (default: %(default)s time(s))")
+        "--steam-rdy-retries", type=TYPE_RETRY, default=60, help="how long to keep checking until Steam is running and is also in BPM if requested (default: %(default)s time(s))")
     launch_parser.add_argument(
-        "--stability-retries", type=RETRY_TYPE, default=15, help="how long to wait until app is considered as stable - to circumvent launchers (like EA) that make the app switch between \"Stopped\" and \"Running\" states (default: %(default)s time(s))")
+        "--stability-retries", type=TYPE_RETRY, default=15, help="how long to wait until app is considered as stable - to circumvent launchers (like EA) that make the app switch between \"Stopped\" and \"Running\" states (default: %(default)s time(s))")
     launch_parser.add_argument(
-        "--launch-retries", type=RETRY_TYPE, default=30, help="how long to wait until app's state changes from \"Stopped\" (default: %(default)s time(s))")
+        "--launch-retries", type=TYPE_RETRY, default=30, help="how long to wait until app's state changes from \"Stopped\" (default: %(default)s time(s))")
     launch_parser.add_argument(
-        "--stream-end-retries", type=RETRY_TYPE, default=15, help="how long to until the MoonDeckStream is ended at the end of successful session (default: %(default)s time(s))")
+        "--stream-end-retries", type=TYPE_RETRY, default=15, help="how long to until the MoonDeckStream is ended at the end of successful session (default: %(default)s time(s))")
 
     # -------- Setup `non-steam` command
     non_steam_parser = list_subparsers.add_parser(
@@ -166,11 +183,11 @@ def add_cmd_app(subparsers: _SubParsersAction):
     non_steam_parser.add_argument(
         "user-id", type=str, help="the Steam user id in SteamID64 format to get apps for")
     non_steam_parser.add_argument(
-        "--host", type=str, help="host id, name or address (default: the \"default\" host)")
+        "--host", type=str, help=DESC_HOST)
     non_steam_parser.add_argument(
-        "--json", action="store_true", help="print the output in JSON format")
+        "--json", action="store_true", help=DESC_JSON)
     non_steam_parser.add_argument(
-        "--buddy-timeout", type=TIMEOUT_TYPE, default=5.0, help="time for Buddy to respond to requests (default: %(default)s second(s))")
+        "--buddy-timeout", type=TYPE_TIMEOUT, default=DEF_TIMEOUT, help=DESC_BUDDY_TIMEOUT)
 
     # -------- Setup `status` command
     status_parser = app_subparsers.add_parser(
@@ -178,16 +195,144 @@ def add_cmd_app(subparsers: _SubParsersAction):
     status_parser.add_argument(
         "--app-id", type=str, help="the app id to get status for, if not specified, the monitored app will be queried")
     status_parser.add_argument(
-        "--host", type=str, help="host id, name or address (default: the \"default\" host)")
+        "--host", type=str, help=DESC_HOST)
     status_parser.add_argument(
-        "--json", action="store_true", help="print the output in JSON format")
+        "--json", action="store_true", help=DESC_JSON)
     status_parser.add_argument(
-        "--buddy-timeout", type=TIMEOUT_TYPE, default=5.0, help="time for Buddy to respond to requests (default: %(default)s second(s))")
+        "--buddy-timeout", type=TYPE_TIMEOUT, default=DEF_TIMEOUT, help=DESC_BUDDY_TIMEOUT)
 
 
-def add_cmd_steam(subparsers: _SubParsersAction):
+def add_cmd_host(main_subparsers: _SubParsersAction[ArgumentParserWithRedirect]):
+    # ---- Setup `host` group
+    host_parser = main_subparsers.add_parser(
+        "host", help="host related commands")
+    host_subparsers = host_parser.add_subparsers(
+        dest="cmd2", help="command to execute")
+    
+    # -------- Setup `add` command
+    add_parser = host_subparsers.add_parser(
+        "add", help="manually add reachable GameStream host (will replace scanned one)")
+    add_parser.add_argument(
+        "address", type=str, help="IP address or valid domain")
+    add_parser.add_argument(
+        "port", type=TYPE_PORT, help="the HTTP port of the server")
+    add_parser.add_argument(
+        "--timeout", type=TYPE_TIMEOUT, default=DEF_TIMEOUT, help="connection timeout (default: %(default)s second(s))")
+    add_parser.add_argument(
+        "--dry", action="store_true", help=DESC_DRY)
+    add_parser.add_argument(
+        "--json", action="store_true", help=DESC_JSON)
+    
+    # ------------ Setup `default` group
+    default_parser = host_subparsers.add_parser(
+        "default", help="set or clear the default host (to be used where it can be specified optionally)")
+    default_subparsers = default_parser.add_subparsers(
+        dest="cmd3", help="command to execute")
+    
+    # ---------------- Setup `clear` command
+    default_subparsers.add_parser(
+        "clear", help="clear the default host")
+    
+    # ---------------- Setup `set` command
+    set_default_parser = default_subparsers.add_parser(
+        "set", help="set the default host")
+    set_default_parser.add_argument(
+        "host", type=str, help=DESC_HOST_NON_OPT)
+    
+    # -------- Setup `list` command
+    list_parser = host_subparsers.add_parser(
+        "list", help="remove host(s) from config")
+    list_parser.add_argument(
+        "--json", action="store_true", help=DESC_JSON)
+    
+    # -------- Setup `pair` command
+    pair_parser = host_subparsers.add_parser(
+        "pair", help="pair MoonDeck CLI with Buddy")
+    pair_parser.add_argument(
+        "host", type=str, help=DESC_HOST_NON_OPT)
+    pair_parser.add_argument(
+        "--pin", type=TYPE_PIN, default=randrange(1000, 9999), help="4-digit pin to use for pairing (default: random 4-digit pin)")
+    pair_parser.add_argument(
+        "--buddy-port", type=TYPE_PORT, default=59999, help="port to be used for Buddy")
+    pair_parser.add_argument(
+        "--buddy-timeout", type=TYPE_TIMEOUT, default=DEF_TIMEOUT, help=DESC_BUDDY_TIMEOUT)
+    
+    # -------- Setup `ping` command
+    ping_parser = host_subparsers.add_parser(
+        "ping", help="ping both Buddy and the GameStream server")
+    ping_parser.add_argument(
+        "--host", type=str, help=DESC_HOST)
+    ping_parser.add_argument(
+        "--inverse", action="store_true", help="ping until both Buddy and GameStream server are \"offline\"")
+    ping_parser.add_argument(
+        "--buddy-timeout", type=TYPE_TIMEOUT, default=1.0, help=DESC_BUDDY_TIMEOUT)
+    ping_parser.add_argument(
+        "--server-timeout", type=TYPE_TIMEOUT, default=1.0, help=DESC_SERVER_TIMEOUT)
+    ping_parser.add_argument(
+        "--timeout", type=TYPE_TIMEOUT, default=60.0, help="how long to continue pinging until both are \"online\" (default: %(default)s second(s))")
+
+    # -------- Setup `remove` command
+    remove_parser = host_subparsers.add_parser(
+        "remove", help="remove host(s) from config")
+    remove_parser.add_argument(
+        "host", type=str, help=DESC_HOST_NON_OPT)
+    remove_parser.add_argument(
+        "--dry", action="store_true", help=DESC_DRY)
+    remove_parser.add_argument(
+        "--json", action="store_true", help=DESC_JSON)
+    
+    # -------- Setup `restart` command
+    restart_parser = host_subparsers.add_parser(
+        "restart", help="restart the paired host")
+    restart_parser.add_argument(
+        "--host", type=str, help=DESC_HOST)
+    restart_parser.add_argument(
+        "--delay", type=TYPE_DELAY, default=DEF_DELAY, help=DESC_DELAY)
+    restart_parser.add_argument(
+        "--buddy-timeout", type=TYPE_TIMEOUT, default=DEF_TIMEOUT, help=DESC_BUDDY_TIMEOUT)
+    
+    # -------- Setup `scan` command
+    scan_parser = host_subparsers.add_parser(
+        "scan", help="scan for available hosts")
+    scan_parser.add_argument(
+        "--timeout", type=float, default=DEF_TIMEOUT, help="scan timeout (default: %(default)s second(s))")
+    scan_parser.add_argument(
+        "--dry", action="store_true", help=DESC_DRY)
+    scan_parser.add_argument(
+        "--json", action="store_true", help=DESC_JSON)
+    scan_parser.add_argument(
+        "--prune", action="store_true", help="remove any previously scanned hosts from the config that were not found during scan")
+
+    # -------- Setup `shutdown` command
+    shutdown_parser = host_subparsers.add_parser(
+        "shutdown", help="shutdown the paired host")
+    shutdown_parser.add_argument(
+        "--host", type=str, help=DESC_HOST)
+    shutdown_parser.add_argument(
+        "--delay", type=TYPE_DELAY, default=DEF_DELAY, help=DESC_DELAY)
+    shutdown_parser.add_argument(
+        "--buddy-timeout", type=TYPE_TIMEOUT, default=DEF_TIMEOUT, help=DESC_BUDDY_TIMEOUT)
+    
+    # -------- Setup `suspend` command
+    suspend_parser = host_subparsers.add_parser(
+        "suspend", help="suspend the paired host")
+    suspend_parser.add_argument(
+        "--host", type=str, help=DESC_HOST)
+    suspend_parser.add_argument(
+        "--delay", type=TYPE_DELAY, default=DEF_DELAY, help=DESC_DELAY)
+    suspend_parser.add_argument(
+        "--buddy-timeout", type=TYPE_TIMEOUT, default=DEF_TIMEOUT, help=DESC_BUDDY_TIMEOUT)
+    
+    # -------- Setup `wake` command
+    wake_parser = host_subparsers.add_parser(
+        "wake", help="send WOL to the host")
+    wake_parser.add_argument(
+        "--host", type=str, help=DESC_HOST)
+
+
+def add_cmd_steam(main_subparsers: _SubParsersAction[ArgumentParserWithRedirect]):
     # ---- Setup `steam` group
-    steam_parser = subparsers.add_parser(
+    steam_parser = main_subparsers.add_parser(
         "steam", help="Steam related commands")
     steam_subparsers = steam_parser.add_subparsers(
         dest="cmd2", help="command to execute")
@@ -196,17 +341,17 @@ def add_cmd_steam(subparsers: _SubParsersAction):
     close_parser = steam_subparsers.add_parser(
         "close", help="close Steam on host")
     close_parser.add_argument(
-        "--host", type=str, help="host id, name or address (default: the \"default\" host)")
+        "--host", type=str, help=DESC_HOST)
     close_parser.add_argument(
-        "--buddy-timeout", type=TIMEOUT_TYPE, default=5.0, help="time for Buddy to respond to requests (default: %(default)s second(s))")
+        "--buddy-timeout", type=TYPE_TIMEOUT, default=DEF_TIMEOUT, help=DESC_BUDDY_TIMEOUT)
     
     # -------- Setup `launch` command
     launch_parser = steam_subparsers.add_parser(
         "launch", help="launch Steam on host")
     launch_parser.add_argument(
-        "--host", type=str, help="host id, name or address (default: the \"default\" host)")
+        "--host", type=str, help=DESC_HOST)
     launch_parser.add_argument(
-        "--buddy-timeout", type=TIMEOUT_TYPE, default=5.0, help="time for Buddy to respond to requests (default: %(default)s second(s))")
+        "--buddy-timeout", type=TYPE_TIMEOUT, default=DEF_TIMEOUT, help=DESC_BUDDY_TIMEOUT)
     launch_parser.add_argument(
         "--bpm", action="store_true", help="launch Steam in Big Picture Mode")
     
@@ -214,16 +359,16 @@ def add_cmd_steam(subparsers: _SubParsersAction):
     status_parser = steam_subparsers.add_parser(
         "status", help="print the current Steam status")
     status_parser.add_argument(
-        "--host", type=str, help="host id, name or address (default: the \"default\" host)")
+        "--host", type=str, help=DESC_HOST)
     status_parser.add_argument(
-        "--json", action="store_true", help="print the output in JSON format")
+        "--json", action="store_true", help=DESC_JSON)
     status_parser.add_argument(
-        "--buddy-timeout", type=TIMEOUT_TYPE, default=5.0, help="time for Buddy to respond to requests (default: %(default)s second(s))")
+        "--buddy-timeout", type=TYPE_TIMEOUT, default=DEF_TIMEOUT, help=DESC_BUDDY_TIMEOUT)
 
 
-def add_cmd_stream(subparsers: _SubParsersAction):
+def add_cmd_stream(main_subparsers: _SubParsersAction[ArgumentParserWithRedirect]):
     # ---- Setup `stream` group
-    stream_parser = subparsers.add_parser(
+    stream_parser = main_subparsers.add_parser(
         "stream", help="stream related commands")
     stream_subparsers = stream_parser.add_subparsers(
         dest="cmd2", help="command to execute")
@@ -232,19 +377,19 @@ def add_cmd_stream(subparsers: _SubParsersAction):
     end_parser = stream_subparsers.add_parser(
         "end", help="end the MoonDeckStream process on host (doing this also clears the monitored app on Buddy)")
     end_parser.add_argument(
-        "--host", type=str, help="host id, name or address (default: the \"default\" host)")
+        "--host", type=str, help=DESC_HOST)
     end_parser.add_argument(
-        "--buddy-timeout", type=TIMEOUT_TYPE, default=5.0, help="time for Buddy to respond to requests (default: %(default)s second(s))")
+        "--buddy-timeout", type=TYPE_TIMEOUT, default=DEF_TIMEOUT, help=DESC_BUDDY_TIMEOUT)
 
     # -------- Setup `status` command
     status_parser = stream_subparsers.add_parser(
         "status", help="print the current MoonDeckStream status")
     status_parser.add_argument(
-        "--host", type=str, help="host id, name or address (default: the \"default\" host)")
+        "--host", type=str, help=DESC_HOST)
     status_parser.add_argument(
-        "--json", action="store_true", help="print the output in JSON format")
+        "--json", action="store_true", help=DESC_JSON)
     status_parser.add_argument(
-        "--buddy-timeout", type=TIMEOUT_TYPE, default=5.0, help="time for Buddy to respond to requests (default: %(default)s second(s))")
+        "--buddy-timeout", type=TYPE_TIMEOUT, default=DEF_TIMEOUT, help=DESC_BUDDY_TIMEOUT)
 
 
 async def main():
@@ -276,139 +421,13 @@ async def main():
                             default=Path("config.json"), help="path to the config file")
 
         # ---- Setup subparsers
-        initial_subparsers = parser.add_subparsers(
+        main_subparsers = parser.add_subparsers(
             dest="cmd1", help="command to execute")
 
-        add_cmd_app(initial_subparsers)
-        add_cmd_steam(initial_subparsers)
-        add_cmd_stream(initial_subparsers)
-
-        # ---- Setup `host` group
-        host_parser = initial_subparsers.add_parser(
-            "host", help="host related commands")
-        host_subparsers = host_parser.add_subparsers(
-            dest="cmd2", help="command to execute")
-
-        # -------- Setup `scan` command
-        scan_parser = host_subparsers.add_parser(
-            "scan", help="scan for available hosts")
-        scan_parser.add_argument(
-            "--timeout", type=float, default=5.0, help="scan timeout (default: %(default)s second(s))")
-        scan_parser.add_argument(
-            "--dry", action="store_true", help="do not save any changes")
-        scan_parser.add_argument(
-            "--json", action="store_true", help="print the output in JSON format")
-        scan_parser.add_argument(
-            "--prune", action="store_true",
-            help="remove any previously scanned hosts from the config that were not found during scan")
-
-        # -------- Setup `add` command
-        add_parser = host_subparsers.add_parser(
-            "add", help="manually add reachable GameStream host (will replace scanned one)")
-        add_parser.add_argument(
-            "address", type=str, help="IP address or valid domain")
-        add_parser.add_argument(
-            "port", type=PORT_TYPE, help="the HTTP port of the server")
-        add_parser.add_argument(
-            "--timeout", type=TIMEOUT_TYPE, default=5.0, help="connection timeout (default: %(default)s second(s))")
-        add_parser.add_argument(
-            "--dry", action="store_true", help="do not save any changes")
-        add_parser.add_argument(
-            "--json", action="store_true", help="print the output in JSON format")
-
-        # -------- Setup `remove` command
-        remove_parser = host_subparsers.add_parser(
-            "remove", help="remove host(s) from config")
-        remove_parser.add_argument(
-            "host", type=str, help="host id, name or address")
-        remove_parser.add_argument(
-            "--dry", action="store_true", help="do not save any changes")
-        remove_parser.add_argument(
-            "--json", action="store_true", help="print the output in JSON format")
-
-        # -------- Setup `list` command
-        list_parser = host_subparsers.add_parser(
-            "list", help="remove host(s) from config")
-        list_parser.add_argument(
-            "--json", action="store_true", help="print the output in JSON format")
-
-        # -------- Setup `pair` command
-        pair_parser = host_subparsers.add_parser(
-            "pair", help="pair MoonDeck CLI with Buddy")
-        pair_parser.add_argument(
-            "host", type=str, help="host id, name or address")
-        pair_parser.add_argument(
-            "--pin", type=PIN_TYPE, default=randrange(1000, 9999), help="4-digit pin to use for pairing (default: random 4-digit pin)")
-        pair_parser.add_argument(
-            "--buddy-port", type=PORT_TYPE, default=59999, help="port to be used for Buddy")
-        pair_parser.add_argument(
-            "--buddy-timeout", type=TIMEOUT_TYPE, default=5.0, help="time for Buddy to respond to requests (default: %(default)s second(s))")
-
-        # ------------ Setup `default` group
-        default_parser = host_subparsers.add_parser(
-            "default", help="set or clear the default host (to be used where it can be specified optionally)")
-        default_subparsers = default_parser.add_subparsers(
-            dest="cmd3", help="command to execute")
-        
-        # ---------------- Setup `set` command
-        set_default_parser = default_subparsers.add_parser(
-            "set", help="set the default host")
-        set_default_parser.add_argument(
-            "host", type=str, help="host id, name or address")
-        
-        # ---------------- Setup `clear` command
-        default_subparsers.add_parser(
-            "clear", help="clear the default host")
-        
-        # -------- Setup `wake` command
-        wake_parser = host_subparsers.add_parser(
-            "wake", help="send WOL to the host")
-        wake_parser.add_argument(
-            "--host", type=str, help="host id, name or address (default: the \"default\" host)")
-        
-        # -------- Setup `ping` command
-        ping_parser = host_subparsers.add_parser(
-            "ping", help="ping both Buddy and the GameStream server")
-        ping_parser.add_argument(
-            "--host", type=str, help="host id, name or address (default: the \"default\" host)")
-        ping_parser.add_argument(
-            "--inverse", action="store_true", help="ping until both Buddy and GameStream server are \"offline\"")
-        ping_parser.add_argument(
-            "--buddy-timeout", type=TIMEOUT_TYPE, default=1.0, help="time for Buddy to respond to requests (default: %(default)s second(s))")
-        ping_parser.add_argument(
-            "--server-timeout", type=TIMEOUT_TYPE, default=1.0, help="time for GameStream server to respond to requests (default: %(default)s second(s))")
-        ping_parser.add_argument(
-            "--timeout", type=TIMEOUT_TYPE, default=60.0, help="how long to continue pinging until both are \"online\" (default: %(default)s second(s))")
-        
-        # -------- Setup `shutdown` command
-        shutdown_parser = host_subparsers.add_parser(
-            "shutdown", help="shutdown the paired host")
-        shutdown_parser.add_argument(
-            "--host", type=str, help="host id, name or address (default: the \"default\" host)")
-        shutdown_parser.add_argument(
-            "--delay", type=DELAY_TYPE, default=10.0, help="how long Buddy should wait until executing the command (default: %(default)s second(s))")
-        shutdown_parser.add_argument(
-            "--buddy-timeout", type=TIMEOUT_TYPE, default=1.0, help="time for Buddy to respond to requests (default: %(default)s second(s))")
-        
-        # -------- Setup `shutdown` command
-        restart_parser = host_subparsers.add_parser(
-            "restart", help="restart the paired host")
-        restart_parser.add_argument(
-            "--host", type=str, help="host id, name or address (default: the \"default\" host)")
-        restart_parser.add_argument(
-            "--delay", type=DELAY_TYPE, default=10.0, help="how long Buddy should wait until executing the command (default: %(default)s second(s))")
-        restart_parser.add_argument(
-            "--buddy-timeout", type=TIMEOUT_TYPE, default=1.0, help="time for Buddy to respond to requests (default: %(default)s second(s))")
-        
-        # -------- Setup `suspend` command
-        suspend_parser = host_subparsers.add_parser(
-            "suspend", help="suspend the paired host")
-        suspend_parser.add_argument(
-            "--host", type=str, help="host id, name or address (default: the \"default\" host)")
-        suspend_parser.add_argument(
-            "--delay", type=DELAY_TYPE, default=10.0, help="how long Buddy should wait until executing the command (default: %(default)s second(s))")
-        suspend_parser.add_argument(
-            "--buddy-timeout", type=TIMEOUT_TYPE, default=1.0, help="time for Buddy to respond to requests (default: %(default)s second(s))")
+        add_cmd_app(main_subparsers)
+        add_cmd_host(main_subparsers)
+        add_cmd_steam(main_subparsers)
+        add_cmd_stream(main_subparsers)
 
         # ---- Parse all of the commands
         parser_args, unrecognized_args = parser.parse_known_args()  # Will exit if help is specified
@@ -429,20 +448,20 @@ async def main():
                 "status": cmd_app_status
             },
             "host": {
-                "scan": cmd_host_scan,
                 "add": cmd_host_add,
-                "remove": cmd_host_remove,
+                "default": {
+                    "clear": cmd_host_default_clear,
+                    "set": cmd_host_default_set
+                },
                 "list": cmd_host_list,
                 "pair": cmd_host_pair,
-                "default": {
-                    "set": cmd_host_default_set,
-                    "clear": cmd_host_default_clear
-                },
-                "wake": cmd_host_wake,
                 "ping": cmd_host_ping,
-                "shutdown": cmd_host_shutdown,
+                "remove": cmd_host_remove,
                 "restart": cmd_host_restart,
-                "suspend": cmd_host_suspend
+                "scan": cmd_host_scan,
+                "shutdown": cmd_host_shutdown,
+                "suspend": cmd_host_suspend,
+                "wake": cmd_host_wake
             },
             "steam": {
                 "close": cmd_steam_close,
@@ -481,8 +500,7 @@ async def main():
             # Unhandled cmd
             break
 
-        raise Exception(
-            f"Unhandled parser branch: {"->".join(cmd_levels)}")
+        raise Exception(f"Unhandled parser branch: {"->".join(cmd_levels)}")
 
     except BuddyException as err:
         logger.info(str(err), exc_info=verbose)
