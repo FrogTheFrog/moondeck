@@ -5,7 +5,7 @@ def add_plugin_to_path():
 
     sys_path_backup = sys.path
     script_dir = Path(__file__).parent.resolve()
-    directories = [["python", "lib"], ["python", "externals"]]
+    directories = [["python"], ["python", "lib"], ["python", "externals"]]
     for dir in directories:
         sys.path.insert(0, str(script_dir.joinpath(*dir)))
 
@@ -20,17 +20,17 @@ restore_sys_path = add_plugin_to_path()
 
 import asyncio
 import pathlib
-import python.lib.gamestreaminfo as gamestreaminfo
-import python.lib.constants as constants
-import python.lib.utils as utils
+import lib.gamestreaminfo as gamestreaminfo
+import lib.constants as constants
+import lib.utils as utils
 
 from typing import cast
-from python.lib.plugin.settings import settings_manager, UserSettings
-from python.lib.logger import logger, set_logger_settings
-from python.lib.buddyrequests import SteamUiMode, SteamUiModeResponse
-from python.lib.buddyclient import BuddyClient, PcStateChange, BuddyException
-from python.lib.utils import wake_on_lan, change_moondeck_runner_ready_state, TimedPooler
-from python.lib.runnerresult import Result, set_result, get_result
+from lib.plugin.settings import settings_manager, UserSettings
+from lib.logger import logger, set_logger_settings
+from lib.buddyrequests import SteamUiMode, SteamUiModeResponse
+from lib.buddyclient import BuddyClient, PcStateChange, BuddyException
+from lib.utils import wake_on_lan, change_moondeck_runner_ready_state, TimedPooler
+from lib.runnerresult import Result, set_result, get_result
 
 
 restore_sys_path()
