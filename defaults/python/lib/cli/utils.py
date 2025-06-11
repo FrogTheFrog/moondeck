@@ -112,6 +112,27 @@ def host_pattern_matcher(match_one: bool):
     return decorator
 
 
+def wol_settings(f):
+    """
+    Adds wol_address and wol_mac to the kwargs.
+    Must be paired with host_pattern_matcher.
+    """
+    @functools.wraps(f)
+    async def async_wrapper(*args, **kwargs):
+        settings: CliSettings = cast(CliSettings, kwargs["settings"])
+        host_id: str = cast(str, kwargs["host_id"])
+
+        address = settings["hosts"][host_id]["address"]
+        mac = settings["hosts"][host_id]["mac"]
+        if mac is None:
+            logger.error("Host has not been paired yet or the MAC was not synced!")
+            return 1
+
+        return await f(*args, wol_address=address, wol_mac=mac, **kwargs)
+
+    return async_wrapper
+
+
 def buddy_session(auto_sync_mac: bool = True):
     """
     Create Buddy session and automatically sync some data.
