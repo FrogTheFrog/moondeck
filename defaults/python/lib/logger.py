@@ -5,7 +5,7 @@ from pathlib import Path
 from logging.handlers import RotatingFileHandler
 
 
-def set_logger_settings(filename: str | Path | None, rotate: bool = True, log_preamble: str | None = None, print_to_stdout: bool = False, verbose: bool = False):
+def set_logger_settings(filename: str | Path | None, rotate: bool = True, log_preamble: str | None = None, print_to_std: bool = False, verbose: bool = False):
     handlers = []
 
     if filename is not None:
@@ -26,30 +26,21 @@ def set_logger_settings(filename: str | Path | None, rotate: bool = True, log_pr
             "[%(asctime)s] %(levelname)s: %(message)s"))
         handlers.append(handler)
 
-    if print_to_stdout:
-        class CustomInfoLevelFormatter(logging.Formatter):
-            def __init__(self, info_fmt: str, *args, validate=True, defaults=None, **kwargs):
-                self._info_style = logging.PercentStyle(
-                    info_fmt, defaults=defaults)
-                if validate:
-                    self._info_style.validate()
+    if print_to_std:
+        stdout_handler = logging.StreamHandler(sys.stdout)
+        stderr_handler = logging.StreamHandler(sys.stderr)
 
-                super().__init__(*args, validate=validate, defaults=defaults, **kwargs)
+        stdout_handler.setFormatter(logging.Formatter("%(message)s"))
+        stderr_handler.setFormatter(logging.Formatter("%(message)s"))
 
-            def formatMessage(self, record):
-                if record.levelno == logging.INFO:
-                    return self._info_style.format(record)
-                return self._style.format(record)
-
-        handler = logging.StreamHandler(sys.stdout)
+        stdout_handler.addFilter(lambda record: record.levelno == logging.INFO)
+        stderr_handler.addFilter(lambda record: record.levelno != logging.INFO)
 
         if log_preamble is not None and verbose:
-            handler.setFormatter(logging.Formatter("[DEBUG] %(message)s"))
-            handler.emit(logging.makeLogRecord({"msg": f"{log_preamble}"}))
+            stderr_handler.emit(logging.makeLogRecord({"msg": f"{log_preamble}", "level": "DEBUG"}))
 
-        handler.setFormatter(CustomInfoLevelFormatter(info_fmt="%(message)s",
-                                                      fmt="[%(levelname)s] %(message)s"))
-        handlers.append(handler)
+        handlers.append(stdout_handler)
+        handlers.append(stderr_handler)
 
     logging.basicConfig(handlers=handlers,
                         level=logging.INFO,
