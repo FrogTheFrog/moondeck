@@ -3,9 +3,8 @@ import json
 
 from abc import ABCMeta, abstractmethod
 from pathlib import Path
-from typing import Any, Generic, Optional, Type, TypeVar, TypedDict, get_args
+from typing import Any, Generic, Optional, get_args
 
-from .logger import logger
 from .utils import TD, from_dict, AnyTypedDict
 
 

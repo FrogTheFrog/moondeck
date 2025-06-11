@@ -8,7 +8,7 @@ import pathlib
 from enum import Enum
 from functools import wraps
 from typing import Any, Callable, Coroutine, List, Literal, Type, TypedDict, Union, TypeVar, get_args, get_origin, is_typeddict
-from externals.wakeonlan import send_magic_packet
+from wakeonlan import send_magic_packet
 
 from .logger import logger
 from .constants import RUNNER_READY_FILE

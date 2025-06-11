@@ -1,17 +1,22 @@
 # autopep8: off
-def get_plugin_dir():
-    from pathlib import Path
-    return Path(__file__).parent.resolve()
-
 def add_plugin_to_path():
     import sys
+    from pathlib import Path
 
-    plugin_dir = get_plugin_dir()
-    directories = [["./"], ["lib"], ["externals"]]
+    sys_path_backup = sys.path
+    script_dir = Path(__file__).parent.resolve()
+    directories = [["lib"], ["externals"]]
     for dir in directories:
-        sys.path.append(str(plugin_dir.joinpath(*dir)))
+        sys.path.insert(0, str(script_dir.joinpath(*dir)))
 
-add_plugin_to_path()
+    def restore_path():
+        sys.path = sys_path_backup
+
+    return restore_path
+
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+restore_sys_path = add_plugin_to_path()  
+
 
 from lib.buddyclient import BuddyException
 from lib.runner.moondeckapprunner import MoonDeckAppRunner
@@ -23,6 +28,10 @@ from lib.runner.settingsparser import parse_settings, RunnerType
 import asyncio
 import lib.constants as constants
 import lib.runnerresult as runnerresult
+
+
+restore_sys_path()
+# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 # autopep8: on
 
 set_logger_settings(constants.RUNNER_LOG_FILE, rotate=False)

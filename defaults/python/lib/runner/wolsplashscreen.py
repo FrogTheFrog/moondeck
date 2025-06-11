@@ -1,4 +1,4 @@
-import externals.pyglet as pyglet
+import pyglet
 import asyncio
 
 from datetime import datetime, timedelta, timezone
