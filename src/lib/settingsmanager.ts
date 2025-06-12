@@ -96,7 +96,7 @@ export interface BuddySettings {
   hostApp: HostApp;
 }
 
-export interface SunshineAppsSettings {
+export interface GameStreamAppsSettings {
   showQuickAccessButton: boolean;
 }
 
@@ -116,7 +116,7 @@ export interface HostSettings {
   passToMoonlight: boolean;
   runnerTimeouts: RunnerTimeouts;
   buddy: BuddySettings;
-  sunshineApps: SunshineAppsSettings;
+  gameStreamApps: GameStreamAppsSettings;
   nonSteamApps: NonSteamAppsSettings;
 }
 

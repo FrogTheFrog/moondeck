@@ -142,7 +142,7 @@ export class ExternalAppShortcuts {
         continue;
       }
 
-      // Add app info for legacy Sunshine apps so that they can be removed/updated.
+      // Add app info for legacy GameStream apps so that they can be removed/updated.
       if (details.strLaunchOptions.includes("MOONDECK_MANAGED=1")) {
         addAppInfo(details, AppType.GameStream);
         continue;

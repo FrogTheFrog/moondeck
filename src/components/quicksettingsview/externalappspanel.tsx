@@ -26,27 +26,27 @@ export const ExternalAppsPanel: FC<Props> = ({ currentHostSettings }) => {
       </PanelSectionRow>;
   }
 
-  let sunshineView = null;
-  if (currentHostSettings.sunshineApps.showQuickAccessButton) {
-    sunshineView =
+  let gameStreamView = null;
+  if (currentHostSettings.gameStreamApps.showQuickAccessButton) {
+    gameStreamView =
       <PanelSectionRow>
         <Field
           childrenContainerWidth="fixed"
           spacingBetweenLabelAndChild="none"
           bottomSeparator={nonSteamView ? "none" : "standard"}
         >
-          <ExternalAppsSyncButton text="Sync Sunshine Apps" appType={AppType.GameStream} noConfirmationDialog={true} />
+          <ExternalAppsSyncButton text="Sync GameStream Apps" appType={AppType.GameStream} noConfirmationDialog={true} />
         </Field>
       </PanelSectionRow>;
   }
 
-  if (!sunshineView && !nonSteamView) {
+  if (!gameStreamView && !nonSteamView) {
     return null;
   }
 
   return (
     <PanelSection title="EXTERNAL APPS">
-      {sunshineView}
+      {gameStreamView}
       {nonSteamView}
     </PanelSection>
   );

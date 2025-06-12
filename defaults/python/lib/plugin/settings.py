@@ -66,7 +66,7 @@ class BuddySettings(TypedDict):
     hostApp: HostApp
 
 
-class SunshineAppsSettings(TypedDict):
+class GameStreamAppsSettings(TypedDict):
     showQuickAccessButton: bool
 
 
@@ -86,7 +86,7 @@ class HostSettings(TypedDict):
     runnerTimeouts: RunnerTimeouts
     passToMoonlight: bool
     buddy: BuddySettings
-    sunshineApps: SunshineAppsSettings
+    gameStreamApps: GameStreamAppsSettings
     nonSteamApps: NonSteamAppsSettings
 
 
@@ -111,7 +111,7 @@ class ButtonStyleSettings(TypedDict):
 
 
 class UserSettings(TypedDict):
-    version: Literal[32]
+    version: Literal[33]
     clientId: str
     currentHostId: Optional[str]
     gameSession: GameSessionSettings
@@ -329,6 +329,11 @@ class UserSettingsManager(SettingsManager[UserSettings]):
                 data["hostSettings"][host]["resolution"]["defaultHdr"] = None
                 for i in range(len(data["hostSettings"][host]["resolution"]["dimensions"])):
                     data["hostSettings"][host]["resolution"]["dimensions"][i]["hdr"] = None
+        if data["version"] == 32:
+            data["version"] = 33
+            for host in data["hostSettings"].keys():
+                data["hostSettings"][host]["gameStreamApps"] = data["hostSettings"][host]["sunshineApps"]
+                del data["hostSettings"][host]["sunshineApps"]
 
 
 settings_manager = UserSettingsManager(constants.CONFIG_FILE)

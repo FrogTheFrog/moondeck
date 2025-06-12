@@ -122,8 +122,8 @@ export class ServerProxy {
             apps: currentSettings?.buddy.hostApp.apps ?? []
           }
         },
-        sunshineApps: {
-          showQuickAccessButton: currentSettings?.sunshineApps.showQuickAccessButton ?? false
+        gameStreamApps: {
+          showQuickAccessButton: currentSettings?.gameStreamApps.showQuickAccessButton ?? false
         },
         nonSteamApps: {
           showQuickAccessButton: currentSettings?.nonSteamApps.showQuickAccessButton ?? false

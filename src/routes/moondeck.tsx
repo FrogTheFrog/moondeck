@@ -12,7 +12,7 @@ import { RunnerSettingsView } from "../components/runnersettingsview";
 import { SetupGuideView } from "../components/setupguideview";
 import { SidebarNavigation } from "@decky/ui";
 import { StatusIndicatorsView } from "../components/statusindicatorsview";
-import { SunshineAppsView } from "../components/sunshineappsview";
+import { GameStreamAppsView } from "../components/gamestreamappsview";
 import { routerHook } from "@decky/api";
 
 const MoonDeckRouter: FC<object> = () => {
@@ -68,9 +68,9 @@ const MoonDeckRouter: FC<object> = () => {
           route: "/moondeck/moondeck-apps"
         },
         {
-          title: "Sunshine Apps",
-          content: <SunshineAppsView />,
-          route: "/moondeck/sunshine-apps"
+          title: "GameStream Apps",
+          content: <GameStreamAppsView />,
+          route: "/moondeck/gamestream-apps"
         },
         {
           title: "Non-Steam Apps",

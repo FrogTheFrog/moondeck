@@ -18,12 +18,12 @@ export const SetupGuideView: FC = () => {
       <DialogControlsSection>
         <DialogControlsSectionHeader>How to get this plugin working?</DialogControlsSectionHeader>
         <Field
-          label="Step 1 - Configure Moonlight client to work with Sunshine"
+          label="Step 1 - Configure Moonlight client to work with GameStream service (e.g. Sunshine)"
           description="Download the flatpak version or AppImage (via Desktop) of the Moonlight client and make sure it is configured."
           focusable={true} />
         <Field
           label="Step 2 - Download and setup Buddy on host PC"
-          description="Requires Buddy v1.8.0 or above."
+          description="Requires Buddy v1.9.0 or above."
         >
           <DialogButton onClick={() => { Navigation.NavigateToExternalWeb(moondeckBuddyLink); }}>Click me!</DialogButton>
         </Field>

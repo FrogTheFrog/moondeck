@@ -6,6 +6,18 @@ export const ChangelogView: FC = () => {
     <DialogBody>
       <DialogControlsSection>
         <Field
+          label="1.11.0"
+          description={
+            <>
+              <div>&bull; Bumped MoonDeckBuddy minimum version to v1.9.0.</div>
+              <div>&bull; Added MoonDeck CLI to the repo while fixing some edge case bugs on the python side.</div>
+              <div>&bull; GameStream (formerly Sunshine) apps are now take directly from Moonlight client.</div>
+              <div>&bull; Renamed "Sunshine Apps" to "GameStream Apps" since to reflect the change from above.</div>
+            </>
+          }
+          focusable={true}
+        />
+        <Field
           label="1.10.1"
           description={
             <>
