@@ -14,7 +14,7 @@ export interface GameStreamHost {
 }
 
 export type ServerStatus = "Offline" | "Online";
-export type PairingStartStatus = "PairingStarted" | "Offline" | (string & {});
+export type PairingStartStatus = "PairingStarted" | "Offline" | (string & {}); // eslint-disable-line
 
 async function scanForHosts(timeout: number): Promise<GameStreamHost[]> {
   try {
@@ -200,7 +200,7 @@ export class ServerProxy {
     const clientId = this.settingsManager.settings.value?.clientId ?? null;
 
     if (address === null || buddyPort === null || clientId === null) {
-      return "Offline";
+      return "Offlina";
     }
 
     const result = await startPairing(address, buddyPort, clientId, pin, 5);
