@@ -3,7 +3,7 @@ def add_plugin_to_path():
     import sys
     from pathlib import Path
 
-    sys_path_backup = sys.path
+    sys_path_backup = list(sys.path)
     script_dir = Path(__file__).parent.resolve()
     directories = [["python"], ["python", "lib"], ["python", "externals"]]
     for dir in directories:
