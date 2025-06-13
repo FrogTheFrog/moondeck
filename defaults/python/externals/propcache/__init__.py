@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 _PUBLIC_API = ("cached_property", "under_cached_property")
 
-__version__ = "0.3.1"
+__version__ = "0.3.2"
 __all__ = ()
 
 # Imports have moved to `propcache.api` in 0.2.0+.
