@@ -3,6 +3,7 @@ import { ButtonStyleView } from "../components/buttonstyleview";
 import { ChangelogView } from "../components/changelogview";
 import { FC } from "react";
 import { GameSessionView } from "../components/gamesessionview";
+import { GameStreamAppsView } from "../components/gamestreamappsview";
 import { HostInfoView } from "../components/hostinfoview";
 import { HostSelectionView } from "../components/hostselectionview";
 import { MoonDeckAppsView } from "../components/moondeckappsview";
@@ -12,7 +13,6 @@ import { RunnerSettingsView } from "../components/runnersettingsview";
 import { SetupGuideView } from "../components/setupguideview";
 import { SidebarNavigation } from "@decky/ui";
 import { StatusIndicatorsView } from "../components/statusindicatorsview";
-import { GameStreamAppsView } from "../components/gamestreamappsview";
 import { routerHook } from "@decky/api";
 
 const MoonDeckRouter: FC<object> = () => {
