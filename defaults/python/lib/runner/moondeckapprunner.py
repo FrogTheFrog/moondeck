@@ -1,13 +1,14 @@
 import asyncio
 
-from typing import cast
+from typing import Optional, cast
+
 from .settingsparser import MoonDeckAppRunnerSettings
 from .wolsplashscreen import WolSplashScreen
 from ..buddyrequests import AppState, SteamUiMode, StreamState, StreamStateResponse, SteamUiModeResponse, StreamedAppDataResponse
 from ..runnerresult import Result, RunnerError
 from ..gamestreaminfo import get_server_info
 from ..logger import logger
-from ..moonlightproxy import MoonlightProxy
+from ..moonlightproxy import MoonlightProxy, ResolutionDimensions
 from ..buddyclient import BuddyClient, BuddyException, HelloResult
 from ..utils import TimedPooler
 
@@ -194,16 +195,16 @@ class MoonDeckAppRunner:
             break
 
     @staticmethod
-    async def start_moonlight(proxy: MoonlightProxy):
+    async def start_moonlight(proxy: MoonlightProxy, hostname: str, host_app: str, audio: Optional[str], resolution: Optional[ResolutionDimensions]):
         logger.info("Checking if Moonlight flatpak is installed or custom binary exists")
         if not await proxy.is_moonlight_installed():
             raise RunnerError(Result.MoonlightIsNotInstalled)
 
         logger.info("Terminating all Moonlight instances if any")
-        await proxy.terminate_all_instances(kill_all=True)
+        await proxy.terminate_all_instances()
 
         logger.info("Starting Moonlight")
-        await proxy.start()
+        await proxy.start(hostname, host_app, audio, resolution)
 
     @staticmethod
     async def wait_for_stream_to_stop(client: BuddyClient, timeout: int):
@@ -241,10 +242,6 @@ class MoonDeckAppRunner:
             settings["client_id"],
             settings["timeouts"]["buddyRequests"])
         moonlight_proxy = MoonlightProxy(
-            settings["hostname"],
-            settings["host_app"],
-            settings["audio"] if settings["pass_to_moonlight"] else None,
-            settings["resolution"] if settings["pass_to_moonlight"] else None,
             settings["moonlight_exec_path"])
 
         async with buddy_client as client, moonlight_proxy as proxy:
@@ -257,7 +254,11 @@ class MoonDeckAppRunner:
             await cls.wait_for_initial_conditions(client=client,
                                                   app_id=settings["app_id"],
                                                   timeout=settings["timeouts"]["initialConditions"])
-            await cls.start_moonlight(proxy=proxy)
+            await cls.start_moonlight(proxy=proxy,
+                                      hostname=settings["hostname"],
+                                      host_app=settings["host_app"],
+                                      audio=settings["audio"] if settings["pass_to_moonlight"] else None,
+                                      resolution=settings["resolution"] if settings["pass_to_moonlight"] else None)
 
             proxy_task = asyncio.create_task(proxy.wait())
             launch_task = asyncio.create_task(MoonDeckAppLauncher.launch(client=client,

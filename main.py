@@ -31,6 +31,7 @@ from lib.buddyrequests import SteamUiMode, SteamUiModeResponse
 from lib.buddyclient import BuddyClient, PcStateChange, BuddyException
 from lib.utils import wake_on_lan, change_moondeck_runner_ready_state, TimedPooler
 from lib.runnerresult import Result, set_result, get_result
+from lib.moonlightproxy import MoonlightProxy
 
 
 restore_sys_path()
@@ -220,15 +221,27 @@ class Plugin:
             logger.exception("Unhandled exception")
 
     @utils.async_scope_log(logger.info)
-    async def get_gamestream_app_names(self, address: str, buddy_port: int, client_id: str, timeout: float):
+    async def get_gamestream_app_names(self, host_name: str, moonlight_exec_path: str | None, timeout: float):
         try:
-            # TODO: fix
-            return None
-
-        except BuddyException:
-            logger.exception("Buddy exception while retrieving gamestream app names")
-            return None
-
+            try:
+                async with asyncio.timeout(timeout):
+                    async with MoonlightProxy(moonlight_exec_path) as client:
+                        await client.start(host_name, "")
+                        await client.wait_until_log_entry(callback=lambda line: f"\"{host_name}\" is now online" in line)
+            except asyncio.TimeoutError:
+                logger.error("Failed to sync Moonlight apps! Host was not reported as online in time or the hostname does not match for some reason.")
+                return None
+            
+            try:
+                async with asyncio.timeout(timeout):
+                    async with MoonlightProxy(moonlight_exec_path) as client:
+                        apps = await client.get_apps(host_name)
+                        if apps is None:
+                            logger.error("Failed to get Moonlight apps!")
+                        return apps
+            except asyncio.TimeoutError:
+                logger.error("Failed to get Moonlight apps (timeout)!")
+                return None
         except Exception:
             logger.exception("Unhandled exception")
             return None

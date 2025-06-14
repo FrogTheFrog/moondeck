@@ -2,8 +2,9 @@ import asyncio
 import contextlib
 import os
 import shutil
+import psutil
 
-from typing import Optional, TypedDict
+from typing import Callable, Optional, TypedDict, cast
 from asyncio.subprocess import Process
 from .logger import logger
 from . import constants
@@ -25,60 +26,122 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
 
     flatpak_moonlight = "com.moonlight_stream.Moonlight"
 
-    def __init__(self, hostname: str, host_app: str, audio: Optional[str], resolution: Optional[ResolutionDimensions], exec_path: Optional[str]) -> None: 
-        self.hostname = hostname
-        self.audio = audio
-        self.resolution = resolution
-        self.host_app = host_app
+    def __init__(self, exec_path: Optional[str]) -> None:
         self.exec_path = exec_path
         self.process: Optional[Process] = None
+        self.__proc: Optional[psutil.Process] = None
 
     async def __aenter__(self):
         return self
 
     async def __aexit__(self, *args):
         return await self.terminate()
+    
+    async def get_apps(self, hostname: str):
+        assert self.process is None, "Another instance of Moonlight has been started already!"
+        exec, args = self.__get_exec_with_args()
 
-    async def start(self):
-        if self.process:
-            return
+        args += ["list", hostname]
+        logger.info(f"Executing: {exec} {' '.join(args)}")
+        self.process = await asyncio.create_subprocess_shell(f"{exec} {' '.join(args)}",
+                                                             stdout=asyncio.subprocess.PIPE,
+                                                             stderr=asyncio.subprocess.DEVNULL)
+        self.__proc = psutil.Process(self.process.pid)
 
-        if self.exec_path is None:
-            exec = self.__get_flatpak_exec()
-            args = ["run", "--arch=x86_64", "--command=moonlight", self.flatpak_moonlight]
+        output, _ = await self.process.communicate()
+        success = self.process.returncode == 0
+        self.process = None
+        self.__proc = None
 
-            if exec is None:
-                logger.error("flatpak is not installed!")
-                return
-        else:
-            exec = self.exec_path
-            args = []
+        if success:
+            apps: set[str] = set()
+            if output:
+                output = output.decode()
+                output = output.split("\n")
+                for app in output:
+                    if app:
+                        apps.add(app)
+            return sorted(list(apps))
+        return None     
 
-        if self.audio:
-            args += ["--audio-config", self.audio]
+    async def start(self, hostname: str, host_app: str, audio: Optional[str] = None, resolution: Optional[ResolutionDimensions] = None):
+        assert self.process is None, "Another instance of Moonlight has been started already!"
+        exec, args = self.__get_exec_with_args()
 
-        if self.resolution:
-            if self.resolution["size"]:
-                args += ["--resolution", f"{self.resolution['size']['width']}x{self.resolution['size']['height']}"]
-            if self.resolution["fps"]:
-                args += ["--fps", f"{self.resolution['fps']}"]
-            if self.resolution["hdr"] is not None:
-                args += ["--hdr" if self.resolution["hdr"] else "--no-hdr"]
-            if self.resolution["bitrate"]:
-                args += ["--bitrate", f"{self.resolution['bitrate']}"]
-        args += ["--no-quit-after", "stream", self.hostname, self.host_app]
+        if audio:
+            args += ["--audio-config", audio]
+
+        if resolution:
+            if resolution["size"]:
+                args += ["--resolution", f"{resolution['size']['width']}x{resolution['size']['height']}"]
+            if resolution["fps"]:
+                args += ["--fps", f"{resolution['fps']}"]
+            if resolution["hdr"] is not None:
+                args += ["--hdr" if resolution["hdr"] else "--no-hdr"]
+            if resolution["bitrate"]:
+                args += ["--bitrate", f"{resolution['bitrate']}"]
+        args += ["--no-quit-after", "stream", hostname, host_app]
 
         logger.info(f"Executing: {exec} {' '.join(args)}")
         self.process = await asyncio.create_subprocess_exec(exec, *args,
                                                             stdout=asyncio.subprocess.PIPE,
                                                             stderr=asyncio.subprocess.STDOUT)
+        self.__proc = psutil.Process(self.process.pid)
 
     async def terminate(self):
+        if self.process is None:
+            return
+
+        assert self.__proc is not None
+        def ps_signal(kill: bool):
+            def do_signal(proc_or_child):
+                try:
+                    if kill:
+                        proc_or_child.kill()
+                    else:
+                        proc_or_child.terminate()
+                except psutil.NoSuchProcess:
+                    pass
+            
+            proc = cast(psutil.Process, self.__proc)
+            for child in list(proc.children(recursive=True)):
+                do_signal(child)
+
+            do_signal(proc)
+
+        try:
+            logger.info("Trying to gracefully terminate Moonlight...")
+            ps_signal(kill=False)
+            try:
+                await asyncio.wait_for(self.process.wait(), timeout=5.0)
+                logger.info("Moonlight terminated gracefully.")
+            except asyncio.TimeoutError:
+                logger.info("Moonlight did not terminate in time - killing it!")
+                ps_signal(kill=True)
+                await self.process.wait()
+        except ProcessLookupError:
+            pass
+        finally:
+            self.process = None
+            self.__proc = None
+
+    async def wait_until_log_entry(self, callback: Callable[[str], bool]):
         if not self.process:
             return
 
-        await self.terminate_all_instances(kill_all=False)
-        self.process = None
+        async def handle_stream(stream: Optional[asyncio.StreamReader]):
+            if not stream:
+                logger.error("NULL Moonlight stream handle!")
+                return
+
+            while not stream.at_eof():
+                data = await stream.readline()
+                if callback(data.decode()):
+                    break
+
+        process_task = asyncio.create_task(self.process.wait())
+        log_task = asyncio.create_task(handle_stream(self.process.stdout))
+        await asyncio.wait({process_task, log_task}, return_when=asyncio.FIRST_COMPLETED)
 
     async def wait(self):
         if not self.process:
@@ -100,35 +163,9 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
         log_task = asyncio.create_task(log_stream(self.process.stdout))
         await asyncio.wait({process_task, log_task}, return_when=asyncio.ALL_COMPLETED)
 
-    async def terminate_all_instances(self, kill_all: bool):
-        if self.exec_path is None or kill_all:
-            flatpak_exec = self.__get_flatpak_exec()
-            if flatpak_exec is None:
-                return
-
-            kill_proc = await asyncio.create_subprocess_exec(flatpak_exec, "kill", MoonlightProxy.flatpak_moonlight,
-                                                             stdout=asyncio.subprocess.PIPE,
-                                                             stderr=asyncio.subprocess.PIPE)
-            output, _ = await kill_proc.communicate()
-            if output:
-                newline = "\n"
-                logger.info(f"flatpak kill output: {newline}{output.decode().strip(newline)}")
-
-        if self.exec_path is not None or kill_all:
-            if self.process:
-                try:
-                    self.process.kill()
-                except ProcessLookupError:
-                    pass
-                self.process = None
-            else:
-                kill_proc = await asyncio.create_subprocess_shell("pkill -f -e -i \"moonlight\"",
-                                                                  stdout=asyncio.subprocess.PIPE,
-                                                                  stderr=asyncio.subprocess.PIPE)
-                output, _ = await kill_proc.communicate()
-                if output:
-                    newline = "\n"
-                    logger.info(f"pkill output: {newline}{output.decode().strip(newline)}")
+    async def terminate_all_instances(self):
+        await self.__kill_flatpak_app()
+        await self.__kill_any_moonlight_app()
 
     async def is_moonlight_installed(self):
         if self.exec_path is None:
@@ -139,7 +176,7 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
 
             list_proc = await asyncio.create_subprocess_exec(flatpak_exec, "list",
                                                              stdout=asyncio.subprocess.PIPE,
-                                                             stderr=asyncio.subprocess.PIPE)
+                                                             stderr=asyncio.subprocess.DEVNULL)
             output, _ = await list_proc.communicate()
             if output:
                 return output.decode().find(MoonlightProxy.flatpak_moonlight) != -1
@@ -156,3 +193,39 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
     
     def __get_flatpak_exec(self):
         return shutil.which("flatpak")
+    
+    def __get_exec_with_args(self):
+        if self.exec_path is None:
+            exec = self.__get_flatpak_exec()
+            args = ["run", "--arch=x86_64", "--command=moonlight", self.flatpak_moonlight]
+
+            if exec is None:
+                raise Exception("Moonlight is not installed!")
+        else:
+            exec = self.exec_path
+            args = []
+
+        return exec, args
+    
+    async def __kill_flatpak_app(self):
+        flatpak_exec = self.__get_flatpak_exec()
+        if flatpak_exec is None:
+            return
+
+        kill_proc = await asyncio.create_subprocess_exec(flatpak_exec, "kill", MoonlightProxy.flatpak_moonlight,
+                                                         stdout=asyncio.subprocess.PIPE,
+                                                         stderr=asyncio.subprocess.STDOUT)
+        output, _ = await kill_proc.communicate()
+        if output:
+            newline = "\n"
+            logger.info(f"flatpak kill output: {newline}{output.decode().strip(newline)}")
+
+    async def __kill_any_moonlight_app(self):
+        kill_proc = await asyncio.create_subprocess_shell("pkill -f -e -i \"moonlight\"",
+                                                          stdout=asyncio.subprocess.PIPE,
+                                                          stderr=asyncio.subprocess.STDOUT)
+        output, _ = await kill_proc.communicate()
+        if output:
+            newline = "\n"
+            logger.info(f"pkill output: {newline}{output.decode().strip(newline)}")
+        

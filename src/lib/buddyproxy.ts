@@ -13,6 +13,8 @@ export type NonSteamAppData = Array<{ app_id: string; app_name: string }> | null
 interface ClientInfo {
   hostId: string;
   address: string;
+  hostName: string;
+  moonlightExecPath: string | null;
   buddyPort: number;
   clientId: string;
   timeouts: RunnerTimeouts;
@@ -38,7 +40,7 @@ async function getBuddyInfo(info: ClientInfo, timeout: number): Promise<BuddyInf
 
 async function getGameStreamAppNames(info: ClientInfo, timeout: number): Promise<GameStreamAppNames> {
   try {
-    return await call<[string, number, string, number], GameStreamAppNames>("get_gamestream_app_names", info.address, info.buddyPort, info.clientId, timeout);
+    return await call<[string, string | null, number], GameStreamAppNames>("get_gamestream_app_names", info.hostName, info.moonlightExecPath, timeout);
   } catch (message) {
     logger.critical("Error while fetching gamestream apps: ", message);
   }
@@ -83,15 +85,17 @@ export class BuddyProxy {
     const hostSettings = this.settingsManager.hostSettings;
     const hostId = this.settingsManager.settings.value?.currentHostId ?? null;
     const address = hostSettings?.address ?? null;
+    const hostName = hostSettings?.hostName ?? null;
+    const moonlightExecPath = this.settingsManager.settings.value?.moonlightExecPath ?? null;
     const buddyPort = hostSettings?.buddy.port ?? null;
     const clientId = this.settingsManager.settings.value?.clientId ?? null;
     const timeouts = hostSettings?.runnerTimeouts ?? null;
 
-    if (hostId === null || address === null || buddyPort === null || clientId === null || timeouts === null) {
+    if (hostId === null || address === null || hostName === null || buddyPort === null || clientId === null || timeouts === null) {
       return null;
     }
 
-    return { hostId, address, buddyPort, clientId, timeouts };
+    return { hostId, address, hostName, moonlightExecPath, buddyPort, clientId, timeouts };
   }
 
   constructor(settingsManager: SettingsManager) {
@@ -130,7 +134,7 @@ export class BuddyProxy {
       return null;
     }
 
-    return await getGameStreamAppNames(clientInfo, 3);
+    return await getGameStreamAppNames(clientInfo, 5);
   }
 
   async getNonSteamAppData(): Promise<NonSteamAppData> {
