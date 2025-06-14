@@ -26,6 +26,7 @@ class MoonDeckAppRunnerSettings(TypedDict):
     app_id: str
     debug_logs: bool
     runner_type: Literal[RunnerType.MoonDeck]
+    quit_after: Optional[bool]
 
 
 class MoonlightOnlyRunnerSettings(TypedDict):
@@ -42,6 +43,7 @@ class MoonlightOnlyRunnerSettings(TypedDict):
     moonlight_exec_path: Optional[str]
     debug_logs: bool
     runner_type: Literal[RunnerType.MoonlightOnly]
+    quit_after: Optional[bool]
 
 
 def parse_audio_settings(host_settings: HostSettings, env_settings: EnvSettings) -> Optional[str]:
@@ -165,7 +167,8 @@ async def parse_settings() -> MoonDeckAppRunnerSettings | MoonlightOnlyRunnerSet
             "moonlight_exec_path": user_settings["moonlightExecPath"] if user_settings["useMoonlightExec"] else None,
             "app_id": env_settings["app_id"],
             "debug_logs": user_settings["runnerDebugLogs"],
-            "runner_type": RunnerType.MoonDeck
+            "runner_type": RunnerType.MoonDeck,
+            "quit_after": False
         })
     else:
         if env_settings["app_name"] is None:
@@ -184,5 +187,6 @@ async def parse_settings() -> MoonDeckAppRunnerSettings | MoonlightOnlyRunnerSet
             "timeouts": host_settings["runnerTimeouts"],
             "moonlight_exec_path": user_settings["moonlightExecPath"] if user_settings["useMoonlightExec"] else None,
             "debug_logs": user_settings["runnerDebugLogs"],
-            "runner_type": RunnerType.MoonlightOnly
+            "runner_type": RunnerType.MoonlightOnly,
+            "quit_after": None
         })

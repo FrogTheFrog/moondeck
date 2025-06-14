@@ -64,7 +64,7 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
             return sorted(list(apps))
         return None     
 
-    async def start(self, hostname: str, host_app: str, audio: Optional[str] = None, resolution: Optional[ResolutionDimensions] = None):
+    async def start(self, hostname: str, host_app: str, audio: Optional[str] = None, resolution: Optional[ResolutionDimensions] = None, quit_after: Optional[bool] = None):
         assert self.process is None, "Another instance of Moonlight has been started already!"
         exec, args = self.__get_exec_with_args()
 
@@ -80,7 +80,14 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
                 args += ["--hdr" if resolution["hdr"] else "--no-hdr"]
             if resolution["bitrate"]:
                 args += ["--bitrate", f"{resolution['bitrate']}"]
-        args += ["--no-quit-after", "stream", hostname, host_app]
+
+        if quit_after is not None:
+            if quit_after:
+                args += ["--quit-after"]
+            else:
+                args += ["--no-quit-after"]
+
+        args += ["stream", hostname, host_app]
 
         logger.info(f"Executing: {exec} {' '.join(args)}")
         self.process = await asyncio.create_subprocess_exec(exec, *args,

@@ -195,7 +195,7 @@ class MoonDeckAppRunner:
             break
 
     @staticmethod
-    async def start_moonlight(proxy: MoonlightProxy, hostname: str, host_app: str, audio: Optional[str], resolution: Optional[ResolutionDimensions]):
+    async def start_moonlight(proxy: MoonlightProxy, hostname: str, host_app: str, audio: Optional[str], resolution: Optional[ResolutionDimensions], quit_after: Optional[bool]):
         logger.info("Checking if Moonlight flatpak is installed or custom binary exists")
         if not await proxy.is_moonlight_installed():
             raise RunnerError(Result.MoonlightIsNotInstalled)
@@ -204,7 +204,7 @@ class MoonDeckAppRunner:
         await proxy.terminate_all_instances()
 
         logger.info("Starting Moonlight")
-        await proxy.start(hostname, host_app, audio, resolution)
+        await proxy.start(hostname, host_app, audio, resolution, quit_after)
 
     @staticmethod
     async def wait_for_stream_to_stop(client: BuddyClient, timeout: int):
@@ -258,7 +258,8 @@ class MoonDeckAppRunner:
                                       hostname=settings["hostname"],
                                       host_app=settings["host_app"],
                                       audio=settings["audio"] if settings["pass_to_moonlight"] else None,
-                                      resolution=settings["resolution"] if settings["pass_to_moonlight"] else None)
+                                      resolution=settings["resolution"] if settings["pass_to_moonlight"] else None,
+                                      quit_after=settings["quit_after"])
 
             proxy_task = asyncio.create_task(proxy.wait())
             launch_task = asyncio.create_task(MoonDeckAppLauncher.launch(client=client,
