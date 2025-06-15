@@ -13,6 +13,8 @@ export const ChangelogView: FC = () => {
               <div>&bull; Added MoonDeck CLI to the repo while fixing some edge case bugs on the python side.</div>
               <div>&bull; GameStream (formerly Sunshine) apps are now take directly from Moonlight client.</div>
               <div>&bull; Renamed "Sunshine Apps" to "GameStream Apps" since to reflect the change from above.</div>
+              <div>&bull; For GameStream apps "--no-quit-after" is no longer enforced.</div>
+              <div>&bull; Hostname is now displayed on the WOL screen when launching app.</div>
             </>
           }
           focusable={true}
