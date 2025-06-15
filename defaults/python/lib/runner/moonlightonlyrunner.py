@@ -9,10 +9,10 @@ from ..moonlightproxy import MoonlightProxy, ResolutionDimensions
 
 class MoonlightOnlyRunner:
     @staticmethod
-    async def check_connectivity(address: str, mac: str, host_id: str, host_port: int, wol_timeout: int, server_timeout: int):
+    async def check_connectivity(address: str, mac: str, host_id: str, hostname: str, host_port: int, wol_timeout: int, server_timeout: int):
         logger.info("Checking connection to GameStream server")
 
-        async with WolSplashScreen(address, mac, wol_timeout) as splash:
+        async with WolSplashScreen(address, mac, wol_timeout, hostname) as splash:
             while True:
                 server_info = await get_server_info(address=address, 
                                                     port=host_port, 
@@ -45,6 +45,7 @@ class MoonlightOnlyRunner:
             await cls.check_connectivity(address=settings["address"], 
                                          mac=settings["mac"],
                                          host_id=settings["host_id"],
+                                         hostname=settings["hostname"],
                                          host_port=settings["host_port"],
                                          wol_timeout=settings["timeouts"]["wakeOnLan"],
                                          server_timeout=settings["timeouts"]["servicePing"])

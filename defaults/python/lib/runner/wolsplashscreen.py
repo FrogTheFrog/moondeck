@@ -63,32 +63,62 @@ class LoadingBar:
 
 
 class LoadingLabel:
-    def __init__(self, width, height, text):
-        self.__label = pyglet.text.Label(x=0, y=0, anchor_y="bottom",
-                                         text=text, weight="bold", font_size=0,
-                                         color=TEXT_COLOR)
+    def __init__(self, width, height):
+        def make_label():
+            return pyglet.text.Label(x=0, y=0, anchor_y="bottom",
+                                     weight="bold", font_size=0,
+                                     color=TEXT_COLOR)
+
+        self.__label_main = make_label()
+        self.__label_repeat = make_label()
+        self.__scroll_x = 0
         self.resize(width, height)
 
     def resize(self, width, height):
         width_ratio = 4/6
-        self.__label.x = ((1 - width_ratio) / 2) * width
-        self.__label.y = height / 2 + 5
+        self.__x = ((1 - width_ratio) / 2) * width
+        self.__width = round(width * width_ratio)
+        self.__scroll_speed = self.__width / 320
+
+        self.__label_main.x = self.__label_repeat.x = self.__x
+        self.__label_main.y = self.__label_repeat.y = height / 2 + 5
 
         font_size_pts = 24
-        self.__label.font_size = int(((width_ratio * width) / font_size_pts) * 0.83)
+        self.__label_main.font_size = self.__label_repeat.font_size = int(((width_ratio * width) / font_size_pts) * 0.83)
 
     def set_text(self, text):
-        self.__label.text = text
+        self.__label_main.text = self.__label_repeat.text = text
 
     def draw(self):
-        self.__label.draw()
+        if self.__label_main.content_width <= self.__width:
+            self.__label_main.draw()
+            return
+        
+        pyglet.gl.glEnable(pyglet.gl.GL_SCISSOR_TEST)
+        pyglet.gl.glScissor(int(self.__x), int(self.__label_main.y), self.__width, self.__label_main.content_height)
+
+        def set_scroll_offset(offset):
+            distance_between_labels = 60
+            self.__scroll_x = offset
+            self.__label_main.x = self.__x - self.__scroll_x
+            self.__label_repeat.x = self.__label_main.x + self.__label_main.content_width + distance_between_labels
+
+        set_scroll_offset(self.__scroll_x + self.__scroll_speed)
+
+        if self.__label_repeat.x < self.__x:
+            set_scroll_offset(self.__x - self.__label_repeat.x)
+
+        self.__label_main.draw()
+        self.__label_repeat.draw()
+
+        pyglet.gl.glDisable(pyglet.gl.GL_SCISSOR_TEST)
 
 
 class Canvas(pyglet.window.Window):
     def __init__(self):
-        super().__init__(fullscreen=True, visible=False, caption="MoonDeck WOL Splash")
+        super().__init__(fullscreen=False, visible=False, resizable=True, caption="MoonDeck WOL Splash")
 
-        self.label = LoadingLabel(width=self.width, height=self.height, text="Checking connection to the host...")
+        self.label = LoadingLabel(width=self.width, height=self.height)
         self.bar = LoadingBar(width=self.width, height=self.height)
 
     def on_resize(self, width, height):
@@ -115,7 +145,8 @@ class Canvas(pyglet.window.Window):
 
 
 class WolSplashScreen:
-    def __init__(self, address: str, mac: str, timeout: int):
+    def __init__(self, address: str, mac: str, timeout: int, hostname: str):
+        self.hostname = hostname
         if timeout > 0:
             wake_on_lan(address=address, mac=mac)
             self.timeout_end = datetime.now(timezone.utc) + timedelta(seconds=timeout)
@@ -145,6 +176,7 @@ class WolSplashScreen:
             return self
         
         self.canvas = Canvas() # Added to pyglet.app.windows
+        self.canvas.label.set_text(text=f"Checking connection to {self.hostname}...")
         self.close_flag = False
         self.task = asyncio.create_task(self.__run_loop())
         return self
@@ -162,5 +194,5 @@ class WolSplashScreen:
         if ((buddy_status is None or buddy_status) and server_status) or (datetime.now(timezone.utc) > self.timeout_end):
             return False
         
-        self.canvas.label.set_text(text="Waiting for the host...")
+        self.canvas.label.set_text(text=f"Waiting for {self.hostname}...")
         return True

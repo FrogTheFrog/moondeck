@@ -143,10 +143,10 @@ class MoonDeckAppLauncher:
 
 class MoonDeckAppRunner:
     @staticmethod
-    async def check_connectivity(client: BuddyClient, mac: str, host_id: str, host_port: int, wol_timeout: int, server_timeout: int):
+    async def check_connectivity(client: BuddyClient, mac: str, host_id: str, hostname: str, host_port: int, wol_timeout: int, server_timeout: int):
         logger.info("Checking connection to Buddy and GameStream server")
 
-        async with WolSplashScreen(client.address, mac, wol_timeout) as splash:
+        async with WolSplashScreen(client.address, mac, wol_timeout, hostname) as splash:
             while True:
                 try:
                     await client.say_hello(force=True)
@@ -248,6 +248,7 @@ class MoonDeckAppRunner:
             await cls.check_connectivity(client=client, 
                                          mac=settings["mac"],
                                          host_id=settings["host_id"],
+                                         hostname=settings["hostname"],
                                          host_port=settings["host_port"],
                                          wol_timeout=settings["timeouts"]["wakeOnLan"],
                                          server_timeout=settings["timeouts"]["servicePing"])
