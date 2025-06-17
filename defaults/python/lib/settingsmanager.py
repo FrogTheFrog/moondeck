@@ -27,7 +27,7 @@ class SettingsManager(Generic[TD], metaclass=ABCMeta):
 
                         self._migrate_settings(data)
                         migrated_data = from_dict(self.settings_type, data)
-                        if initial_data != migrated_data:
+                        if initial_data == migrated_data:
                             raise Exception(
                                 f"Settings migration for {self.settings_type} was not performed! Initial data: {initial_data}")
                         else:
