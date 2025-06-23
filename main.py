@@ -220,13 +220,13 @@ class Plugin:
             logger.exception("Unhandled exception")
 
     @utils.async_scope_log(logger.info)
-    async def get_gamestream_app_names(self, address: str, buddy_port: int, client_id: str, timeout: float):
+    async def get_game_stream_app_names(self, address: str, buddy_port: int, client_id: str, timeout: float):
         try:
             async with BuddyClient(address, buddy_port, client_id, timeout) as client:
                 return await client.get_game_stream_app_names()
 
         except BuddyException:
-            logger.exception("While retrieving non-Steam app data")
+            logger.exception("While retrieving GameStream app names")
             return None
 
         except Exception:
