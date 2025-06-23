@@ -240,7 +240,12 @@ class BuddyRequests(contextlib.AbstractAsyncContextManager):
         async with self.__session.post(f"{self.base_url}/endStream") as resp:
             data = await resp.json(encoding="utf-8")
             return utils.from_dict(ResultLikeResponse, data)
-        
+    
+    async def get_game_stream_app_names(self):
+        async with self.__session.get(f"{self.base_url}/gameStreamAppNames") as resp:
+            data = await resp.json(encoding="utf-8")
+            return utils.from_dict(GameStreamAppNamesResponse, data)
+
     async def get_non_steam_app_data(self, user_id: str):
         data = {
             "user_id": user_id

@@ -35,6 +35,7 @@ from lib.cli.settings import CliSettingsManager
 
 from lib.cli.cmd.app.clear import execute as cmd_app_clear
 from lib.cli.cmd.app.launch import execute as cmd_app_launch
+from lib.cli.cmd.app.list.game_stream import execute as cmd_app_list_game_stream
 from lib.cli.cmd.app.list.non_steam import execute as cmd_app_list_non_steam
 from lib.cli.cmd.app.status import execute as cmd_app_status
 
@@ -150,6 +151,28 @@ def add_cmd_app(main_subparsers: _SubParsersAction[ArgumentParserWithRedirect]):
     list_subparsers = list_parser.add_subparsers(
         dest="cmd3", help="command to execute")
     
+    # -------- Setup `game-stream` command
+    game_stream_parser = list_subparsers.add_parser(
+        "game-stream", help="print the list of GameStream apps on the host")
+    game_stream_parser.add_argument(
+        "--host", type=str, help=DESC_HOST)
+    game_stream_parser.add_argument(
+        "--json", action="store_true", help=DESC_JSON)
+    game_stream_parser.add_argument(
+        "--buddy-timeout", type=TYPE_TIMEOUT, default=DEF_TIMEOUT, help=DESC_BUDDY_TIMEOUT)
+
+    # -------- Setup `non-steam` command
+    non_steam_parser = list_subparsers.add_parser(
+        "non-steam", help="print the list of non-Steam apps on the host")
+    non_steam_parser.add_argument(
+        "user-id", type=str, help="the Steam user id in SteamID64 format to get apps for")
+    non_steam_parser.add_argument(
+        "--host", type=str, help=DESC_HOST)
+    non_steam_parser.add_argument(
+        "--json", action="store_true", help=DESC_JSON)
+    non_steam_parser.add_argument(
+        "--buddy-timeout", type=TYPE_TIMEOUT, default=DEF_TIMEOUT, help=DESC_BUDDY_TIMEOUT)
+    
     # -------- Setup `launch` command
     launch_parser = app_subparsers.add_parser(
         "launch", help="launch the app on host")
@@ -185,18 +208,6 @@ def add_cmd_app(main_subparsers: _SubParsersAction[ArgumentParserWithRedirect]):
         "--launch-retries", type=TYPE_RETRY, default=30, help="how long to wait until app's state changes from \"Stopped\" (default: %(default)s time(s))")
     launch_parser.add_argument(
         "--stream-end-retries", type=TYPE_RETRY, default=15, help="how long to until the MoonDeckStream is ended at the end of successful session (default: %(default)s time(s))")
-
-    # -------- Setup `non-steam` command
-    non_steam_parser = list_subparsers.add_parser(
-        "non-steam", help="print the list of non-Steam games on the host")
-    non_steam_parser.add_argument(
-        "user-id", type=str, help="the Steam user id in SteamID64 format to get apps for")
-    non_steam_parser.add_argument(
-        "--host", type=str, help=DESC_HOST)
-    non_steam_parser.add_argument(
-        "--json", action="store_true", help=DESC_JSON)
-    non_steam_parser.add_argument(
-        "--buddy-timeout", type=TYPE_TIMEOUT, default=DEF_TIMEOUT, help=DESC_BUDDY_TIMEOUT)
 
     # -------- Setup `status` command
     status_parser = app_subparsers.add_parser(
@@ -452,6 +463,7 @@ async def main():
                 "clear": cmd_app_clear,
                 "launch": cmd_app_launch,
                 "list": {
+                    "game-stream": cmd_app_list_game_stream,
                     "non-steam": cmd_app_list_non_steam
                 },
                 "status": cmd_app_status

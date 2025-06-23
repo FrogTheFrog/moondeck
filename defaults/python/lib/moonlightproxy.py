@@ -43,9 +43,9 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
 
         args += ["list", hostname]
         logger.info(f"Executing: {exec} {' '.join(args)}")
-        self.process = await asyncio.create_subprocess_shell(f"{exec} {' '.join(args)}",
-                                                             stdout=asyncio.subprocess.PIPE,
-                                                             stderr=asyncio.subprocess.DEVNULL)
+        self.process = await asyncio.create_subprocess_exec(exec, *args,
+                                                            stdout=asyncio.subprocess.PIPE,
+                                                            stderr=asyncio.subprocess.DEVNULL)
         self.__proc = psutil.Process(self.process.pid)
 
         output, _ = await self.process.communicate()
@@ -131,24 +131,6 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
         finally:
             self.process = None
             self.__proc = None
-
-    async def wait_until_log_entry(self, callback: Callable[[str], bool]):
-        if not self.process:
-            return
-
-        async def handle_stream(stream: Optional[asyncio.StreamReader]):
-            if not stream:
-                logger.error("NULL Moonlight stream handle!")
-                return
-
-            while not stream.at_eof():
-                data = await stream.readline()
-                if callback(data.decode()):
-                    break
-
-        process_task = asyncio.create_task(self.process.wait())
-        log_task = asyncio.create_task(handle_stream(self.process.stdout))
-        await asyncio.wait({process_task, log_task}, return_when=asyncio.FIRST_COMPLETED)
 
     async def wait(self):
         if not self.process:
