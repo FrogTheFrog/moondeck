@@ -7,7 +7,7 @@ def add_plugin_to_path():
     script_dir = Path(__file__).parent.resolve()
     directories = [["python"], ["python", "lib"], ["python", "externals"]]
     for dir in directories:
-        sys.path.insert(0, str(script_dir.joinpath(*dir)))
+        sys.path.append(str(script_dir.joinpath(*dir)))
 
     def restore_path():
         sys.path = sys_path_backup
