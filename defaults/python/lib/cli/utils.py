@@ -7,7 +7,7 @@ from typing import cast
 from lib.cli.settings import CliSettingsManager, CliSettings
 from lib.gamestreaminfo import GameStreamHost, get_server_info
 from lib.logger import logger
-from lib.buddyclient import BuddyClient, BuddyException, HelloResult
+from lib.buddyclient import BuddyClient, BuddyException
 
 
 def cmd_entry(f):

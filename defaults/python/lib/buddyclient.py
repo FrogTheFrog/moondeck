@@ -36,6 +36,11 @@ class CloseSteamResult(Enum):
     Failed = "Failed to close Steam via Buddy!"
 
 
+class CloseSteamBigPictureModeResult(Enum):
+    BuddyRefused = "Buddy refused to close BPM. Check the logs on host!"
+    Failed = "Failed to close BPM via Buddy!"
+
+
 class ChangePcStateResult(Enum):
     BuddyRefused = "Buddy refused to change PC state. Check the logs on host!"
     Failed = "Failed to change PC state via Buddy!"
@@ -230,6 +235,15 @@ class BuddyClient(contextlib.AbstractAsyncContextManager):
                 raise BuddyException(CloseSteamResult.BuddyRefused)
 
         return await self._try_request(request(), CloseSteamResult.Failed)
+    
+    async def close_steam_big_picture_mode(self):
+        async def request():
+            await self.say_hello()
+            resp = await self.__requests.post_close_steam_big_picture_mode()
+            if not resp["result"]:
+                raise BuddyException(CloseSteamBigPictureModeResult.BuddyRefused)
+
+        return await self._try_request(request(), CloseSteamBigPictureModeResult.Failed)
 
     async def change_pc_state(self, state: PcStateChange, delay_s: int):
         async def request():

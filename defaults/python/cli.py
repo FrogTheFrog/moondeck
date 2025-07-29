@@ -52,7 +52,8 @@ from lib.cli.cmd.host.shutdown import execute as cmd_host_shutdown
 from lib.cli.cmd.host.suspend import execute as cmd_host_suspend
 from lib.cli.cmd.host.wake import execute as cmd_host_wake
 
-from lib.cli.cmd.steam.close import execute as cmd_steam_close
+from lib.cli.cmd.steam.close.bpm import execute as cmd_steam_close_bpm
+from lib.cli.cmd.steam.close.client import execute as cmd_steam_close_client
 from lib.cli.cmd.steam.launch import execute as cmd_steam_launch
 from lib.cli.cmd.steam.status import execute as cmd_steam_status
 
@@ -197,7 +198,7 @@ def add_cmd_app(main_subparsers: _SubParsersAction[ArgumentParserWithRedirect]):
     launch_parser.add_argument(
         "--no-cleanup", action="store_true", help="do not end MoonDeckStream or clear monitored app data if launch fails")
     launch_parser.add_argument(
-        "--close-steam", action="store_true", help="close Steam once the launched app has been ended at the end of successful session")
+        "--close-steam", choices=["client", "bpm"], help="close Steam or BPM once the launched app has been ended at the end of successful session")
     launch_parser.add_argument(
         "--stream-rdy-retries", type=TYPE_RETRY, default=30, help="how long to keep checking until MoonDeckStream is running (default: %(default)s time(s))")
     launch_parser.add_argument(
@@ -357,9 +358,23 @@ def add_cmd_steam(main_subparsers: _SubParsersAction[ArgumentParserWithRedirect]
     steam_subparsers = steam_parser.add_subparsers(
         dest="cmd2", help="command to execute")
     
-    # -------- Setup `close` command
+    # -------- Setup `close` group
     close_parser = steam_subparsers.add_parser(
-        "close", help="close Steam on host")
+        "close", help="close Steam components from Buddy")
+    close_subparsers = close_parser.add_subparsers(
+        dest="cmd3", help="command to execute")
+    
+    # -------- Setup `client` command
+    close_parser = close_subparsers.add_parser(
+        "client", help="close Steam client on host")
+    close_parser.add_argument(
+        "--host", type=str, help=DESC_HOST)
+    close_parser.add_argument(
+        "--buddy-timeout", type=TYPE_TIMEOUT, default=DEF_TIMEOUT, help=DESC_BUDDY_TIMEOUT)
+    
+    # -------- Setup `bpm` command
+    close_parser = close_subparsers.add_parser(
+        "bpm", help="close Steam's BPM on host")
     close_parser.add_argument(
         "--host", type=str, help=DESC_HOST)
     close_parser.add_argument(
@@ -485,7 +500,10 @@ async def main():
                 "wake": cmd_host_wake
             },
             "steam": {
-                "close": cmd_steam_close,
+                "close": {
+                    "bpm": cmd_steam_close_bpm,
+                    "client": cmd_steam_close_client
+                },
                 "launch": cmd_steam_launch,
                 "status": cmd_steam_status
             },

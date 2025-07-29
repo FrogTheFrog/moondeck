@@ -191,6 +191,11 @@ class BuddyRequests(contextlib.AbstractAsyncContextManager):
         async with self.__session.post(f"{self.base_url}/closeSteam") as resp:
             data = await resp.json(encoding="utf-8")
             return utils.from_dict(ResultLikeResponse, data)
+        
+    async def post_close_steam_big_picture_mode(self):
+        async with self.__session.post(f"{self.base_url}/closeSteamBigPictureMode") as resp:
+            data = await resp.json(encoding="utf-8")
+            return utils.from_dict(ResultLikeResponse, data)
 
     async def get_pc_state(self):
         async with self.__session.get(f"{self.base_url}/pcState") as resp:

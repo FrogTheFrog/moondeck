@@ -32,6 +32,6 @@ async def execute(buddy_client: BuddyClient, json: bool):
     else:
         logger.info("Steam status:")
         logger.info(f"  Running          : {data["status"]["running"]}")
-        logger.info(f"  BIg Picture Mode : {data["status"]["bpm"]}")
+        logger.info(f"  Big Picture Mode : {data["status"]["bpm"]}")
 
     return 0

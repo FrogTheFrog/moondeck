@@ -1,6 +1,9 @@
+from typing import Literal, Optional
+
 from lib.cli.utils import buddy_session, check_connectivity, cmd_entry, host_pattern_matcher, settings_watcher, wol_settings
 from lib.buddyclient import BuddyClient
 from lib.logger import logger
+from lib.runner.settingsparser import CloseSteam
 from lib.runner.moondeckapprunner import MoonDeckAppRunner, MoonDeckAppLauncher
 from lib.cli.settings import CliSettings
 from lib.utils import wake_on_lan
@@ -13,7 +16,7 @@ from lib.utils import wake_on_lan
 @cmd_entry
 async def execute(buddy_client: BuddyClient, settings: CliSettings, host_id: str, app_id: str,
                   wol_address: str, wol_mac: str, simple: bool, server_timeout: float, ping_timeout: int,
-                  bpm: bool, no_stream: bool, no_cleanup: bool, close_steam: bool, precheck_retries: int,
+                  bpm: bool, no_stream: bool, no_cleanup: bool, close_steam: Optional[Literal["client", "bpm"]], precheck_retries: int,
                   stream_rdy_retries: int, steam_rdy_retries: int, stability_retries: int, launch_retries: int,
                   stream_end_retries: int):
     if simple:
@@ -45,15 +48,23 @@ async def execute(buddy_client: BuddyClient, settings: CliSettings, host_id: str
                                      manage_stream=not no_stream)
 
     if not no_stream:
+        close_steam_setting = {
+            "client": CloseSteam.Client,
+            "bpm": CloseSteam.BigPictureMode
+        }
+
         await MoonDeckAppRunner.end_successful_stream(client=buddy_client,
-                                                      close_steam=close_steam,
+                                                      close_steam=close_steam_setting.get(close_steam) if close_steam else None,
                                                       timeout=stream_end_retries)
     else:
         logger.info("Clearing streamed app data") 
         await buddy_client.clear_streamed_app_data()
 
-        if close_steam:
+        if close_steam == "client":
             logger.info("Asking to close Steam if it's still open")
             await buddy_client.close_steam()
+        elif close_steam == "bpm":
+            logger.info("Asking to close Steam's BPM if it's still open")
+            await buddy_client.close_steam_big_picture_mode()
 
     return 0

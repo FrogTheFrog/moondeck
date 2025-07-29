@@ -16,7 +16,7 @@ async def execute(settings: CliSettings, timeout: float, dry: bool, json: bool, 
         if host is None:
             logger.info("Could not reach the host")
         else:
-            logger.info("Available host:")
+            logger.info("Adding host:")
             log_gamestream_host(host)
     
     if host is None:

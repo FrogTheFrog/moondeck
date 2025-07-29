@@ -1,10 +1,16 @@
 from typing import Literal, Optional, TypedDict, cast
+from enum import Enum
 
 from .envparser import EnvSettings, parse_env_settings, RunnerType
 from ..runnerresult import RunnerError, Result
 from ..plugin.settings import Dimension, HostSettings, RunnerTimeouts, settings_manager
 from ..moonlightproxy import ResolutionDimensions
 from ..logger import logger
+
+
+class CloseSteam(Enum):
+    Client = 0
+    BigPictureMode = 1
 
 
 class MoonDeckAppRunnerSettings(TypedDict):
@@ -20,7 +26,7 @@ class MoonDeckAppRunnerSettings(TypedDict):
     buddy_port: int
     client_id: str
     big_picture_mode: bool
-    close_steam: bool
+    close_steam: Optional[CloseSteam]
     timeouts: RunnerTimeouts
     moonlight_exec_path: Optional[str]
     app_id: str
@@ -162,7 +168,7 @@ async def parse_settings() -> MoonDeckAppRunnerSettings | MoonlightOnlyRunnerSet
             "buddy_port": host_settings["buddy"]["port"],
             "client_id": user_settings["clientId"],
             "big_picture_mode": host_settings["buddy"]["bigPictureMode"],
-            "close_steam": host_settings["buddy"]["closeSteamOnceSessionEnds"],
+            "close_steam": CloseSteam.Client if host_settings["buddy"]["closeSteamOnceSessionEnds"] else None,
             "timeouts": host_settings["runnerTimeouts"],
             "moonlight_exec_path": user_settings["moonlightExecPath"] if user_settings["useMoonlightExec"] else None,
             "app_id": env_settings["app_id"],

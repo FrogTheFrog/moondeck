@@ -2,7 +2,7 @@ import asyncio
 
 from typing import Optional, cast
 
-from .settingsparser import MoonDeckAppRunnerSettings
+from .settingsparser import MoonDeckAppRunnerSettings, CloseSteam
 from .wolsplashscreen import WolSplashScreen
 from ..buddyrequests import AppState, SteamUiMode, StreamState, StreamStateResponse, SteamUiModeResponse, StreamedAppDataResponse
 from ..runnerresult import Result, RunnerError
@@ -223,13 +223,16 @@ class MoonDeckAppRunner:
                 break
 
     @classmethod
-    async def end_successful_stream(cls, client: BuddyClient, close_steam: bool, timeout: int):
+    async def end_successful_stream(cls, client: BuddyClient, close_steam: Optional[CloseSteam], timeout: int):
         logger.info("App closed gracefully, ending stream if it's still open")
         await client.end_stream()
 
-        if close_steam:
+        if close_steam == CloseSteam.Client:
             logger.info("Asking to close Steam if it's still open")
             await client.close_steam()
+        elif close_steam == CloseSteam.BigPictureMode:
+            logger.info("Asking to close Steam's BPM if it's still open")
+            await client.close_steam_big_picture_mode()
             
         await cls.wait_for_stream_to_stop(client=client,
                                           timeout=timeout)
