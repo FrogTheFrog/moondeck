@@ -1,7 +1,6 @@
 {
     "version": "2.0.0",
     "tasks": [
-        // OTHER
         {
             "label": "checkforsettings",
             "type": "shell",
@@ -15,86 +14,15 @@
                 "close": true
             }
         },
-        // BUILD
         {
-            "label": "pnpmsetup",
-            "type": "shell",
-            "group": "build",
-            "detail": "Setup pnpm",
-            "command": "pnpm i",
-            "problemMatcher": [],
-            "presentation": {
-                "reveal": "silent",
-                "revealProblems": "onProblem",
-                "close": true
-            }
-        },
-        {
-            "label": "update_ui",
-            "type": "shell",
-            "group": "build",
-            "detail": "Update DFL",
-            "command": "pnpm update @decky/ui --latest",
-            "problemMatcher": [],
-            "presentation": {
-                "reveal": "silent",
-                "revealProblems": "onProblem",
-                "close": true
-            }
-        },
-        {
-            "label": "update_api",
-            "type": "shell",
-            "group": "build",
-            "detail": "Update Decky API",
-            "command": "pnpm update @decky/api --latest",
-            "problemMatcher": [],
-            "presentation": {
-                "reveal": "silent",
-                "revealProblems": "onProblem",
-                "close": true
-            }
-        },
-        {
-            "label": "build",
-            "type": "npm",
-            "group": "build",
-            "detail": "rollup -c",
-            "script": "build",
-            "path": "",
-            "problemMatcher": [],
-            "presentation": {
-                "reveal": "silent",
-                "revealProblems": "onProblem",
-                "close": true
-            }
-        },
-        {
-            "label": "buildall",
-            "group": "build",
-            "detail": "Build decky-plugin-template",
-            "dependsOrder": "sequence",
-            "dependsOn": [
-                "pnpmsetup",
-                "build"
-            ],
-            "problemMatcher": [],
-            "presentation": {
-                "reveal": "silent",
-                "revealProblems": "onProblem",
-                "close": true
-            }
-        },
-        // DEPLOY
-        {
-            "label": "createfolders",
+            "label": "createpluginsfolder",
             "detail": "Create plugins folder in expected directory",
             "type": "shell",
             "group": "none",
             "dependsOn": [
                 "checkforsettings"
             ],
-            "command": "ssh deck@${config:deckip} -p ${config:deckport} ${config:deckkey} 'mkdir -p ${config:deckdir}/homebrew/pluginloader && mkdir -p ${config:deckdir}/homebrew/plugins'",
+            "command": "ssh deck@${config:deckip} -p ${config:deckport} ${config:deckkey} 'echo '${config:deckpass}' | sudo -S mkdir -p ${config:deckdir}/homebrew/plugins'",
             "problemMatcher": [],
             "presentation": {
                 "reveal": "silent",
@@ -103,15 +31,62 @@
             }
         },
         {
-            "label": "deploy",
-            "detail": "Deploy dev plugin to deck",
+            "label": "removeplugindir",
+            "detail": "Delete existing plugin directory",
             "type": "shell",
             "group": "none",
             "dependsOn": [
-                "createfolders",
-                "chmodfolders"
+                "createpluginsfolder"
             ],
-            "command": "rsync -azp --delete --chmod=D0755,F0755 --rsh='ssh -p ${config:deckport} ${config:deckkey}' --exclude='.git/' --exclude='.github/' --exclude='.vscode/' --exclude='node_modules/' --exclude='src/' --exclude='*.log' --exclude='.gitignore' . deck@${config:deckip}:${config:deckdir}/homebrew/plugins/${workspaceFolderBasename}",
+            "command": "ssh deck@${config:deckip} -p ${config:deckport} ${config:deckkey} 'echo '${config:deckpass}' | sudo -S rm -rf ${config:deckdir}/homebrew/plugins/${workspaceFolderBasename}'",
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "silent",
+                "revealProblems": "onProblem",
+                "close": true
+            }
+        },
+        {
+            "label": "deploytmp",
+            "detail": "Deploy dev plugin to tmp dir on deck",
+            "type": "shell",
+            "group": "none",
+            "dependsOn": [
+                "removeplugindir"
+            ],
+            "command": "rsync -azp --delete --chmod=D0755,F0755 --rsh='ssh -p ${config:deckport} ${config:deckkey}' --exclude='.git/' --exclude='.github/' --exclude='.vscode/' --exclude='node_modules/' --exclude='src/' --exclude='*.log' --exclude='.gitignore' . deck@${config:deckip}:/tmp/${workspaceFolderBasename}-tmp",
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "silent",
+                "revealProblems": "onProblem",
+                "close": true
+            }
+        },
+        {
+            "label": "movedeployeddir",
+            "detail": "Delete existing plugin directory",
+            "type": "shell",
+            "group": "none",
+            "dependsOn": [
+                "deploytmp"
+            ],
+            "command": "ssh deck@${config:deckip} -p ${config:deckport} ${config:deckkey} 'echo '${config:deckpass}' | sudo -S mv /tmp/${workspaceFolderBasename}-tmp ${config:deckdir}/homebrew/plugins/${workspaceFolderBasename}'",
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "silent",
+                "revealProblems": "onProblem",
+                "close": true
+            }
+        },
+        {
+            "label": "changepermissions",
+            "detail": "Change the permissions to expected ones",
+            "type": "shell",
+            "group": "none",
+            "dependsOn": [
+                "movedeployeddir"
+            ],
+            "command": "ssh deck@${config:deckip} -p ${config:deckport} ${config:deckkey} 'cd ${config:deckdir}/homebrew/plugins/ && echo '${config:deckpass}' | sudo -S chown root:root . ./${workspaceFolderBasename} ./${workspaceFolderBasename}/ ./${workspaceFolderBasename}/plugin.json'",
             "problemMatcher": [],
             "presentation": {
                 "reveal": "silent",
@@ -134,24 +109,11 @@
             }
         },
         {
-            "label": "chmodfolders",
-            "detail": "chmods folders to prevent perms issues",
-            "type": "shell",
-            "group": "none",
-            "command": "ssh deck@${config:deckip} -p ${config:deckport} ${config:deckkey} 'echo '${config:deckpass}' | sudo -S chmod -R ug+rw ${config:deckdir}/homebrew/'",
-            "problemMatcher": [],
-            "presentation": {
-                "reveal": "silent",
-                "revealProblems": "onProblem",
-                "close": true
-            }
-        },
-        {
             "label": "deployall",
             "dependsOrder": "sequence",
             "group": "none",
             "dependsOn": [
-                "deploy",
+                "changepermissions",
                 "restartloader"
             ],
             "problemMatcher": [],
@@ -161,24 +123,5 @@
                 "close": true
             }
         },
-        // ALL-IN-ONE
-        {
-            "label": "allinone",
-            "detail": "Build and deploy",
-            "dependsOrder": "sequence",
-            "group": "test",
-            "dependsOn": [
-                "buildall",
-                "deployall"
-                // Uncomment this line if you'd like your python code reloaded after deployment (this will restart Steam)
-                // ,"restartloader"
-            ],
-            "problemMatcher": [],
-            "presentation": {
-                "reveal": "silent",
-                "revealProblems": "onProblem",
-                "close": true
-            }
-        }
     ]
 }
