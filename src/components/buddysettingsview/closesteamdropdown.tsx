@@ -1,6 +1,6 @@
 import { FC } from "react";
-import { closeSteamOption } from "../../lib";
 import { ListDropdown } from "../shared";
+import { closeSteamOption } from "../../lib";
 
 const NoopText = "Do Nothing";
 const DropdownValues = [...closeSteamOption, NoopText] as const;
@@ -9,16 +9,15 @@ const DropdownValuesEx = (() => {
   for (const value of DropdownValues) {
     switch (value) {
       case NoopText:
-        extendedValues.push({ id: value, label: value })
+        extendedValues.push({ id: value, label: value });
         break;
       case "Client":
-        extendedValues.push({ id: value, label: "Close Steam Client" })
+        extendedValues.push({ id: value, label: "Close Steam Client" });
         break;
       case "BigPictureMode":
-        extendedValues.push({ id: value, label: "Close Big Picture Mode" })
+        extendedValues.push({ id: value, label: "Close Big Picture Mode" });
         break;
     }
-
   }
   return extendedValues;
 })();
@@ -38,11 +37,11 @@ interface Prop {
 
 export const CloseSteamDropdown: FC<Prop> = ({ value, setValue }) => {
   return (
-    <ListDropdown<any>
+    <ListDropdown<unknown>
       optionList={DropdownValuesEx}
       label={NoopText}
       value={convertToNoopValue(value)}
-      setValue={(value) => setValue(convertFromNoopValue(value))}
+      setValue={(value) => setValue(convertFromNoopValue(value as typeof DropdownValues[number]))}
     />
   );
 };

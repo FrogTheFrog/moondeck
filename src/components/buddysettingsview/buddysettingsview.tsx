@@ -2,11 +2,11 @@ import { DialogBody, DialogControlsSection, DialogControlsSectionHeader, Field, 
 import { FC, useContext } from "react";
 import { HostAppSelectionDropdown, LabelWithIcon, ToggleField } from "../shared";
 import { ModifyListButton, RemoveListEntryButton } from "../shared/indexedlist";
+import { CloseSteamDropdown } from "./closesteamdropdown";
 import { HostOff } from "../icons";
 import { ModifyHostAppModal } from "./modifyhostappmodal";
 import { MoonDeckContext } from "../../contexts";
 import { useCurrentHostSettings } from "../../hooks";
-import { CloseSteamDropdown } from "./closesteamdropdown";
 
 export const BuddySettingsView: FC = () => {
   const { settingsManager } = useContext(MoonDeckContext);
