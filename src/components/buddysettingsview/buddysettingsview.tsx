@@ -6,6 +6,7 @@ import { HostOff } from "../icons";
 import { ModifyHostAppModal } from "./modifyhostappmodal";
 import { MoonDeckContext } from "../../contexts";
 import { useCurrentHostSettings } from "../../hooks";
+import { CloseSteamDropdown } from "./closesteamdropdown";
 
 export const BuddySettingsView: FC = () => {
   const { settingsManager } = useContext(MoonDeckContext);
@@ -32,16 +33,20 @@ export const BuddySettingsView: FC = () => {
       <DialogControlsSection>
         <DialogControlsSectionHeader>General</DialogControlsSectionHeader>
         <ToggleField
-          label="Launch in big picture mode"
+          label="Launch in Big Picture Mode"
           description="If enabled, Buddy will open Steam in big picture mode before starting the app."
           value={hostSettings.buddy.bigPictureMode}
           setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.buddy.bigPictureMode = value; })}
         />
-        <ToggleField
-          label="Automatically close Steam on host when gaming session ends"
-          value={hostSettings.buddy.closeSteamOnceSessionEnds}
-          setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.buddy.closeSteamOnceSessionEnds = value; })}
-        />
+        <Field
+          label="When the gaming session ends:"
+          childrenContainerWidth="fixed"
+        >
+          <CloseSteamDropdown
+             value={hostSettings.buddy.closeSteam}
+             setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.buddy.closeSteam = value; })}
+          />
+        </Field>
       </DialogControlsSection>
       <DialogControlsSection>
         <DialogControlsSectionHeader>GameStream App</DialogControlsSectionHeader>

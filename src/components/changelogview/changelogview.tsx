@@ -14,6 +14,7 @@ export const ChangelogView: FC = () => {
               <div>&bull; Renamed "Sunshine Apps" to "GameStream Apps" since that's how it is always called in the source code.</div>
               <div>&bull; For GameStream apps "--no-quit-after" is no longer enforced (Moonlight will use its own setting).</div>
               <div>&bull; Hostname is now displayed on the WOL screen when launching app.</div>
+              <div>&bull; Buddy can now be configured to close the Big Picture Mode when app streaming finishes.</div>
             </>
           }
           focusable={true}

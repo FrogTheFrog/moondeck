@@ -116,7 +116,7 @@ export class ServerProxy {
         buddy: {
           bigPictureMode: currentSettings?.buddy.bigPictureMode ?? true,
           port: currentSettings?.buddy.port ?? 59999,
-          closeSteamOnceSessionEnds: currentSettings?.buddy.closeSteamOnceSessionEnds ?? false,
+          closeSteam: currentSettings?.buddy.closeSteam ?? null,
           hostApp: {
             selectedAppIndex: currentSettings?.buddy.hostApp.selectedAppIndex ?? -1,
             apps: currentSettings?.buddy.hostApp.apps ?? []

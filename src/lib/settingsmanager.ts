@@ -12,6 +12,7 @@ export const verticalAlignmentValues = ["left", "right"] as const;
 export const minBitrate = 0 as const;
 export const minFps = 0 as const;
 export const audioOptions = ["stereo", "5.1-surround", "7.1-surround"] as const;
+export const closeSteamOption = ["Client", "BigPictureMode"] as const;
 
 export enum ControllerConfigValues {
   Disable = "Disable Steam Input",
@@ -92,7 +93,7 @@ export interface AudioSettings {
 export interface BuddySettings {
   bigPictureMode: boolean;
   port: number;
-  closeSteamOnceSessionEnds: boolean;
+  closeSteam: typeof closeSteamOption[number] | null;
   hostApp: HostApp;
 }
 

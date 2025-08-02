@@ -8,6 +8,7 @@ from ..settingsmanager import SettingsManager
 
 ControllerConfigOption = Literal["Disable", "Default", "Enable", "Noop"]
 AudioOption = Literal["stereo", "5.1-surround", "7.1-surround"]
+CloseSteamOption = Literal["Client", "BigPictureMode"]
 
 
 class RunnerTimeouts(TypedDict):
@@ -62,7 +63,7 @@ class AudioSettings(TypedDict):
 class BuddySettings(TypedDict):
     bigPictureMode: bool
     port: int
-    closeSteamOnceSessionEnds: bool
+    closeSteam: Optional[CloseSteamOption]
     hostApp: HostApp
 
 
@@ -111,7 +112,7 @@ class ButtonStyleSettings(TypedDict):
 
 
 class UserSettings(TypedDict):
-    version: Literal[33]
+    version: Literal[34]
     clientId: str
     currentHostId: Optional[str]
     gameSession: GameSessionSettings
@@ -334,6 +335,11 @@ class UserSettingsManager(SettingsManager[UserSettings]):
             for host in data["hostSettings"].keys():
                 data["hostSettings"][host]["gameStreamApps"] = data["hostSettings"][host]["sunshineApps"]
                 del data["hostSettings"][host]["sunshineApps"]
+        if data["version"] == 33:
+            data["version"] = 34
+            for host in data["hostSettings"].keys():
+                data["hostSettings"][host]["buddy"]["closeSteam"] = "Client" if data["hostSettings"][host]["buddy"]["closeSteamOnceSessionEnds"] else None
+                del data["hostSettings"][host]["buddy"]["closeSteamOnceSessionEnds"]
 
 
 settings_manager = UserSettingsManager(constants.CONFIG_FILE)

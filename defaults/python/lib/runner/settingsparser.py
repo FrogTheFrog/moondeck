@@ -168,7 +168,7 @@ async def parse_settings() -> MoonDeckAppRunnerSettings | MoonlightOnlyRunnerSet
             "buddy_port": host_settings["buddy"]["port"],
             "client_id": user_settings["clientId"],
             "big_picture_mode": host_settings["buddy"]["bigPictureMode"],
-            "close_steam": CloseSteam.Client if host_settings["buddy"]["closeSteamOnceSessionEnds"] else None,
+            "close_steam": CloseSteam[host_settings["buddy"]["closeSteam"]] if host_settings["buddy"]["closeSteam"] else None,
             "timeouts": host_settings["runnerTimeouts"],
             "moonlight_exec_path": user_settings["moonlightExecPath"] if user_settings["useMoonlightExec"] else None,
             "app_id": env_settings["app_id"],
