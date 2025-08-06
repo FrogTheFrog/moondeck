@@ -262,7 +262,7 @@ def add_cmd_host(main_subparsers: _SubParsersAction[ArgumentParserWithRedirect])
     
     # -------- Setup `list` command
     list_parser = host_subparsers.add_parser(
-        "list", help="remove host(s) from config")
+        "list", help="list hosts in the config")
     list_parser.add_argument(
         "--json", action="store_true", help=DESC_JSON)
     
