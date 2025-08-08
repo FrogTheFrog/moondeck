@@ -78,8 +78,12 @@ jobs:
     name: Build MoonDeck CLI
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
+        config:
+          - os: ubuntu-latest
+            ext: bin
+          - os: windows-latest
+            ext: exe
+    runs-on: ${{ matrix.config.os }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -94,7 +98,7 @@ jobs:
       - name: Set PYTHONPATH
         run: echo "PYTHONPATH=./lib:./externals" >> $GITHUB_ENV
 
-      - name: Build CLI
+      - name: Build
         uses: Nuitka/Nuitka-Action@main
         with:
           working-directory: ./defaults/python
@@ -102,6 +106,13 @@ jobs:
           script-name: cli.py
           mode: onefile
           include-data-files: ./ssl/moondeck_cert.pem=./ssl/moondeck_cert.pem
+          output-file: moondeck-cli.${{ matrix.config.ext }}
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ runner.os }} Build
+          path: build/*.${{ matrix.config.ext }}
 
   release-pre-check:
     name: Check for release conditions
