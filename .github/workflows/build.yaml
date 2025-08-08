@@ -75,7 +75,7 @@ jobs:
           if-no-files-found: error
 
   build-cli:
-    name: Build MoonDeck CLI
+    name: Build CLI
     strategy:
       matrix:
         config:
@@ -96,11 +96,10 @@ jobs:
         with:
           python-version: "3.13"
 
-      - name: Set PYTHONPATH
-        run: echo "PYTHONPATH=./lib:./externals" >> $GITHUB_ENV
-
       - name: Build
         uses: Nuitka/Nuitka-Action@main
+        env:
+          PYTHONPATH: "./lib:./externals"
         with:
           working-directory: ./defaults/python
           nuitka-version: main
@@ -112,7 +111,7 @@ jobs:
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ runner.os }} Build
+          name: moondeck-cli
           path: ./defaults/python/build/*.${{ matrix.config.ext }}
 
   release-pre-check:
