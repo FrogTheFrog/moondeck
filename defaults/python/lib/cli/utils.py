@@ -7,7 +7,7 @@ from typing import cast
 from lib.cli.settings import CliSettingsManager, CliSettings
 from lib.gamestreaminfo import GameStreamHost, get_server_info
 from lib.logger import logger
-from lib.buddyclient import BuddyClient, BuddyException
+from lib.buddyclient import BuddyClient, BuddyException, HelloResult
 
 
 def cmd_entry(f):
@@ -203,8 +203,12 @@ async def check_connectivity(client: BuddyClient, info_port: int, host_id: str, 
                     try:
                         await client.say_hello(force=True)
                         status["buddy"] = True
-                    except BuddyException:
-                        status["buddy"] = False
+                    except BuddyException as err:
+                        valid_errors = [HelloResult.Offline, HelloResult.Restarting, HelloResult.ShuttingDown, HelloResult.Suspending]
+                        if err.result in valid_errors:
+                            status["buddy"] = False
+                        else:
+                            raise err
                 
                 async def get_server_status():
                     server_info = await get_server_info(address=client.address, 

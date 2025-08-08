@@ -114,7 +114,7 @@ class BuddyRequests(contextlib.AbstractAsyncContextManager):
         super().__init__()
         
         headers = {"authorization": f"basic {base64.b64encode(client_id.encode('utf-8')).decode('utf-8')}"}
-        cafile = str(pathlib.Path(__file__).parent.resolve().joinpath("..", "ssl", "moondeck_cert.pem"))
+        cafile = str(pathlib.Path(__file__).parent.joinpath("..", "ssl", "moondeck_cert.pem").resolve())
         ssl_context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH, cafile=cafile)
         ssl_context.check_hostname = False
         connector = aiohttp.TCPConnector(ssl=ssl_context)

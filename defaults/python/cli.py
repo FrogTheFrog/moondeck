@@ -3,13 +3,15 @@ from __future__ import annotations
 # autopep8: off
 def add_plugin_to_path():
     import sys
-    from pathlib import Path
-
     sys_path_backup = list(sys.path)
-    script_dir = Path(__file__).parent.resolve()
-    directories = [["lib"], ["externals"]]
-    for dir in directories:
-        sys.path.append(str(script_dir.joinpath(*dir)))
+
+    # Do nothing if it's packaged with Nuitka
+    if "__compiled__" not in globals():
+        from pathlib import Path
+        script_dir = Path(__file__).parent.resolve()
+        directories = [["lib"], ["externals"]]
+        for dir in directories:
+            sys.path.append(str(script_dir.joinpath(*dir)))
 
     def restore_path():
         sys.path = sys_path_backup
