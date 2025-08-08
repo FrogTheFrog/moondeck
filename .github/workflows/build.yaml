@@ -81,8 +81,10 @@ jobs:
         config:
           - os: ubuntu-latest
             ext: bin
+            artifact-postix: linux
           - os: windows-latest
             ext: exe
+            artifact-postix: win
     runs-on: ${{ matrix.config.os }}
     needs: [test-plugin]
     steps:
@@ -111,7 +113,7 @@ jobs:
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: moondeck-cli
+          name: moondeck-cli-${{ matrix.config.artifact-postix }}
           path: ./defaults/python/build/*.${{ matrix.config.ext }}
 
   release-pre-check:
