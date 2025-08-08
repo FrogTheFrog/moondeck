@@ -98,6 +98,12 @@ jobs:
         with:
           python-version: "3.13"
 
+      - name: Test
+        env:
+          PYTHONPATH: "./lib:./externals"
+        shell: bash
+        run: printenv
+
       - name: Build
         uses: Nuitka/Nuitka-Action@main
         env:
