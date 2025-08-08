@@ -84,6 +84,7 @@ jobs:
           - os: windows-latest
             ext: exe
     runs-on: ${{ matrix.config.os }}
+    needs: [test-plugin]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -112,7 +113,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ runner.os }} Build
-          path: build/*.${{ matrix.config.ext }}
+          path: ./defaults/python/build/*.${{ matrix.config.ext }}
 
   release-pre-check:
     name: Check for release conditions
