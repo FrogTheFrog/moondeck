@@ -82,9 +82,11 @@ jobs:
           - os: ubuntu-latest
             ext: bin
             artifact-postix: linux
+            sep: ":"
           - os: windows-latest
             ext: exe
             artifact-postix: win
+            sep: ";"
     runs-on: ${{ matrix.config.os }}
     needs: [test-plugin]
     steps:
@@ -100,14 +102,14 @@ jobs:
 
       - name: Test
         env:
-          PYTHONPATH: "./lib:./externals"
+          PYTHONPATH: "./lib${{ matrix.config.sep }}./externals"
         shell: bash
         run: printenv
 
       - name: Build
         uses: Nuitka/Nuitka-Action@main
         env:
-          PYTHONPATH: "./lib:./externals"
+          PYTHONPATH: "./lib${{ matrix.config.sep }}./externals"
         with:
           working-directory: ./defaults/python
           nuitka-version: main
