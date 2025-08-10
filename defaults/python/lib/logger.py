@@ -1,11 +1,11 @@
 import logging
-import sys
 
-from pathlib import Path
-from logging.handlers import RotatingFileHandler
-
-
-def set_logger_settings(filename: str | Path | None, rotate: bool = True, log_preamble: str | None = None, print_to_std: bool = False, verbose: bool = False):
+def set_logger_settings(filename: str | None, rotate: bool = True, log_preamble: str | None = None, print_to_std: bool = False, verbose: bool = False):
+    # Lazy import to improve CLI performance
+    import sys
+    from pathlib import Path
+    from logging.handlers import RotatingFileHandler
+    
     handlers = []
 
     if filename is not None:

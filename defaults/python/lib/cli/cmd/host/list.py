@@ -1,5 +1,3 @@
-import json as jlib
-
 from typing import Optional, TypedDict
 from lib.cli.utils import cmd_entry, settings_watcher
 from lib.cli.settings import CliSettings
@@ -49,6 +47,9 @@ def log_host_info(info: PrintableHostInfo):
 async def execute(settings: CliSettings, json: bool):
     host_info = convert_settings_to_host_info(settings)
     if json:
+        # Lazy import to improve CLI performance
+        import json as jlib
+
         logger.info(jlib.dumps(host_info, indent=2))
     else:
         if len(host_info) == 0:

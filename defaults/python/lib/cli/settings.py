@@ -1,5 +1,3 @@
-import uuid
-
 from typing import Dict, Literal, Optional, TypedDict, get_args
 from ..settingsmanager import SettingsManager
 
@@ -22,6 +20,9 @@ class CliSettings(TypedDict):
 
 class CliSettingsManager(SettingsManager[CliSettings]):
     def _default_settings(self):
+        # Lazy import to improve CLI performance
+        import uuid
+
         return CliSettings({
             "version": get_args(CliSettings.__annotations__["version"])[0],
             "clientId": str(uuid.uuid4()),

@@ -1,71 +1,28 @@
 from __future__ import annotations
 
 # autopep8: off
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 def add_plugin_to_path():
-    import sys
-    sys_path_backup = list(sys.path)
-
     # Do nothing if it's packaged with Nuitka
     if "__compiled__" not in globals():
+        import sys
         from pathlib import Path
         script_dir = Path(__file__).parent.resolve()
         directories = [["lib"], ["externals"]]
         for dir in directories:
             sys.path.append(str(script_dir.joinpath(*dir)))
 
-    def restore_path():
-        sys.path = sys_path_backup
-
-    return restore_path
-
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-restore_sys_path = add_plugin_to_path()  
+add_plugin_to_path()
+# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+# autopep8: on  
 
 
-import sys
-import asyncio
-
-from pathlib import Path
 from argparse import _SubParsersAction, ArgumentParser, ArgumentTypeError, HelpFormatter, SUPPRESS, OPTIONAL, ZERO_OR_MORE
-from gettext import gettext
-from random import randrange
 from typing import Awaitable, Callable, cast
 
 from lib.logger import logger, set_logger_settings
 from lib.buddyclient import BuddyException
 from lib.cli.settings import CliSettingsManager
-
-from lib.cli.cmd.app.clear import execute as cmd_app_clear
-from lib.cli.cmd.app.launch import execute as cmd_app_launch
-from lib.cli.cmd.app.list.game_stream import execute as cmd_app_list_game_stream
-from lib.cli.cmd.app.list.non_steam import execute as cmd_app_list_non_steam
-from lib.cli.cmd.app.status import execute as cmd_app_status
-
-from lib.cli.cmd.host.add import execute as cmd_host_add
-from lib.cli.cmd.host.default.clear import execute as cmd_host_default_clear
-from lib.cli.cmd.host.default.set import execute as cmd_host_default_set
-from lib.cli.cmd.host.list import execute as cmd_host_list
-from lib.cli.cmd.host.pair import execute as cmd_host_pair
-from lib.cli.cmd.host.ping import execute as cmd_host_ping
-from lib.cli.cmd.host.remove import execute as cmd_host_remove
-from lib.cli.cmd.host.restart import execute as cmd_host_restart
-from lib.cli.cmd.host.scan import execute as cmd_host_scan
-from lib.cli.cmd.host.shutdown import execute as cmd_host_shutdown
-from lib.cli.cmd.host.suspend import execute as cmd_host_suspend
-from lib.cli.cmd.host.wake import execute as cmd_host_wake
-
-from lib.cli.cmd.steam.close.bpm import execute as cmd_steam_close_bpm
-from lib.cli.cmd.steam.close.client import execute as cmd_steam_close_client
-from lib.cli.cmd.steam.launch import execute as cmd_steam_launch
-from lib.cli.cmd.steam.status import execute as cmd_steam_status
-
-from lib.cli.cmd.stream.end import execute as cmd_stream_end
-from lib.cli.cmd.stream.status import execute as cmd_stream_status
-
-
-restore_sys_path()
-# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-# autopep8: on
 
 
 def arg_type(value_type, min_value=None, max_value=None):
@@ -114,6 +71,8 @@ class CustomArgumentDefaultsHelpFormatter(HelpFormatter):
             if action.default is not SUPPRESS:
                 defaulting_nargs = [OPTIONAL, ZERO_OR_MORE]
                 if action.option_strings or action.nargs in defaulting_nargs:
+                    from gettext import gettext
+
                     help += gettext(" (default: %(default)s)")
         return help
 
@@ -125,6 +84,8 @@ class ArgumentParserWithRedirect(ArgumentParser):
         super().__init__(*args, **kwargs)
 
     def _print_message(self, message, file=None):
+        import sys
+
         if message:
             message = message.rstrip("\n")
             if file == sys.stderr:
@@ -226,6 +187,8 @@ def add_cmd_app(main_subparsers: _SubParsersAction[ArgumentParserWithRedirect]):
 
 
 def add_cmd_host(main_subparsers: _SubParsersAction[ArgumentParserWithRedirect]):
+    from random import randrange
+
     # ---- Setup `host` group
     host_parser = main_subparsers.add_parser(
         "host", help="host related commands")
@@ -430,6 +393,10 @@ def add_cmd_stream(main_subparsers: _SubParsersAction[ArgumentParserWithRedirect
 
 
 async def main():
+    import sys
+    import asyncio
+    from pathlib import Path
+
     verbose = False
     try:
         # ---- Setup early logging to at least print something out
@@ -471,52 +438,60 @@ async def main():
         parser_args = { k.replace("-", "_"):v for k, v in vars(parser_args).items() }
 
         if unrecognized_args:
+            from gettext import gettext
+
             parser.exit(2, gettext(f"{parser.prog}: error: unrecognized arguments {unrecognized_args}"))
             return 2
 
-        # ---- Delegate the commands
+        # ---- Make a tree of available commands
         cmds = {
-            "app": {
-                "clear": cmd_app_clear,
-                "launch": cmd_app_launch,
-                "list": {
-                    "game-stream": cmd_app_list_game_stream,
-                    "non-steam": cmd_app_list_non_steam
+            "app": [
+                "clear",
+                "launch",
+                {
+                    "list": [
+                        "game-stream",
+                        "non-steam"
+                    ]
                 },
-                "status": cmd_app_status
-            },
-            "host": {
-                "add": cmd_host_add,
-                "default": {
-                    "clear": cmd_host_default_clear,
-                    "set": cmd_host_default_set
+                "status"
+            ],
+            "host": [
+                "add",
+                {
+                    "default": [
+                        "clear",
+                        "set"
+                    ]
                 },
-                "list": cmd_host_list,
-                "pair": cmd_host_pair,
-                "ping": cmd_host_ping,
-                "remove": cmd_host_remove,
-                "restart": cmd_host_restart,
-                "scan": cmd_host_scan,
-                "shutdown": cmd_host_shutdown,
-                "suspend": cmd_host_suspend,
-                "wake": cmd_host_wake
-            },
-            "steam": {
-                "close": {
-                    "bpm": cmd_steam_close_bpm,
-                    "client": cmd_steam_close_client
+                "list",
+                "pair",
+                "ping",
+                "remove",
+                "restart",
+                "scan",
+                "shutdown",
+                "suspend",
+                "wake"
+            ],
+            "steam": [
+                {
+                    "close": [
+                        "bpm",
+                        "client"
+                    ],
                 },
-                "launch": cmd_steam_launch,
-                "status": cmd_steam_status
-            },
-            "stream": {
-                "end": cmd_stream_end,
-                "status": cmd_stream_status
-            }
+                "launch",
+                "status"
+            ],
+            "stream": [
+                "end",
+                "status"
+            ]
         }
 
         cmd_levels = []
-        cmd_dict = cmds
+        cmd_struct = cmds
         while True:
             next_level = len(cmd_levels) + 1
             level_cmd = parser_args.get(f"cmd{next_level}", None)
@@ -527,15 +502,25 @@ async def main():
                 parser.parse_known_args(sys.argv[1:] + ["--help"])
                 return 2
             
+            next_struct_value = None
             cmd_levels.append(level_cmd)
-            next_dict_value = cmd_dict.get(level_cmd, None)
 
-            if isinstance(next_dict_value, dict):
-                cmd_dict = next_dict_value
+            if isinstance(cmd_struct, list):
+                next_struct_value = next((it for it in cmd_struct if it == level_cmd or level_cmd in it), None)
+                if isinstance(next_struct_value, dict):
+                    cmd_struct = next_struct_value
+
+            if isinstance(cmd_struct, dict):
+                next_struct_value = cmd_struct.get(level_cmd, None)
+            
+            if isinstance(next_struct_value, dict) or isinstance(next_struct_value, list):
+                cmd_struct = next_struct_value
                 continue
 
-            if callable(next_dict_value):
-                cmd = cast(Callable[..., Awaitable[int]], next_dict_value)
+            if isinstance(next_struct_value, str):
+                from importlib import import_module
+
+                cmd = cast(Callable[..., Awaitable[int]], import_module(f"lib.cli.cmd.{".".join(cmd_levels)}".replace("-", "_")).execute)
                 sys.exit(await cmd(settings_manager=CliSettingsManager(parser_args["config_file"]), **parser_args))
 
             # Unhandled cmd
@@ -557,4 +542,5 @@ async def main():
 
 
 if __name__ == "__main__":
+    import asyncio
     asyncio.run(main())

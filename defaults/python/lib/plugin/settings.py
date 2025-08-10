@@ -1,6 +1,3 @@
-import uuid
-from .. import constants
-
 from typing import Dict, List, Literal, Optional, TypedDict, get_args
 from ..buddyrequests import OsType
 from ..settingsmanager import SettingsManager
@@ -129,6 +126,9 @@ class UserSettings(TypedDict):
 
 class UserSettingsManager(SettingsManager[UserSettings]):
     def _default_settings(self):
+        # Lazy import to improve CLI performance
+        import uuid
+
         return UserSettings({
             "version": get_args(UserSettings.__annotations__["version"])[0],
             "clientId": str(uuid.uuid4()),
@@ -340,6 +340,3 @@ class UserSettingsManager(SettingsManager[UserSettings]):
             for host in data["hostSettings"].keys():
                 data["hostSettings"][host]["buddy"]["closeSteam"] = "Client" if data["hostSettings"][host]["buddy"]["closeSteamOnceSessionEnds"] else None
                 del data["hostSettings"][host]["buddy"]["closeSteamOnceSessionEnds"]
-
-
-settings_manager = UserSettingsManager(constants.CONFIG_FILE)

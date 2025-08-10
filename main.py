@@ -1,21 +1,17 @@
 # autopep8: off
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 def add_plugin_to_path():
     import sys
     from pathlib import Path
 
-    sys_path_backup = list(sys.path)
     script_dir = Path(__file__).parent.resolve()
     directories = [["python"], ["python", "lib"], ["python", "externals"]]
     for dir in directories:
         sys.path.append(str(script_dir.joinpath(*dir)))
 
-    def restore_path():
-        sys.path = sys_path_backup
-
-    return restore_path
-
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-restore_sys_path = add_plugin_to_path()  
+add_plugin_to_path()  
+# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+# autopep8: on
 
 
 import asyncio
@@ -25,7 +21,7 @@ import lib.constants as constants
 import lib.utils as utils
 
 from typing import cast
-from lib.plugin.settings import settings_manager, UserSettings
+from lib.plugin.settings import UserSettings, UserSettingsManager
 from lib.logger import logger, set_logger_settings
 from lib.buddyrequests import SteamUiMode, SteamUiModeResponse
 from lib.buddyclient import BuddyClient, PcStateChange, BuddyException
@@ -33,11 +29,8 @@ from lib.utils import wake_on_lan, change_moondeck_runner_ready_state, TimedPool
 from lib.runnerresult import Result, set_result, get_result
 
 
-restore_sys_path()
-# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-# autopep8: on
-
 set_logger_settings(constants.LOG_FILE, rotate=True)
+settings_manager = UserSettingsManager(constants.get_config_file_path())
 
 
 class Plugin:

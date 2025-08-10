@@ -1,5 +1,3 @@
-import json as jlib
-
 from lib.cli.utils import buddy_session, cmd_entry, host_pattern_matcher, settings_watcher
 from lib.buddyclient import BuddyClient
 from lib.logger import logger
@@ -13,6 +11,9 @@ async def execute(buddy_client: BuddyClient, json: bool):
     apps = await buddy_client.get_game_stream_app_names()
     if apps is not None:
         if json:
+            # Lazy import to improve CLI performance
+            import json as jlib
+
             logger.info(jlib.dumps(apps, indent=2))
         else:
             if len(apps) == 0:

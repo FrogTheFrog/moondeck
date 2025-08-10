@@ -1,11 +1,6 @@
-import asyncio
 import contextlib
-import os
-import shutil
-import psutil
 
-from typing import Callable, Optional, TypedDict, cast
-from asyncio.subprocess import Process
+from typing import Optional, TypedDict, cast
 from .logger import logger
 from . import constants
 
@@ -27,6 +22,10 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
     flatpak_moonlight = "com.moonlight_stream.Moonlight"
 
     def __init__(self, exec_path: Optional[str]) -> None:
+        # Lazy import to improve CLI performance
+        import psutil
+        from asyncio.subprocess import Process
+
         self.exec_path = exec_path
         self.process: Optional[Process] = None
         self.__proc: Optional[psutil.Process] = None
@@ -38,6 +37,10 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
         return await self.terminate()
     
     async def get_apps(self, hostname: str):
+        # Lazy import to improve CLI performance
+        import asyncio
+        import psutil
+
         assert self.process is None, "Another instance of Moonlight has been started already!"
         exec, args = self.__get_exec_with_args()
 
@@ -65,6 +68,10 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
         return None     
 
     async def start(self, hostname: str, host_app: str, audio: Optional[str] = None, resolution: Optional[ResolutionDimensions] = None, quit_after: Optional[bool] = None):
+        # Lazy import to improve CLI performance
+        import asyncio
+        import psutil
+        
         assert self.process is None, "Another instance of Moonlight has been started already!"
         exec, args = self.__get_exec_with_args()
 
@@ -96,6 +103,10 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
         self.__proc = psutil.Process(self.process.pid)
 
     async def terminate(self):
+        # Lazy import to improve CLI performance
+        import asyncio
+        import psutil
+
         if self.process is None:
             return
 
@@ -133,6 +144,9 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
             self.__proc = None
 
     async def wait(self):
+        # Lazy import to improve CLI performance
+        import asyncio
+
         if not self.process:
             return
 
@@ -150,13 +164,17 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
 
         process_task = asyncio.create_task(self.process.wait())
         log_task = asyncio.create_task(log_stream(self.process.stdout))
-        await asyncio.wait({process_task, log_task}, return_when=asyncio.ALL_COMPLETED)
+        await asyncio.wait([process_task, log_task], return_when=asyncio.ALL_COMPLETED)
 
     async def terminate_all_instances(self):
         await self.__kill_flatpak_app()
         await self.__kill_any_moonlight_app()
 
     async def is_moonlight_installed(self):
+        # Lazy import to improve CLI performance
+        import asyncio
+        import os
+
         if self.exec_path is None:
             flatpak_exec = self.__get_flatpak_exec()
             if flatpak_exec is None:
@@ -181,6 +199,7 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
         return False
     
     def __get_flatpak_exec(self):
+        import shutil
         return shutil.which("flatpak")
     
     def __get_exec_with_args(self):
@@ -197,6 +216,9 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
         return exec, args
     
     async def __kill_flatpak_app(self):
+        # Lazy import to improve CLI performance
+        import asyncio
+
         flatpak_exec = self.__get_flatpak_exec()
         if flatpak_exec is None:
             return
@@ -210,6 +232,9 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
             logger.info(f"flatpak kill output: {newline}{output.decode().strip(newline)}")
 
     async def __kill_any_moonlight_app(self):
+        # Lazy import to improve CLI performance
+        import asyncio
+
         kill_proc = await asyncio.create_subprocess_shell("pkill -f -e -i \"moonlight\"",
                                                           stdout=asyncio.subprocess.PIPE,
                                                           stderr=asyncio.subprocess.STDOUT)

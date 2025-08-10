@@ -1,12 +1,4 @@
-import aiohttp
-import asyncio
-import html
-import re
-
 from typing import TypedDict
-from zeroconf import IPVersion, Zeroconf, ServiceListener
-from zeroconf.asyncio import AsyncServiceBrowser, AsyncServiceInfo, AsyncZeroconf
-
 from .logger import logger
 
 
@@ -17,68 +9,91 @@ class GameStreamHost(TypedDict):
     uniqueId: str
 
 
-class GameStreamListener(ServiceListener):
-    def __init__(self, timeout: float, unique_id: str | None = None):
-        self.timeout = timeout
-        self.unique_id = unique_id
-        self.__hosts: list[GameStreamHost] = []
-        self.__tasks: set[asyncio.Task] = set()
-        self.__cancel_condition = asyncio.Condition()
+def getGameSteamListener():
+    # Lazy import to improve CLI performance
+    from zeroconf import IPVersion, Zeroconf, ServiceListener
+    from zeroconf.asyncio import AsyncServiceInfo
 
-    def add_service(self, zc: Zeroconf, type_: str, name: str):
-        task = asyncio.create_task(self.parse_info(zc, AsyncServiceInfo(type_, name)))
-        self.__tasks.add(task)
-        task.add_done_callback(self.__tasks.discard)
+    class GameStreamListener(ServiceListener):
+        def __init__(self, timeout: float, unique_id: str | None = None):
+            # Lazy import to improve CLI performance
+            import asyncio
 
-    def remove_service(self, zc: Zeroconf, type_: str, name: str):
-        pass
+            self.timeout = timeout
+            self.unique_id = unique_id
+            self.__hosts: list[GameStreamHost] = []
+            self.__tasks: set[asyncio.Task] = set()
+            self.__cancel_condition = asyncio.Condition()
 
-    def update_service(self, zc: Zeroconf, type_: str, name: str):
-        pass
+        def add_service(self, zc: Zeroconf, type_: str, name: str):
+            # Lazy import to improve CLI performance
+            import asyncio
 
-    async def parse_info(self, zc: Zeroconf, info: AsyncServiceInfo):
-        if not await info.async_request(zc, self.timeout * 1000):
-            return
+            task = asyncio.create_task(self.parse_info(zc, AsyncServiceInfo(type_, name)))
+            self.__tasks.add(task)
+            task.add_done_callback(self.__tasks.discard)
 
-        if info.port is None:
-            return
+        def remove_service(self, zc: Zeroconf, type_: str, name: str):
+            pass
 
-        for ip in info.parsed_scoped_addresses(version=IPVersion.V4Only):
-            server_info = await get_server_info(ip, info.port, self.timeout)
-            if server_info:
-                if self.unique_id is None:
-                    self.__hosts.append(server_info)
-                elif self.unique_id == server_info["uniqueId"] and len(self.__hosts) == 0:
-                    self.__hosts.append(server_info)
-                    async with self.__cancel_condition:
-                        self.__cancel_condition.notify_all()
+        def update_service(self, zc: Zeroconf, type_: str, name: str):
+            pass
 
-    async def wait(self):
-        async with self.__cancel_condition:
-            try:
-                await asyncio.wait_for(self.__cancel_condition.wait(), timeout=self.timeout)
-            except asyncio.TimeoutError:
-                pass
+        async def parse_info(self, zc: Zeroconf, info: AsyncServiceInfo):
+            if not await info.async_request(zc, self.timeout * 1000):
+                return
 
-        return self.__hosts
+            if info.port is None:
+                return
 
-    async def __aenter__(self):
-        return self
+            for ip in info.parsed_scoped_addresses(version=IPVersion.V4Only):
+                server_info = await get_server_info(ip, info.port, self.timeout)
+                if server_info:
+                    if self.unique_id is None:
+                        self.__hosts.append(server_info)
+                    elif self.unique_id == server_info["uniqueId"] and len(self.__hosts) == 0:
+                        self.__hosts.append(server_info)
+                        async with self.__cancel_condition:
+                            self.__cancel_condition.notify_all()
 
-    async def __aexit__(self, *args, **kwargs):
-        for task in list(self.__tasks):
-            task.cancel()
+        async def wait(self):
+            # Lazy import to improve CLI performance
+            import asyncio
 
-        for task in list(self.__tasks):
-            try:
-                await task
-            except asyncio.CancelledError:
-                pass
+            async with self.__cancel_condition:
+                try:
+                    await asyncio.wait_for(self.__cancel_condition.wait(), timeout=self.timeout)
+                except asyncio.TimeoutError:
+                    pass
+
+            return self.__hosts
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args, **kwargs):
+            # Lazy import to improve CLI performance
+            import asyncio
+
+            for task in list(self.__tasks):
+                task.cancel()
+
+            for task in list(self.__tasks):
+                try:
+                    await task
+                except asyncio.CancelledError:
+                    pass
+
+    return GameStreamListener
 
 
 async def _scan_for_hosts(timeout: float, unique_id: str | None = None):
+    # Lazy import to improve CLI performance
+    from zeroconf import IPVersion
+    from zeroconf.asyncio import AsyncServiceBrowser, AsyncZeroconf
+
     timeout = 0.1 if timeout <= 0 else timeout
-    async with GameStreamListener(timeout, unique_id=unique_id) as listener:
+    async with getGameSteamListener()(timeout, unique_id=unique_id) as listener:
         async with AsyncZeroconf(ip_version=IPVersion.V4Only) as aiozeroconf:
             async with AsyncServiceBrowser(aiozeroconf.zeroconf,
                                            type_=["_nvstream._tcp.local."],
@@ -87,6 +102,12 @@ async def _scan_for_hosts(timeout: float, unique_id: str | None = None):
 
 
 async def get_server_info(address: str, port: int, timeout: float):
+    # Lazy import to improve CLI performance
+    import aiohttp
+    import asyncio
+    import html
+    import re
+
     try:
         timeout = 0.1 if timeout <= 0 else timeout
 

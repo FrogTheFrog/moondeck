@@ -1,5 +1,3 @@
-import asyncio
-
 from lib.cli.utils import buddy_session, cmd_entry, host_pattern_matcher, settings_watcher
 from lib.cli.settings import CliSettings
 from lib.logger import logger
@@ -11,6 +9,9 @@ from lib.buddyclient import BuddyClient, BuddyException, HelloResult, PairingRes
 @buddy_session()
 @cmd_entry
 async def execute(buddy_client: BuddyClient, settings: CliSettings, host_id: str, buddy_port: int, pin: int):
+    # Lazy import to improve CLI performance
+    import asyncio
+
     try:
         try:
             await buddy_client.start_pairing(pin)

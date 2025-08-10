@@ -1,5 +1,3 @@
-import json as jlib
-
 from typing import TypedDict
 from lib.cli.utils import buddy_session, cmd_entry, host_pattern_matcher, settings_watcher
 from lib.buddyclient import BuddyClient
@@ -30,6 +28,9 @@ async def execute(buddy_client: BuddyClient, app_id: str | None, json: bool):
         }})
 
     if json:
+        # Lazy import to improve CLI performance
+        import json as jlib
+
         logger.info(jlib.dumps(data, indent=2))
     else:
         if data["status"] is None:

@@ -1,5 +1,3 @@
-import aiohttp
-import asyncio
 import contextlib
 from . import constants
 
@@ -133,6 +131,10 @@ class BuddyClient(contextlib.AbstractAsyncContextManager):
         return await self.__requests.__aexit__(*args)
 
     async def _try_request(self, request: Awaitable[T], default_error_value: Enum):
+        # Lazy import to improve CLI performance
+        import asyncio
+        import aiohttp
+
         try:
             return await request
         

@@ -3,9 +3,10 @@ from enum import Enum
 
 from .envparser import EnvSettings, parse_env_settings, RunnerType
 from ..runnerresult import RunnerError, Result
-from ..plugin.settings import Dimension, HostSettings, RunnerTimeouts, settings_manager
+from ..plugin.settings import Dimension, HostSettings, RunnerTimeouts, UserSettingsManager
 from ..moonlightproxy import ResolutionDimensions
 from ..logger import logger
+from .. import constants
 
 
 class CloseSteam(Enum):
@@ -128,6 +129,7 @@ def parse_host_app_name(host_settings: HostSettings) -> str:
 
 async def parse_settings() -> MoonDeckAppRunnerSettings | MoonlightOnlyRunnerSettings:
     logger.info("Getting current host settings")
+    settings_manager = UserSettingsManager(constants.get_config_file_path())
     user_settings, _ = await settings_manager.read()
     host_settings = None
 

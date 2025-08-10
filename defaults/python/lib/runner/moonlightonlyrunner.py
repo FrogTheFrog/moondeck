@@ -1,6 +1,5 @@
 from typing import Optional
 from .settingsparser import MoonlightOnlyRunnerSettings
-from .wolsplashscreen import WolSplashScreen
 from ..runnerresult import Result, RunnerError
 from ..gamestreaminfo import get_server_info
 from ..logger import logger
@@ -11,6 +10,9 @@ class MoonlightOnlyRunner:
     @staticmethod
     async def check_connectivity(address: str, mac: str, host_id: str, hostname: str, host_port: int, wol_timeout: int, server_timeout: int):
         logger.info("Checking connection to GameStream server")
+
+        # Lazy import to improve CLI performance
+        from .wolsplashscreen import WolSplashScreen
 
         async with WolSplashScreen(address, mac, wol_timeout, hostname) as splash:
             while True:

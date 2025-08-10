@@ -1,5 +1,3 @@
-import json as jlib
-
 from lib.cli.utils import cmd_entry, log_gamestream_host, settings_watcher
 from lib.gamestreaminfo import get_server_info
 from lib.cli.settings import CliSettings
@@ -11,6 +9,9 @@ async def execute(settings: CliSettings, timeout: float, dry: bool, json: bool, 
     logger.info("Getting server info...")
     host = await get_server_info(address=address, port=port, timeout=timeout)
     if json:
+        # Lazy import to improve CLI performance
+        import json as jlib
+
         logger.info(jlib.dumps(host, indent=2))
     else:
         if host is None:

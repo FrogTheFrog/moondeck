@@ -1,19 +1,22 @@
-import copy
-import json
-
 from abc import ABCMeta, abstractmethod
-from pathlib import Path
 from typing import Any, Generic, Optional, get_args
 
 from .utils import TD, from_dict, AnyTypedDict
 
 
 class SettingsManager(Generic[TD], metaclass=ABCMeta):
-    def __init__(self, filepath: Path):
+    def __init__(self, filepath):
+        # Lazy import to improve CLI performance
+        from pathlib import Path
+
         self.settings_type = get_args(self.__orig_bases__[0])[0]  # type: ignore
-        self.filepath = filepath
+        self.filepath: Path = Path(filepath)
 
     async def read(self):
+        # Lazy import to improve CLI performance
+        import copy
+        import json
+
         settings: Optional[TD] = None
         migrated = False
         try:
@@ -52,6 +55,9 @@ class SettingsManager(Generic[TD], metaclass=ABCMeta):
         return settings
 
     async def write(self, settings: TD):
+        # Lazy import to improve CLI performance
+        import json
+
         # Verify that settings we are about to save are valid
         settings = from_dict(self.settings_type, settings)
         self.filepath.parent.mkdir(parents=True, exist_ok=True)

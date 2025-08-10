@@ -1,5 +1,3 @@
-import json as jlib
-
 from lib.cli.utils import cmd_entry, host_pattern_matcher, settings_watcher
 from lib.cli.settings import CliSettings
 from lib.logger import logger
@@ -10,6 +8,9 @@ from lib.logger import logger
 @cmd_entry
 async def execute(settings: CliSettings, host_ids: list[str], dry: bool, json: bool):
     if json:
+        # Lazy import to improve CLI performance
+        import json as jlib
+
         logger.info(jlib.dumps(host_ids, indent=2))
     else:
         if len(host_ids) == 0:

@@ -1,8 +1,4 @@
-import aiohttp
-import base64
 import contextlib
-import pathlib
-import ssl
 from . import utils
 
 from typing import List, Literal, Optional, TypedDict
@@ -113,6 +109,12 @@ class BuddyRequests(contextlib.AbstractAsyncContextManager):
     def __init__(self, address: str, port: int, client_id: str, timeout: float) -> None:
         super().__init__()
         
+        # Lazy import to improve CLI performance
+        import aiohttp
+        import base64
+        import pathlib
+        import ssl
+
         headers = {"authorization": f"basic {base64.b64encode(client_id.encode('utf-8')).decode('utf-8')}"}
         cafile = str(pathlib.Path(__file__).parent.joinpath("..", "ssl", "moondeck_cert.pem").resolve())
         ssl_context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH, cafile=cafile)
@@ -146,6 +148,9 @@ class BuddyRequests(contextlib.AbstractAsyncContextManager):
             return utils.from_dict(PairingStateResponse, data)
 
     async def post_start_pairing(self, pin: int):
+        # Lazy import to improve CLI performance
+        import base64
+
         data = {
             "id": self.client_id,
             "hashed_id": base64.b64encode((self.client_id + str(pin)).encode("utf-8")).decode("utf-8")

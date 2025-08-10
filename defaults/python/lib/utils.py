@@ -1,14 +1,5 @@
-import asyncio
-import copy
-import inspect
-import socket
-import ipaddress
-import pathlib
-
 from enum import Enum
-from functools import wraps
 from typing import Any, Callable, Coroutine, List, Literal, Type, TypedDict, Union, TypeVar, get_args, get_origin, is_typeddict
-from wakeonlan import send_magic_packet
 
 from .logger import logger
 from .constants import RUNNER_READY_FILE
@@ -40,6 +31,9 @@ def is_list_like(data_type):
 
     
 def is_enum_like(data_type):
+    # Lazy import to improve CLI performance
+    import inspect
+
     return inspect.isclass(data_type) and issubclass(data_type, Enum)
 
 
@@ -66,6 +60,9 @@ def from_list(item_type: Type[T], data: List[Any]) -> List[T]:
 
 
 def from_dict(output_type: Type[T], data: AnyTypedDict) -> T:
+    # Lazy import to improve CLI performance
+    import copy
+
     assert isinstance(data, dict), f"Expected dict (\"{output_type}\"), got {data}"
     
     def get_annotations(data_type, data):
@@ -112,6 +109,9 @@ def from_dict(output_type: Type[T], data: AnyTypedDict) -> T:
 # Decorator for loging the entry/exit and the result
 def async_scope_log(log_fn):
     def decorator(func):
+        # Lazy import to improve CLI performance
+        from functools import wraps
+
         @wraps(func)
         async def impl(*args, **kwargs):
             args_str = "" if len(args) == 0 else f"args={args}"
@@ -127,6 +127,11 @@ def async_scope_log(log_fn):
 
 
 def wake_on_lan(address: str, mac: str):
+    # Lazy import to improve CLI performance
+    import socket
+    import ipaddress
+    from wakeonlan import send_magic_packet
+
     default_port = 9
 
     def _try_parse_info(ip_address: str):
@@ -164,10 +169,16 @@ def wake_on_lan(address: str, mac: str):
 
 
 def is_moondeck_runner_ready():
+    # Lazy import to improve CLI performance
+    import pathlib
+
     return pathlib.Path(RUNNER_READY_FILE).exists()
 
 
 def change_moondeck_runner_ready_state(make_ready):
+    # Lazy import to improve CLI performance
+    import pathlib
+
     path = pathlib.Path(RUNNER_READY_FILE)
     if make_ready:
         path.touch(exist_ok=True)
@@ -196,6 +207,9 @@ class TimedPoolerGenerator:
         return self
 
     async def __anext__(self):
+        # Lazy import to improve CLI performance
+        import asyncio
+
         if self.pooler.retries <= 0:
             if self.pooler.exception_on_retry_out is not None:
                 raise self.pooler.exception_on_retry_out

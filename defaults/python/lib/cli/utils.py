@@ -1,8 +1,3 @@
-import asyncio
-import inspect
-import functools
-import copy
-
 from typing import cast
 from lib.cli.settings import CliSettingsManager, CliSettings
 from lib.gamestreaminfo import GameStreamHost, get_server_info
@@ -19,6 +14,9 @@ def cmd_entry(f):
     and
     https://stackoverflow.com/a/42769789
     """
+    # Lazy import to improve CLI performance
+    import inspect
+
     def contains_var_kwarg(f):
         return any(
             param.kind == inspect.Parameter.VAR_KEYWORD
@@ -42,6 +40,9 @@ def cmd_entry(f):
             if is_kwarg_of(key, f)
         }
 
+    # Lazy import to improve CLI performance
+    import functools
+
     @functools.wraps(f)
     async def async_wrapper(*args, **kwargs):
         return await f(*args, **filter_kwargs(**kwargs))
@@ -55,6 +56,10 @@ def settings_watcher(dry: bool | None = None):
     If the settings are modified afterwards, the will be saved unless "dry" mode is enabled.
     """
     def decorator(f):
+        # Lazy import to improve CLI performance
+        import functools
+        import copy
+    
         @functools.wraps(f)
         async def async_wrapper(*args, **kwargs):
             do_write: bool = kwargs.get("dry", False) if dry is None else dry
@@ -82,6 +87,9 @@ def host_pattern_matcher(match_one: bool):
     Must be paired with settings_watcher.
     """
     def decorator(f):
+        # Lazy import to improve CLI performance
+        import functools
+
         @functools.wraps(f)
         async def async_wrapper(*args, **kwargs):
             settings: CliSettings = cast(CliSettings, kwargs["settings"])
@@ -117,6 +125,9 @@ def wol_settings(f):
     Adds wol_address and wol_mac to the kwargs.
     Must be paired with host_pattern_matcher.
     """
+    # Lazy import to improve CLI performance
+    import functools
+
     @functools.wraps(f)
     async def async_wrapper(*args, **kwargs):
         settings: CliSettings = cast(CliSettings, kwargs["settings"])
@@ -139,6 +150,9 @@ def buddy_session(auto_sync_mac: bool = True):
     Must be paired with host_pattern_matcher.
     """
     def decorator(f):
+        # Lazy import to improve CLI performance
+        import functools
+
         @functools.wraps(f)
         async def async_wrapper(*args, **kwargs):
             settings: CliSettings = cast(CliSettings, kwargs["settings"])
@@ -174,6 +188,9 @@ def buddy_session(auto_sync_mac: bool = True):
 
 
 async def check_connectivity(client: BuddyClient, info_port: int, host_id: str, server_timeout: float, timeout: float, inverse: bool = False):
+    # Lazy import to improve CLI performance
+    import asyncio
+
     loop = asyncio.get_running_loop()
     now = loop.time()
     timeout_at = now + (0 if timeout <= 0 else timeout)

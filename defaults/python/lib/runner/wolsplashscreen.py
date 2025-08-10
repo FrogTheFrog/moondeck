@@ -1,3 +1,4 @@
+# Warning! Slow to load, only import this module lazily!
 import pyglet
 import asyncio
 

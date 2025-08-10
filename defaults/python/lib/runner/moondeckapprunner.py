@@ -1,9 +1,6 @@
-import asyncio
-
 from typing import Optional, cast
 
 from .settingsparser import MoonDeckAppRunnerSettings, CloseSteam
-from .wolsplashscreen import WolSplashScreen
 from ..buddyrequests import AppState, SteamUiMode, StreamState, StreamStateResponse, SteamUiModeResponse, StreamedAppDataResponse
 from ..runnerresult import Result, RunnerError
 from ..gamestreaminfo import get_server_info
@@ -146,6 +143,9 @@ class MoonDeckAppRunner:
     async def check_connectivity(client: BuddyClient, mac: str, host_id: str, hostname: str, host_port: int, wol_timeout: int, server_timeout: int):
         logger.info("Checking connection to Buddy and GameStream server")
 
+        # Lazy import to improve CLI performance
+        from .wolsplashscreen import WolSplashScreen
+
         async with WolSplashScreen(client.address, mac, wol_timeout, hostname) as splash:
             while True:
                 try:
@@ -239,6 +239,9 @@ class MoonDeckAppRunner:
 
     @classmethod
     async def run(cls, settings: MoonDeckAppRunnerSettings):
+        # Lazy import to improve CLI performance
+        import asyncio
+
         buddy_client = BuddyClient(
             settings["address"],
             settings["buddy_port"],
