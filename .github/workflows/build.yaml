@@ -79,7 +79,7 @@ jobs:
     strategy:
       matrix:
         config:
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             ext: bin
             artifact-postix: linux
             sep: ":"
@@ -113,7 +113,6 @@ jobs:
           nuitka-version: main
           script-name: cli.py
           mode: onefile
-          onefile-cache-mode: cached
           include-data-files: ./ssl/moondeck_cert.pem=./ssl/moondeck_cert.pem
           include-package: lib.cli
           prefer-source-code: true
