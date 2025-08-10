@@ -100,11 +100,9 @@ jobs:
         with:
           python-version: "3.13"
 
-      - name: Test
-        env:
-          PYTHONPATH: "./lib${{ matrix.config.sep }}./externals"
+      - name: Download externals
         shell: bash
-        run: printenv
+        run: "cd ./defaults/python && rm externals -rf && pip install -r ./requirements.txt -t ./externals"
 
       - name: Build
         uses: Nuitka/Nuitka-Action@main
