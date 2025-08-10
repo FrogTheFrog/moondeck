@@ -143,11 +143,11 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          path: moondeck
+          path: artifacts
 
       - name: Package release
         run: |
-          zip -r moondeck.zip moondeck/*
+          zip -r moondeck.zip artifacts/moondeck/*
 
       - name: Nightly Release
         env:
@@ -158,4 +158,6 @@ jobs:
           prerelease: false
           tag_name: nightly
           name: 'Nightly Release'
-          files: moondeck.zip
+          files: |
+            moondeck.zip
+            artifacts/moondeck-cli-*/*
