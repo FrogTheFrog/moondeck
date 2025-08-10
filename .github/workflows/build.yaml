@@ -143,7 +143,6 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          name: moondeck
           path: moondeck
 
       - name: Package release
