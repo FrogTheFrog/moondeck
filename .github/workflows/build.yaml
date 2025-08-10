@@ -114,6 +114,8 @@ jobs:
           script-name: cli.py
           mode: onefile
           include-data-files: ./ssl/moondeck_cert.pem=./ssl/moondeck_cert.pem
+          include-package: lib.cli
+          prefer-source-code: true
           output-file: moondeck-cli.${{ matrix.config.ext }}
 
       - name: Upload Artifacts

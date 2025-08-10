@@ -1,0 +1,15 @@
+{
+    "version": 1,
+    "clientId": "73c668c3-0e43-4d7b-b13b-f7cb6a8a59f0",
+    "defaultHost": "641AF184-E6C4-730D-3396-030AC331B204",
+    "hosts": {
+        "641AF184-E6C4-730D-3396-030AC331B204": {
+            "address": "192.168.0.253",
+            "manualAddress": true,
+            "infoPort": 47989,
+            "buddyPort": 59999,
+            "hostName": "frogstation",
+            "mac": "50:EB:F6:25:95:5F"
+        }
+    }
+}
