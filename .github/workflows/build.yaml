@@ -147,7 +147,8 @@ jobs:
 
       - name: Package release
         run: |
-          zip -r moondeck.zip artifacts/moondeck/*
+          cd ./artifacts/moondeck
+          zip -r moondeck.zip *
 
       - name: Nightly Release
         env:
