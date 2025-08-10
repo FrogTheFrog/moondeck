@@ -113,6 +113,7 @@ jobs:
           nuitka-version: main
           script-name: cli.py
           mode: onefile
+          onefile-cache-mode: cached
           include-data-files: ./ssl/moondeck_cert.pem=./ssl/moondeck_cert.pem
           include-package: lib.cli
           prefer-source-code: true
