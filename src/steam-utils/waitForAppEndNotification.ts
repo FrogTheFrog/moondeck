@@ -1,4 +1,4 @@
-import { LifetimeNotification } from "@decky/ui";
+import { AppLifetimeNotification } from "@decky/ui/dist/globals/steam-client/GameSessions";
 import { SteamClientEx } from "./shared";
 import { logger } from "../lib/logger";
 
@@ -21,7 +21,7 @@ export async function waitForAppEndNotification(appId: number, timeout: number):
     };
 
     try {
-      unregister = (SteamClient as SteamClientEx).GameSessions.RegisterForAppLifetimeNotifications((data: LifetimeNotification) => {
+      unregister = (SteamClient as SteamClientEx).GameSessions.RegisterForAppLifetimeNotifications((data: AppLifetimeNotification) => {
         if (appId !== null && data.unAppID !== appId) {
           return;
         }

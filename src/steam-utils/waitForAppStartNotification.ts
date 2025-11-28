@@ -1,4 +1,4 @@
-import { LifetimeNotification } from "@decky/ui";
+import { AppLifetimeNotification } from "@decky/ui/dist/globals/steam-client/GameSessions";
 import { SteamClientEx } from "./shared";
 import { logger } from "../lib/logger";
 
@@ -11,7 +11,7 @@ export enum AppStartResult {
 // eslint-disable-next-line @typescript-eslint/promise-function-async
 function waitForLifetimeNotification(appId: number, lifetimeCallback: (running: boolean) => void): () => void {
   try {
-    const { unregister } = (SteamClient as SteamClientEx).GameSessions.RegisterForAppLifetimeNotifications((data: LifetimeNotification) => {
+    const { unregister } = (SteamClient as SteamClientEx).GameSessions.RegisterForAppLifetimeNotifications((data: AppLifetimeNotification) => {
       if (data.unAppID !== appId) {
         return;
       }

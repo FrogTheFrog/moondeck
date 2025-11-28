@@ -1,6 +1,6 @@
 import { AppType, EnvVars, addShortcut, getAppStoreEx, removeShortcut, restartSteamClient } from "./steamutils";
 import { getEnvKeyValueNumber, makeEnvKeyValue } from "./envutils";
-import { AppDetails } from "@decky/ui";
+import { AppDetails } from "@decky/ui/dist/globals/steam-client/App";
 import { AppOverviewPatcher } from "./appoverviewpatcher";
 import { AppSyncState } from "./appsyncstate";
 import { BehaviorSubject } from "rxjs";

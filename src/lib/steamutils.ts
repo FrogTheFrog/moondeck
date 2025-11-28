@@ -1,5 +1,6 @@
-import { AppDetails, LifetimeNotification } from "@decky/ui";
 import { SteamClientEx, getAllNonSteamAppIds, getAppDetails, getCurrentDisplayMode } from "../steam-utils";
+import { AppDetails } from "@decky/ui/dist/globals/steam-client/App";
+import { AppLifetimeNotification } from "@decky/ui/dist/globals/steam-client/GameSessions";
 import { call } from "@decky/api";
 import { logger } from "./logger";
 import { throttleAll } from "promise-throttle-all";
@@ -21,7 +22,7 @@ export enum AppType {
   NonSteam
 }
 
-export function registerForGameLifetime(callback: (data: LifetimeNotification) => void): () => void {
+export function registerForGameLifetime(callback: (data: AppLifetimeNotification) => void): () => void {
   const { unregister } = (SteamClient as SteamClientEx).GameSessions.RegisterForAppLifetimeNotifications(callback);
   return unregister;
 }

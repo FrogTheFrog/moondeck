@@ -1,7 +1,7 @@
 import { AppType, EnvVars, addAppsToCollection, addShortcut, checkExecPathMatch, getAppDetailsForAppIds, getAppStoreEx, getMoonDeckRunPath, getOrCreateCollection, removeAppsFromCollection, removeShortcut, restartSteamClient, setAppLaunchOptions } from "./steamutils";
 import { HostSettings, SettingsManager } from "./settingsmanager";
 import { getEnvKeyValueString, makeEnvKeyValue } from "./envutils";
-import { AppDetails } from "@decky/ui";
+import { AppDetails } from "@decky/ui/dist/globals/steam-client/App";
 import { AppSyncState } from "./appsyncstate";
 import { BehaviorSubject } from "rxjs";
 import { BuddyProxy } from "./buddyproxy";

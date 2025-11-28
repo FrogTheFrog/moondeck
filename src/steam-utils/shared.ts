@@ -1,4 +1,6 @@
-import { AppDetails, LifetimeNotification, sleep } from "@decky/ui";
+import { AppDetails } from "@decky/ui/dist/globals/steam-client/App";
+import { AppLifetimeNotification } from "@decky/ui/dist/globals/steam-client/GameSessions";
+import { sleep } from "@decky/ui";
 
 export interface SystemSuspendInfo {
   state: number;
@@ -49,7 +51,7 @@ export interface SteamClientEx {
     ToggleOverrideResolutionForInternalDisplay: (appId: number) => void;
   };
   GameSessions: {
-    RegisterForAppLifetimeNotifications: (callback: (data: LifetimeNotification) => void) => { unregister: () => void };
+    RegisterForAppLifetimeNotifications: (callback: (data: AppLifetimeNotification) => void) => { unregister: () => void };
   };
   User: {
     RegisterForLoginStateChange: (callback: (username: string) => void) => { unregister: () => void };

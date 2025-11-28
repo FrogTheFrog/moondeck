@@ -2,7 +2,7 @@ import { AppStartResult, AppType, ControllerConfigOption, EnvVars, SteamClientEx
 import { ControllerConfigValues, Dimension, HostResolution, HostSettings, SettingsManager, networkReconnectAfterSuspendDefault } from "./settingsmanager";
 import { Subscription, pairwise } from "rxjs";
 import { getEnvKeyValueString, makeEnvKeyValue } from "./envutils";
-import { AppDetails } from "@decky/ui";
+import { AppDetails } from "@decky/ui/dist/globals/steam-client/App";
 import { AppSyncState } from "./appsyncstate";
 import { CommandProxy } from "./commandproxy";
 import { ExternalAppShortcuts } from "./externalappshortcuts";
