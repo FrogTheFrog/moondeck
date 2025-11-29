@@ -1,4 +1,3 @@
-import { SteamClientEx } from "./shared";
 import { logger } from "../lib/logger";
 
 /**
@@ -6,7 +5,8 @@ import { logger } from "../lib/logger";
  */
 export function registerForDisplayStateChanges(onChange: () => void): () => void {
   try {
-    return (SteamClient as SteamClientEx).System.DisplayManager.RegisterForStateChanges(onChange).unregister;
+    const unregisterable = SteamClient.System.DisplayManager.RegisterForStateChanges(onChange);
+    return () => unregisterable.unregister();
   } catch (error) {
     logger.critical(error);
     // eslint-disable-next-line @typescript-eslint/no-empty-function

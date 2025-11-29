@@ -1,4 +1,3 @@
-import { SteamClientEx } from "./shared";
 import { logger } from "../lib/logger";
 import { waitForAppDetails } from "./waitForAppDetails";
 
@@ -31,7 +30,7 @@ export async function setShortcutName(appId: number, value: string): Promise<boo
   }
 
   try {
-    (SteamClient as SteamClientEx).Apps.SetShortcutName(appId, value);
+    SteamClient.Apps.SetShortcutName(appId, value);
     if (!(await waitForAppDetails(appId, (details) => details?.strDisplayName === value)).matchesPredicate) {
       logger.error(`Could not set shortcut name for ${appId}!`);
       return false;

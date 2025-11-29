@@ -1,4 +1,3 @@
-import { SteamClientEx } from "./shared";
 import { logger } from "../lib/logger";
 
 /**
@@ -11,7 +10,7 @@ import { logger } from "../lib/logger";
  */
 export function restartSteamClient(): void {
   try {
-    (SteamClient as SteamClientEx).User.StartRestart(true);
+    SteamClient.User.StartRestart(true);
   } catch (error) {
     logger.critical(error);
   }

@@ -1,5 +1,3 @@
-import { AppLifetimeNotification } from "@decky/ui/dist/globals/steam-client/GameSessions";
-import { SteamClientEx } from "./shared";
 import { logger } from "../lib/logger";
 
 export enum AppStartResult {
@@ -11,7 +9,7 @@ export enum AppStartResult {
 // eslint-disable-next-line @typescript-eslint/promise-function-async
 function waitForLifetimeNotification(appId: number, lifetimeCallback: (running: boolean) => void): () => void {
   try {
-    const { unregister } = (SteamClient as SteamClientEx).GameSessions.RegisterForAppLifetimeNotifications((data: AppLifetimeNotification) => {
+    const unregisterable = SteamClient.GameSessions.RegisterForAppLifetimeNotifications((data) => {
       if (data.unAppID !== appId) {
         return;
       }
@@ -23,7 +21,7 @@ function waitForLifetimeNotification(appId: number, lifetimeCallback: (running: 
     return () => {
       if (!unregistered) {
         unregistered = true;
-        unregister();
+        unregisterable.unregister();
       }
     };
   } catch (error) {
@@ -38,18 +36,18 @@ function waitForProcessLaunchAction(gameId: string, processLaunched: (launched: 
   try {
     let actionId: number | null = null;
     let callbackInvoked = false;
-    const { unregister: unregisterStart } = (SteamClient as SteamClientEx).Apps.RegisterForGameActionStart((gameActionId, gameIdFromAction, action, _1) => {
+    const unregisterStart = SteamClient.Apps.RegisterForGameActionStart((gameActionId, gameIdFromAction, action, _1) => {
       if (action === "LaunchApp" && gameIdFromAction === gameId && actionId === null) {
         actionId = gameActionId;
       }
     });
-    const { unregister: unregisterTaskChange } = (SteamClient as SteamClientEx).Apps.RegisterForGameActionTaskChange((gameActionId, _1, _2, task, _3) => {
+    const unregisterTaskChange = SteamClient.Apps.RegisterForGameActionTaskChange((gameActionId, _1, _2, task, _3) => {
       if (gameActionId === actionId && task === "CreatingProcess" && !callbackInvoked) {
         callbackInvoked = true;
         processLaunched(true);
       }
     });
-    const { unregister: unregisterEnd } = (SteamClient as SteamClientEx).Apps.RegisterForGameActionEnd((gameActionId) => {
+    const unregisterEnd = SteamClient.Apps.RegisterForGameActionEnd((gameActionId) => {
       if (gameActionId === actionId && !callbackInvoked) {
         callbackInvoked = true;
         processLaunched(false);
@@ -60,9 +58,9 @@ function waitForProcessLaunchAction(gameId: string, processLaunched: (launched: 
     return () => {
       if (!unregistered) {
         unregistered = true;
-        unregisterStart();
-        unregisterTaskChange();
-        unregisterEnd();
+        unregisterStart.unregister();
+        unregisterTaskChange.unregister();
+        unregisterEnd.unregister();
       }
     };
   } catch (error) {

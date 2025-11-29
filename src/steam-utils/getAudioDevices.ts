@@ -1,4 +1,3 @@
-import { SteamClientEx } from "./shared";
 import { logger } from "../lib/logger";
 
 export interface AudioDevices {
@@ -13,7 +12,7 @@ export async function getAudioDevices(): Promise<AudioDevices> {
   try {
     const knownExternalDeviceNames = ["Rembrandt Radeon High Definition Audio Controller", "HD-Audio Generic"];
     const knownInternalDeviceNames = ["Raven/Raven2/FireFlight/Renoir Audio Processor", "ACP/ACP3X/ACP6x Audio Coprocessor"];
-    const audioData = await (SteamClient as SteamClientEx).System.Audio.GetDevices();
+    const audioData = await SteamClient.System.Audio.GetDevices();
     const validDevices = audioData.vecDevices.filter((device) => {
       const invalidNames = ["echo-cancel", "input.virtual", "filter-chain-sink", "output.virtual", "filter-chain-source"];
       for (const invalidName of invalidNames) {

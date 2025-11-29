@@ -1,4 +1,4 @@
-import { AppResolutionOverrideConstants, SteamClientEx } from "./shared";
+import { AppResolutionOverrideConstants } from "./shared";
 import { logger } from "../lib/logger";
 
 /**
@@ -6,7 +6,7 @@ import { logger } from "../lib/logger";
  */
 export async function getAppResolutionOverride(appId: number): Promise<AppResolutionOverrideConstants | string | null> {
   try {
-    return await (SteamClient as SteamClientEx).Apps.GetResolutionOverrideForApp(appId);
+    return await SteamClient.Apps.GetResolutionOverrideForApp(appId);
   } catch (error) {
     logger.critical(error);
     return null;

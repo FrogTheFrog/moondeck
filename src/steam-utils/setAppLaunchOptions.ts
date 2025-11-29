@@ -1,4 +1,3 @@
-import { SteamClientEx } from "./shared";
 import { logger } from "../lib/logger";
 import { waitForAppDetails } from "./waitForAppDetails";
 
@@ -21,7 +20,7 @@ export async function setAppLaunchOptions(appId: number, value: string): Promise
   }
 
   try {
-    (SteamClient as SteamClientEx).Apps.SetAppLaunchOptions(appId, value);
+    SteamClient.Apps.SetAppLaunchOptions(appId, value);
     if (!(await waitForAppDetails(appId, (details) => details?.strLaunchOptions === value)).matchesPredicate) {
       logger.error(`Could not set app launch options for ${appId}!`);
       return false;

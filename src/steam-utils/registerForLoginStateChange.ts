@@ -1,4 +1,3 @@
-import { SteamClientEx } from "./shared";
 import { logger } from "../lib/logger";
 
 /**
@@ -11,7 +10,7 @@ import { logger } from "../lib/logger";
 export function registerForLoginStateChange(onLogin: (username: string) => void, onLogout: () => void): () => void {
   try {
     let isLoggedIn: boolean | null = null;
-    return (SteamClient as SteamClientEx).User.RegisterForLoginStateChange((username: string) => {
+    const unregisterable = SteamClient.User.RegisterForLoginStateChange((username: string) => {
       if (username === "") {
         if (isLoggedIn !== false) {
           onLogout();
@@ -23,7 +22,8 @@ export function registerForLoginStateChange(onLogin: (username: string) => void,
         }
         isLoggedIn = true;
       }
-    }).unregister;
+    });
+    return () => unregisterable.unregister();
   } catch (error) {
     logger.critical(error);
     // eslint-disable-next-line @typescript-eslint/no-empty-function

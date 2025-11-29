@@ -1,4 +1,3 @@
-import { SteamClientEx } from "./shared";
 import { getGameId } from "./getGameId";
 import { logger } from "../lib/logger";
 import { waitForAppEndNotification } from "./waitForAppEndNotification";
@@ -21,7 +20,7 @@ export async function terminateApp(appId: number, timeout: number): Promise<bool
 
   try {
     const startNotification = waitForAppEndNotification(appId, timeout);
-    (SteamClient as SteamClientEx).Apps.TerminateApp(gameId, false);
+    SteamClient.Apps.TerminateApp(gameId, false);
     return await startNotification;
   } catch (error) {
     logger.critical(error);

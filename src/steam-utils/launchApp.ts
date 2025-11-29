@@ -1,5 +1,4 @@
 import { AppStartResult, waitForAppStartNotification } from "./waitForAppStartNotification";
-import { SteamClientEx } from "./shared";
 import { getGameId } from "./getGameId";
 import { logger } from "../lib/logger";
 
@@ -20,7 +19,7 @@ export async function launchApp(appId: number, timeout: number): Promise<AppStar
 
   try {
     const startNotification = waitForAppStartNotification(appId, gameId, timeout);
-    (SteamClient as SteamClientEx).Apps.RunGame(gameId, "", -1, 100);
+    SteamClient.Apps.RunGame(gameId, "", -1, 100);
     return await startNotification;
   } catch (error) {
     logger.critical(error);

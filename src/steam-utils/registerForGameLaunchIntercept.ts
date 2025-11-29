@@ -1,4 +1,3 @@
-import { SteamClientEx } from "./shared";
 import { logger } from "../lib/logger";
 
 /**
@@ -6,11 +5,12 @@ import { logger } from "../lib/logger";
  */
 export function registerForGameLaunchIntercept(callback: (gameId: string, cancel: () => void) => void): () => void {
   try {
-    return (SteamClient as SteamClientEx).Apps.RegisterForGameActionStart((gameActionId, gameId, action, _1) => {
+    const unregisterable = SteamClient.Apps.RegisterForGameActionStart((gameActionId, gameId, action, _1) => {
       if (action === "LaunchApp") {
-        callback(gameId, () => (SteamClient as SteamClientEx).Apps.CancelGameAction(gameActionId));
+        callback(gameId, () => SteamClient.Apps.CancelGameAction(gameActionId));
       }
-    }).unregister;
+    });
+    return () => unregisterable.unregister();
   } catch (error) {
     logger.critical(error);
     // eslint-disable-next-line @typescript-eslint/no-empty-function

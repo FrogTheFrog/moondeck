@@ -1,5 +1,4 @@
-import { AppLifetimeNotification } from "@decky/ui/dist/globals/steam-client/GameSessions";
-import { SteamClientEx } from "./shared";
+import { Unregisterable } from "@decky/ui";
 import { logger } from "../lib/logger";
 
 /**
@@ -10,24 +9,24 @@ export async function waitForAppEndNotification(appId: number, timeout: number):
   return await new Promise<boolean>((_resolve) => {
     let alreadyResolved = false;
     let timeoutId: NodeJS.Timeout | undefined;
-    let unregister: (() => void) | undefined;
+    let unregisterable: Unregisterable | undefined;
     const resolve = (value: boolean): void => {
       if (!alreadyResolved) {
         alreadyResolved = true;
         clearTimeout(timeoutId);
-        unregister?.();
+        unregisterable?.unregister();
         _resolve(value);
       }
     };
 
     try {
-      unregister = (SteamClient as SteamClientEx).GameSessions.RegisterForAppLifetimeNotifications((data: AppLifetimeNotification) => {
+      unregisterable = SteamClient.GameSessions.RegisterForAppLifetimeNotifications((data) => {
         if (appId !== null && data.unAppID !== appId) {
           return;
         }
 
         resolve(!data.bRunning);
-      }).unregister;
+      });
       timeoutId = setTimeout(() => { resolve(false); }, timeout);
     } catch (error) {
       logger.critical(error);

@@ -1,4 +1,3 @@
-import { SteamClientEx } from "./shared";
 import { logger } from "../lib/logger";
 import { waitForAppDetails } from "./waitForAppDetails";
 
@@ -17,7 +16,7 @@ export async function setOverrideResolutionForInternalDisplay(appId: number, val
   }
 
   try {
-    (SteamClient as SteamClientEx).Apps.ToggleOverrideResolutionForInternalDisplay(appId);
+    SteamClient.Apps.ToggleOverrideResolutionForInternalDisplay(appId);
     if (!(await waitForAppDetails(appId, (details) => details?.bOverrideInternalResolution === value)).matchesPredicate) {
       logger.error(`Could not set override resolution for internal display for ${appId}!`);
       return false;

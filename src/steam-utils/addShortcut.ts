@@ -1,4 +1,3 @@
-import { SteamClientEx } from "./shared";
 import { getAppStoreEx } from "./getAppStoreEx";
 import { logger } from "../lib/logger";
 import { removeShortcut } from "./removeShortcut";
@@ -24,7 +23,7 @@ export async function addShortcut(appName: string, execPath: string): Promise<nu
     return null;
   }
 
-  const appId = await (SteamClient as SteamClientEx).Apps.AddShortcut(appName, execPath, "", "");
+  const appId = await SteamClient.Apps.AddShortcut(appName, execPath, "", "");
   if (typeof appId === "number") {
     if (await waitForAppOverview(appId, (overview) => overview !== null)) {
       const overview = appStoreEx.getAppOverview(appId);

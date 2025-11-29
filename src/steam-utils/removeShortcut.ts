@@ -1,4 +1,3 @@
-import { SteamClientEx } from "./shared";
 import { getAppStoreEx } from "./getAppStoreEx";
 import { getCollectionStore } from "./getCollectionStore";
 import { logger } from "../lib/logger";
@@ -43,7 +42,7 @@ export async function removeShortcut(appId: number): Promise<boolean> {
 
   try {
     logger.log(`Removing shortcut for ${appId}.`);
-    (SteamClient as SteamClientEx).Apps.RemoveShortcut(appId);
+    SteamClient.Apps.RemoveShortcut(appId);
 
     for (const collection of collectionStore.userCollections) {
       if (collection.bAllowsDragAndDrop && collection.apps.has(appId)) {

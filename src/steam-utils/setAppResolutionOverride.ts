@@ -1,4 +1,3 @@
-import { SteamClientEx } from "./shared";
 import { getAppResolutionOverride } from "./getAppResolutionOverride";
 import { logger } from "../lib/logger";
 import { waitForAppResolutionOverride } from "./waitForAppResolutionOverride";
@@ -18,7 +17,7 @@ export async function setAppResolutionOverride(appId: number, value: string): Pr
       return true;
     }
 
-    (SteamClient as SteamClientEx).Apps.SetAppResolutionOverride(appId, value);
+    SteamClient.Apps.SetAppResolutionOverride(appId, value);
     if (!await waitForAppResolutionOverride(appId, (override) => override === value)) {
       logger.error(`Failed to set resolution override for ${appId} - value did not change!`);
       return false;

@@ -1,4 +1,4 @@
-import { SteamClientEx, getAllNonSteamAppIds, getAppDetails, getCurrentDisplayMode } from "../steam-utils";
+import { getAllNonSteamAppIds, getAppDetails, getCurrentDisplayMode } from "../steam-utils";
 import { AppDetails } from "@decky/ui/dist/globals/steam-client/App";
 import { AppLifetimeNotification } from "@decky/ui/dist/globals/steam-client/GameSessions";
 import { call } from "@decky/api";
@@ -23,8 +23,8 @@ export enum AppType {
 }
 
 export function registerForGameLifetime(callback: (data: AppLifetimeNotification) => void): () => void {
-  const { unregister } = (SteamClient as SteamClientEx).GameSessions.RegisterForAppLifetimeNotifications(callback);
-  return unregister;
+  const unregisterable = SteamClient.GameSessions.RegisterForAppLifetimeNotifications(callback);
+  return () => unregisterable.unregister();
 }
 
 export async function getCurrentDisplayModeString(): Promise<string | null> {

@@ -1,10 +1,11 @@
-import { AppStartResult, AppType, ControllerConfigOption, EnvVars, SteamClientEx, checkExecPathMatch, getAppDetails, getAudioDevices, getCurrentDisplayModeString, getDisplayIdentifiers, getMoonDeckRunPath, getSystemNetworkStore, launchApp, registerForGameLaunchIntercept, registerForGameLifetime, registerForSuspendNotifictions, setAppHiddenState, setAppLaunchOptions, setAppResolutionOverride, setOverrideResolutionForInternalDisplay, setShortcutName, waitForNetworkConnection } from "./steamutils";
+import { AppStartResult, AppType, ControllerConfigOption, EnvVars, checkExecPathMatch, getAppDetails, getAudioDevices, getCurrentDisplayModeString, getDisplayIdentifiers, getMoonDeckRunPath, getSystemNetworkStore, launchApp, registerForGameLaunchIntercept, registerForGameLifetime, registerForSuspendNotifictions, setAppHiddenState, setAppLaunchOptions, setAppResolutionOverride, setOverrideResolutionForInternalDisplay, setShortcutName, waitForNetworkConnection } from "./steamutils";
 import { ControllerConfigValues, Dimension, HostResolution, HostSettings, SettingsManager, networkReconnectAfterSuspendDefault } from "./settingsmanager";
 import { Subscription, pairwise } from "rxjs";
 import { getEnvKeyValueString, makeEnvKeyValue } from "./envutils";
 import { AppDetails } from "@decky/ui/dist/globals/steam-client/App";
 import { AppSyncState } from "./appsyncstate";
 import { CommandProxy } from "./commandproxy";
+import { EThirdPartyControllerConfiguration } from "@decky/ui/dist/globals/steam-client/Input";
 import { ExternalAppShortcuts } from "./externalappshortcuts";
 import { MoonDeckAppProxy } from "./moondeckapp";
 import { MoonDeckAppShortcuts } from "./moondeckappshortcuts";
@@ -109,7 +110,7 @@ export function updateControllerConfig(appId: number, controllerConfig: keyof ty
   if (controllerConfig !== "Noop") {
     logger.log(`Setting controller config to ${controllerConfig} for ${appId}.`);
     const option = ControllerConfigOption[controllerConfig];
-    (SteamClient as SteamClientEx).Apps.SetThirdPartyControllerConfiguration(appId, option);
+    SteamClient.Apps.SetThirdPartyControllerConfiguration(appId, option as unknown as EThirdPartyControllerConfiguration);
   }
 }
 
