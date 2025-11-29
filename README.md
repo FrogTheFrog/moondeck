@@ -12,10 +12,10 @@ It requires an additional lightweight app to be installed on the host PC - [Moon
 
 ## Building
 
-1. Clone this repo to the `~/homebrew/plugins`.
-2. Install pnpm via npm `npm install --global pnpm`.
-3. Run `pnpm install` in the cloned repo directory.
-4. Build using `pnpm run build-dev` for local build.
+To build and deploy the plugin package first copy `.env.example` to `.env` and update any relevant settings. Then either:
+
+* Run `pnpm` commands `pnpm run setup` and `pnpm run build:plugin` and `pnpm run deploy`.
+* Run VSCode tasks Ctrl+Shift+P or Cmd+Shift+P and run: `Tasks: Run Task` and choose the task to run.
 
 ## Internal data
 
