@@ -89,7 +89,6 @@ export const HostSelectionView: FC = () => {
             currentHost={settings.currentHostId}
             onForget={(value) => {
               settingsManager.update((settings) => {
-                // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
                 delete settings.hostSettings[value];
                 settings.currentHostId = null;
               });

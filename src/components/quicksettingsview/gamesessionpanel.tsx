@@ -44,7 +44,8 @@ export const GameSessionPanel: FC<Props> = ({ appData }) => {
             label="AppId as game title"
             disabled={isDisabled}
             checked={appData.sessionOptions.nameSetToAppId}
-            onChange={() => handleNameChange()} />
+            onChange={() => handleNameChange()}
+          />
         </PanelSectionRow>
       </PanelSection>;
   }
@@ -70,7 +71,8 @@ export const GameSessionPanel: FC<Props> = ({ appData }) => {
         <PanelSectionRow>
           <Field
             bottomSeparator="none"
-            description="Last somewhat graceful resort for when MoonDeck or host misbehaves." />
+            description="Last somewhat graceful resort for when MoonDeck or host misbehaves."
+          />
         </PanelSectionRow>
         <PanelSectionRow>
           <ButtonItem

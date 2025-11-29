@@ -22,7 +22,7 @@ export enum ControllerConfigValues {
 }
 export function getControllerConfigDropdownValues(): Array<{ id: keyof typeof ControllerConfigValues; label: string }> {
   return Object.entries(ControllerConfigValues).map(([id, label]) => {
-    return { id, label } as unknown as { id: keyof typeof ControllerConfigValues; label: string };
+    return { id, label } as { id: keyof typeof ControllerConfigValues; label: string };
   });
 }
 
@@ -276,10 +276,8 @@ export class SettingsManager {
     }
 
     const settings = cloneDeep(this.settings.value);
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const hostSettings = settings.hostSettings[settings.currentHostId!];
     if (hostSettings === undefined) {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       logger.error(`Host (${settings.currentHostId!}) settings are missing!`);
       return;
     }

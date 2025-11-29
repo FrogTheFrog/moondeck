@@ -34,7 +34,8 @@ export const MoonDeckAppsView: FC = () => {
 
   return (
     <DialogBody>
-      {currentSettings !== null &&
+      {
+        currentSettings !== null &&
         <DialogControlsSection>
           <ToggleField
             label="Enable the MoonDeck shortcuts"

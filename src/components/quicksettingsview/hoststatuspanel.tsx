@@ -25,7 +25,8 @@ export const HostStatusPanel: FC<Props> = ({ currentHostSettings, currentSetting
         <PanelSectionRow>
           <Field
             label={<LabelWithIcon icon={HostOff} label="HOST IS NOT SELECTED" />}
-            description="Go to settings to select host" />
+            description="Go to settings to select host"
+          />
         </PanelSectionRow>
       </PanelSection>
     );

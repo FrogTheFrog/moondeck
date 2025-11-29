@@ -49,24 +49,26 @@ export const LinkedDisplayList: FC<Props> = ({ hostSettings }) => {
     }
 
     if (mappedEntries.length > 0) {
-      linkedEntries = <>
-        {mappedEntries.map((entry) => {
-          return (
-            <Field
-              key={entry.display}
-              label={entry.display}
-              description={entry.resolution}
-              childrenContainerWidth="min"
-            >
-              <DialogButton
-                onClick={() => unlinkDisplay(entry.display)}
-                style={{ minWidth: "auto", fontSize: "20px", lineHeight: "16px", padding: "10px 12px" }}>
-                <TrashMain />
-              </DialogButton>
-            </Field>
-          );
-        })}
-      </>;
+      linkedEntries =
+        <>
+          {mappedEntries.map((entry) => {
+            return (
+              <Field
+                key={entry.display}
+                label={entry.display}
+                description={entry.resolution}
+                childrenContainerWidth="min"
+              >
+                <DialogButton
+                  onClick={() => unlinkDisplay(entry.display)}
+                  style={{ minWidth: "auto", fontSize: "20px", lineHeight: "16px", padding: "10px 12px" }}
+                >
+                  <TrashMain />
+                </DialogButton>
+              </Field>
+            );
+          })}
+        </>;
     }
   }
 

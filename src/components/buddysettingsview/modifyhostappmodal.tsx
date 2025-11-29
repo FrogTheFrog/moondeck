@@ -9,7 +9,6 @@ function isValidIndex(index: number | null, listSize: number): boolean {
 }
 
 export const ModifyHostAppModal: IndexedListModal<HostApp["apps"][number]> = ({ closeModal, currentList, currentIndex, updateList }) => {
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const initialValue = isValidIndex(currentIndex, currentList.length) ? currentList[currentIndex!] : null;
   const [name, setName] = useState<string>(initialValue ?? "");
   const [nameIsValid, setNameIsValid] = useState<boolean>(false);

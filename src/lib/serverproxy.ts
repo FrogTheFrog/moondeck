@@ -14,7 +14,7 @@ export interface GameStreamHost {
 }
 
 export type ServerStatus = "Offline" | "Online";
-export type PairingStartStatus = "PairingStarted" | "Offline" | (string & {}); // eslint-disable-line
+export type PairingStartStatus = "PairingStarted" | "Offline" | (string & {});
 
 async function scanForHosts(timeout: number): Promise<GameStreamHost[]> {
   try {

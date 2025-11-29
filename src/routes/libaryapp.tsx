@@ -1,7 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Navigation, afterPatch, appDetailsClasses, createReactTreePatcher, findInReactTree } from "@decky/ui";
 import { RoutePatch, routerHook } from "@decky/api";
 import { MoonDeckLaunchButtonAnchor } from "../components/moondecklaunchbutton";
@@ -87,7 +87,8 @@ function patchLibraryApp(route: string): RoutePatch {
             <MoonDeckLaunchButtonAnchor
               appId={appId}
               appName={appName}
-              appType={appType} />
+              appType={appType}
+            />
           );
 
           return ret;

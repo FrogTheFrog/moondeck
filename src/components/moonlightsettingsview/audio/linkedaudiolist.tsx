@@ -51,24 +51,26 @@ export const LinkedAudioList: FC<Props> = ({ hostSettings }) => {
     }
 
     if (mappedEntries.length > 0) {
-      linkedEntries = <>
-        {mappedEntries.map((entry) => {
-          return (
-            <Field
-              key={entry.device}
-              label={entry.device}
-              description={entry.option}
-              childrenContainerWidth="min"
-            >
-              <DialogButton
-                onClick={() => unlinkAudio(entry.device)}
-                style={{ minWidth: "auto", fontSize: "20px", lineHeight: "16px", padding: "10px 12px" }}>
-                <TrashMain />
-              </DialogButton>
-            </Field>
-          );
-        })}
-      </>;
+      linkedEntries =
+        <>
+          {mappedEntries.map((entry) => {
+            return (
+              <Field
+                key={entry.device}
+                label={entry.device}
+                description={entry.option}
+                childrenContainerWidth="min"
+              >
+                <DialogButton
+                  onClick={() => unlinkAudio(entry.device)}
+                  style={{ minWidth: "auto", fontSize: "20px", lineHeight: "16px", padding: "10px 12px" }}
+                >
+                  <TrashMain />
+                </DialogButton>
+              </Field>
+            );
+          })}
+        </>;
     }
   }
 

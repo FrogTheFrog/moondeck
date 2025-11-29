@@ -5,7 +5,7 @@ import { UserSettings } from "../../lib";
 interface Props {
   disabled: boolean;
   currentHost: UserSettings["currentHostId"];
-  onForget: (value: Exclude< UserSettings["currentHostId"], null>) => void;
+  onForget: (value: Exclude<UserSettings["currentHostId"], null>) => void;
 }
 
 export const HostForgetButton: FC<Props> = ({ disabled, currentHost, onForget }) => {

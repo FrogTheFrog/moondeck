@@ -9,7 +9,6 @@ export function registerForDisplayStateChanges(onChange: () => void): () => void
     return () => unregisterable.unregister();
   } catch (error) {
     logger.critical(error);
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
     return () => { };
   }
 }

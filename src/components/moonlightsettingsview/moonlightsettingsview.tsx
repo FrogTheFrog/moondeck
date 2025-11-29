@@ -17,7 +17,8 @@ export const MoonlightSettingsView: FC = () => {
           <Field
             label={<LabelWithIcon icon={HostOff} label="HOST IS NOT SELECTED" />}
             description="Go to host selection page to select host"
-            bottomSeparator="none" />
+            bottomSeparator="none"
+          />
         </DialogControlsSection>
       </DialogBody>
     );

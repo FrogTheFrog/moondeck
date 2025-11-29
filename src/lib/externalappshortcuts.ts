@@ -61,7 +61,7 @@ async function getHostData(appType: ExternalAppType, buddyProxy: BuddyProxy, hos
     }
 
     // Filter out the custom MoonDeck host apps
-    gameStreamApps = gameStreamApps.filter(app => !moonDeckHostApps.includes(app));
+    gameStreamApps = gameStreamApps.filter((app) => !moonDeckHostApps.includes(app));
     return gameStreamApps.map((appName) => { return { appType: AppType.GameStream, appName, entryId: appName, entryType: EnvVars.AppName }; });
   }
 

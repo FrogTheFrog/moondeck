@@ -18,16 +18,16 @@ export const QuickSettingsView: FC = () => {
 
   return (
     <>
-      {appData !== null
-        ? <GameSessionPanel appData={appData} />
-        : <>
+      {appData !== null ?
+          <GameSessionPanel appData={appData} /> :
+          <>
             <HostStatusPanel currentHostSettings={currentHostSettings} currentSettings={currentSettings} serverStatus={serverStatus} serverRefreshStatus={serverRefreshStatus} buddyStatus={buddyStatus} buddyRefreshStatus={buddyRefreshStatus} />
             <ExternalAppsPanel currentHostSettings={currentHostSettings} />
             <HostAppPanel currentHostSettings={currentHostSettings} currentSettings={currentSettings} />
             <ResolutionPanel currentHostSettings={currentHostSettings} currentSettings={currentSettings} />
-          </>
-      }
-      {currentHostSettings !== null &&
+          </>}
+      {
+        currentHostSettings !== null &&
         <HostCommandPanel serverStatus={serverStatus} buddyStatus={buddyStatus} />
       }
     </>

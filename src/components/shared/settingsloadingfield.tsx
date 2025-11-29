@@ -10,7 +10,8 @@ export const SettingsLoadingField: FC = () => {
         <Field
           label={<LabelWithIcon icon={HostOff} label="SETTINGS ARE STILL BEING LOADED" />}
           description="Please wait or check the logs for exceptions!"
-          bottomSeparator="none" />
+          bottomSeparator="none"
+        />
       </DialogControlsSection>
     </DialogBody>
   );

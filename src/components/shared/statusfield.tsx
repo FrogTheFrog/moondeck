@@ -23,7 +23,7 @@ export const StatusField: FC<ExtendedProps<BuddyStatus | ServerStatus>> = ({ sta
   return (
     <Field
       label={<LabelWithIcon icon={icon} label={label} />}
-      childrenContainerWidth={"min"}
+      childrenContainerWidth="min"
       verticalAlignment="center"
       bottomSeparator={noSeparator === true ? "none" : "standard"}
     >

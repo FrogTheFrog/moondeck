@@ -10,7 +10,6 @@ function isValidIndex(index: number | null, listSize: number): boolean {
 }
 
 export const ModifyResolutionModal: IndexedListModal<HostResolution["dimensions"][number]> = ({ closeModal, currentList, currentIndex, updateList }) => {
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const initialValue = isValidIndex(currentIndex, currentList.length) ? currentList[currentIndex!] : null;
   const [width, setWidth] = useState<number | null>(initialValue?.width ?? null);
   const [height, setHeight] = useState<number | null>(initialValue?.height ?? null);

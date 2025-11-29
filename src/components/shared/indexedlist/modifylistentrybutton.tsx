@@ -11,7 +11,6 @@ export const ModifyListButton: <ListElement, Modal extends IndexedListModal<List
   const handleClick = (): void => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const Modal = modal as FC<IndexedListModalPropsWithClose<any>>;
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
     showModal(<Modal closeModal={() => {}} currentIndex={currentIndex} currentList={currentList} updateList={updateList} />);
   };
 

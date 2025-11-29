@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { AppSyncState } from "../lib/appsyncstate";
 import { ConnectivityManager } from "../lib/connectivitymanager";
 import { ExternalAppShortcuts } from "../lib/externalappshortcuts";
@@ -16,14 +18,11 @@ export interface MoonDeckContextType {
 }
 
 export function getDefaultContext(makeNew = false): MoonDeckContextType {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
   if (typeof (getDefaultContext as any).defaultValue === "undefined") {
     makeNew = true;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
     (getDefaultContext as any).defaultValue = {};
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
   const context = (getDefaultContext as any).defaultValue as MoonDeckContextType;
   if (makeNew) {
     context.appSyncState = new AppSyncState();

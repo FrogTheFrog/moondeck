@@ -18,7 +18,8 @@ export const BuddySettingsView: FC = () => {
           <Field
             label={<LabelWithIcon icon={HostOff} label="HOST IS NOT SELECTED" />}
             description="Go to host selection page to select host"
-            bottomSeparator="none" />
+            bottomSeparator="none"
+          />
         </DialogControlsSection>
       </DialogBody>
     );
@@ -43,8 +44,8 @@ export const BuddySettingsView: FC = () => {
           childrenContainerWidth="fixed"
         >
           <CloseSteamDropdown
-             value={hostSettings.buddy.closeSteam}
-             setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.buddy.closeSteam = value; })}
+            value={hostSettings.buddy.closeSteam}
+            setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.buddy.closeSteam = value; })}
           />
         </Field>
       </DialogControlsSection>

@@ -45,7 +45,8 @@ export const ResolutionPanel: FC<Props> = ({ currentSettings, currentHostSetting
             setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.resolution.useLinkedDisplays = value; })}
           />
         </PanelSectionRow>
-        {showCustomResolution &&
+        {
+          showCustomResolution &&
           <>
             <PanelSectionRow>
               <ToggleField

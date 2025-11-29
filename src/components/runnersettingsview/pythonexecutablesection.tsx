@@ -56,10 +56,11 @@ export const PythonExecutableSection: FC = () => {
       >
         <AnyTextInput
           value={userSettings.pythonExecPath}
-          setValue={(value) =>
-            settingsManager.update((userSettings) => {
-              userSettings.pythonExecPath = value;
-            })
+          setValue={
+            (value) =>
+              settingsManager.update((userSettings) => {
+                userSettings.pythonExecPath = value;
+              })
           }
         />
         <DialogButton

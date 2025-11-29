@@ -14,7 +14,6 @@ export function registerForSuspendNotifictions(onSuspend: (info: SuspendProgress
     };
   } catch (error) {
     logger.critical(error);
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
     return () => { };
   }
 }

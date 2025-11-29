@@ -5,6 +5,7 @@ import { getEnvKeyValueString, makeEnvKeyValue } from "./envutils";
 import { AppDetails } from "@decky/ui/dist/globals/steam-client/App";
 import { AppSyncState } from "./appsyncstate";
 import { CommandProxy } from "./commandproxy";
+import { ESuspendResumeProgressState } from "@decky/ui/dist/globals/steam-client/User";
 import { EThirdPartyControllerConfiguration } from "@decky/ui/dist/globals/steam-client/Input";
 import { ExternalAppShortcuts } from "./externalappshortcuts";
 import { MoonDeckAppProxy } from "./moondeckapp";
@@ -109,8 +110,8 @@ function getLaunchOptionsString(currentValue: string, appId: number, appType: Ap
 export function updateControllerConfig(appId: number, controllerConfig: keyof typeof ControllerConfigValues): void {
   if (controllerConfig !== "Noop") {
     logger.log(`Setting controller config to ${controllerConfig} for ${appId}.`);
-    const option = ControllerConfigOption[controllerConfig];
-    SteamClient.Apps.SetThirdPartyControllerConfiguration(appId, option as unknown as EThirdPartyControllerConfiguration);
+    const option = ControllerConfigOption[controllerConfig] as unknown as EThirdPartyControllerConfiguration;
+    SteamClient.Apps.SetThirdPartyControllerConfiguration(appId, option);
   }
 }
 
@@ -202,14 +203,12 @@ export class MoonDeckAppLauncher {
 
   private initSuspension(): void {
     this.unregisterSuspension = registerForSuspendNotifictions(async (info) => {
-      // This the earliest state or smt
-      if (info.state === 1 && this.moonDeckApp.value !== null) {
+      if (info.state === ESuspendResumeProgressState.Complete && this.moonDeckApp.value !== null) {
         logger.log("Suspending MoonDeck app.");
         await this.moonDeckApp.suspendApp();
       }
     }, async (info) => {
-      // This the latest state or smt
-      if (info.state === 1) {
+      if (info.state === ESuspendResumeProgressState.Complete) {
         const resumeAfterSuspend = this.settingsManager.settings.value?.gameSession.resumeAfterSuspend ?? false;
         if (!resumeAfterSuspend) {
           await this.moonDeckApp.clearApp();

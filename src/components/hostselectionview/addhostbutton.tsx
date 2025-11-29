@@ -8,7 +8,6 @@ interface Props {
 
 export const AddHostButton: FC<Props> = ({ disabled }) => {
   const handleClick = (): void => {
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
     showModal(<ManualHostModal closeModal={() => {}} />);
   };
 

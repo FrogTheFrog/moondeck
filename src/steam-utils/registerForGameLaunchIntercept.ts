@@ -13,7 +13,6 @@ export function registerForGameLaunchIntercept(callback: (gameId: string, cancel
     return () => unregisterable.unregister();
   } catch (error) {
     logger.critical(error);
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
     return () => { };
   }
 }

@@ -1,8 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { AppStoreOverview, getAppStoreEx } from "./steamutils";
-import { IMapWillChange, Lambda } from "mobx";
+import { IObjectWillChange, Lambda } from "mobx";
 import BiMap from "ts-bidirectional-map";
 import { ObservableObjectAdministration } from "mobx/dist/internal";
 import { cloneDeep } from "lodash";
@@ -10,6 +7,13 @@ import { logger } from "./logger";
 
 const patchKey = Symbol("MoonDeck");
 type SetterPredicate<T> = (currentValue: T, newValue: T) => boolean;
+interface GenericObject<T> {
+  [key: string | symbol]: T;
+}
+type ExtendedGenericObject<T> = T & GenericObject<unknown>;
+type GenericAppStoreOverview = ExtendedGenericObject<AppStoreOverview>;
+type GenericAppStoreOverviewMaybeNull = GenericAppStoreOverview | null;
+type GenericExtendedGenericObject = ExtendedGenericObject<ObservableObjectAdministration>;
 interface PatchData<T> {
   patchedValue: T;
   setterPredicate: SetterPredicate<T>;
@@ -25,7 +29,7 @@ type MaybePatchedGetter<T> = PropertyDescriptor["get"] & Partial<PatchedData<T>>
 
 function makeSetterAndGetter<T>(initialData: PatchData<T>): PropertyDescriptor {
   const setter = function patchedSetter(value: T): void {
-    const patchData = (patchedSetter as unknown as PatchedSetter<T>)[patchKey];
+    const patchData = (patchedSetter as PatchedSetter<T>)[patchKey];
     patchData.origValue = value;
     if (patchData.setterPredicate(patchData.patchedValue, value)) {
       patchData.patchedValue = value;
@@ -33,10 +37,10 @@ function makeSetterAndGetter<T>(initialData: PatchData<T>): PropertyDescriptor {
         patchData.origSetter(value);
       }
     }
-  } as unknown as MaybePatchedSetter<T>;
+  } as MaybePatchedSetter<T>;
   const getter = function patchedGetter(): T {
-    return (patchedGetter as unknown as PatchedGetter<T>)[patchKey].patchedValue;
-  } as unknown as MaybePatchedGetter<T>;
+    return (patchedGetter as PatchedGetter<T>)[patchKey].patchedValue;
+  } as MaybePatchedGetter<T>;
 
   setter[patchKey] = initialData;
   getter[patchKey] = initialData;
@@ -60,9 +64,9 @@ function getPatchData<T>(obj: object, prop: string): PatchData<T> | null {
   }
 
   // eslint-disable-next-line @typescript-eslint/unbound-method
-  const setter = descriptor.set as unknown as MaybePatchedSetter<T>;
+  const setter = descriptor.set as MaybePatchedSetter<T>;
   // eslint-disable-next-line @typescript-eslint/unbound-method
-  const getter = descriptor.get as unknown as MaybePatchedGetter<T>;
+  const getter = descriptor.get as MaybePatchedGetter<T>;
   if (setter == null || getter == null) {
     return null;
   }
@@ -74,14 +78,14 @@ function isPatched(obj: object, prop: string): boolean {
   return getPatchData(obj, prop) !== null;
 }
 
-function patchProperty<T>(obj: object, prop: string, setterPredicate: SetterPredicate<T>, value: T): boolean {
+function patchProperty<T>(obj: GenericObject<T>, prop: string, setterPredicate: SetterPredicate<T>, value: T): boolean {
   if (isPatched(obj, prop)) {
-    (obj as any)[prop] = value;
+    obj[prop] = value;
     return false;
   }
 
   const descriptor = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(obj), prop);
-  const origValue = (obj as any)[prop] as T;
+  const origValue = obj[prop];
   const patchData = {
     patchedValue: setterPredicate(origValue, value) ? value : origValue,
     setterPredicate,
@@ -95,7 +99,7 @@ function patchProperty<T>(obj: object, prop: string, setterPredicate: SetterPred
   return true;
 }
 
-function unpatchProperty(orig: object, out: object, prop: string): void {
+function unpatchProperty(orig: GenericObject<unknown>, out: GenericObject<unknown>, prop: string): void {
   const descriptor = Object.getOwnPropertyDescriptor(orig, prop);
   if (descriptor == null) {
     return;
@@ -104,11 +108,11 @@ function unpatchProperty(orig: object, out: object, prop: string): void {
   let patchData: PatchData<unknown> | undefined;
   if (typeof descriptor.set === "function") {
     // eslint-disable-next-line @typescript-eslint/unbound-method
-    const setter = descriptor.set as unknown as MaybePatchedSetter<unknown>;
+    const setter = descriptor.set as MaybePatchedSetter<unknown>;
     patchData = setter[patchKey];
   } else if (typeof descriptor.get === "function") {
     // eslint-disable-next-line @typescript-eslint/unbound-method
-    const getter = descriptor.set as unknown as MaybePatchedGetter<unknown>;
+    const getter = descriptor.get as MaybePatchedGetter<unknown>;
     patchData = getter[patchKey];
   }
 
@@ -116,7 +120,7 @@ function unpatchProperty(orig: object, out: object, prop: string): void {
     return;
   }
 
-  (out as any)[prop] = patchData.origValue;
+  out[prop] = patchData.origValue;
 }
 
 function getMobxAdminSymbol(obj: object): symbol | null {
@@ -133,7 +137,7 @@ export class AppOverviewPatcher<T extends keyof AppStoreOverview> {
   private uninterceptCallback: (() => void) | null = null;
   private readonly shortcutToSteamAppIds = new BiMap<number, number>();
 
-  constructor(private readonly propSetterPredicates: { [K in T]: SetterPredicate<AppStoreOverview[K]> }) {
+  constructor(private readonly propSetterPredicates: ExtendedGenericObject<{ [K in T]: SetterPredicate<AppStoreOverview[K]> }>) {
   }
 
   init(): void {
@@ -152,7 +156,7 @@ export class AppOverviewPatcher<T extends keyof AppStoreOverview> {
 
       const steamAppOverview = appStoreEx.getAppOverview(steamAppId);
       if (steamAppOverview != null) {
-        this.trySwapOverview(change.newValue, steamAppOverview);
+        this.trySwapOverview(change.newValue as GenericAppStoreOverview, steamAppOverview as GenericAppStoreOverview);
       }
     });
 
@@ -165,7 +169,7 @@ export class AppOverviewPatcher<T extends keyof AppStoreOverview> {
 
       const steamAppOverview = appStoreEx.getAppOverview(shortcutAppId);
       if (steamAppOverview != null) {
-        this.trySwapOverview(steamAppOverview, change.newValue, true);
+        this.trySwapOverview(steamAppOverview as GenericAppStoreOverview, change.newValue as GenericAppStoreOverview, true);
       }
 
       return change;
@@ -216,8 +220,8 @@ export class AppOverviewPatcher<T extends keyof AppStoreOverview> {
       return;
     }
 
-    const fromOverview = appStoreEx.getAppOverview(shortcutAppId);
-    const toOverview = appStoreEx.getAppOverview(steamAppId);
+    const fromOverview = appStoreEx.getAppOverview(shortcutAppId) as GenericAppStoreOverviewMaybeNull;
+    const toOverview = appStoreEx.getAppOverview(steamAppId) as GenericAppStoreOverviewMaybeNull;
     if (fromOverview == null || toOverview == null) {
       return;
     }
@@ -225,7 +229,7 @@ export class AppOverviewPatcher<T extends keyof AppStoreOverview> {
     this.trySwapOverview(fromOverview, toOverview);
   }
 
-  trySwapOverview(from: AppStoreOverview, to: AppStoreOverview, fromIntercept = false): void {
+  trySwapOverview(from: GenericAppStoreOverview, to: GenericAppStoreOverview, fromIntercept = false): void {
     const appStoreEx = getAppStoreEx();
     if (appStoreEx === null) {
       logger.error("appStoreEx is null!");
@@ -235,19 +239,18 @@ export class AppOverviewPatcher<T extends keyof AppStoreOverview> {
     logger.debug(`Checking if need to patch overview for ${to.appid}.`);
     const mobxAdmin = getMobxAdminSymbol(to);
     if (mobxAdmin) {
-      const mobxAdminObj = (to as any)[mobxAdmin] as ObservableObjectAdministration;
+      const mobxAdminObj = to[mobxAdmin] as GenericExtendedGenericObject;
       const isBeingObserved = mobxAdminObj.values_.size > 0;
 
       if (isBeingObserved) {
-        const interceptorUnregister = (mobxAdminObj as any)[patchKey] as Lambda | undefined;
+        const interceptorUnregister = mobxAdminObj[patchKey] as Lambda | undefined;
         if (!interceptorUnregister) {
           logger.debug(`Patching MobX for ${to.appid}.`);
-          (mobxAdminObj as any)[patchKey] = mobxAdminObj.intercept_((change: IMapWillChange<string | number, unknown>) => {
+          mobxAdminObj[patchKey] = mobxAdminObj.intercept_((change: IObjectWillChange<GenericAppStoreOverview>) => {
             if (change.type === "update") {
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-              const predicate = (this.propSetterPredicates as any)[change.name] as SetterPredicate<unknown> | undefined;
+              const predicate = this.propSetterPredicates[change.name] as SetterPredicate<unknown> | undefined;
               if (predicate) {
-                if (!predicate((change.object as any)[change.name], change.newValue)) {
+                if (!predicate(change.object[change.name], change.newValue)) {
                   return null;
                 }
               }
@@ -258,8 +261,7 @@ export class AppOverviewPatcher<T extends keyof AppStoreOverview> {
         }
 
         for (const [prop] of Object.entries(this.propSetterPredicates)) {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-          (to as any)[prop] = (from as any)[prop];
+          to[prop] = from[prop];
         }
 
         return;
@@ -270,7 +272,7 @@ export class AppOverviewPatcher<T extends keyof AppStoreOverview> {
 
     let patched = false;
     for (const [prop, predicate] of Object.entries(this.propSetterPredicates)) {
-      patched = patchProperty(to, prop, predicate as SetterPredicate<unknown>, (from as any)[prop]) || patched;
+      patched = patchProperty(to, prop, predicate as SetterPredicate<unknown>, from[prop]) || patched;
     }
 
     if (patched) {
@@ -289,15 +291,15 @@ export class AppOverviewPatcher<T extends keyof AppStoreOverview> {
       return;
     }
 
-    const overview = appStoreEx.getAppOverview(appId);
+    const overview = appStoreEx.getAppOverview(appId) as GenericAppStoreOverviewMaybeNull;
     if (overview == null) {
       return;
     }
 
     const mobxAdmin = getMobxAdminSymbol(overview);
     if (mobxAdmin) {
-      const mobxAdminObj = (overview as any)[mobxAdmin] as ObservableObjectAdministration;
-      const interceptorUnregister = (mobxAdminObj as any)[patchKey] as Lambda | undefined;
+      const mobxAdminObj = overview[mobxAdmin] as GenericExtendedGenericObject;
+      const interceptorUnregister = mobxAdminObj[patchKey] as Lambda | undefined;
       if (interceptorUnregister) {
         logger.debug(`Unpatching MobX for ${appId}.`);
         interceptorUnregister();

@@ -72,7 +72,6 @@ const MoonDeckLaunchButton: FC<Props> = ({ appId, appName, appType }) => {
         };
 
         if (settings.enableMoondeckButtonPrompt) {
-          // eslint-disable-next-line @typescript-eslint/no-empty-function
           showModal(<LaunchPromptModal closeModal={() => { }} onDone={onDone} launchApp={launchApp} />);
         } else {
           launchApp().catch((e) => logger.critical(e)).finally(() => onDone());
@@ -151,7 +150,8 @@ export const MoonDeckLaunchButtonAnchor: FC<Props> = (props) => {
 
   return (
     <div id="moondeck" ref={ref} style={{ position: `var(${achorPositionName}, relative)` as CSSProperties["position"], height: 0 }}>
-      {show &&
+      {
+        show &&
         <MoonDeckLaunchButton {...props} />
       }
     </div>

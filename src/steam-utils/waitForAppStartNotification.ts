@@ -6,7 +6,6 @@ export enum AppStartResult {
   Cancelled
 }
 
-// eslint-disable-next-line @typescript-eslint/promise-function-async
 function waitForLifetimeNotification(appId: number, lifetimeCallback: (running: boolean) => void): () => void {
   try {
     const unregisterable = SteamClient.GameSessions.RegisterForAppLifetimeNotifications((data) => {
@@ -26,7 +25,6 @@ function waitForLifetimeNotification(appId: number, lifetimeCallback: (running: 
     };
   } catch (error) {
     logger.critical(error);
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
     return () => { };
   }
 }
@@ -65,7 +63,6 @@ function waitForProcessLaunchAction(gameId: string, processLaunched: (launched: 
     };
   } catch (error) {
     logger.critical(error);
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
     return () => { };
   }
 }
