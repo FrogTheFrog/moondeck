@@ -6,6 +6,11 @@ export const ChangelogView: FC = () => {
     <DialogBody>
       <DialogControlsSection>
         <Field
+          label="1.11.1"
+          description="Fixed sidebar navigation issue in latest beta."
+          focusable={true}
+        />
+        <Field
           label="1.11.0"
           description={
             <>
