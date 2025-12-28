@@ -26,6 +26,19 @@ export function getControllerConfigDropdownValues(): Array<{ id: keyof typeof Co
   });
 }
 
+export enum VideoCodecValues {
+  AV1 = "AV1",
+  HEVC = "HEVC",
+  H264 = "H.264",
+  auto = "Auto"
+}
+export function getVideoCodecDropdownValues(): Array<{ id: keyof typeof VideoCodecValues; label: string }> {
+  return Object.entries(VideoCodecValues).map(([id, label]) => {
+    return { id, label } as { id: keyof typeof VideoCodecValues; label: string };
+  });
+}
+
+
 export const buddyRequestsDefault = 5 as const;
 export const servicePingDefault = 5 as const;
 export const initialConditionsDefault = 30 as const;
@@ -81,6 +94,7 @@ export interface HostResolution {
   defaultBitrate: number | null;
   defaultFps: number | null;
   defaultHdr: boolean | null;
+  videoCodec: keyof typeof VideoCodecValues;
   dimensions: Dimension[];
 }
 

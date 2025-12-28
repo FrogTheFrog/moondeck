@@ -91,6 +91,7 @@ export class ServerProxy {
           defaultBitrate: currentSettings?.resolution.defaultBitrate ?? null,
           defaultFps: currentSettings?.resolution.defaultFps ?? null,
           defaultHdr: currentSettings?.resolution.defaultHdr ?? null,
+          videoCodec: currentSettings?.resolution.videoCodec ?? null,
           dimensions: currentSettings?.resolution.dimensions ?? []
         },
         audio: {

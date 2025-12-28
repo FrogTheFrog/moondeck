@@ -15,6 +15,7 @@ class ResolutionDimensions(TypedDict):
     bitrate: Optional[int]
     fps: Optional[int]
     hdr: Optional[bool]
+    video_codec: Options[str]
 
 
 class MoonlightProxy(contextlib.AbstractAsyncContextManager):
@@ -87,6 +88,8 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
                 args += ["--hdr" if resolution["hdr"] else "--no-hdr"]
             if resolution["bitrate"]:
                 args += ["--bitrate", f"{resolution['bitrate']}"]
+            if resolution["video_codec"]:
+                args += ["--video-codec", f"{resolution['video_codec']}"]
 
         if quit_after is not None:
             if quit_after:

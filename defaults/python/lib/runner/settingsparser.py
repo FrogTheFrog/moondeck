@@ -72,8 +72,13 @@ def parse_resolution_settings(host_settings: HostSettings, env_settings: EnvSett
         "size": None,
         "bitrate": host_settings["resolution"]["defaultBitrate"],
         "fps": host_settings["resolution"]["defaultFps"],
-        "hdr": host_settings["resolution"]["defaultHdr"]
+        "hdr": host_settings["resolution"]["defaultHdr"],
+        "video_codec": host_settings["resolution"]["videoCodec"]
     }
+
+    if dimensions["video_codec"] == "H264":
+        dimensions["video_codec"] = "H.264"
+
     dimension_list = host_settings["resolution"]["dimensions"]
 
     def update_dimensions(dimension: Dimension):

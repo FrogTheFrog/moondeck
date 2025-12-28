@@ -1,8 +1,8 @@
 import { DialogControlsSection, DialogControlsSectionHeader, Field, Focusable } from "@decky/ui";
 import { FC, useContext } from "react";
 import { ModifyListButton, RemoveListEntryButton } from "../../shared/indexedlist";
-import { NumericTextInput, ResolutionSelectionDropdown, ToggleField } from "../../shared";
-import { minBitrate, minFps } from "../../../lib";
+import { ListDropdown, NumericTextInput, ResolutionSelectionDropdown, ToggleField } from "../../shared";
+import { getVideoCodecDropdownValues, minBitrate, minFps, HostSettings } from "../../../lib";
 import { CurrentHostSettings } from "../../../hooks";
 import { HdrSelectionDropdown } from "./hdrselectiondropdown";
 import { LinkedDisplayList } from "./linkeddisplaylist";
@@ -19,6 +19,18 @@ export const ResolutionSection: FC<Props> = ({ hostSettings }) => {
   return (
     <DialogControlsSection>
       <DialogControlsSectionHeader>Resolution</DialogControlsSectionHeader>
+      <Field
+        label="Default codec (optional)"
+        description="Codec to be applied when starting stream."
+        childrenContainerWidth="fixed"
+      >
+        <ListDropdown<HostSettings["resolution"]["videoCodec"]>
+          optionList={getVideoCodecDropdownValues()}
+          label="Select video codec"
+          value={hostSettings.resolution.videoCodec}
+          setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.resolution.videoCodec = value; })}
+        />
+      </Field>
       <Field
         label="Default bitrate in kbps (optional)"
         description="Bitrate to be applied when starting stream. Will be overridden by the one from custom resolution if provided."
