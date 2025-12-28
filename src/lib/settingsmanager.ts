@@ -27,6 +27,7 @@ export function getControllerConfigDropdownValues(): Array<{ id: keyof typeof Co
 }
 
 export enum VideoCodecValues {
+  Default = "Default",
   AV1 = "AV1",
   HEVC = "HEVC",
   H264 = "H.264",
@@ -129,6 +130,7 @@ export interface HostSettings {
   resolution: HostResolution;
   audio: AudioSettings;
   passToMoonlight: boolean;
+  showPerformanceStats: boolean;
   runnerTimeouts: RunnerTimeouts;
   buddy: BuddySettings;
   gameStreamApps: GameStreamAppsSettings;

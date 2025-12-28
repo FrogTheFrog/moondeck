@@ -27,7 +27,8 @@ class MoonlightOnlyRunner:
                     return
 
     @staticmethod
-    async def start_moonlight(proxy: MoonlightProxy, hostname: str, host_app: str, audio: Optional[str], resolution: Optional[ResolutionDimensions], quit_after: Optional[bool]):
+    async def start_moonlight(proxy: MoonlightProxy, hostname: str, host_app: str, audio: Optional[str], resolution: Optional[ResolutionDimensions], 
+                              quit_after: Optional[bool], show_performance_stats: Optional[bool]):
         logger.info("Checking if Moonlight flatpak is installed or custom binary exists")
         if not await proxy.is_moonlight_installed():
             raise RunnerError(Result.MoonlightIsNotInstalled)
@@ -36,7 +37,7 @@ class MoonlightOnlyRunner:
         await proxy.terminate_all_instances()
 
         logger.info("Starting Moonlight")
-        await proxy.start(hostname, host_app, audio, resolution, quit_after)
+        await proxy.start(hostname, host_app, audio, resolution, quit_after, show_performance_stats)
 
     @classmethod
     async def run(cls, settings: MoonlightOnlyRunnerSettings):
@@ -56,5 +57,6 @@ class MoonlightOnlyRunner:
                                       host_app=settings["host_app"],
                                       audio=settings["audio"] if settings["pass_to_moonlight"] else None,
                                       resolution=settings["resolution"] if settings["pass_to_moonlight"] else None,
-                                      quit_after=settings["quit_after"])
+                                      quit_after=settings["quit_after"],
+                                      show_performance_stats=settings["show_performance_stats"] if settings["pass_to_moonlight"] else None)
             await proxy.wait()

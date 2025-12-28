@@ -22,6 +22,12 @@ export const GeneralSection: FC<Props> = ({ hostSettings }) => {
         value={hostSettings.passToMoonlight}
         setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.passToMoonlight = value; })}
       />
+      <ToggleField
+        label="Show performance stats when streaming"
+        description="Enable this to show performance stats during streaming"
+        value={hostSettings.showPerformanceStats}
+        setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.showPerformanceStats = value; })}
+      />
     </DialogControlsSection>
   );
 };

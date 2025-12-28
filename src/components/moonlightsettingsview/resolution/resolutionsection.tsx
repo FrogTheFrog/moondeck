@@ -20,13 +20,13 @@ export const ResolutionSection: FC<Props> = ({ hostSettings }) => {
     <DialogControlsSection>
       <DialogControlsSectionHeader>Resolution</DialogControlsSectionHeader>
       <Field
-        label="Default codec (optional)"
-        description="Codec to be applied when starting stream."
+        label="Video codec (optional)"
+        description="Codec to be applied when starting stream. Default option will use the codec selected in Moonlight's settings. H.264 is recommended for better decoding latency."
         childrenContainerWidth="fixed"
       >
         <ListDropdown<HostSettings["resolution"]["videoCodec"]>
           optionList={getVideoCodecDropdownValues()}
-          label="Select video codec"
+          label="Default"
           value={hostSettings.resolution.videoCodec}
           setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.resolution.videoCodec = value; })}
         />

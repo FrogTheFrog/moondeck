@@ -15,7 +15,7 @@ class ResolutionDimensions(TypedDict):
     bitrate: Optional[int]
     fps: Optional[int]
     hdr: Optional[bool]
-    video_codec: Options[str]
+    video_codec: Optional[str]
 
 
 class MoonlightProxy(contextlib.AbstractAsyncContextManager):
@@ -68,7 +68,8 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
             return sorted(list(apps))
         return None     
 
-    async def start(self, hostname: str, host_app: str, audio: Optional[str] = None, resolution: Optional[ResolutionDimensions] = None, quit_after: Optional[bool] = None):
+    async def start(self, hostname: str, host_app: str, audio: Optional[str] = None, resolution: Optional[ResolutionDimensions] = None, 
+                    quit_after: Optional[bool] = None, show_performance_stats: Optional[bool] = None):
         # Lazy import to improve CLI performance
         import asyncio
         import psutil
@@ -88,7 +89,7 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
                 args += ["--hdr" if resolution["hdr"] else "--no-hdr"]
             if resolution["bitrate"]:
                 args += ["--bitrate", f"{resolution['bitrate']}"]
-            if resolution["video_codec"]:
+            if resolution["video_codec"] and resolution["video_codec"] != "Default":
                 args += ["--video-codec", f"{resolution['video_codec']}"]
 
         if quit_after is not None:
@@ -96,6 +97,12 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
                 args += ["--quit-after"]
             else:
                 args += ["--no-quit-after"]
+        
+        if show_performance_stats is not None:
+            if show_performance_stats:
+                args += ["--performance-overlay"]
+            else:
+                args += ["--no-performance-overlay"]
 
         args += ["stream", hostname, host_app]
 

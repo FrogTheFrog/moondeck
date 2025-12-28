@@ -4,7 +4,7 @@ from ..settingsmanager import SettingsManager
 
 
 ControllerConfigOption = Literal["Disable", "Default", "Enable", "Noop"]
-VideoCodecOption = Literal["AV1", "HEVC", "H264", "Auto"]
+VideoCodecOption = Literal["Default", "AV1", "HEVC", "H264", "auto"]
 AudioOption = Literal["stereo", "5.1-surround", "7.1-surround"]
 CloseSteamOption = Literal["Client", "BigPictureMode"]
 
@@ -85,6 +85,7 @@ class HostSettings(TypedDict):
     audio: AudioSettings
     runnerTimeouts: RunnerTimeouts
     passToMoonlight: bool
+    showPerformanceStats : bool
     buddy: BuddySettings
     gameStreamApps: GameStreamAppsSettings
     nonSteamApps: NonSteamAppsSettings
@@ -349,4 +350,6 @@ class UserSettingsManager(SettingsManager[UserSettings]):
         if data["version"] == 34:
             data["version"] = 35
             for host in data["hostSettings"].keys():
-                data["hostSettings"][host]["resolution"]["videoCodec"] = "Auto"
+                data["hostSettings"][host]["resolution"]["videoCodec"] = "Default"
+                data["hostSettings"][host]["showPerformanceStats"] = False
+                

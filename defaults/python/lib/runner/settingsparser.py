@@ -18,6 +18,7 @@ class MoonDeckAppRunnerSettings(TypedDict):
     audio: Optional[str]
     resolution: ResolutionDimensions
     pass_to_moonlight: bool
+    show_performance_stats: bool
     host_app: str
     host_id: str
     hostname: str
@@ -40,6 +41,7 @@ class MoonlightOnlyRunnerSettings(TypedDict):
     audio: Optional[str]
     resolution: ResolutionDimensions
     pass_to_moonlight: bool
+    show_performance_stats: bool
     host_app: str
     host_id: str
     hostname: str
@@ -157,6 +159,8 @@ async def parse_settings() -> MoonDeckAppRunnerSettings | MoonlightOnlyRunnerSet
     pass_to_moonlight = host_settings["passToMoonlight"]
     if not pass_to_moonlight:
         logger.info("Settings will NOT be passed to Moonlight")
+
+    show_performance_stats = host_settings["showPerformanceStats"]
     
     if env_settings["runner_type"] == RunnerType.MoonDeck:
         if env_settings["app_id"] is None:
@@ -166,6 +170,7 @@ async def parse_settings() -> MoonDeckAppRunnerSettings | MoonlightOnlyRunnerSet
             "audio": parse_audio_settings(host_settings=host_settings, env_settings=env_settings),
             "resolution": parse_resolution_settings(host_settings=host_settings, env_settings=env_settings),
             "pass_to_moonlight": pass_to_moonlight,
+            "show_performance_stats" : show_performance_stats,
             "host_app": parse_host_app_name(host_settings=host_settings),
             "host_id": cast(str, host_id),
             "hostname": host_settings["hostName"],
@@ -191,6 +196,7 @@ async def parse_settings() -> MoonDeckAppRunnerSettings | MoonlightOnlyRunnerSet
             "audio": parse_audio_settings(host_settings=host_settings, env_settings=env_settings),
             "resolution": parse_resolution_settings(host_settings=host_settings, env_settings=env_settings),
             "pass_to_moonlight": pass_to_moonlight,
+            "show_performance_stats" : show_performance_stats,
             "host_app": env_settings["app_name"],
             "host_id": cast(str, host_id),
             "hostname": host_settings["hostName"],
