@@ -1,9 +1,8 @@
-from typing import Optional
 from .settingsparser import MoonlightOnlyRunnerSettings
 from ..runnerresult import Result, RunnerError
 from ..gamestreaminfo import get_server_info
 from ..logger import logger
-from ..moonlightproxy import MoonlightProxy, ResolutionDimensions, GeneralSettings
+from ..moonlightproxy import CommandLineOptions, MoonlightProxy
 
 
 class MoonlightOnlyRunner:
@@ -27,8 +26,7 @@ class MoonlightOnlyRunner:
                     return
 
     @staticmethod
-    async def start_moonlight(proxy: MoonlightProxy, hostname: str, host_app: str, audio: Optional[str], resolution: Optional[ResolutionDimensions], 
-                              quit_after: Optional[bool], general_settings: Optional[GeneralSettings]):
+    async def start_moonlight(proxy: MoonlightProxy, hostname: str, host_app: str, cmd_options: CommandLineOptions):
         logger.info("Checking if Moonlight flatpak is installed or custom binary exists")
         if not await proxy.is_moonlight_installed():
             raise RunnerError(Result.MoonlightIsNotInstalled)
@@ -37,7 +35,7 @@ class MoonlightOnlyRunner:
         await proxy.terminate_all_instances()
 
         logger.info("Starting Moonlight")
-        await proxy.start(hostname, host_app, audio, resolution, quit_after, general_settings)
+        await proxy.start(hostname, host_app, cmd_options)
 
     @classmethod
     async def run(cls, settings: MoonlightOnlyRunnerSettings):
@@ -55,8 +53,5 @@ class MoonlightOnlyRunner:
             await cls.start_moonlight(proxy=proxy,
                                       hostname=settings["hostname"],
                                       host_app=settings["host_app"],
-                                      audio=settings["audio"] if settings["pass_to_moonlight"] else None,
-                                      resolution=settings["resolution"] if settings["pass_to_moonlight"] else None,
-                                      quit_after=settings["quit_after"],
-                                      general_settings=settings["general_settings"] if settings["pass_to_moonlight"] else None)
+                                      cmd_options=settings["cmd_options"])
             await proxy.wait()
