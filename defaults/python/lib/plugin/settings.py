@@ -4,7 +4,7 @@ from ..settingsmanager import SettingsManager
 
 
 ControllerConfigOption = Literal["Disable", "Default", "Enable", "Noop"]
-VideoCodecOption = Literal["Default", "AV1", "HEVC", "H264", "auto"]
+VideoCodecOption = Literal["AV1", "HEVC", "H.264", "Auto"]
 AudioOption = Literal["stereo", "5.1-surround", "7.1-surround"]
 CloseSteamOption = Literal["Client", "BigPictureMode"]
 
@@ -49,7 +49,6 @@ class HostResolution(TypedDict):
     defaultBitrate: Optional[int]
     defaultFps: Optional[int]
     defaultHdr: Optional[bool]
-    videoCodec: VideoCodecOption
     dimensions: List[Dimension]
 
 
@@ -85,7 +84,8 @@ class HostSettings(TypedDict):
     audio: AudioSettings
     runnerTimeouts: RunnerTimeouts
     passToMoonlight: bool
-    showPerformanceStats : bool
+    showPerformanceStats : Optional[bool]
+    videoCodec: Optional[VideoCodecOption]
     buddy: BuddySettings
     gameStreamApps: GameStreamAppsSettings
     nonSteamApps: NonSteamAppsSettings
@@ -155,11 +155,7 @@ class UserSettingsManager(SettingsManager[UserSettings]):
             },
             "enableMoondeckShortcuts": True,
             "enableMoondeckButtonPrompt": False,
-            "hostSettings": {
-                "resolution" : {
-                    "videoCodec" : "Auto",
-                },
-            },
+            "hostSettings": {},
             "runnerDebugLogs": False,
             "useMoonlightExec": False,
             "moonlightExecPath": "",
@@ -350,6 +346,6 @@ class UserSettingsManager(SettingsManager[UserSettings]):
         if data["version"] == 34:
             data["version"] = 35
             for host in data["hostSettings"].keys():
-                data["hostSettings"][host]["resolution"]["videoCodec"] = "Default"
-                data["hostSettings"][host]["showPerformanceStats"] = False
+                data["hostSettings"][host]["videoCodec"] = None
+                data["hostSettings"][host]["showPerformanceStats"] = None
                 

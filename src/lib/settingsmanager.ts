@@ -13,6 +13,8 @@ export const minBitrate = 0 as const;
 export const minFps = 0 as const;
 export const audioOptions = ["stereo", "5.1-surround", "7.1-surround"] as const;
 export const closeSteamOption = ["Client", "BigPictureMode"] as const;
+export const showPerformanceOptions = ["Enabled", "Disabled"] as const;
+export const videoCodecOptions = ["AV1", "HEVC", "H.264", "Auto"] as const;
 
 export enum ControllerConfigValues {
   Disable = "Disable Steam Input",
@@ -25,20 +27,6 @@ export function getControllerConfigDropdownValues(): Array<{ id: keyof typeof Co
     return { id, label } as { id: keyof typeof ControllerConfigValues; label: string };
   });
 }
-
-export enum VideoCodecValues {
-  Default = "Default",
-  AV1 = "AV1",
-  HEVC = "HEVC",
-  H264 = "H.264",
-  auto = "Auto"
-}
-export function getVideoCodecDropdownValues(): Array<{ id: keyof typeof VideoCodecValues; label: string }> {
-  return Object.entries(VideoCodecValues).map(([id, label]) => {
-    return { id, label } as { id: keyof typeof VideoCodecValues; label: string };
-  });
-}
-
 
 export const buddyRequestsDefault = 5 as const;
 export const servicePingDefault = 5 as const;
@@ -95,7 +83,6 @@ export interface HostResolution {
   defaultBitrate: number | null;
   defaultFps: number | null;
   defaultHdr: boolean | null;
-  videoCodec: keyof typeof VideoCodecValues;
   dimensions: Dimension[];
 }
 
@@ -130,7 +117,8 @@ export interface HostSettings {
   resolution: HostResolution;
   audio: AudioSettings;
   passToMoonlight: boolean;
-  showPerformanceStats: boolean;
+  showPerformanceStats: boolean | null;
+  videoCodec: typeof videoCodecOptions[number] | null;
   runnerTimeouts: RunnerTimeouts;
   buddy: BuddySettings;
   gameStreamApps: GameStreamAppsSettings;

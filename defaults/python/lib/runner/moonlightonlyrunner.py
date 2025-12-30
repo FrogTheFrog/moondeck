@@ -3,7 +3,7 @@ from .settingsparser import MoonlightOnlyRunnerSettings
 from ..runnerresult import Result, RunnerError
 from ..gamestreaminfo import get_server_info
 from ..logger import logger
-from ..moonlightproxy import MoonlightProxy, ResolutionDimensions
+from ..moonlightproxy import MoonlightProxy, ResolutionDimensions, GeneralSettings
 
 
 class MoonlightOnlyRunner:
@@ -28,7 +28,7 @@ class MoonlightOnlyRunner:
 
     @staticmethod
     async def start_moonlight(proxy: MoonlightProxy, hostname: str, host_app: str, audio: Optional[str], resolution: Optional[ResolutionDimensions], 
-                              quit_after: Optional[bool], show_performance_stats: Optional[bool]):
+                              quit_after: Optional[bool], general_settings: Optional[GeneralSettings]):
         logger.info("Checking if Moonlight flatpak is installed or custom binary exists")
         if not await proxy.is_moonlight_installed():
             raise RunnerError(Result.MoonlightIsNotInstalled)
@@ -37,7 +37,7 @@ class MoonlightOnlyRunner:
         await proxy.terminate_all_instances()
 
         logger.info("Starting Moonlight")
-        await proxy.start(hostname, host_app, audio, resolution, quit_after, show_performance_stats)
+        await proxy.start(hostname, host_app, audio, resolution, quit_after, general_settings)
 
     @classmethod
     async def run(cls, settings: MoonlightOnlyRunnerSettings):
@@ -58,5 +58,5 @@ class MoonlightOnlyRunner:
                                       audio=settings["audio"] if settings["pass_to_moonlight"] else None,
                                       resolution=settings["resolution"] if settings["pass_to_moonlight"] else None,
                                       quit_after=settings["quit_after"],
-                                      show_performance_stats=settings["show_performance_stats"] if settings["pass_to_moonlight"] else None)
+                                      general_settings=settings["general_settings"] if settings["pass_to_moonlight"] else None)
             await proxy.wait()

@@ -4,7 +4,7 @@ from enum import Enum
 from .envparser import EnvSettings, parse_env_settings, RunnerType
 from ..runnerresult import RunnerError, Result
 from ..plugin.settings import Dimension, HostSettings, RunnerTimeouts, UserSettingsManager
-from ..moonlightproxy import ResolutionDimensions
+from ..moonlightproxy import ResolutionDimensions, GeneralSettings
 from ..logger import logger
 from .. import constants
 
@@ -18,7 +18,7 @@ class MoonDeckAppRunnerSettings(TypedDict):
     audio: Optional[str]
     resolution: ResolutionDimensions
     pass_to_moonlight: bool
-    show_performance_stats: bool
+    general_settings: Optional[GeneralSettings]
     host_app: str
     host_id: str
     hostname: str
@@ -41,7 +41,7 @@ class MoonlightOnlyRunnerSettings(TypedDict):
     audio: Optional[str]
     resolution: ResolutionDimensions
     pass_to_moonlight: bool
-    show_performance_stats: bool
+    general_settings: Optional[GeneralSettings]
     host_app: str
     host_id: str
     hostname: str
@@ -69,17 +69,21 @@ def parse_audio_settings(host_settings: HostSettings, env_settings: EnvSettings)
     logger.info(f"Parsed audio option: {audio_option}")
     return audio_option
 
+def parse_general_settings(host_settings: HostSettings) -> GeneralSettings:
+    general_settings: GeneralSettings = {
+        "show_performance_stats" : host_settings["showPerformanceStats"],
+        "video_codec" : host_settings["videoCodec"]
+    }
+
+    return general_settings
+
 def parse_resolution_settings(host_settings: HostSettings, env_settings: EnvSettings) -> ResolutionDimensions:
     dimensions: ResolutionDimensions = { 
         "size": None,
         "bitrate": host_settings["resolution"]["defaultBitrate"],
         "fps": host_settings["resolution"]["defaultFps"],
         "hdr": host_settings["resolution"]["defaultHdr"],
-        "video_codec": host_settings["resolution"]["videoCodec"]
     }
-
-    if dimensions["video_codec"] == "H264":
-        dimensions["video_codec"] = "H.264"
 
     dimension_list = host_settings["resolution"]["dimensions"]
 
@@ -159,8 +163,6 @@ async def parse_settings() -> MoonDeckAppRunnerSettings | MoonlightOnlyRunnerSet
     pass_to_moonlight = host_settings["passToMoonlight"]
     if not pass_to_moonlight:
         logger.info("Settings will NOT be passed to Moonlight")
-
-    show_performance_stats = host_settings["showPerformanceStats"]
     
     if env_settings["runner_type"] == RunnerType.MoonDeck:
         if env_settings["app_id"] is None:
@@ -170,7 +172,7 @@ async def parse_settings() -> MoonDeckAppRunnerSettings | MoonlightOnlyRunnerSet
             "audio": parse_audio_settings(host_settings=host_settings, env_settings=env_settings),
             "resolution": parse_resolution_settings(host_settings=host_settings, env_settings=env_settings),
             "pass_to_moonlight": pass_to_moonlight,
-            "show_performance_stats" : show_performance_stats,
+            "general_settings" : parse_general_settings(host_settings=host_settings),
             "host_app": parse_host_app_name(host_settings=host_settings),
             "host_id": cast(str, host_id),
             "hostname": host_settings["hostName"],
@@ -196,7 +198,7 @@ async def parse_settings() -> MoonDeckAppRunnerSettings | MoonlightOnlyRunnerSet
             "audio": parse_audio_settings(host_settings=host_settings, env_settings=env_settings),
             "resolution": parse_resolution_settings(host_settings=host_settings, env_settings=env_settings),
             "pass_to_moonlight": pass_to_moonlight,
-            "show_performance_stats" : show_performance_stats,
+            "general_settings" : parse_general_settings(host_settings=host_settings),
             "host_app": env_settings["app_name"],
             "host_id": cast(str, host_id),
             "hostname": host_settings["hostName"],

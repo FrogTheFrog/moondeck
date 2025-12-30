@@ -91,7 +91,6 @@ export class ServerProxy {
           defaultBitrate: currentSettings?.resolution.defaultBitrate ?? null,
           defaultFps: currentSettings?.resolution.defaultFps ?? null,
           defaultHdr: currentSettings?.resolution.defaultHdr ?? null,
-          videoCodec: currentSettings?.resolution.videoCodec ?? null,
           dimensions: currentSettings?.resolution.dimensions ?? []
         },
         audio: {
@@ -100,7 +99,8 @@ export class ServerProxy {
           linkedAudio: currentSettings?.audio.linkedAudio ?? {}
         },
         passToMoonlight: currentSettings?.passToMoonlight ?? true,
-        showPerformanceStats: currentSettings?.showPerformanceStats ?? true,
+        showPerformanceStats: currentSettings?.showPerformanceStats ?? null,
+        videoCodec: currentSettings?.videoCodec ?? null,
         runnerTimeouts: {
           buddyRequests: currentSettings?.runnerTimeouts.buddyRequests ?? buddyRequestsDefault,
           servicePing: currentSettings?.runnerTimeouts.servicePing ?? servicePingDefault,

@@ -5,7 +5,7 @@ from ..buddyrequests import AppState, SteamUiMode, StreamState, StreamStateRespo
 from ..runnerresult import Result, RunnerError
 from ..gamestreaminfo import get_server_info
 from ..logger import logger
-from ..moonlightproxy import MoonlightProxy, ResolutionDimensions
+from ..moonlightproxy import MoonlightProxy, ResolutionDimensions, GeneralSettings
 from ..buddyclient import BuddyClient, BuddyException, HelloResult
 from ..utils import TimedPooler
 
@@ -196,7 +196,7 @@ class MoonDeckAppRunner:
 
     @staticmethod
     async def start_moonlight(proxy: MoonlightProxy, hostname: str, host_app: str, audio: Optional[str], resolution: Optional[ResolutionDimensions], 
-                              quit_after: Optional[bool], show_performance_stats: Optional[bool]):
+                              quit_after: Optional[bool], general_settings: Optional[GeneralSettings]):
         logger.info("Checking if Moonlight flatpak is installed or custom binary exists")
         if not await proxy.is_moonlight_installed():
             raise RunnerError(Result.MoonlightIsNotInstalled)
@@ -205,7 +205,7 @@ class MoonDeckAppRunner:
         await proxy.terminate_all_instances()
 
         logger.info("Starting Moonlight")
-        await proxy.start(hostname, host_app, audio, resolution, quit_after, show_performance_stats)
+        await proxy.start(hostname, host_app, audio, resolution, quit_after, general_settings)
 
     @staticmethod
     async def wait_for_stream_to_stop(client: BuddyClient, timeout: int):
@@ -268,7 +268,7 @@ class MoonDeckAppRunner:
                                       audio=settings["audio"] if settings["pass_to_moonlight"] else None,
                                       resolution=settings["resolution"] if settings["pass_to_moonlight"] else None,
                                       quit_after=settings["quit_after"],
-                                      show_performance_stats=settings["show_performance_stats"] if settings["pass_to_moonlight"] else None)
+                                      general_settings=settings["general_settings"] if settings["pass_to_moonlight"] else None)
 
             proxy_task = asyncio.create_task(proxy.wait())
             launch_task = asyncio.create_task(MoonDeckAppLauncher.launch(client=client,

@@ -1,8 +1,8 @@
 import { DialogControlsSection, DialogControlsSectionHeader, Field, Focusable } from "@decky/ui";
 import { FC, useContext } from "react";
 import { ModifyListButton, RemoveListEntryButton } from "../../shared/indexedlist";
-import { ListDropdown, NumericTextInput, ResolutionSelectionDropdown, ToggleField } from "../../shared";
-import { getVideoCodecDropdownValues, minBitrate, minFps, HostSettings } from "../../../lib";
+import { NumericTextInput, ResolutionSelectionDropdown, ToggleField } from "../../shared";
+import { minBitrate, minFps } from "../../../lib";
 import { CurrentHostSettings } from "../../../hooks";
 import { HdrSelectionDropdown } from "./hdrselectiondropdown";
 import { LinkedDisplayList } from "./linkeddisplaylist";
@@ -19,18 +19,6 @@ export const ResolutionSection: FC<Props> = ({ hostSettings }) => {
   return (
     <DialogControlsSection>
       <DialogControlsSectionHeader>Resolution</DialogControlsSectionHeader>
-      <Field
-        label="Video codec (optional)"
-        description="Codec to be applied when starting stream. Default option will use the codec selected in Moonlight's settings. H.264 is recommended for better decoding latency."
-        childrenContainerWidth="fixed"
-      >
-        <ListDropdown<HostSettings["resolution"]["videoCodec"]>
-          optionList={getVideoCodecDropdownValues()}
-          label="Default"
-          value={hostSettings.resolution.videoCodec}
-          setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.resolution.videoCodec = value; })}
-        />
-      </Field>
       <Field
         label="Default bitrate in kbps (optional)"
         description="Bitrate to be applied when starting stream. Will be overridden by the one from custom resolution if provided."
