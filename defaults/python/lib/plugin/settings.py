@@ -4,6 +4,7 @@ from ..settingsmanager import SettingsManager
 
 
 ControllerConfigOption = Literal["Disable", "Default", "Enable", "Noop"]
+VideoCodecOption = Literal["AV1", "HEVC", "H.264", "Auto"]
 AudioOption = Literal["stereo", "5.1-surround", "7.1-surround"]
 CloseSteamOption = Literal["Client", "BigPictureMode"]
 
@@ -83,6 +84,10 @@ class HostSettings(TypedDict):
     audio: AudioSettings
     runnerTimeouts: RunnerTimeouts
     passToMoonlight: bool
+    showPerformanceStats : Optional[bool]
+    enableVSync : Optional[bool]
+    enableFramePacing : Optional[bool]
+    videoCodec: Optional[VideoCodecOption]
     buddy: BuddySettings
     gameStreamApps: GameStreamAppsSettings
     nonSteamApps: NonSteamAppsSettings
@@ -109,7 +114,7 @@ class ButtonStyleSettings(TypedDict):
 
 
 class UserSettings(TypedDict):
-    version: Literal[34]
+    version: Literal[35]
     clientId: str
     currentHostId: Optional[str]
     gameSession: GameSessionSettings
@@ -340,3 +345,11 @@ class UserSettingsManager(SettingsManager[UserSettings]):
             for host in data["hostSettings"].keys():
                 data["hostSettings"][host]["buddy"]["closeSteam"] = "Client" if data["hostSettings"][host]["buddy"]["closeSteamOnceSessionEnds"] else None
                 del data["hostSettings"][host]["buddy"]["closeSteamOnceSessionEnds"]
+        if data["version"] == 34:
+            data["version"] = 35
+            for host in data["hostSettings"].keys():
+                data["hostSettings"][host]["videoCodec"] = None
+                data["hostSettings"][host]["showPerformanceStats"] = None
+                data["hostSettings"][host]["enableVSync"] = None
+                data["hostSettings"][host]["enableFramePacing"] = None
+                
