@@ -13,7 +13,6 @@ export const minBitrate = 0 as const;
 export const minFps = 0 as const;
 export const audioOptions = ["stereo", "5.1-surround", "7.1-surround"] as const;
 export const closeSteamOption = ["Client", "BigPictureMode"] as const;
-export const showPerformanceOptions = ["Enabled", "Disabled"] as const;
 export const videoCodecOptions = ["AV1", "HEVC", "H.264", "Auto"] as const;
 
 export enum ControllerConfigValues {
@@ -118,6 +117,8 @@ export interface HostSettings {
   audio: AudioSettings;
   passToMoonlight: boolean;
   showPerformanceStats: boolean | null;
+  enableVSync: boolean | null;
+  enableFramePacing: boolean | null;
   videoCodec: typeof videoCodecOptions[number] | null;
   runnerTimeouts: RunnerTimeouts;
   buddy: BuddySettings;

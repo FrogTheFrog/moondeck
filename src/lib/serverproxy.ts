@@ -100,6 +100,8 @@ export class ServerProxy {
         },
         passToMoonlight: currentSettings?.passToMoonlight ?? true,
         showPerformanceStats: currentSettings?.showPerformanceStats ?? null,
+        enableVSync: currentSettings?.enableVSync ?? null,
+        enableFramePacing: currentSettings?.enableFramePacing ?? null,
         videoCodec: currentSettings?.videoCodec ?? null,
         runnerTimeouts: {
           buddyRequests: currentSettings?.runnerTimeouts.buddyRequests ?? buddyRequestsDefault,

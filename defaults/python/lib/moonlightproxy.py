@@ -21,7 +21,9 @@ class CommandLineOptions(TypedDict):
     audio: Optional[str]
     resolution: Optional[ResolutionDimensions]
     quit_after: Optional[bool]
-    show_performance_stats: Optional[bool]    
+    show_performance_stats: Optional[bool]
+    enable_v_sync: Optional[bool]
+    enable_frame_pacing: Optional[bool]
     video_codec: Optional[str]
 
 
@@ -108,6 +110,18 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
                     args += ["--performance-overlay"]
                 else:
                     args += ["--no-performance-overlay"]
+
+            if (enable_v_sync := cmd_options["enable_v_sync"]) is not None:
+                if enable_v_sync:
+                    args += ["--vsync"]
+                else:
+                    args += ["--no-vsync"]
+
+            if (enable_frame_pacing := cmd_options["enable_frame_pacing"]) is not None:
+                if enable_frame_pacing:
+                    args += ["--frame-pacing"]
+                else:
+                    args += ["--no-frame-pacing"]
             
             if (video_codec := cmd_options["video_codec"]) is not None:
                 args += ["--video-codec", video_codec]

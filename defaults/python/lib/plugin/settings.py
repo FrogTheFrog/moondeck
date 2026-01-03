@@ -85,6 +85,8 @@ class HostSettings(TypedDict):
     runnerTimeouts: RunnerTimeouts
     passToMoonlight: bool
     showPerformanceStats : Optional[bool]
+    enableVSync : Optional[bool]
+    enableFramePacing : Optional[bool]
     videoCodec: Optional[VideoCodecOption]
     buddy: BuddySettings
     gameStreamApps: GameStreamAppsSettings
@@ -348,4 +350,6 @@ class UserSettingsManager(SettingsManager[UserSettings]):
             for host in data["hostSettings"].keys():
                 data["hostSettings"][host]["videoCodec"] = None
                 data["hostSettings"][host]["showPerformanceStats"] = None
+                data["hostSettings"][host]["enableVSync"] = None
+                data["hostSettings"][host]["enableFramePacing"] = None
                 

@@ -126,6 +126,8 @@ def parse_cmd_options(pass_to_moonlight: bool, host_settings: HostSettings, env_
         "audio": parse_audio_settings(host_settings=host_settings, env_settings=env_settings) if pass_to_moonlight else None,
         "resolution": parse_resolution_settings(host_settings=host_settings, env_settings=env_settings) if pass_to_moonlight else None,
         "show_performance_stats": host_settings["showPerformanceStats"] if pass_to_moonlight else None,
+        "enable_v_sync": host_settings["enableVSync"] if pass_to_moonlight else None,
+        "enable_frame_pacing": host_settings["enableFramePacing"] if pass_to_moonlight else None,
         "video_codec": host_settings["videoCodec"] if pass_to_moonlight else None,
 
         # This one is a special case since it is currently hardcoded based on the runner type and is not configurable.

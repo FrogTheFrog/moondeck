@@ -3,7 +3,7 @@ import { FC, useContext } from "react";
 import { HostSettings } from "../../../lib";
 import { MoonDeckContext } from "../../../contexts";
 import { MoonlightExecutableSelection } from "./moonlightexecutableselection";
-import { ShowPerformanceSelectionDropdown, ToggleField, VideoCodecSelectionDropdown } from "../../shared";
+import { BooleanSelectionDropdown, ToggleField, VideoCodecSelectionDropdown } from "../../shared";
 
 interface Props {
   hostSettings: HostSettings;
@@ -33,12 +33,38 @@ export const GeneralSection: FC<Props> = ({ hostSettings }) => {
         />
       </Field>
       <Field
-        label="Show performance stats when streaming"
-        description="Enable this to show performance stats during streaming. Don't override option will use the option selected in Moonlight's settings."
+        label="Enable v-sync when streaming"
+        description="Enable or disable v-sync during streaming. Don't override option will use the option selected in Moonlight's settings."
         childrenContainerWidth="fixed"
       >
-        <ShowPerformanceSelectionDropdown
+        <BooleanSelectionDropdown
+          includeNoopOption={true}
+          value={hostSettings.enableVSync!}
+          defaultText="Select v-sync option"
+          setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.enableVSync = value; })}
+        />
+      </Field>
+      <Field
+        label="Enable frame pacing when streaming"
+        description="Enable or disable frame pacing during streaming. Don't override option will use the option selected in Moonlight's settings."
+        childrenContainerWidth="fixed"
+      >
+        <BooleanSelectionDropdown
+          includeNoopOption={true}
+          value={hostSettings.enableFramePacing!}
+          defaultText="Select frame pacing option"
+          setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.enableFramePacing = value; })}
+        />
+      </Field>
+      <Field
+        label="Show performance stats when streaming"
+        description="Show or hide performance stats during streaming. Don't override option will use the option selected in Moonlight's settings."
+        childrenContainerWidth="fixed"
+      >
+        <BooleanSelectionDropdown
+          includeNoopOption={true}
           value={hostSettings.showPerformanceStats!}
+          defaultText="Select show performance option"
           setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.showPerformanceStats = value; })}
         />
       </Field>

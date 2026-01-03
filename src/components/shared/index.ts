@@ -10,7 +10,7 @@ export * from "./nonemptytextinput";
 export * from "./numerictextinput";
 export * from "./resolutionselectiondropdown";
 export * from "./serverstatusfield";
-export * from "./showperformanceselectiondropdown";
+export * from "./booleanselectiondropdown";
 export * from "./statusfield";
 export * from "./settingsloadingfield";
 export * from "./textinput";
