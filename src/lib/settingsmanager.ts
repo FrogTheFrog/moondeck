@@ -18,8 +18,7 @@ export const videoCodecOptions = ["AV1", "HEVC", "H.264", "Auto"] as const;
 export enum ControllerConfigValues {
   Disable = "Disable Steam Input",
   Default = "Use default settings",
-  Enable = "Enable Steam Input",
-  Noop = "Do nothing"
+  Enable = "Enable Steam Input"
 }
 export function getControllerConfigDropdownValues(): Array<{ id: keyof typeof ControllerConfigValues; label: string }> {
   return Object.entries(ControllerConfigValues).map(([id, label]) => {
@@ -129,7 +128,7 @@ export interface HostSettings {
 export interface GameSessionSettings {
   autoApplyAppId: boolean;
   resumeAfterSuspend: boolean;
-  controllerConfig: keyof typeof ControllerConfigValues;
+  controllerConfig: keyof typeof ControllerConfigValues | null;
 }
 
 export interface ButtonPositionSettings {

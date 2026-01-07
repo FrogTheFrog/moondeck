@@ -1,7 +1,7 @@
-import { BooleanSelectionDropdown, ToggleField, VideoCodecSelectionDropdown } from "../../shared";
 import { DialogControlsSection, DialogControlsSectionHeader, Field } from "@decky/ui";
 import { FC, useContext } from "react";
-import { HostSettings } from "../../../lib";
+import { HostSettings, videoCodecOptions } from "../../../lib";
+import { ListDropdown, OptionalBooleanDropdown, ToggleField } from "../../shared";
 import { MoonDeckContext } from "../../../contexts";
 import { MoonlightExecutableSelection } from "./moonlightexecutableselection";
 
@@ -27,7 +27,10 @@ export const GeneralSection: FC<Props> = ({ hostSettings }) => {
         description="Codec to use when streaming. Current Moonlight setting will be used unless overriden."
         childrenContainerWidth="fixed"
       >
-        <VideoCodecSelectionDropdown
+        <ListDropdown
+          optionList={videoCodecOptions}
+          label="Don't override"
+          withOptionalValue={true}
           value={hostSettings.videoCodec}
           setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.videoCodec = value; })}
         />
@@ -37,10 +40,9 @@ export const GeneralSection: FC<Props> = ({ hostSettings }) => {
         description="V-sync option to use when streaming. Current Moonlight setting will be used unless overriden."
         childrenContainerWidth="fixed"
       >
-        <BooleanSelectionDropdown
-          includeNoopOption={true}
-          value={hostSettings.enableVSync!}
-          defaultText="Select v-sync option"
+        <OptionalBooleanDropdown
+          value={hostSettings.enableVSync}
+          optValueLabel="Don't override"
           setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.enableVSync = value; })}
         />
       </Field>
@@ -49,10 +51,9 @@ export const GeneralSection: FC<Props> = ({ hostSettings }) => {
         description="Frame pacing option to use when streaming. Current Moonlight setting will be used unless overriden."
         childrenContainerWidth="fixed"
       >
-        <BooleanSelectionDropdown
-          includeNoopOption={true}
-          value={hostSettings.enableFramePacing!}
-          defaultText="Select frame pacing option"
+        <OptionalBooleanDropdown
+          value={hostSettings.enableFramePacing}
+          optValueLabel="Don't override"
           setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.enableFramePacing = value; })}
         />
       </Field>
@@ -61,10 +62,9 @@ export const GeneralSection: FC<Props> = ({ hostSettings }) => {
         description="Show or hide performance stats when streaming. Current Moonlight setting will be used unless overriden."
         childrenContainerWidth="fixed"
       >
-        <BooleanSelectionDropdown
-          includeNoopOption={true}
-          value={hostSettings.showPerformanceStats!}
-          defaultText="Select show performance option"
+        <OptionalBooleanDropdown
+          value={hostSettings.showPerformanceStats}
+          optValueLabel="Don't override"
           setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.showPerformanceStats = value; })}
         />
       </Field>

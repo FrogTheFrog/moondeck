@@ -7,15 +7,10 @@ interface Props {
   setOverride: (value: HostResolution["appResolutionOverride"]) => void;
 }
 
-function entryToLabel(value: string): string {
-  return value.replace(/([A-Z])/g, " $1");
-}
-
-const entries = appResolutionOverrideValues.map((entry) => { return { id: entry, label: entryToLabel(entry) }; });
 export const AppResolutionOverrideDropdown: FC<Props> = ({ currentOverride, setOverride }) => {
   return (
-    <ListDropdown<typeof currentOverride>
-      optionList={entries}
+    <ListDropdown
+      optionList={appResolutionOverrideValues}
       label="Select override type"
       value={currentOverride}
       setValue={setOverride}

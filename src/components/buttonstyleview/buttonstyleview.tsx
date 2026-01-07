@@ -1,7 +1,7 @@
 import { AnyTextInput, ListDropdown, SettingsLoadingField, ToggleField } from "../shared";
 import { DialogBody, DialogControlsSection, DialogControlsSectionHeader, Field } from "@decky/ui";
 import { FC, useContext } from "react";
-import { UserSettings, buttonStyles, horizontalAlignmentValues, verticalAlignmentValues } from "../../lib";
+import { buttonStyles, horizontalAlignmentValues, verticalAlignmentValues } from "../../lib";
 import { MoonDeckContext } from "../../contexts";
 import { useCurrentSettings } from "../../hooks";
 
@@ -19,7 +19,7 @@ export const ButtonStyleView: FC = () => {
           label="Select theme for MoonDeck button"
           childrenContainerWidth="fixed"
         >
-          <ListDropdown<UserSettings["buttonStyle"]["theme"]>
+          <ListDropdown
             optionList={buttonStyles}
             label="Select theme"
             value={settings.buttonStyle.theme}
@@ -38,7 +38,7 @@ export const ButtonStyleView: FC = () => {
           label="Horizontal alignment"
           childrenContainerWidth="fixed"
         >
-          <ListDropdown<UserSettings["buttonPosition"]["horizontalAlignment"]>
+          <ListDropdown
             optionList={horizontalAlignmentValues}
             label="Select side"
             value={settings.buttonPosition.horizontalAlignment}
@@ -49,7 +49,7 @@ export const ButtonStyleView: FC = () => {
           label="Vertical alignment"
           childrenContainerWidth="fixed"
         >
-          <ListDropdown<UserSettings["buttonPosition"]["verticalAlignment"]>
+          <ListDropdown
             optionList={verticalAlignmentValues}
             label="Select side"
             value={settings.buttonPosition.verticalAlignment}

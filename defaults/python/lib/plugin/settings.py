@@ -3,7 +3,7 @@ from ..buddyrequests import OsType
 from ..settingsmanager import SettingsManager
 
 
-ControllerConfigOption = Literal["Disable", "Default", "Enable", "Noop"]
+ControllerConfigOption = Literal["Disable", "Default", "Enable"]
 VideoCodecOption = Literal["AV1", "HEVC", "H.264", "Auto"]
 AudioOption = Literal["stereo", "5.1-surround", "7.1-surround"]
 CloseSteamOption = Literal["Client", "BigPictureMode"]
@@ -96,7 +96,7 @@ class HostSettings(TypedDict):
 class GameSessionSettings(TypedDict):
     autoApplyAppId: bool
     resumeAfterSuspend: bool
-    controllerConfig: ControllerConfigOption
+    controllerConfig: Optional[ControllerConfigOption]
 
 
 class ButtonPositionSettings(TypedDict):
@@ -114,7 +114,7 @@ class ButtonStyleSettings(TypedDict):
 
 
 class UserSettings(TypedDict):
-    version: Literal[35]
+    version: Literal[36]
     clientId: str
     currentHostId: Optional[str]
     gameSession: GameSessionSettings
@@ -141,7 +141,7 @@ class UserSettingsManager(SettingsManager[UserSettings]):
             "gameSession": {
                 "autoApplyAppId": False,
                 "resumeAfterSuspend": False,
-                "controllerConfig": "Noop"
+                "controllerConfig": None
             },
             "buttonPosition": {
                 "horizontalAlignment": "bottom",
@@ -352,4 +352,7 @@ class UserSettingsManager(SettingsManager[UserSettings]):
                 data["hostSettings"][host]["showPerformanceStats"] = None
                 data["hostSettings"][host]["enableVSync"] = None
                 data["hostSettings"][host]["enableFramePacing"] = None
-                
+        if data["version"] == 35:
+            data["version"] = 36
+            if data["gameSession"]["controllerConfig"] == "Noop":
+                data["gameSession"]["controllerConfig"] = None

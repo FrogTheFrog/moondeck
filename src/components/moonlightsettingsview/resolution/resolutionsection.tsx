@@ -1,10 +1,9 @@
 import { DialogControlsSection, DialogControlsSectionHeader, Field, Focusable } from "@decky/ui";
 import { FC, useContext } from "react";
 import { ModifyListButton, RemoveListEntryButton } from "../../shared/indexedlist";
-import { NumericTextInput, ResolutionSelectionDropdown, ToggleField } from "../../shared";
+import { NumericTextInput, OptionalBooleanDropdown, ResolutionSelectionDropdown, ToggleField } from "../../shared";
 import { minBitrate, minFps } from "../../../lib";
 import { CurrentHostSettings } from "../../../hooks";
-import { HdrSelectionDropdown } from "./hdrselectiondropdown";
 import { LinkedDisplayList } from "./linkeddisplaylist";
 import { ModifyResolutionModal } from "./modifyresolutionmodal";
 import { MoonDeckContext } from "../../../contexts";
@@ -48,8 +47,9 @@ export const ResolutionSection: FC<Props> = ({ hostSettings }) => {
         description="HDR to be applied when starting stream. Will be overridden by the one from custom resolution if provided."
         childrenContainerWidth="fixed"
       >
-        <HdrSelectionDropdown
+        <OptionalBooleanDropdown
           value={hostSettings.resolution.defaultHdr}
+          optValueLabel="Don't override"
           setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.resolution.defaultHdr = value; })}
         />
       </Field>
