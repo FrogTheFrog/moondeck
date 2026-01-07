@@ -9,7 +9,7 @@ function convertToNoopValue(value: boolean | null): typeof BooleanDropdownValues
   if (value == null) return BooleanDropdownValuesWithNoop[2];
 
   if (value == true)
-    return BooleanDropdownValuesWithNoop[0]
+    return BooleanDropdownValuesWithNoop[0];
   else
     return BooleanDropdownValuesWithNoop[1];
 }
@@ -55,7 +55,7 @@ export const BooleanSelectionDropdown: FC<PropsWithNoop | PropsWithoutNoop> = ({
       />
     );
   }
-  
+
   return (
     <ListDropdown
       optionList={BooleanOptions}
