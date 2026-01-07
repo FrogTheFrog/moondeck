@@ -31,7 +31,7 @@ export const IndexedListDropdown: <ListElement>(props: Props<ListElement>) => Re
   }, [currentList, currentIndex]);
 
   return (
-    <ListDropdown<typeof currentEntry>
+    <ListDropdown
       disabled={currentList.length === 0}
       singleItemSelection={singleItemSelection}
       focusable={focusable}

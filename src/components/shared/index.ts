@@ -1,5 +1,4 @@
 export * from "./anytextinput";
-export * from "./audioselectiondropdown";
 export * from "./buddystatusfield";
 export * from "./externalappspurgebutton";
 export * from "./externalappssyncbutton";
@@ -10,6 +9,7 @@ export * from "./nonemptytextinput";
 export * from "./numerictextinput";
 export * from "./resolutionselectiondropdown";
 export * from "./serverstatusfield";
+export * from "./optionalbooleandropdown";
 export * from "./statusfield";
 export * from "./settingsloadingfield";
 export * from "./textinput";

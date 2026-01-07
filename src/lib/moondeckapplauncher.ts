@@ -107,8 +107,8 @@ function getLaunchOptionsString(currentValue: string, appId: number, appType: Ap
   return launchOptions.join(" ");
 }
 
-export function updateControllerConfig(appId: number, controllerConfig: keyof typeof ControllerConfigValues): void {
-  if (controllerConfig !== "Noop") {
+export function updateControllerConfig(appId: number, controllerConfig: keyof typeof ControllerConfigValues | null): void {
+  if (controllerConfig !== null) {
     logger.log(`Setting controller config to ${controllerConfig} for ${appId}.`);
     const option = ControllerConfigOption[controllerConfig] as unknown as EThirdPartyControllerConfiguration;
     SteamClient.Apps.SetThirdPartyControllerConfiguration(appId, option);

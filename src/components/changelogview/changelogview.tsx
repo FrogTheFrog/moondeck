@@ -6,6 +6,18 @@ export const ChangelogView: FC = () => {
     <DialogBody>
       <DialogControlsSection>
         <Field
+          label="1.11.2"
+          description={
+            <>
+              <div>&bull; Added an option to change video codec used by Moonlight.</div>
+              <div>&bull; Added a toggle for Moonlight's V-sync option.</div>
+              <div>&bull; Added a toggle for Moonlight's frame pacing option.</div>
+              <div>&bull; Added a toggle for showing performance stats in Moonlight.</div>
+            </>
+          }
+          focusable={true}
+        />
+        <Field
           label="1.11.1"
           description="Fixed sidebar navigation issue in latest beta."
           focusable={true}

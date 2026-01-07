@@ -1,9 +1,8 @@
 import { DialogButton, Field, ModalRoot } from "@decky/ui";
 import { Dimension, HostResolution, minBitrate, minFps, stringifyDimension } from "../../../lib";
+import { NumericTextInput, OptionalBooleanDropdown } from "../../shared";
 import { useEffect, useState } from "react";
-import { HdrSelectionDropdown } from "./hdrselectiondropdown";
 import { IndexedListModal } from "../../shared/indexedlist";
-import { NumericTextInput } from "../../shared";
 
 function isValidIndex(index: number | null, listSize: number): boolean {
   return index !== null && index >= 0 && index < listSize;
@@ -116,8 +115,9 @@ export const ModifyResolutionModal: IndexedListModal<HostResolution["dimensions"
         label="HDR"
         childrenContainerWidth="fixed"
       >
-        <HdrSelectionDropdown
+        <OptionalBooleanDropdown
           value={hdr}
+          optValueLabel="Don't override"
           setValue={setHdr}
         />
       </Field>

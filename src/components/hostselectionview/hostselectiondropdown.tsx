@@ -18,7 +18,7 @@ export const HostSelectionDropdown: FC<Props> = ({ disableNoneOption, singleItem
     const hosts: typeof entries = Object.entries(currentSettings.hostSettings).map(([id, hostSettings]) => { return { id, label: hostSettings.hostName }; });
     if (hosts.length > 0) {
       if (!disableNoneOption) {
-        hosts.push({ id: null, label: "None" });
+        hosts.unshift({ id: null, label: "None" });
       }
 
       setEntries(hosts);
@@ -30,7 +30,7 @@ export const HostSelectionDropdown: FC<Props> = ({ disableNoneOption, singleItem
   }, [currentSettings]);
 
   return (
-    <ListDropdown<typeof currentHost>
+    <ListDropdown
       disabled={disabled}
       singleItemSelection={singleItemSelection}
       optionList={entries}
