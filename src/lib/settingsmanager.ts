@@ -13,12 +13,12 @@ export const minBitrate = 0 as const;
 export const minFps = 0 as const;
 export const audioOptions = ["stereo", "5.1-surround", "7.1-surround"] as const;
 export const closeSteamOption = ["Client", "BigPictureMode"] as const;
+export const videoCodecOptions = ["AV1", "HEVC", "H.264", "Auto"] as const;
 
 export enum ControllerConfigValues {
   Disable = "Disable Steam Input",
   Default = "Use default settings",
-  Enable = "Enable Steam Input",
-  Noop = "Do nothing"
+  Enable = "Enable Steam Input"
 }
 export function getControllerConfigDropdownValues(): Array<{ id: keyof typeof ControllerConfigValues; label: string }> {
   return Object.entries(ControllerConfigValues).map(([id, label]) => {
@@ -115,6 +115,10 @@ export interface HostSettings {
   resolution: HostResolution;
   audio: AudioSettings;
   passToMoonlight: boolean;
+  showPerformanceStats: boolean | null;
+  enableVSync: boolean | null;
+  enableFramePacing: boolean | null;
+  videoCodec: typeof videoCodecOptions[number] | null;
   runnerTimeouts: RunnerTimeouts;
   buddy: BuddySettings;
   gameStreamApps: GameStreamAppsSettings;
@@ -124,7 +128,7 @@ export interface HostSettings {
 export interface GameSessionSettings {
   autoApplyAppId: boolean;
   resumeAfterSuspend: boolean;
-  controllerConfig: keyof typeof ControllerConfigValues;
+  controllerConfig: keyof typeof ControllerConfigValues | null;
 }
 
 export interface ButtonPositionSettings {

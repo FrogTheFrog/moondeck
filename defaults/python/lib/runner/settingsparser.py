@@ -4,7 +4,7 @@ from enum import Enum
 from .envparser import EnvSettings, parse_env_settings, RunnerType
 from ..runnerresult import RunnerError, Result
 from ..plugin.settings import Dimension, HostSettings, RunnerTimeouts, UserSettingsManager
-from ..moonlightproxy import ResolutionDimensions
+from ..moonlightproxy import ResolutionDimensions, CommandLineOptions
 from ..logger import logger
 from .. import constants
 
@@ -15,9 +15,7 @@ class CloseSteam(Enum):
 
 
 class MoonDeckAppRunnerSettings(TypedDict):
-    audio: Optional[str]
-    resolution: ResolutionDimensions
-    pass_to_moonlight: bool
+    cmd_options: CommandLineOptions
     host_app: str
     host_id: str
     hostname: str
@@ -33,13 +31,10 @@ class MoonDeckAppRunnerSettings(TypedDict):
     app_id: str
     debug_logs: bool
     runner_type: Literal[RunnerType.MoonDeck]
-    quit_after: Optional[bool]
 
 
 class MoonlightOnlyRunnerSettings(TypedDict):
-    audio: Optional[str]
-    resolution: ResolutionDimensions
-    pass_to_moonlight: bool
+    cmd_options: CommandLineOptions
     host_app: str
     host_id: str
     hostname: str
@@ -50,7 +45,6 @@ class MoonlightOnlyRunnerSettings(TypedDict):
     moonlight_exec_path: Optional[str]
     debug_logs: bool
     runner_type: Literal[RunnerType.MoonlightOnly]
-    quit_after: Optional[bool]
 
 
 def parse_audio_settings(host_settings: HostSettings, env_settings: EnvSettings) -> Optional[str]:
@@ -72,8 +66,9 @@ def parse_resolution_settings(host_settings: HostSettings, env_settings: EnvSett
         "size": None,
         "bitrate": host_settings["resolution"]["defaultBitrate"],
         "fps": host_settings["resolution"]["defaultFps"],
-        "hdr": host_settings["resolution"]["defaultHdr"]
+        "hdr": host_settings["resolution"]["defaultHdr"],
     }
+
     dimension_list = host_settings["resolution"]["dimensions"]
 
     def update_dimensions(dimension: Dimension):
@@ -126,6 +121,19 @@ def parse_host_app_name(host_settings: HostSettings) -> str:
     logger.info(f"Parsed host app name: {host_app}")
     return host_app
 
+def parse_cmd_options(pass_to_moonlight: bool, host_settings: HostSettings, env_settings: EnvSettings) -> CommandLineOptions:
+    return CommandLineOptions({
+        "audio": parse_audio_settings(host_settings=host_settings, env_settings=env_settings) if pass_to_moonlight else None,
+        "resolution": parse_resolution_settings(host_settings=host_settings, env_settings=env_settings) if pass_to_moonlight else None,
+        "show_performance_stats": host_settings["showPerformanceStats"] if pass_to_moonlight else None,
+        "enable_v_sync": host_settings["enableVSync"] if pass_to_moonlight else None,
+        "enable_frame_pacing": host_settings["enableFramePacing"] if pass_to_moonlight else None,
+        "video_codec": host_settings["videoCodec"] if pass_to_moonlight else None,
+
+        # This one is a special case since it is currently hardcoded based on the runner type and is not configurable.
+        # The hardcoded non-None value should always be passed regardless of what `pass_to_moonlight` says.
+        "quit_after": False if env_settings["runner_type"] == RunnerType.MoonDeck else None
+    })
 
 async def parse_settings() -> MoonDeckAppRunnerSettings | MoonlightOnlyRunnerSettings:
     logger.info("Getting current host settings")
@@ -158,9 +166,7 @@ async def parse_settings() -> MoonDeckAppRunnerSettings | MoonlightOnlyRunnerSet
             raise RunnerError(Result.NoAppId)
 
         return MoonDeckAppRunnerSettings({
-            "audio": parse_audio_settings(host_settings=host_settings, env_settings=env_settings),
-            "resolution": parse_resolution_settings(host_settings=host_settings, env_settings=env_settings),
-            "pass_to_moonlight": pass_to_moonlight,
+            "cmd_options": parse_cmd_options(pass_to_moonlight, host_settings=host_settings, env_settings=env_settings),
             "host_app": parse_host_app_name(host_settings=host_settings),
             "host_id": cast(str, host_id),
             "hostname": host_settings["hostName"],
@@ -175,17 +181,14 @@ async def parse_settings() -> MoonDeckAppRunnerSettings | MoonlightOnlyRunnerSet
             "moonlight_exec_path": user_settings["moonlightExecPath"] if user_settings["useMoonlightExec"] else None,
             "app_id": env_settings["app_id"],
             "debug_logs": user_settings["runnerDebugLogs"],
-            "runner_type": RunnerType.MoonDeck,
-            "quit_after": False
+            "runner_type": RunnerType.MoonDeck
         })
     else:
         if env_settings["app_name"] is None:
             raise RunnerError(Result.NoAppName)
 
         return MoonlightOnlyRunnerSettings({
-            "audio": parse_audio_settings(host_settings=host_settings, env_settings=env_settings),
-            "resolution": parse_resolution_settings(host_settings=host_settings, env_settings=env_settings),
-            "pass_to_moonlight": pass_to_moonlight,
+            "cmd_options": parse_cmd_options(pass_to_moonlight, host_settings=host_settings, env_settings=env_settings),
             "host_app": env_settings["app_name"],
             "host_id": cast(str, host_id),
             "hostname": host_settings["hostName"],
@@ -195,6 +198,5 @@ async def parse_settings() -> MoonDeckAppRunnerSettings | MoonlightOnlyRunnerSet
             "timeouts": host_settings["runnerTimeouts"],
             "moonlight_exec_path": user_settings["moonlightExecPath"] if user_settings["useMoonlightExec"] else None,
             "debug_logs": user_settings["runnerDebugLogs"],
-            "runner_type": RunnerType.MoonlightOnly,
-            "quit_after": None
+            "runner_type": RunnerType.MoonlightOnly
         })

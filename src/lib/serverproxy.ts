@@ -99,6 +99,10 @@ export class ServerProxy {
           linkedAudio: currentSettings?.audio.linkedAudio ?? {}
         },
         passToMoonlight: currentSettings?.passToMoonlight ?? true,
+        showPerformanceStats: currentSettings?.showPerformanceStats ?? null,
+        enableVSync: currentSettings?.enableVSync ?? null,
+        enableFramePacing: currentSettings?.enableFramePacing ?? null,
+        videoCodec: currentSettings?.videoCodec ?? null,
         runnerTimeouts: {
           buddyRequests: currentSettings?.runnerTimeouts.buddyRequests ?? buddyRequestsDefault,
           servicePing: currentSettings?.runnerTimeouts.servicePing ?? servicePingDefault,

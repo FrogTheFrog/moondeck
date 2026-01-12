@@ -1,7 +1,7 @@
-import { AudioSelectionDropdown, ListDropdown } from "../../shared";
 import { DialogButton, Field, ModalRoot } from "@decky/ui";
 import { FC, useContext, useState } from "react";
 import { HostSettings, audioOptions } from "../../../lib";
+import { ListDropdown } from "../../shared";
 import { MoonDeckContext } from "../../../contexts";
 
 interface Props {
@@ -40,7 +40,7 @@ export const LinkedAudioModal: FC<Props> = ({ closeModal, devices, hostSettings 
         childrenContainerWidth="max"
         bottomSeparator="none"
       >
-        <ListDropdown<string>
+        <ListDropdown
           label="Select audio device"
           optionList={devices}
           singleItemSelection={true}
@@ -54,8 +54,9 @@ export const LinkedAudioModal: FC<Props> = ({ closeModal, devices, hostSettings 
         childrenContainerWidth="max"
         bottomSeparator="none"
       >
-        <AudioSelectionDropdown
-          includeNoopOption={false}
+        <ListDropdown
+          optionList={audioOptions}
+          label="Select audio option"
           value={option}
           setValue={setOption}
         />

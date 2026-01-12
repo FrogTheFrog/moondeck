@@ -17,6 +17,16 @@ class ResolutionDimensions(TypedDict):
     hdr: Optional[bool]
 
 
+class CommandLineOptions(TypedDict):
+    audio: Optional[str]
+    resolution: Optional[ResolutionDimensions]
+    quit_after: Optional[bool]
+    show_performance_stats: Optional[bool]
+    enable_v_sync: Optional[bool]
+    enable_frame_pacing: Optional[bool]
+    video_codec: Optional[str]
+
+
 class MoonlightProxy(contextlib.AbstractAsyncContextManager):
 
     flatpak_moonlight = "com.moonlight_stream.Moonlight"
@@ -67,7 +77,7 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
             return sorted(list(apps))
         return None     
 
-    async def start(self, hostname: str, host_app: str, audio: Optional[str] = None, resolution: Optional[ResolutionDimensions] = None, quit_after: Optional[bool] = None):
+    async def start(self, hostname: str, host_app: str, cmd_options: Optional[CommandLineOptions] = None):
         # Lazy import to improve CLI performance
         import asyncio
         import psutil
@@ -75,24 +85,46 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
         assert self.process is None, "Another instance of Moonlight has been started already!"
         exec, args = self.__get_exec_with_args()
 
-        if audio:
-            args += ["--audio-config", audio]
+        if cmd_options:
+            if (audio := cmd_options["audio"]) is not None:
+                args += ["--audio-config", audio]
 
-        if resolution:
-            if resolution["size"]:
-                args += ["--resolution", f"{resolution['size']['width']}x{resolution['size']['height']}"]
-            if resolution["fps"]:
-                args += ["--fps", f"{resolution['fps']}"]
-            if resolution["hdr"] is not None:
-                args += ["--hdr" if resolution["hdr"] else "--no-hdr"]
-            if resolution["bitrate"]:
-                args += ["--bitrate", f"{resolution['bitrate']}"]
+            if (resolution := cmd_options["resolution"]) is not None:
+                if resolution["size"]:
+                    args += ["--resolution", f"{resolution['size']['width']}x{resolution['size']['height']}"]
+                if resolution["fps"]:
+                    args += ["--fps", f"{resolution['fps']}"]
+                if resolution["hdr"] is not None:
+                    args += ["--hdr" if resolution["hdr"] else "--no-hdr"]
+                if resolution["bitrate"]:
+                    args += ["--bitrate", f"{resolution['bitrate']}"]
 
-        if quit_after is not None:
-            if quit_after:
-                args += ["--quit-after"]
-            else:
-                args += ["--no-quit-after"]
+            if (quit_after := cmd_options["quit_after"]) is not None:
+                if quit_after:
+                    args += ["--quit-after"]
+                else:
+                    args += ["--no-quit-after"]
+            
+            if (show_performance_stats := cmd_options["show_performance_stats"]) is not None:
+                if show_performance_stats:
+                    args += ["--performance-overlay"]
+                else:
+                    args += ["--no-performance-overlay"]
+
+            if (enable_v_sync := cmd_options["enable_v_sync"]) is not None:
+                if enable_v_sync:
+                    args += ["--vsync"]
+                else:
+                    args += ["--no-vsync"]
+
+            if (enable_frame_pacing := cmd_options["enable_frame_pacing"]) is not None:
+                if enable_frame_pacing:
+                    args += ["--frame-pacing"]
+                else:
+                    args += ["--no-frame-pacing"]
+            
+            if (video_codec := cmd_options["video_codec"]) is not None:
+                args += ["--video-codec", video_codec]
 
         args += ["stream", hostname, host_app]
 

@@ -1,8 +1,8 @@
 import { DialogBody, DialogControlsSection, Field } from "@decky/ui";
 import { FC, useContext } from "react";
 import { ListDropdown, SettingsLoadingField, ToggleField } from "../shared";
-import { UserSettings, getControllerConfigDropdownValues } from "../../lib";
 import { MoonDeckContext } from "../../contexts";
+import { getControllerConfigDropdownValues } from "../../lib";
 import { useCurrentSettings } from "../../hooks";
 
 export const GameSessionView: FC = () => {
@@ -24,9 +24,10 @@ export const GameSessionView: FC = () => {
           childrenContainerWidth="fixed"
           bottomSeparator="none"
         >
-          <ListDropdown<UserSettings["gameSession"]["controllerConfig"]>
+          <ListDropdown
             optionList={getControllerConfigDropdownValues()}
-            label="Loading..."
+            label="Do nothing"
+            withOptionalValue={true}
             value={settings.gameSession.controllerConfig}
             setValue={(value) => settingsManager.update((settings) => { settings.gameSession.controllerConfig = value; })}
           />
