@@ -29,7 +29,12 @@ export const WOLExecutableSelection: FC<Props> = ({ hostSettings }) => {
     <>
       <ToggleField
         label="Use custom WOL executable"
-        description="Use provided executable to send Wake On Lan (WOL) to the host. The executable will be receive the following args: HOSTNAME, IP_ADDRESS, MAC"
+        description={
+          <>
+            <div>Use provided executable to send Wake On Lan (WOL) to the host.</div>
+            <div>The executable will be receive the following arguments: HOSTNAME, IP_ADDRESS, MAC</div>
+          </>
+        }
         bottomSeparator="none"
         value={hostSettings.useCustomWolExec}
         setValue={(value) => settingsManager.updateHost((settings) => { settings.useCustomWolExec = value; })}
