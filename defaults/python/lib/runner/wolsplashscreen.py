@@ -2,6 +2,7 @@
 import pyglet
 import asyncio
 
+from typing import Optional
 from datetime import datetime, timedelta, timezone
 from ..logger import logger
 from ..utils import wake_on_lan
@@ -146,10 +147,12 @@ class Canvas(pyglet.window.Window):
 
 
 class WolSplashScreen:
-    def __init__(self, address: str, mac: str, timeout: int, hostname: str):
+    def __init__(self, address: str, mac: str, timeout: int, hostname: str, custom_wol_exec: Optional[str]):
+        self.address = address
         self.hostname = hostname
+        self.mac = mac
+        self.custom_wol_exec = custom_wol_exec
         if timeout > 0:
-            wake_on_lan(address=address, mac=mac)
             self.timeout_end = datetime.now(timezone.utc) + timedelta(seconds=timeout)
         else:
             self.timeout_end = None
@@ -171,7 +174,8 @@ class WolSplashScreen:
 
     async def __aenter__(self):
         self.close_flag = True
-        self.task = None
+        self.wol_task = None
+        self.loop_task = None
 
         if self.timeout_end is None:
             return self
@@ -179,18 +183,34 @@ class WolSplashScreen:
         self.canvas = Canvas() # Added to pyglet.app.windows
         self.canvas.label.set_text(text=f"Checking connection to {self.hostname}...")
         self.close_flag = False
-        self.task = asyncio.create_task(self.__run_loop())
+        self.wol_task = asyncio.create_task(wake_on_lan(hostname=self.hostname,
+                                                        address=self.address,
+                                                        mac=self.mac,
+                                                        custom_exec=self.custom_wol_exec))
+        self.loop_task = asyncio.create_task(self.__run_loop())
         return self
 
     async def __aexit__(self, exc_type, exc, tb):
         self.close_flag = True
-        if self.task:
-            await self.task
+        if self.loop_task:
+            await self.loop_task
+
+            if self.wol_task:
+                _, pending = await asyncio.wait({self.wol_task}, timeout=1)
+                if self.wol_task in pending:
+                    self.wol_task.cancel()
+                    await asyncio.wait({self.wol_task}) 
+
+            self.loop_task.result()
 
     def update(self, buddy_status, server_status) -> bool:
         logger.info(f"Buddy: {buddy_status}, Server: {server_status}")
         if self.close_flag or self.timeout_end is None:
             return False
+        
+        if self.wol_task and self.wol_task.done():
+            self.wol_task.result()
+            self.wol_task = None
 
         if ((buddy_status is None or buddy_status) and server_status) or (datetime.now(timezone.utc) > self.timeout_end):
             return False

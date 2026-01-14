@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Any, Callable, Coroutine, List, Literal, Type, TypedDict, Union, TypeVar, get_args, get_origin, is_typeddict
+from typing import Any, Callable, Coroutine, List, Literal, Optional, Type, TypedDict, Union, TypeVar, get_args, get_origin, is_typeddict, cast
 
 from .logger import logger
 from .constants import RUNNER_READY_FILE
@@ -126,46 +126,108 @@ def async_scope_log(log_fn):
     return decorator
 
 
-def wake_on_lan(address: str, mac: str):
-    # Lazy import to improve CLI performance
-    import socket
-    import ipaddress
-    from wakeonlan import send_magic_packet
+def ps_signal(process, kill: bool):
+    import psutil
 
-    default_port = 9
-
-    def _try_parse_info(ip_address: str):
+    def do_signal(proc_or_child):
         try:
-            parsed_address = ipaddress.ip_address(ip_address)
-            if isinstance(parsed_address, ipaddress.IPv4Address):
-                return socket.AF_INET, ip_address
-            if isinstance(parsed_address, ipaddress.IPv6Address):
-                return socket.AF_INET6, ip_address
-        except ValueError:
+            if kill:
+                proc_or_child.kill()
+            else:
+                proc_or_child.terminate()
+        except psutil.NoSuchProcess:
             pass
+    
+    proc = cast(psutil.Process, process)
+    for child in list(proc.children(recursive=True)):
+        do_signal(child)
 
-        return None
+    do_signal(proc)
 
-    # if valid IP was specified, we don't need to call `getaddrinfo` at all
-    info = _try_parse_info(address)
-    if info:
-        infos = [info]
+
+async def wake_on_lan(hostname: str, address: str, mac: str, custom_exec: Optional[str] = None):
+    if custom_exec:
+        # Lazy import to improve CLI performance
+        import asyncio
+        import os
+        import psutil
+        import io
+
+        newline = "\n"
+        buffer = io.StringIO()
+        wol_proc = None
+        ps_proc = None
+        try:
+            env = os.environ.copy()
+            env.pop("LD_LIBRARY_PATH", None)
+            wol_proc = await asyncio.create_subprocess_exec(custom_exec, hostname, address, mac,
+                                                            stdout=asyncio.subprocess.PIPE,
+                                                            stderr=asyncio.subprocess.STDOUT,
+                                                            env=env)
+            ps_proc = psutil.Process(wol_proc.pid)
+
+            async def handle_stream(stream: Optional[asyncio.StreamReader]):
+                if not stream:
+                    raise Exception("NULL WOL exec stream handle!")
+                    return
+
+                while not stream.at_eof():
+                    data = await stream.readline()
+                    buffer.write(data.decode())
+
+            process_task = asyncio.create_task(wol_proc.wait())
+            log_task = asyncio.create_task(handle_stream(wol_proc.stdout))
+            await asyncio.wait([process_task, log_task], return_when=asyncio.ALL_COMPLETED)
+
+            logger.info(f"WOL exec ({custom_exec}) output:{newline}{buffer.getvalue().strip(newline)}")
+            if wol_proc.returncode:
+                raise Exception(f"Custom WOL failed with code {wol_proc.returncode}")
+        except asyncio.CancelledError:
+            if ps_proc:
+                assert wol_proc is not None
+                ps_signal(ps_proc, kill=True)
+                await wol_proc.wait()
+                logger.info(f"WOL exec ({custom_exec}) output before it was killed:{newline}{buffer.getvalue().strip(newline)}")
     else:
-        infos = [(x[0], x[4][0]) for x in socket.getaddrinfo(address, default_port, family=socket.AF_UNSPEC)
-                 if x[0] in [socket.AF_INET, socket.AF_INET6] and isinstance(x[4][0], str)]
+        # Lazy import to improve CLI performance
+        import socket
+        import ipaddress
+        from wakeonlan import send_magic_packet
 
-    if not infos:
-        raise Exception(f"WOL failed - {address} does not have any IPv4 or IPv6 interfaces!") 
+        default_port = 9
 
-    for family, address_info in infos:
-        address_log = address if address == address_info else f"{address} ({address_info})"
-        logger.info(f"Sending WOL ({mac}) to {address_log}")
+        def _try_parse_info(ip_address: str):
+            try:
+                parsed_address = ipaddress.ip_address(ip_address)
+                if isinstance(parsed_address, ipaddress.IPv4Address):
+                    return socket.AF_INET, ip_address
+                if isinstance(parsed_address, ipaddress.IPv6Address):
+                    return socket.AF_INET6, ip_address
+            except ValueError:
+                pass
 
-        if family == socket.AF_INET:
-            # Broadcast for IPv4
-            send_magic_packet(mac, ip_address="255.255.255.255", address_family=family, port=default_port)
+            return None
 
-        send_magic_packet(mac, ip_address=address_info, address_family=family, port=default_port)
+        # if valid IP was specified, we don't need to call `getaddrinfo` at all
+        info = _try_parse_info(address)
+        if info:
+            infos = [info]
+        else:
+            infos = [(x[0], x[4][0]) for x in socket.getaddrinfo(address, default_port, family=socket.AF_UNSPEC)
+                    if x[0] in [socket.AF_INET, socket.AF_INET6] and isinstance(x[4][0], str)]
+
+        if not infos:
+            raise Exception(f"WOL failed - {address} does not have any IPv4 or IPv6 interfaces!") 
+
+        for family, address_info in infos:
+            address_log = address if address == address_info else f"{address} ({address_info})"
+            logger.info(f"Sending WOL ({hostname} - {mac}) to {address_log}")
+
+            if family == socket.AF_INET:
+                # Broadcast for IPv4
+                send_magic_packet(mac, ip_address="255.255.255.255", address_family=family, port=default_port)
+
+            send_magic_packet(mac, ip_address=address_info, address_family=family, port=default_port)
 
 
 def is_moondeck_runner_ready():

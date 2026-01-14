@@ -6,6 +6,6 @@ from lib.utils import wake_on_lan
 @host_pattern_matcher(match_one=True)
 @wol_settings
 @cmd_entry
-async def execute(wol_address: str, wol_mac: str):    
-    wake_on_lan(address=wol_address, mac=wol_mac)
+async def execute(hostname: str, wol_address: str, wol_mac: str):    
+    await wake_on_lan(hostname=hostname, address=wol_address, mac=wol_mac)
     return 0

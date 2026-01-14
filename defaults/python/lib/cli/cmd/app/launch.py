@@ -24,7 +24,7 @@ async def execute(buddy_client: BuddyClient, settings: CliSettings, host_id: str
          logger.info(f"Buddy has accepted the request to launch {app_id}")
          return 0
 
-    wake_on_lan(address=wol_address, mac=wol_mac)
+    await wake_on_lan(hostname=settings["hosts"][host_id]["hostName"], address=wol_address, mac=wol_mac)
     if not await check_connectivity(client=buddy_client,
                                     info_port=settings["hosts"][host_id]["infoPort"],
                                     host_id=host_id,

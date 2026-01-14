@@ -123,6 +123,8 @@ export interface HostSettings {
   buddy: BuddySettings;
   gameStreamApps: GameStreamAppsSettings;
   nonSteamApps: NonSteamAppsSettings;
+  useCustomWolExec: boolean;
+  customWolExecPath: string;
 }
 
 export interface GameSessionSettings {

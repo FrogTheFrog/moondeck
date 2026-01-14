@@ -13,6 +13,7 @@ import { RunnerSettingsView } from "../components/runnersettingsview";
 import { SetupGuideView } from "../components/setupguideview";
 import { SidebarNavigation } from "@decky/ui";
 import { StatusIndicatorsView } from "../components/statusindicatorsview";
+import { WOLSettingsView } from "../components/wolsettingsview";
 import { routerHook } from "@decky/api";
 
 const MoonDeckRouter: FC<object> = () => {
@@ -67,6 +68,12 @@ const MoonDeckRouter: FC<object> = () => {
           title: "Runner Settings",
           content: <RunnerSettingsView />,
           route: "/moondeck/runner-settings",
+          visible: true
+        },
+        {
+          title: "WOL Settings",
+          content: <WOLSettingsView />,
+          route: "/moondeck/wol-settings",
           visible: true
         },
         "separator",

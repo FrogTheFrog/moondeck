@@ -1,3 +1,4 @@
+from typing import Optional
 from .settingsparser import MoonlightOnlyRunnerSettings
 from ..runnerresult import Result, RunnerError
 from ..gamestreaminfo import get_server_info
@@ -7,13 +8,13 @@ from ..moonlightproxy import CommandLineOptions, MoonlightProxy
 
 class MoonlightOnlyRunner:
     @staticmethod
-    async def check_connectivity(address: str, mac: str, host_id: str, hostname: str, host_port: int, wol_timeout: int, server_timeout: int):
+    async def check_connectivity(address: str, mac: str, host_id: str, hostname: str, host_port: int, custom_wol_exec: Optional[str], wol_timeout: int, server_timeout: int):
         logger.info("Checking connection to GameStream server")
 
         # Lazy import to improve CLI performance
         from .wolsplashscreen import WolSplashScreen
 
-        async with WolSplashScreen(address, mac, wol_timeout, hostname) as splash:
+        async with WolSplashScreen(address, mac, wol_timeout, hostname, custom_wol_exec) as splash:
             while True:
                 server_info = await get_server_info(address=address, 
                                                     port=host_port, 
@@ -48,6 +49,7 @@ class MoonlightOnlyRunner:
                                          host_id=settings["host_id"],
                                          hostname=settings["hostname"],
                                          host_port=settings["host_port"],
+                                         custom_wol_exec=settings["custom_wol_exec_path"],
                                          wol_timeout=settings["timeouts"]["wakeOnLan"],
                                          server_timeout=settings["timeouts"]["servicePing"])
             await cls.start_moonlight(proxy=proxy,

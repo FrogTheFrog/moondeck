@@ -10,9 +10,9 @@ import { sleep } from "@decky/ui";
 
 type PcStateChange = "Restart" | "Shutdown" | "Suspend";
 
-async function wakeOnLan(address: string, mac: string): Promise<void> {
+async function wakeOnLan(hostName: string, address: string, mac: string, customExec: string | null): Promise<void> {
   try {
-    await call<[string, string], unknown>("wake_on_lan", address, mac);
+    await call<[string, string, string, string | null], unknown>("wake_on_lan", hostName, address, mac, customExec);
   } catch (message) {
     logger.critical("Error while sending WOL: ", message);
   }
@@ -78,11 +78,14 @@ export class CommandProxy {
       this.executingSubject.next(true);
       if (this.buddyProxy.status.value === "Offline" && this.serverProxy.status.value === "Offline") {
         const hostSettings = this.settingsManager.hostSettings;
+        const hostName = hostSettings?.hostName ?? null;
         const address = hostSettings?.address ?? null;
         const mac = hostSettings?.mac ?? null;
+        const useCustomExec = hostSettings?.useCustomWolExec ?? false;
+        const customExec = hostSettings?.customWolExecPath ?? null;
 
-        if (address !== null && mac !== null) {
-          await wakeOnLan(address, mac);
+        if (hostName !== null && address !== null && mac !== null && (!useCustomExec || customExec !== null)) {
+          await wakeOnLan(hostName, address, mac, customExec);
           await sleep(2 * 1000);
         }
       }
