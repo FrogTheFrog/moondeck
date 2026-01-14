@@ -6,6 +6,15 @@ export const ChangelogView: FC = () => {
     <DialogBody>
       <DialogControlsSection>
         <Field
+          label="1.11.3"
+          description={
+            <>
+              <div>&bull; Allow WOL to be sent via custom executable.</div>
+            </>
+          }
+          focusable={true}
+        />
+        <Field
           label="1.11.2"
           description={
             <>
