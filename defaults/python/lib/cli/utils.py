@@ -133,13 +133,14 @@ def wol_settings(f):
         settings: CliSettings = cast(CliSettings, kwargs["settings"])
         host_id: str = cast(str, kwargs["host_id"])
 
+        hostname = settings["hosts"][host_id]["hostName"]
         address = settings["hosts"][host_id]["address"]
         mac = settings["hosts"][host_id]["mac"]
         if mac is None:
             logger.error("Host has not been paired yet or the MAC was not synced!")
             return 1
 
-        return await f(*args, wol_address=address, wol_mac=mac, **kwargs)
+        return await f(*args, hostname=hostname, wol_address=address, wol_mac=mac, **kwargs)
 
     return async_wrapper
 

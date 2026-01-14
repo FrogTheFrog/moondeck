@@ -81,9 +81,10 @@ export class CommandProxy {
         const hostName = hostSettings?.hostName ?? null;
         const address = hostSettings?.address ?? null;
         const mac = hostSettings?.mac ?? null;
-        const customExec = hostSettings?.useCustomWolExec ? hostSettings.customWolExecPath : null;
+        const useCustomExec = hostSettings?.useCustomWolExec ?? false;
+        const customExec = hostSettings?.customWolExecPath ?? null;
 
-        if (hostName !== null && address !== null && mac !== null && customExec !== null) {
+        if (hostName !== null && address !== null && mac !== null && (!useCustomExec || customExec !== null)) {
           await wakeOnLan(hostName, address, mac, customExec);
           await sleep(2 * 1000);
         }
