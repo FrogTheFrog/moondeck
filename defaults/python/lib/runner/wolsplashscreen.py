@@ -149,7 +149,8 @@ class WolSplashScreen:
     def __init__(self, address: str, mac: str, timeout: int, hostname: str):
         self.hostname = hostname
         if timeout > 0:
-            wake_on_lan(address=address, mac=mac)
+            # TODO
+            wake_on_lan(hostname=hostname, address=address, mac=mac)
             self.timeout_end = datetime.now(timezone.utc) + timedelta(seconds=timeout)
         else:
             self.timeout_end = None

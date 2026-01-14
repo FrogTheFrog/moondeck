@@ -91,6 +91,7 @@ class HostSettings(TypedDict):
     buddy: BuddySettings
     gameStreamApps: GameStreamAppsSettings
     nonSteamApps: NonSteamAppsSettings
+    wolExecPath: str
 
 
 class GameSessionSettings(TypedDict):
@@ -114,7 +115,7 @@ class ButtonStyleSettings(TypedDict):
 
 
 class UserSettings(TypedDict):
-    version: Literal[36]
+    version: Literal[37]
     clientId: str
     currentHostId: Optional[str]
     gameSession: GameSessionSettings
@@ -356,3 +357,7 @@ class UserSettingsManager(SettingsManager[UserSettings]):
             data["version"] = 36
             if data["gameSession"]["controllerConfig"] == "Noop":
                 data["gameSession"]["controllerConfig"] = None
+        if data["version"] == 36:
+            data["version"] = 37
+            for host in data["hostSettings"].keys():
+                data["hostSettings"][host]["wolExecPath"] = ""

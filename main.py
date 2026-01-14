@@ -138,9 +138,9 @@ class Plugin:
             logger.exception("Unhandled exception")
 
     @utils.async_scope_log(logger.info)
-    async def wake_on_lan(self, address: str, mac: str):
+    async def wake_on_lan(self, hostname: str, address: str, mac: str, custom_exec: str):
         try:
-            wake_on_lan(address, mac)
+            await wake_on_lan(hostname, address, mac, custom_exec)
         except Exception:
             logger.exception("Unhandled exception")
 

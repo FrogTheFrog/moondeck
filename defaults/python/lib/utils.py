@@ -126,46 +126,57 @@ def async_scope_log(log_fn):
     return decorator
 
 
-def wake_on_lan(address: str, mac: str):
-    # Lazy import to improve CLI performance
-    import socket
-    import ipaddress
-    from wakeonlan import send_magic_packet
+async def wake_on_lan(hostname: str, address: str, mac: str, custom_exec: str = ""):
+    if custom_exec:
+        # Lazy import to improve CLI performance
+        import asyncio
 
-    default_port = 9
-
-    def _try_parse_info(ip_address: str):
-        try:
-            parsed_address = ipaddress.ip_address(ip_address)
-            if isinstance(parsed_address, ipaddress.IPv4Address):
-                return socket.AF_INET, ip_address
-            if isinstance(parsed_address, ipaddress.IPv6Address):
-                return socket.AF_INET6, ip_address
-        except ValueError:
-            pass
-
-        return None
-
-    # if valid IP was specified, we don't need to call `getaddrinfo` at all
-    info = _try_parse_info(address)
-    if info:
-        infos = [info]
+        wol_proc = await asyncio.create_subprocess_exec(custom_exec, hostname, address, mac,
+                                                        stdout=asyncio.subprocess.PIPE,
+                                                        stderr=asyncio.subprocess.STDOUT)
+        output, _ = await wol_proc.communicate()
+        newline = "\n"
+        logger.info(f"Custom WOL ({custom_exec}) output:{newline}{output.decode().strip(newline)}")
     else:
-        infos = [(x[0], x[4][0]) for x in socket.getaddrinfo(address, default_port, family=socket.AF_UNSPEC)
-                 if x[0] in [socket.AF_INET, socket.AF_INET6] and isinstance(x[4][0], str)]
+        # Lazy import to improve CLI performance
+        import socket
+        import ipaddress
+        from wakeonlan import send_magic_packet
 
-    if not infos:
-        raise Exception(f"WOL failed - {address} does not have any IPv4 or IPv6 interfaces!") 
+        default_port = 9
 
-    for family, address_info in infos:
-        address_log = address if address == address_info else f"{address} ({address_info})"
-        logger.info(f"Sending WOL ({mac}) to {address_log}")
+        def _try_parse_info(ip_address: str):
+            try:
+                parsed_address = ipaddress.ip_address(ip_address)
+                if isinstance(parsed_address, ipaddress.IPv4Address):
+                    return socket.AF_INET, ip_address
+                if isinstance(parsed_address, ipaddress.IPv6Address):
+                    return socket.AF_INET6, ip_address
+            except ValueError:
+                pass
 
-        if family == socket.AF_INET:
-            # Broadcast for IPv4
-            send_magic_packet(mac, ip_address="255.255.255.255", address_family=family, port=default_port)
+            return None
 
-        send_magic_packet(mac, ip_address=address_info, address_family=family, port=default_port)
+        # if valid IP was specified, we don't need to call `getaddrinfo` at all
+        info = _try_parse_info(address)
+        if info:
+            infos = [info]
+        else:
+            infos = [(x[0], x[4][0]) for x in socket.getaddrinfo(address, default_port, family=socket.AF_UNSPEC)
+                    if x[0] in [socket.AF_INET, socket.AF_INET6] and isinstance(x[4][0], str)]
+
+        if not infos:
+            raise Exception(f"WOL failed - {address} does not have any IPv4 or IPv6 interfaces!") 
+
+        for family, address_info in infos:
+            address_log = address if address == address_info else f"{address} ({address_info})"
+            logger.info(f"Sending WOL ({hostname} - {mac}) to {address_log}")
+
+            if family == socket.AF_INET:
+                # Broadcast for IPv4
+                send_magic_packet(mac, ip_address="255.255.255.255", address_family=family, port=default_port)
+
+            send_magic_packet(mac, ip_address=address_info, address_family=family, port=default_port)
 
 
 def is_moondeck_runner_ready():
