@@ -2,6 +2,7 @@
 import pyglet
 import asyncio
 
+from typing import Optional
 from datetime import datetime, timedelta, timezone
 from ..logger import logger
 from ..utils import wake_on_lan
@@ -146,11 +147,12 @@ class Canvas(pyglet.window.Window):
 
 
 class WolSplashScreen:
-    def __init__(self, address: str, mac: str, timeout: int, hostname: str):
+    def __init__(self, address: str, mac: str, timeout: int, hostname: str, custom_wol_exec: Optional[str]):
+        self.address = address
         self.hostname = hostname
+        self.mac = mac
+        self.custom_wol_exec = custom_wol_exec
         if timeout > 0:
-            # TODO
-            wake_on_lan(hostname=hostname, address=address, mac=mac)
             self.timeout_end = datetime.now(timezone.utc) + timedelta(seconds=timeout)
         else:
             self.timeout_end = None
@@ -180,13 +182,26 @@ class WolSplashScreen:
         self.canvas = Canvas() # Added to pyglet.app.windows
         self.canvas.label.set_text(text=f"Checking connection to {self.hostname}...")
         self.close_flag = False
-        self.task = asyncio.create_task(self.__run_loop())
+        self.wol_task = asyncio.create_task(wake_on_lan(hostname=self.hostname,
+                                                        address=self.address,
+                                                        mac=self.mac,
+                                                        custom_exec=self.custom_wol_exec))
+        self.loop_task = asyncio.create_task(self.__run_loop())
+        self.task = asyncio.wait({self.wol_task, self.loop_task}, return_when=asyncio.FIRST_COMPLETED)
         return self
 
     async def __aexit__(self, exc_type, exc, tb):
         self.close_flag = True
         if self.task:
-            await self.task
+            _, pending = await self.task
+            if self.wol_task in pending:
+                done, _ = await asyncio.wait({self.wol_task}, timeout=2)
+                if self.wol_task in done:
+                    self.wol_task.result()
+                else:
+                    self.wol_task.cancel()
+
+            self.loop_task.result()
 
     def update(self, buddy_status, server_status) -> bool:
         logger.info(f"Buddy: {buddy_status}, Server: {server_status}")

@@ -131,7 +131,9 @@ export class ServerProxy {
         },
         nonSteamApps: {
           showQuickAccessButton: currentSettings?.nonSteamApps.showQuickAccessButton ?? false
-        }
+        },
+        useCustomWolExec: currentSettings?.useCustomWolExec ?? false,
+        customWolExecPath: currentSettings?.customWolExecPath ?? ""
       };
 
       settings.currentHostId = selectHost ? host.uniqueId : settings.currentHostId;

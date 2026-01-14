@@ -20,7 +20,7 @@ import lib.gamestreaminfo as gamestreaminfo
 import lib.constants as constants
 import lib.utils as utils
 
-from typing import cast
+from typing import Optional, cast
 from lib.plugin.settings import UserSettings, UserSettingsManager
 from lib.logger import logger, set_logger_settings
 from lib.buddyrequests import SteamUiMode, SteamUiModeResponse
@@ -138,7 +138,7 @@ class Plugin:
             logger.exception("Unhandled exception")
 
     @utils.async_scope_log(logger.info)
-    async def wake_on_lan(self, hostname: str, address: str, mac: str, custom_exec: str):
+    async def wake_on_lan(self, hostname: str, address: str, mac: str, custom_exec: Optional[str]):
         try:
             await wake_on_lan(hostname, address, mac, custom_exec)
         except Exception:

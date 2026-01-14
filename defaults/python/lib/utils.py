@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Any, Callable, Coroutine, List, Literal, Type, TypedDict, Union, TypeVar, get_args, get_origin, is_typeddict
+from typing import Any, Callable, Coroutine, List, Literal, Optional, Type, TypedDict, Union, TypeVar, get_args, get_origin, is_typeddict
 
 from .logger import logger
 from .constants import RUNNER_READY_FILE
@@ -126,7 +126,7 @@ def async_scope_log(log_fn):
     return decorator
 
 
-async def wake_on_lan(hostname: str, address: str, mac: str, custom_exec: str = ""):
+async def wake_on_lan(hostname: str, address: str, mac: str, custom_exec: Optional[str] = None):
     if custom_exec:
         # Lazy import to improve CLI performance
         import asyncio

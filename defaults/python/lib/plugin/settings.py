@@ -91,7 +91,8 @@ class HostSettings(TypedDict):
     buddy: BuddySettings
     gameStreamApps: GameStreamAppsSettings
     nonSteamApps: NonSteamAppsSettings
-    wolExecPath: str
+    useCustomWolExec: bool
+    customWolExecPath: str
 
 
 class GameSessionSettings(TypedDict):
@@ -360,4 +361,5 @@ class UserSettingsManager(SettingsManager[UserSettings]):
         if data["version"] == 36:
             data["version"] = 37
             for host in data["hostSettings"].keys():
-                data["hostSettings"][host]["wolExecPath"] = ""
+                data["hostSettings"][host]["useCustomWolExec"] = False
+                data["hostSettings"][host]["customWolExecPath"] = ""
