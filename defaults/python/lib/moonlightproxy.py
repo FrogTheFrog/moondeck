@@ -137,37 +137,21 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
     async def terminate(self):
         # Lazy import to improve CLI performance
         import asyncio
-        import psutil
+        from .utils import ps_signal
 
         if self.process is None:
             return
 
         assert self.__proc is not None
-        def ps_signal(kill: bool):
-            def do_signal(proc_or_child):
-                try:
-                    if kill:
-                        proc_or_child.kill()
-                    else:
-                        proc_or_child.terminate()
-                except psutil.NoSuchProcess:
-                    pass
-            
-            proc = cast(psutil.Process, self.__proc)
-            for child in list(proc.children(recursive=True)):
-                do_signal(child)
-
-            do_signal(proc)
-
         try:
             logger.info("Trying to gracefully terminate Moonlight...")
-            ps_signal(kill=False)
+            ps_signal(self.__proc, kill=False)
             try:
                 await asyncio.wait_for(self.process.wait(), timeout=5.0)
                 logger.info("Moonlight terminated gracefully.")
             except asyncio.TimeoutError:
                 logger.info("Moonlight did not terminate in time - killing it!")
-                ps_signal(kill=True)
+                ps_signal(self.__proc, kill=True)
                 await self.process.wait()
         except ProcessLookupError:
             pass

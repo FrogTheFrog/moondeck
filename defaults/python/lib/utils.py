@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Any, Callable, Coroutine, List, Literal, Optional, Type, TypedDict, Union, TypeVar, get_args, get_origin, is_typeddict
+from typing import Any, Callable, Coroutine, List, Literal, Optional, Type, TypedDict, Union, TypeVar, get_args, get_origin, is_typeddict, cast
 
 from .logger import logger
 from .constants import RUNNER_READY_FILE
@@ -126,17 +126,68 @@ def async_scope_log(log_fn):
     return decorator
 
 
+def ps_signal(process, kill: bool):
+    import psutil
+
+    def do_signal(proc_or_child):
+        try:
+            if kill:
+                proc_or_child.kill()
+            else:
+                proc_or_child.terminate()
+        except psutil.NoSuchProcess:
+            pass
+    
+    proc = cast(psutil.Process, process)
+    for child in list(proc.children(recursive=True)):
+        do_signal(child)
+
+    do_signal(proc)
+
+
 async def wake_on_lan(hostname: str, address: str, mac: str, custom_exec: Optional[str] = None):
     if custom_exec:
         # Lazy import to improve CLI performance
         import asyncio
+        import os
+        import psutil
+        import io
 
-        wol_proc = await asyncio.create_subprocess_exec(custom_exec, hostname, address, mac,
-                                                        stdout=asyncio.subprocess.PIPE,
-                                                        stderr=asyncio.subprocess.STDOUT)
-        output, _ = await wol_proc.communicate()
         newline = "\n"
-        logger.info(f"Custom WOL ({custom_exec}) output:{newline}{output.decode().strip(newline)}")
+        buffer = io.StringIO()
+        wol_proc = None
+        ps_proc = None
+        try:
+            env = os.environ.copy()
+            env.pop("LD_LIBRARY_PATH", None)
+            wol_proc = await asyncio.create_subprocess_exec(custom_exec, hostname, address, mac,
+                                                            stdout=asyncio.subprocess.PIPE,
+                                                            stderr=asyncio.subprocess.STDOUT,
+                                                            env=env)
+            ps_proc = psutil.Process(wol_proc.pid)
+
+            async def handle_stream(stream: Optional[asyncio.StreamReader]):
+                if not stream:
+                    raise Exception("NULL WOL exec stream handle!")
+                    return
+
+                while not stream.at_eof():
+                    data = await stream.readline()
+                    buffer.write(data.decode())
+
+            process_task = asyncio.create_task(wol_proc.wait())
+            log_task = asyncio.create_task(handle_stream(wol_proc.stdout))
+            await asyncio.wait([process_task, log_task], return_when=asyncio.ALL_COMPLETED)
+
+            logger.info(f"WOL exec ({custom_exec}) output:{newline}{buffer.getvalue().strip(newline)}")
+            if wol_proc.returncode:
+                raise Exception(f"Custom WOL failed with code {wol_proc.returncode}")
+        except asyncio.CancelledError:
+            if ps_proc:
+                assert wol_proc is not None
+                ps_signal(ps_proc, kill=True)
+                await wol_proc.wait()
+                logger.info(f"WOL exec ({custom_exec}) output before it was killed:{newline}{buffer.getvalue().strip(newline)}")
     else:
         # Lazy import to improve CLI performance
         import socket

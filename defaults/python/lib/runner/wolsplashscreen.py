@@ -174,7 +174,8 @@ class WolSplashScreen:
 
     async def __aenter__(self):
         self.close_flag = True
-        self.task = None
+        self.wol_task = None
+        self.loop_task = None
 
         if self.timeout_end is None:
             return self
@@ -187,19 +188,18 @@ class WolSplashScreen:
                                                         mac=self.mac,
                                                         custom_exec=self.custom_wol_exec))
         self.loop_task = asyncio.create_task(self.__run_loop())
-        self.task = asyncio.wait({self.wol_task, self.loop_task}, return_when=asyncio.FIRST_COMPLETED)
         return self
 
     async def __aexit__(self, exc_type, exc, tb):
         self.close_flag = True
-        if self.task:
-            _, pending = await self.task
-            if self.wol_task in pending:
-                done, _ = await asyncio.wait({self.wol_task}, timeout=2)
-                if self.wol_task in done:
-                    self.wol_task.result()
-                else:
+        if self.loop_task:
+            await self.loop_task
+
+            if self.wol_task:
+                _, pending = await asyncio.wait({self.wol_task}, timeout=1)
+                if self.wol_task in pending:
                     self.wol_task.cancel()
+                    await asyncio.wait({self.wol_task}) 
 
             self.loop_task.result()
 
@@ -207,6 +207,10 @@ class WolSplashScreen:
         logger.info(f"Buddy: {buddy_status}, Server: {server_status}")
         if self.close_flag or self.timeout_end is None:
             return False
+        
+        if self.wol_task and self.wol_task.done():
+            self.wol_task.result()
+            self.wol_task = None
 
         if ((buddy_status is None or buddy_status) and server_status) or (datetime.now(timezone.utc) > self.timeout_end):
             return False
