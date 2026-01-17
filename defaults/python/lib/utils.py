@@ -218,16 +218,31 @@ async def wake_on_lan(hostname: str, address: str, mac: str, custom_exec: Option
 
         if not infos:
             raise Exception(f"WOL failed - {address} does not have any IPv4 or IPv6 interfaces!") 
+        
+        tried_addresses = []
+        def try_send_magic_packet(ip_address, family):
+            try:
+                if (ip_address, family) in tried_addresses:
+                    return
+
+                tried_addresses.append((ip_address, family))
+                address_log = address if address == ip_address else f"{address} ({ip_address})"
+                logger.info(f"Sending WOL ({hostname} - {mac}) to {address_log}")
+
+                send_magic_packet(mac, address_info, family, port=default_port)
+            except OSError as err:
+                acceptable_errors = [101]
+                if err.errno in acceptable_errors:
+                    logger.warning(f"WOL failed: {str(err)}")
+                else:
+                    raise
 
         for family, address_info in infos:
-            address_log = address if address == address_info else f"{address} ({address_info})"
-            logger.info(f"Sending WOL ({hostname} - {mac}) to {address_log}")
-
             if family == socket.AF_INET:
                 # Broadcast for IPv4
-                send_magic_packet(mac, ip_address="255.255.255.255", address_family=family, port=default_port)
+                try_send_magic_packet("255.255.255.255", family)
 
-            send_magic_packet(mac, ip_address=address_info, address_family=family, port=default_port)
+            try_send_magic_packet(address_info, family)
 
 
 def is_moondeck_runner_ready():
