@@ -230,7 +230,7 @@ async def wake_on_lan(hostname: str, address: str, mac: str, custom_exec: Option
                 address_log = address if address == ip_address else f"{address} ({ip_address})"
                 logger.info(f"Sending WOL ({hostname} - {mac}) to {address_log}")
 
-                send_magic_packet(mac, address_info, family, port=default_port)
+                send_magic_packet(mac, ip_address=ip_address, address_family=family, port=default_port)
             except OSError as err:
                 acceptable_errors = [101]
                 if err.errno in acceptable_errors:
