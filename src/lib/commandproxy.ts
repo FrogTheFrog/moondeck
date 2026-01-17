@@ -85,7 +85,7 @@ export class CommandProxy {
         const customExec = hostSettings?.customWolExecPath ?? null;
 
         if (hostName !== null && address !== null && mac !== null && (!useCustomExec || customExec !== null)) {
-          await wakeOnLan(hostName, address, mac, customExec);
+          await wakeOnLan(hostName, address, mac, useCustomExec ? customExec : null);
           await sleep(2 * 1000);
         }
       }
