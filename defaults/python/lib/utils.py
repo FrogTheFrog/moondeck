@@ -222,10 +222,11 @@ async def wake_on_lan(hostname: str, address: str, mac: str, custom_exec: Option
         tried_addresses = []
         def try_send_magic_packet(ip_address, family):
             try:
-                if (ip_address, family) in tried_addresses:
+                cache_key = (ip_address, family)
+                if cache_key in tried_addresses:
                     return
 
-                tried_addresses.append((ip_address, family))
+                tried_addresses.append(cache_key)
                 address_log = address if address == ip_address else f"{address} ({ip_address})"
                 logger.info(f"Sending WOL ({hostname} - {mac}) to {address_log}")
 
