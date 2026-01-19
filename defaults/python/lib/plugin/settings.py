@@ -73,6 +73,12 @@ class NonSteamAppsSettings(TypedDict):
     showQuickAccessButton: bool
 
 
+class WolSettings(TypedDict):
+    useCustomWolExec: bool
+    customWolExecPath: str
+    port: int
+
+
 class HostSettings(TypedDict):
     hostInfoPort: int
     address: str
@@ -91,8 +97,7 @@ class HostSettings(TypedDict):
     buddy: BuddySettings
     gameStreamApps: GameStreamAppsSettings
     nonSteamApps: NonSteamAppsSettings
-    useCustomWolExec: bool
-    customWolExecPath: str
+    wolSettings: WolSettings
 
 
 class GameSessionSettings(TypedDict):
@@ -116,7 +121,7 @@ class ButtonStyleSettings(TypedDict):
 
 
 class UserSettings(TypedDict):
-    version: Literal[37]
+    version: Literal[38]
     clientId: str
     currentHostId: Optional[str]
     gameSession: GameSessionSettings
@@ -363,3 +368,13 @@ class UserSettingsManager(SettingsManager[UserSettings]):
             for host in data["hostSettings"].keys():
                 data["hostSettings"][host]["useCustomWolExec"] = False
                 data["hostSettings"][host]["customWolExecPath"] = ""
+        if data["version"] == 37:
+            data["version"] = 38
+            for host in data["hostSettings"].keys():
+                data["hostSettings"][host]["wolSettings"] = {
+                    "useCustomWolExec": data["hostSettings"][host]["useCustomWolExec"],
+                    "customWolExecPath": data["hostSettings"][host]["customWolExecPath"],
+                    "port": 9,
+                }
+                del data["hostSettings"][host]["useCustomWolExec"]
+                del data["hostSettings"][host]["customWolExecPath"]

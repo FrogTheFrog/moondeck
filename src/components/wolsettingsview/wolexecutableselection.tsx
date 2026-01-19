@@ -20,7 +20,7 @@ export const WOLExecutableSelection: FC<Props> = ({ hostSettings }) => {
       return null;
     }).then((result) => {
       if (result !== null) {
-        settingsManager.updateHost((settings) => { settings.customWolExecPath = result.realpath; });
+        settingsManager.updateHost((settings) => { settings.wolSettings.customWolExecPath = result.realpath; });
       }
     }).catch((error) => logger.error(error));
   };
@@ -32,12 +32,12 @@ export const WOLExecutableSelection: FC<Props> = ({ hostSettings }) => {
         description={
           <>
             <div>Use provided executable to send Wake On Lan (WOL) to the host.</div>
-            <div>The executable will be receive the following arguments: HOSTNAME, IP_ADDRESS, MAC</div>
+            <div>The executable will be receive the following arguments: HOSTNAME, IP_ADDRESS, PORT, MAC</div>
           </>
         }
         bottomSeparator="none"
-        value={hostSettings.useCustomWolExec}
-        setValue={(value) => settingsManager.updateHost((settings) => { settings.useCustomWolExec = value; })}
+        value={hostSettings.wolSettings.useCustomWolExec}
+        setValue={(value) => settingsManager.updateHost((settings) => { settings.wolSettings.useCustomWolExec = value; })}
       />
       <Field
         childrenContainerWidth="max"
@@ -45,14 +45,14 @@ export const WOLExecutableSelection: FC<Props> = ({ hostSettings }) => {
       >
         <Focusable style={{ display: "grid", gap: "10px", gridTemplateColumns: "1fr auto" }}>
           <AnyTextInput
-            disabled={!hostSettings.useCustomWolExec}
-            value={hostSettings.customWolExecPath}
-            setValue={(value) => settingsManager.updateHost((settings) => { settings.customWolExecPath = value; })}
+            disabled={!hostSettings.wolSettings.useCustomWolExec}
+            value={hostSettings.wolSettings.customWolExecPath}
+            setValue={(value) => settingsManager.updateHost((settings) => { settings.wolSettings.customWolExecPath = value; })}
           />
           <DialogButton
             style={{ minWidth: "initial", width: "initial" }}
-            disabled={!hostSettings.useCustomWolExec}
-            focusable={hostSettings.useCustomWolExec}
+            disabled={!hostSettings.wolSettings.useCustomWolExec}
+            focusable={hostSettings.wolSettings.useCustomWolExec}
             onClick={() => browseForExec()}
           >
             Browse

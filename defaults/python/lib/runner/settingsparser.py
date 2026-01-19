@@ -29,6 +29,7 @@ class MoonDeckAppRunnerSettings(TypedDict):
     timeouts: RunnerTimeouts
     moonlight_exec_path: Optional[str]
     custom_wol_exec_path: Optional[str]
+    wol_port: int
     app_id: str
     debug_logs: bool
     runner_type: Literal[RunnerType.MoonDeck]
@@ -45,6 +46,7 @@ class MoonlightOnlyRunnerSettings(TypedDict):
     timeouts: RunnerTimeouts
     moonlight_exec_path: Optional[str]
     custom_wol_exec_path: Optional[str]
+    wol_port: int
     debug_logs: bool
     runner_type: Literal[RunnerType.MoonlightOnly]
 
@@ -181,7 +183,8 @@ async def parse_settings() -> MoonDeckAppRunnerSettings | MoonlightOnlyRunnerSet
             "close_steam": CloseSteam[host_settings["buddy"]["closeSteam"]] if host_settings["buddy"]["closeSteam"] else None,
             "timeouts": host_settings["runnerTimeouts"],
             "moonlight_exec_path": user_settings["moonlightExecPath"] if user_settings["useMoonlightExec"] else None,
-            "custom_wol_exec_path": host_settings["customWolExecPath"] if host_settings["useCustomWolExec"] else None,
+            "custom_wol_exec_path": host_settings["wolSettings"]["customWolExecPath"] if host_settings["wolSettings"]["useCustomWolExec"] else None,
+            "wol_port": host_settings["wolSettings"]["port"],
             "app_id": env_settings["app_id"],
             "debug_logs": user_settings["runnerDebugLogs"],
             "runner_type": RunnerType.MoonDeck
@@ -200,7 +203,8 @@ async def parse_settings() -> MoonDeckAppRunnerSettings | MoonlightOnlyRunnerSet
             "host_port": host_settings["hostInfoPort"],
             "timeouts": host_settings["runnerTimeouts"],
             "moonlight_exec_path": user_settings["moonlightExecPath"] if user_settings["useMoonlightExec"] else None,
-            "custom_wol_exec_path": host_settings["customWolExecPath"] if host_settings["useCustomWolExec"] else None,
+            "custom_wol_exec_path": host_settings["wolSettings"]["customWolExecPath"] if host_settings["wolSettings"]["useCustomWolExec"] else None,
+            "wol_port": host_settings["wolSettings"]["port"],
             "debug_logs": user_settings["runnerDebugLogs"],
             "runner_type": RunnerType.MoonlightOnly
         })

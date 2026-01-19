@@ -145,7 +145,9 @@ def ps_signal(process, kill: bool):
     do_signal(proc)
 
 
-async def wake_on_lan(hostname: str, address: str, mac: str, custom_exec: Optional[str] = None):
+async def wake_on_lan(hostname: str, address: str, mac: str, port: int = 9, custom_exec: Optional[str] = None):
+    assert port > 0 and port <= 65535
+
     if custom_exec:
         # Lazy import to improve CLI performance
         import asyncio
@@ -160,7 +162,7 @@ async def wake_on_lan(hostname: str, address: str, mac: str, custom_exec: Option
         try:
             env = os.environ.copy()
             env.pop("LD_LIBRARY_PATH", None)
-            wol_proc = await asyncio.create_subprocess_exec(custom_exec, hostname, address, mac,
+            wol_proc = await asyncio.create_subprocess_exec(custom_exec, hostname, address, f"{port}", mac,
                                                             stdout=asyncio.subprocess.PIPE,
                                                             stderr=asyncio.subprocess.STDOUT,
                                                             env=env)
@@ -194,8 +196,6 @@ async def wake_on_lan(hostname: str, address: str, mac: str, custom_exec: Option
         import ipaddress
         from wakeonlan import send_magic_packet
 
-        default_port = 9
-
         def _try_parse_info(ip_address: str):
             try:
                 parsed_address = ipaddress.ip_address(ip_address)
@@ -213,7 +213,7 @@ async def wake_on_lan(hostname: str, address: str, mac: str, custom_exec: Option
         if info:
             infos = [info]
         else:
-            infos = [(x[0], x[4][0]) for x in socket.getaddrinfo(address, default_port, family=socket.AF_UNSPEC)
+            infos = [(x[0], x[4][0]) for x in socket.getaddrinfo(address, port, family=socket.AF_UNSPEC)
                     if x[0] in [socket.AF_INET, socket.AF_INET6] and isinstance(x[4][0], str)]
 
         if not infos:
@@ -228,9 +228,9 @@ async def wake_on_lan(hostname: str, address: str, mac: str, custom_exec: Option
 
                 tried_addresses.append(cache_key)
                 address_log = address if address == ip_address else f"{address} ({ip_address})"
-                logger.info(f"Sending WOL ({hostname} - {mac}) to {address_log}")
+                logger.info(f"Sending WOL ({hostname} - {mac}) to {address_log} on port {port}")
 
-                send_magic_packet(mac, ip_address=ip_address, address_family=family, port=default_port)
+                send_magic_packet(mac, ip_address=ip_address, address_family=family, port=port)
             except OSError as err:
                 acceptable_errors = [101]
                 if err.errno in acceptable_errors:

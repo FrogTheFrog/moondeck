@@ -132,8 +132,11 @@ export class ServerProxy {
         nonSteamApps: {
           showQuickAccessButton: currentSettings?.nonSteamApps.showQuickAccessButton ?? false
         },
-        useCustomWolExec: currentSettings?.useCustomWolExec ?? false,
-        customWolExecPath: currentSettings?.customWolExecPath ?? ""
+        wolSettings: {
+          useCustomWolExec: currentSettings?.wolSettings.useCustomWolExec ?? false,
+          customWolExecPath: currentSettings?.wolSettings.customWolExecPath ?? "",
+          port: currentSettings?.wolSettings.port ?? 9
+        }
       };
 
       settings.currentHostId = selectHost ? host.uniqueId : settings.currentHostId;

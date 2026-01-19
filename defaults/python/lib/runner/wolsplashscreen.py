@@ -147,10 +147,11 @@ class Canvas(pyglet.window.Window):
 
 
 class WolSplashScreen:
-    def __init__(self, address: str, mac: str, timeout: int, hostname: str, custom_wol_exec: Optional[str]):
+    def __init__(self, address: str, mac: str, timeout: int, hostname: str, wol_port: int, custom_wol_exec: Optional[str]):
         self.address = address
         self.hostname = hostname
         self.mac = mac
+        self.wol_port = wol_port
         self.custom_wol_exec = custom_wol_exec
         if timeout > 0:
             self.timeout_end = datetime.now(timezone.utc) + timedelta(seconds=timeout)
@@ -186,6 +187,7 @@ class WolSplashScreen:
         self.wol_task = asyncio.create_task(wake_on_lan(hostname=self.hostname,
                                                         address=self.address,
                                                         mac=self.mac,
+                                                        port=self.wol_port,
                                                         custom_exec=self.custom_wol_exec))
         self.loop_task = asyncio.create_task(self.__run_loop())
         return self

@@ -105,6 +105,12 @@ export interface NonSteamAppsSettings {
   showQuickAccessButton: boolean;
 }
 
+export interface WolSettings {
+  useCustomWolExec: boolean;
+  customWolExecPath: string;
+  port: number;
+}
+
 export interface HostSettings {
   hostInfoPort: number;
   address: string;
@@ -123,8 +129,7 @@ export interface HostSettings {
   buddy: BuddySettings;
   gameStreamApps: GameStreamAppsSettings;
   nonSteamApps: NonSteamAppsSettings;
-  useCustomWolExec: boolean;
-  customWolExecPath: string;
+  wolSettings: WolSettings;
 }
 
 export interface GameSessionSettings {

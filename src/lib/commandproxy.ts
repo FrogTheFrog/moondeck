@@ -10,9 +10,9 @@ import { sleep } from "@decky/ui";
 
 type PcStateChange = "Restart" | "Shutdown" | "Suspend";
 
-async function wakeOnLan(hostName: string, address: string, mac: string, customExec: string | null): Promise<void> {
+async function wakeOnLan(hostName: string, address: string, mac: string, port: number, customExec: string | null): Promise<void> {
   try {
-    await call<[string, string, string, string | null], unknown>("wake_on_lan", hostName, address, mac, customExec);
+    await call<[string, string, string, number, string | null], unknown>("wake_on_lan", hostName, address, mac, port, customExec);
   } catch (message) {
     logger.critical("Error while sending WOL: ", message);
   }
@@ -81,11 +81,12 @@ export class CommandProxy {
         const hostName = hostSettings?.hostName ?? null;
         const address = hostSettings?.address ?? null;
         const mac = hostSettings?.mac ?? null;
-        const useCustomExec = hostSettings?.useCustomWolExec ?? false;
-        const customExec = hostSettings?.customWolExecPath ?? null;
+        const port = hostSettings?.wolSettings.port ?? null;
+        const useCustomExec = hostSettings?.wolSettings.useCustomWolExec ?? false;
+        const customExec = hostSettings?.wolSettings.customWolExecPath ?? null;
 
-        if (hostName !== null && address !== null && mac !== null && (!useCustomExec || customExec !== null)) {
-          await wakeOnLan(hostName, address, mac, useCustomExec ? customExec : null);
+        if (hostName !== null && address !== null && mac !== null && port !== null && (!useCustomExec || customExec !== null)) {
+          await wakeOnLan(hostName, address, mac, port, useCustomExec ? customExec : null);
           await sleep(2 * 1000);
         }
       }

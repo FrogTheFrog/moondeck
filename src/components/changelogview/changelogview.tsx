@@ -10,6 +10,7 @@ export const ChangelogView: FC = () => {
           description={
             <>
               <div>&bull; Allow WOL to be sent via custom executable.</div>
+              <div>&bull; WOL port can now be specified.</div>
             </>
           }
           focusable={true}
