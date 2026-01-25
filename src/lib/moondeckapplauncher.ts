@@ -5,7 +5,6 @@ import { getEnvKeyValueString, makeEnvKeyValue } from "./envutils";
 import { AppDetails } from "@decky/ui/dist/globals/steam-client/App";
 import { AppSyncState } from "./appsyncstate";
 import { CommandProxy } from "./commandproxy";
-import { ESuspendResumeProgressState } from "@decky/ui/dist/globals/steam-client/User";
 import { EThirdPartyControllerConfiguration } from "@decky/ui/dist/globals/steam-client/Input";
 import { ExternalAppShortcuts } from "./externalappshortcuts";
 import { MoonDeckAppProxy } from "./moondeckapp";
@@ -202,34 +201,32 @@ export class MoonDeckAppLauncher {
   }
 
   private initSuspension(): void {
-    this.unregisterSuspension = registerForSuspendNotifictions(async (info) => {
-      if (info.state === ESuspendResumeProgressState.Complete && this.moonDeckApp.value !== null) {
+    this.unregisterSuspension = registerForSuspendNotifictions(async () => {
+      if (this.moonDeckApp.value !== null) {
         logger.log("Suspending MoonDeck app.");
         await this.moonDeckApp.suspendApp();
       }
-    }, async (info) => {
-      if (info.state === ESuspendResumeProgressState.Complete) {
-        const resumeAfterSuspend = this.settingsManager.settings.value?.gameSession.resumeAfterSuspend ?? false;
-        if (!resumeAfterSuspend) {
-          await this.moonDeckApp.clearApp();
-          return;
-        }
+    }, async () => {
+      const resumeAfterSuspend = this.settingsManager.settings.value?.gameSession.resumeAfterSuspend ?? false;
+      if (!resumeAfterSuspend) {
+        await this.moonDeckApp.clearApp();
+        return;
+      }
 
-        logger.log("Waiting for internet connection to resume MoonDeck app.");
-        const connection = await waitForNetworkConnection(this.settingsManager.hostSettings?.runnerTimeouts.networkReconnectAfterSuspend ?? networkReconnectAfterSuspendDefault);
+      logger.log("Waiting for internet connection to resume MoonDeck app.");
+      const connection = await waitForNetworkConnection(this.settingsManager.hostSettings?.runnerTimeouts.networkReconnectAfterSuspend ?? networkReconnectAfterSuspendDefault);
 
-        if (this.moonDeckApp.value === null) {
-          logger.log("MoonDeck app has been started manually already.");
-          return;
-        }
+      if (this.moonDeckApp.value === null) {
+        logger.log("MoonDeck app has been started manually already.");
+        return;
+      }
 
-        if (connection) {
-          logger.log(`Relaunching app ${this.moonDeckApp.value.steamAppId} after suspend.`);
-          await this.launchApp(this.moonDeckApp.value.steamAppId, this.moonDeckApp.value.name, this.moonDeckApp.value.appType, true);
-        } else {
-          logger.toast("Not resuming session - no network connection!", { output: "warn" });
-          await this.moonDeckApp.clearApp();
-        }
+      if (connection) {
+        logger.log(`Relaunching app ${this.moonDeckApp.value.steamAppId} after suspend.`);
+        await this.launchApp(this.moonDeckApp.value.steamAppId, this.moonDeckApp.value.name, this.moonDeckApp.value.appType, true);
+      } else {
+        logger.toast("Not resuming session - no network connection!", { output: "warn" });
+        await this.moonDeckApp.clearApp();
       }
     });
   }

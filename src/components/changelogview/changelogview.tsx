@@ -11,6 +11,7 @@ export const ChangelogView: FC = () => {
             <>
               <div>&bull; Allow WOL to be sent via custom executable.</div>
               <div>&bull; WOL port can now be specified.</div>
+              <div>&bull; Terminate Moonlight earlier when SteamDeck gets suspended - this should result in less graphical glitches during suspend.</div>
             </>
           }
           focusable={true}
