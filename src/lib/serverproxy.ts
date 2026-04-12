@@ -209,7 +209,7 @@ export class ServerProxy {
     const clientId = this.settingsManager.settings.value?.clientId ?? null;
 
     if (address === null || buddyPort === null || clientId === null) {
-      return "Offlina";
+      return "Offline";
     }
 
     const result = await startPairing(address, buddyPort, clientId, pin, 5);
