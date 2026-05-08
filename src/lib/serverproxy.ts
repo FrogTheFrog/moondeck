@@ -1,4 +1,4 @@
-import { HostSettings, SettingsManager, appLaunchDefault, appLaunchStabilityDefault, buddyRequestsDefault, initialConditionsDefault, networkReconnectAfterSuspendDefault, servicePingDefault, steamLaunchAfterSuspendDefault, steamLaunchDefault, steamReadinessDefault, streamEndDefault, streamReadinessDefault, wakeOnLanDefault } from "./settingsmanager";
+import { HostSettings, SettingsManager, appLaunchDefault, appLaunchStabilityDefault, buddyRequestsDefault, initialConditionsDefault, networkReconnectAfterSuspendDefault, servicePingDefault, steamLaunchAfterSuspendDefault, steamLaunchDefault, steamReadinessDefault, streamEndDefault, streamReadinessDefault, userSwitch, wakeOnLanDefault } from "./settingsmanager";
 import { BehaviorSubject } from "rxjs";
 import { BuddyProxy } from "./buddyproxy";
 import { Mutex } from "async-mutex";
@@ -109,6 +109,7 @@ export class ServerProxy {
           initialConditions: currentSettings?.runnerTimeouts.initialConditions ?? initialConditionsDefault,
           streamReadiness: currentSettings?.runnerTimeouts.streamReadiness ?? streamReadinessDefault,
           steamReadiness: currentSettings?.runnerTimeouts.steamReadiness ?? steamReadinessDefault,
+          userSwitch: currentSettings?.runnerTimeouts.userSwitch ?? userSwitch,
           appLaunch: currentSettings?.runnerTimeouts.appLaunch ?? appLaunchDefault,
           appLaunchStability: currentSettings?.runnerTimeouts.appLaunchStability ?? appLaunchStabilityDefault,
           streamEnd: currentSettings?.runnerTimeouts.streamEnd ?? streamEndDefault,

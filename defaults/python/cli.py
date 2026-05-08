@@ -39,12 +39,28 @@ def arg_type(value_type, min_value=None, max_value=None):
     return checker
 
 
+def pair_type(first_type, second_type):
+    def checker(arg: str):
+        try:
+            args = arg.split(",")
+            if len(args) != 2:
+                raise ArgumentTypeError(f"{arg} must be separated by a single comma!")
+
+            f = (first_type(args[0].strip()), second_type(args[1].strip()))
+        except ValueError:
+            raise ArgumentTypeError(f"first item must be valid {first_type} and second item must be valid {second_type}")
+        return f
+
+    return checker
+
+
 # Custom types
 TYPE_TIMEOUT = arg_type(float, min_value=1)
 TYPE_RETRY = arg_type(int, min_value=1)
 TYPE_PORT = arg_type(int, min_value=0, max_value=65535)
 TYPE_PIN = arg_type(int, min_value=1000, max_value=9999)
 TYPE_DELAY = arg_type(int, min_value=1, max_value=30)
+TYPE_STEAM_USER = arg_type(pair_type(str, str))
 
 # Common descriptions
 DESC_HOST = "host id, name or address (default: the \"default\" host)"
@@ -58,7 +74,7 @@ DESC_DELAY = "how long Buddy should wait until executing the command (default: %
 
 # Common defaults
 DEF_TIMEOUT = 5.0
-DEF_DELAY = 10.0
+DEF_DELAY = 10
 
 
 class CustomArgumentDefaultsHelpFormatter(HelpFormatter):
@@ -157,6 +173,8 @@ def add_cmd_app(main_subparsers: _SubParsersAction[ArgumentParserWithRedirect]):
     launch_parser.add_argument(
         "--bpm", action="store_true", help="ensure that Steam is running in the Big Picture Mode")
     launch_parser.add_argument(
+        "--user", type=TYPE_STEAM_USER, default=None, help="a pair of <user_id,username> for switching the account before launching the app")
+    launch_parser.add_argument(
         "--no-stream", action="store_true", help="do not manage the lifetime of MoonDeckStream - will also make related args obsolete")
     launch_parser.add_argument(
         "--no-cleanup", action="store_true", help="do not end MoonDeckStream or clear monitored app data if launch fails")
@@ -172,6 +190,8 @@ def add_cmd_app(main_subparsers: _SubParsersAction[ArgumentParserWithRedirect]):
         "--launch-retries", type=TYPE_RETRY, default=30, help="how long to wait until app's state changes from \"Stopped\" (default: %(default)s time(s))")
     launch_parser.add_argument(
         "--stream-end-retries", type=TYPE_RETRY, default=15, help="how long to until the MoonDeckStream is ended at the end of successful session (default: %(default)s time(s))")
+    launch_parser.add_argument(
+        "--user-switch-retries", type=TYPE_RETRY, default=60, help="how long to until the Steam user account is switched (default: %(default)s time(s))")
 
     # -------- Setup `status` command
     status_parser = app_subparsers.add_parser(
@@ -354,6 +374,8 @@ def add_cmd_steam(main_subparsers: _SubParsersAction[ArgumentParserWithRedirect]
         "--buddy-timeout", type=TYPE_TIMEOUT, default=DEF_TIMEOUT, help=DESC_BUDDY_TIMEOUT)
     launch_parser.add_argument(
         "--bpm", action="store_true", help="launch Steam in Big Picture Mode")
+    launch_parser.add_argument(
+        "--username", type=str, default=None, help="launch Steam in Big Picture Mode")
     
     # -------- Setup `status` command
     status_parser = steam_subparsers.add_parser(

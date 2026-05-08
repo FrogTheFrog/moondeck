@@ -14,6 +14,11 @@ class CloseSteam(Enum):
     BigPictureMode = 1
 
 
+class SteamUser(TypedDict):
+    id: str
+    name: str
+
+
 class MoonDeckAppRunnerSettings(TypedDict):
     cmd_options: CommandLineOptions
     host_app: str
@@ -31,6 +36,7 @@ class MoonDeckAppRunnerSettings(TypedDict):
     custom_wol_exec_path: Optional[str]
     wol_port: int
     app_id: str
+    steam_user: Optional[SteamUser]
     debug_logs: bool
     runner_type: Literal[RunnerType.MoonDeck]
 
@@ -168,6 +174,12 @@ async def parse_settings() -> MoonDeckAppRunnerSettings | MoonlightOnlyRunnerSet
     if env_settings["runner_type"] == RunnerType.MoonDeck:
         if env_settings["app_id"] is None:
             raise RunnerError(Result.NoAppId)
+        
+        if env_settings["user_id"] is None:
+            raise RunnerError(Result.NoUserId)
+        
+        if env_settings["username"] is None:
+            raise RunnerError(Result.NoUsername)
 
         return MoonDeckAppRunnerSettings({
             "cmd_options": parse_cmd_options(pass_to_moonlight, host_settings=host_settings, env_settings=env_settings),
@@ -186,6 +198,7 @@ async def parse_settings() -> MoonDeckAppRunnerSettings | MoonlightOnlyRunnerSet
             "custom_wol_exec_path": host_settings["wolSettings"]["customWolExecPath"] if host_settings["wolSettings"]["useCustomWolExec"] else None,
             "wol_port": host_settings["wolSettings"]["port"],
             "app_id": env_settings["app_id"],
+            "steam_user": SteamUser(id=env_settings["user_id"], name=env_settings["username"]),
             "debug_logs": user_settings["runnerDebugLogs"],
             "runner_type": RunnerType.MoonDeck
         })

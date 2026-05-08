@@ -23,7 +23,7 @@ import lib.utils as utils
 from typing import Optional, cast
 from lib.plugin.settings import UserSettings, UserSettingsManager
 from lib.logger import logger, set_logger_settings
-from lib.buddyrequests import SteamUiMode, SteamUiModeResponse
+from lib.buddyrequests import SteamUiMode, SteamUiModeResponse, CurrentUserResponse
 from lib.buddyclient import BuddyClient, PcStateChange, BuddyException
 from lib.utils import wake_on_lan, change_moondeck_runner_ready_state, TimedPooler
 from lib.runnerresult import Result, set_result, get_result
@@ -232,15 +232,17 @@ class Plugin:
         try:
             async with BuddyClient(address, buddy_port, client_id, buddy_timeout) as client:
                 logger.info(f"Sending request to launch Steam if needed")
-                await client.launch_steam(big_picture_mode=False)
+                await client.launch_steam(big_picture_mode=False, username=None)
 
                 logger.info("Waiting for Steam to be ready")
                 pooler = TimedPooler(retries=ready_timeout,
                                      exception_on_retry_out=BuddyException(Result.SteamDidNotReadyUpInTime))
 
-                async for req, in pooler(client.get_steam_ui_mode):
-                    mode = cast(SteamUiModeResponse, req)["mode"]
-                    if mode != SteamUiMode.Unknown:
+                async for req1, req2 in pooler(client.get_steam_ui_mode, client.get_current_user):
+                    mode = cast(SteamUiModeResponse, req1)["mode"]
+                    current_user = cast(CurrentUserResponse, req2)["user"]
+                    
+                    if mode != SteamUiMode.Unknown or current_user != None:
                         break
 
                 return await client.get_non_steam_app_data(user_id=user_id)

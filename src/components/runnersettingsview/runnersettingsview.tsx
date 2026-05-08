@@ -1,7 +1,7 @@
 import { DialogBody, DialogControlsSection, DialogControlsSectionHeader, Field } from "@decky/ui";
 import { FC, useContext } from "react";
 import { LabelWithIcon, NumericTextInput, ToggleField } from "../shared";
-import { appLaunchDefault, appLaunchStabilityDefault, buddyRequestsDefault, initialConditionsDefault, networkReconnectAfterSuspendDefault, servicePingDefault, steamLaunchAfterSuspendDefault, steamLaunchDefault, steamReadinessDefault, streamEndDefault, streamReadinessDefault, wakeOnLanDefault } from "../../lib";
+import { appLaunchDefault, appLaunchStabilityDefault, buddyRequestsDefault, initialConditionsDefault, networkReconnectAfterSuspendDefault, servicePingDefault, steamLaunchAfterSuspendDefault, steamLaunchDefault, steamReadinessDefault, streamEndDefault, streamReadinessDefault, userSwitch, wakeOnLanDefault } from "../../lib";
 import { useCurrentHostSettings, useCurrentSettings } from "../../hooks";
 import { HostOff } from "../icons";
 import { MoonDeckContext } from "../../contexts";
@@ -95,6 +95,17 @@ export const RunnerSettingsView: FC = () => {
             min={1}
             value={hostSettings.runnerTimeouts.steamReadiness}
             setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.runnerTimeouts.steamReadiness = value; })}
+          />
+        </Field>
+        <Field
+          label={`userSwitch (default: ${userSwitch})`}
+          description="Timeout for how long to wait for the user account to be switched if needed."
+          childrenContainerWidth="fixed"
+        >
+          <NumericTextInput
+            min={5}
+            value={hostSettings.runnerTimeouts.userSwitch}
+            setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.runnerTimeouts.userSwitch = value; })}
           />
         </Field>
         <Field

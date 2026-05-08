@@ -6,6 +6,16 @@ export const ChangelogView: FC = () => {
     <DialogBody>
       <DialogControlsSection>
         <Field
+          label="1.12.0"
+          description={
+            <>
+              <div>&bull; Bumped MoonDeckBuddy minimum version to v1.10.0.</div>
+              <div>&bull; MoonDeck will now automatically switch Steam account on host if needed.</div>
+            </>
+          }
+          focusable={true}
+        />
+        <Field
           label="1.11.3"
           description={
             <>

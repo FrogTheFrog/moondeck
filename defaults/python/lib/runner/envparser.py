@@ -21,6 +21,8 @@ class EnvSettings(TypedDict):
     linked_display: Optional[str]
     app_id: Optional[str]
     app_name: Optional[str]
+    user_id: Optional[str]
+    username: Optional[str]
     runner_type: Optional[RunnerType]
 
 
@@ -69,6 +71,14 @@ def get_app_name() -> Optional[str]:
     return os.environ.get("MOONDECK_APP_NAME")
 
 
+def get_user_id() -> Optional[str]:
+    return os.environ.get("MOONDECK_STEAM_USER_ID")
+
+
+def get_username() -> Optional[str]:
+    return os.environ.get("SteamUser")
+
+
 def get_runner_type() -> Optional[RunnerType]:
     app_type = os.environ.get("MOONDECK_APP_TYPE")
     try:
@@ -91,5 +101,7 @@ def parse_env_settings() -> EnvSettings:
         "linked_display": get_linked_display(),
         "app_id": get_app_id(),
         "app_name": get_app_name(),
+        "user_id": get_user_id(),
+        "username": get_username(),
         "runner_type": get_runner_type()
     }

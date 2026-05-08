@@ -96,6 +96,10 @@ class GetNonSteamAppDataResult(Enum):
     Failed = "Failed to get non-Steam app data via Buddy!"
 
 
+class GetCurrentUserResult(Enum):
+    Failed = "Failed to get current user id via Buddy!"
+
+
 class BuddyException(Exception):
     def __init__(self, result: Enum):
         super().__init__(result.value)
@@ -211,10 +215,10 @@ class BuddyClient(contextlib.AbstractAsyncContextManager):
 
         return await self._try_request(request(), SteamUiModeResult.Failed)
 
-    async def launch_steam(self, big_picture_mode: bool):
+    async def launch_steam(self, big_picture_mode: bool, username: str | None):
         async def request():
             await self.say_hello()
-            resp = await self.__requests.post_launch_steam(big_picture_mode)
+            resp = await self.__requests.post_launch_steam(big_picture_mode, username)
             if not resp["result"]:
                 raise BuddyException(LaunchSteamResult.BuddyRefused)
 
@@ -229,10 +233,10 @@ class BuddyClient(contextlib.AbstractAsyncContextManager):
 
         return await self._try_request(request(), LaunchSteamAppResult.Failed)
 
-    async def close_steam(self):
+    async def close_steam(self, keep_stream_alive: bool = False):
         async def request():
             await self.say_hello()
-            resp = await self.__requests.post_close_steam()
+            resp = await self.__requests.post_close_steam(keep_stream_alive)
             if not resp["result"]:
                 raise BuddyException(CloseSteamResult.BuddyRefused)
 
@@ -306,7 +310,7 @@ class BuddyClient(contextlib.AbstractAsyncContextManager):
         async def request():
             await self.say_hello()
             resp = await self.__requests.get_game_stream_app_names()
-            return resp["appNames"]
+            return resp["app_names"]
 
         return await self._try_request(request(), GetGameStreamAppNamesResult.Failed)
 
@@ -317,3 +321,10 @@ class BuddyClient(contextlib.AbstractAsyncContextManager):
             return resp["data"]
 
         return await self._try_request(request(), GetNonSteamAppDataResult.Failed)
+    
+    async def get_current_user(self):
+        async def request():
+            await self.say_hello()
+            return await self.__requests.get_current_user()
+
+        return await self._try_request(request(), GetCurrentUserResult.Failed)
