@@ -15,6 +15,7 @@ class RunnerTimeouts(TypedDict):
     initialConditions: int
     streamReadiness: int
     steamReadiness: int
+    userSwitch: int
     appLaunch: int
     appLaunchStability: int
     streamEnd: int
@@ -121,7 +122,7 @@ class ButtonStyleSettings(TypedDict):
 
 
 class UserSettings(TypedDict):
-    version: Literal[38]
+    version: Literal[39]
     clientId: str
     currentHostId: Optional[str]
     gameSession: GameSessionSettings
@@ -378,3 +379,7 @@ class UserSettingsManager(SettingsManager[UserSettings]):
                 }
                 del data["hostSettings"][host]["useCustomWolExec"]
                 del data["hostSettings"][host]["customWolExecPath"]
+        if data["version"] == 38:
+            data["version"] = 39
+            for host in data["hostSettings"].keys():
+                data["hostSettings"][host]["runnerTimeouts"]["userSwitch"] = 60

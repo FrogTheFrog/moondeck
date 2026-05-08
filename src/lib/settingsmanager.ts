@@ -31,6 +31,7 @@ export const servicePingDefault = 5 as const;
 export const initialConditionsDefault = 30 as const;
 export const streamReadinessDefault = 30 as const;
 export const steamReadinessDefault = 60 as const;
+export const userSwitch = 60 as const;
 export const appLaunchDefault = 30 as const;
 export const appLaunchStabilityDefault = 15 as const;
 export const appUpdateDefault = 15 as const;
@@ -48,6 +49,7 @@ export interface RunnerTimeouts {
   initialConditions: number;
   streamReadiness: number;
   steamReadiness: number;
+  userSwitch: number;
   appLaunch: number;
   appLaunchStability: number;
   streamEnd: number;

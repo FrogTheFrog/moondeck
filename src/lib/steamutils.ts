@@ -12,6 +12,7 @@ export enum EnvVars {
   LinkedAudio = "MOONDECK_LINKED_AUDIO",
   LinkedDisplay = "MOONDECK_LINKED_DISPLAY",
   SteamAppId = "MOONDECK_STEAM_APP_ID",
+  SteamUserId = "MOONDECK_STEAM_USER_ID",
   AppName = "MOONDECK_APP_NAME",
   Python = "MOONDECK_PYTHON"
 }

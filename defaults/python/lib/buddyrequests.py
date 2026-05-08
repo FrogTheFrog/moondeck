@@ -58,6 +58,10 @@ class AppData(TypedDict):
     app_state: AppState
 
 
+class UserData(TypedDict):
+    id: Optional[str]
+
+
 class ApiVersionResponse(TypedDict):
     version: int
 
@@ -75,11 +79,15 @@ class ResultLikeResponse(TypedDict):
 
 
 class GameStreamAppNamesResponse(TypedDict):
-    appNames: Optional[List[str]]
+    app_names: Optional[List[str]]
 
 
 class NonSteamAppDataResponse(TypedDict):
     data: Optional[List[NonSteamAppDataItem]]
+
+
+class CurrentUserResponse(TypedDict):
+    user: Optional[UserData]
 
 
 class StreamStateResponse(TypedDict):
@@ -174,9 +182,10 @@ class BuddyRequests(contextlib.AbstractAsyncContextManager):
             data = await resp.json(encoding="utf-8")
             return utils.from_dict(SteamUiModeResponse, data)
 
-    async def post_launch_steam(self, big_picture_mode: bool):
+    async def post_launch_steam(self, big_picture_mode: bool, username: Optional[str]):
         data = {
-            "big_picture_mode": big_picture_mode
+            "big_picture_mode": big_picture_mode,
+            "username": username
         }
 
         async with self.__session.post(f"{self.base_url}/launchSteam", json=data) as resp:
@@ -192,8 +201,12 @@ class BuddyRequests(contextlib.AbstractAsyncContextManager):
             data = await resp.json(encoding="utf-8")
             return utils.from_dict(ResultLikeResponse, data)
 
-    async def post_close_steam(self):
-        async with self.__session.post(f"{self.base_url}/closeSteam") as resp:
+    async def post_close_steam(self, keep_stream_alive: bool):
+        data = {
+            "keep_stream_alive": keep_stream_alive
+        }
+
+        async with self.__session.post(f"{self.base_url}/closeSteam", json=data) as resp:
             data = await resp.json(encoding="utf-8")
             return utils.from_dict(ResultLikeResponse, data)
         
@@ -264,3 +277,8 @@ class BuddyRequests(contextlib.AbstractAsyncContextManager):
         async with self.__session.get(f"{self.base_url}/nonSteamAppData", json=data) as resp:
             data = await resp.json(encoding="utf-8")
             return utils.from_dict(NonSteamAppDataResponse, data)
+        
+    async def get_current_user(self):
+        async with self.__session.get(f"{self.base_url}/currentUser") as resp:
+            data = await resp.json(encoding="utf-8")
+            return utils.from_dict(CurrentUserResponse, data)

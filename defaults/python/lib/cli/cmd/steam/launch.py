@@ -7,7 +7,7 @@ from lib.logger import logger
 @host_pattern_matcher(match_one=True)
 @buddy_session()
 @cmd_entry
-async def execute(buddy_client: BuddyClient, bpm: bool):
-    await buddy_client.launch_steam(big_picture_mode=bpm)
-    logger.info(f"Buddy accepted Steam launch request (force BPM: {bpm})")
+async def execute(buddy_client: BuddyClient, bpm: bool, username: str | None):
+    await buddy_client.launch_steam(big_picture_mode=bpm, username=username)
+    logger.info(f"Buddy accepted Steam launch request (force BPM: {bpm}, username: {username})")
     return 0

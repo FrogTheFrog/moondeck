@@ -1,7 +1,7 @@
 from typing import Optional, cast
 
-from .settingsparser import MoonDeckAppRunnerSettings, CloseSteam
-from ..buddyrequests import AppState, SteamUiMode, StreamState, StreamStateResponse, SteamUiModeResponse, StreamedAppDataResponse
+from .settingsparser import MoonDeckAppRunnerSettings, CloseSteam, SteamUser
+from ..buddyrequests import AppState, CurrentUserResponse, SteamUiMode, StreamState, StreamStateResponse, SteamUiModeResponse, StreamedAppDataResponse
 from ..runnerresult import Result, RunnerError
 from ..gamestreaminfo import get_server_info
 from ..logger import logger
@@ -24,16 +24,62 @@ class MoonDeckAppLauncher:
                 break
 
     @staticmethod
-    async def wait_for_steam_to_be_ready(client: BuddyClient, big_picture_mode: bool, timeout: int):
-        logger.info("Waiting for Steam to be ready")
+    async def wait_for_steam_user_switch_to_be_ready(client: BuddyClient, user_id: str, timeout: int):
+        logger.info(f"Waiting for Steam to be ready to switch to user {user_id} if needed")
         pooler = TimedPooler(retries=timeout,
+                             exception_on_retry_out=RunnerError(Result.SteamUserSwitchNotReadyInTime))
+
+
+        steam_close_request_sent = False
+        async for req, in pooler(client.get_current_user):
+            current_user = cast(CurrentUserResponse, req)["user"]
+            current_user_id = current_user and current_user["id"]
+
+            if current_user_id == user_id:
+                break
+
+            if current_user is None:
+                # Steam is not running
+                break
+
+            if not steam_close_request_sent:
+                await client.close_steam(keep_stream_alive=True)
+                steam_close_request_sent = True
+
+
+    @staticmethod
+    async def wait_for_steam_to_be_ready(client: BuddyClient, big_picture_mode: bool, user_id: str | None, can_retry_user_switch: bool, timeout: int):
+        logger.info("Waiting for Steam to be ready")
+        stuck_null_user_wait_counter = 5
+        pooler = TimedPooler(retries=max(stuck_null_user_wait_counter, timeout),
                              exception_on_retry_out=RunnerError(Result.SteamDidNotReadyUpInTime))
 
         desired_mode = SteamUiMode.BigPicture if big_picture_mode else SteamUiMode.Desktop
-        async for req, in pooler(client.get_steam_ui_mode):
-            mode = cast(SteamUiModeResponse, req)["mode"]
+        async for req1, req2 in pooler(client.get_steam_ui_mode, client.get_current_user):
+            mode = cast(SteamUiModeResponse, req1)["mode"]
+            current_user = cast(CurrentUserResponse, req2)["user"]
+            current_user_id = current_user and current_user["id"]
+
+            if user_id is None:
+                # Any logged-in user will do, but it must be logged-in
+                if current_user_id is None:
+                    continue
+            elif current_user:
+                if current_user_id is None:
+                    if stuck_null_user_wait_counter > 1:
+                        stuck_null_user_wait_counter -= 1
+                        continue
+
+                if current_user_id != user_id:
+                    if can_retry_user_switch:
+                        return True
+                    else:
+                        continue
+
             if mode == desired_mode:
                 break
+
+        return False
 
     @staticmethod
     async def wait_for_app_to_be_launched(client: BuddyClient, app_id: str, stability_timeout: int, launch_timeout: int):
@@ -96,18 +142,27 @@ class MoonDeckAppLauncher:
             pooler.retries = 1
 
     @classmethod
-    async def launch(cls, client: BuddyClient, big_picture_mode: bool, app_id: str, stream_rdy_timeout: int, steam_rdy_timeout: int, stability_timeout: int, launch_timeout: int, cleanup_on_error: bool, manage_stream: bool):
+    async def launch(cls, client: BuddyClient, big_picture_mode: bool, app_id: str, user: SteamUser | None, stream_rdy_timeout: int, steam_rdy_timeout: int, stability_timeout: int, launch_timeout: int, user_switch_timeout: int, cleanup_on_error: bool, manage_stream: bool):
         try:
             if manage_stream:
                 await cls.wait_for_stream_to_be_ready(client=client,
                                                       timeout=stream_rdy_timeout)
             
-            logger.info(f"Sending request to launch Steam if needed (forcing big picture mode: {big_picture_mode})")
-            await client.launch_steam(big_picture_mode)
+            can_retry_user_switch = True
+            while can_retry_user_switch:
+                if user:
+                    await cls.wait_for_steam_user_switch_to_be_ready(client=client,
+                                                                     user_id=user["id"],
+                                                                     timeout=user_switch_timeout)
 
-            await cls.wait_for_steam_to_be_ready(client=client,
-                                                 big_picture_mode=big_picture_mode,
-                                                 timeout=steam_rdy_timeout)
+                logger.info(f"Sending request to launch Steam if needed (forcing big picture mode: {big_picture_mode}, specified user: {user})")
+                await client.launch_steam(big_picture_mode, user and user["name"])
+
+                can_retry_user_switch = await cls.wait_for_steam_to_be_ready(client=client,
+                                                                             big_picture_mode=big_picture_mode,
+                                                                             user_id=user and user["id"],
+                                                                             can_retry_user_switch=can_retry_user_switch,
+                                                                             timeout=steam_rdy_timeout)
 
             retry_launch_sequence = True
             while retry_launch_sequence:
@@ -169,13 +224,15 @@ class MoonDeckAppRunner:
                     return
 
     @staticmethod
-    async def wait_for_initial_conditions(client: BuddyClient, app_id: str, timeout: int):
+    async def wait_for_initial_conditions(client: BuddyClient, app_id: str, user_id: str | None, timeout: int):
         logger.info("Waiting for a initial stream conditions to be satisfied")
         
         pooler = TimedPooler(retries=timeout)
-        async for req1, req2 in pooler(client.get_stream_state, client.get_streamed_app_data):
+        async for req1, req2, req3 in pooler(client.get_stream_state, client.get_streamed_app_data, client.get_current_user):
             state = cast(StreamStateResponse, req1)["state"]
             data = cast(StreamedAppDataResponse, req2)["data"]
+            current_user = cast(CurrentUserResponse, req3)["user"]
+            current_user_id = current_user and current_user["id"]
 
             if state == StreamState.StreamEnding:
                 pooler.exception_on_retry_out = RunnerError(Result.StreamDidNotEnd)
@@ -185,8 +242,8 @@ class MoonDeckAppRunner:
                     # Stream is active, but the app was not started for some reason
                     break
                 
-                if data["app_id"] == app_id:
-                    # Already streaming this very app
+                if data["app_id"] == app_id and (user_id is None or current_user_id == user_id):
+                    # Already streaming this very app via the same account
                     break
 
                 pooler.exception_on_retry_out = RunnerError(Result.AnotherSteamAppIsStreaming)
@@ -262,6 +319,7 @@ class MoonDeckAppRunner:
                                          server_timeout=settings["timeouts"]["servicePing"])
             await cls.wait_for_initial_conditions(client=client,
                                                   app_id=settings["app_id"],
+                                                  user_id=settings["steam_user"] and settings["steam_user"]["id"],
                                                   timeout=settings["timeouts"]["initialConditions"])
             await cls.start_moonlight(proxy=proxy,
                                       hostname=settings["hostname"],
@@ -272,10 +330,12 @@ class MoonDeckAppRunner:
             launch_task = asyncio.create_task(MoonDeckAppLauncher.launch(client=client,
                                                                          big_picture_mode=settings["big_picture_mode"],
                                                                          app_id=settings["app_id"],
+                                                                         user=settings["steam_user"],
                                                                          stream_rdy_timeout=settings["timeouts"]["streamReadiness"],
                                                                          steam_rdy_timeout=settings["timeouts"]["steamReadiness"],
                                                                          stability_timeout=settings["timeouts"]["appLaunchStability"],
                                                                          launch_timeout=settings["timeouts"]["appLaunch"],
+                                                                         user_switch_timeout=settings["timeouts"]["userSwitch"],
                                                                          cleanup_on_error=True,
                                                                          manage_stream=True))
 
