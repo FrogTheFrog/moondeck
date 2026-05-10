@@ -12,15 +12,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
 
       - name: Install PNPM
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
         with:
           version: 10
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: recursive
 
@@ -36,15 +36,15 @@ jobs:
     needs: [test-plugin]
     steps:
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
 
       - name: Install PNPM
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
         with:
           version: 10
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: recursive
 
@@ -55,7 +55,7 @@ jobs:
         run: pnpm run build:plugin
 
       - name: Upload package
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: moondeck
           path: out/moondeck.zip
@@ -78,12 +78,12 @@ jobs:
     needs: [test-plugin]
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: recursive
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.13"
 
@@ -97,7 +97,7 @@ jobs:
           PYTHONPATH: "./lib${{ matrix.config.sep }}./externals"
         with:
           working-directory: ./defaults/python
-          nuitka-version: main
+          nuitka-version: 4.0.8
           script-name: cli.py
           mode: onefile
           include-data-files: ./ssl/moondeck_cert.pem=./ssl/moondeck_cert.pem
@@ -106,7 +106,7 @@ jobs:
           output-file: moondeck-cli-${{ matrix.config.artifact-postix }}.${{ matrix.config.ext }}
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: moondeck-cli-${{ matrix.config.artifact-postix }}
           path: ./defaults/python/build/*.${{ matrix.config.ext }}
