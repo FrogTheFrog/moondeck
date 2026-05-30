@@ -1,4 +1,4 @@
-import { AppType, EnvVars, addAppsToCollection, addShortcut, checkExecPathMatch, getAppDetailsForAppIds, getAppStoreEx, getMoonDeckRunPath, getOrCreateCollection, removeAppsFromCollection, removeShortcut, restartSteamClient, setAppLaunchOptions } from "./steamutils";
+import { AppType, EnvVars, addAppsToCollection, addShortcut, checkExecPathMatch, getAppDetailsForAppIds, getAppStoreEx, getMoonDeckRunPath, getOrCreateCollection, isMoonDeckShortcut, removeAppsFromCollection, removeShortcut, restartSteamClient, setAppLaunchOptions } from "./steamutils";
 import { HostSettings, SettingsManager } from "./settingsmanager";
 import { getEnvKeyValueString, makeEnvKeyValue } from "./envutils";
 import { AppDetails } from "@decky/ui/dist/globals/steam-client/App";
@@ -379,8 +379,20 @@ export class ExternalAppShortcuts {
       const collectionApps = collection ? Array.from(collection.apps.keys()) : [];
       const someRandomApps = collectionApps.filter((appId) => !this.managedApps.has(appId));
 
+      let leftoverMoonDeckApps: number[] = [];
+      if (collection) {
+        const possiblyLeftoverApps = Array.from(collection.allApps.values())
+          .filter((item) => someRandomApps.includes(item.appid))
+          .filter((item) => `${item.appid}` != item.gameid) // Not a normal Steam app
+          .map((item) => item.appid);
+
+        leftoverMoonDeckApps = (await getAppDetailsForAppIds(possiblyLeftoverApps))
+          .filter((item) => isMoonDeckShortcut(item))
+          .map((item) => item.unAppID);
+      }
+
       await addAppsToCollection(collectionTag, Array.from(this.managedApps.keys()));
-      await removeAppsFromCollection(collectionTag, someRandomApps);
+      await removeAppsFromCollection(collectionTag, leftoverMoonDeckApps);
     }
   }
 }

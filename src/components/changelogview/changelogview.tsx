@@ -11,6 +11,7 @@ export const ChangelogView: FC = () => {
             <>
               <div>&bull; Bumped MoonDeckBuddy minimum version to v1.10.0.</div>
               <div>&bull; MoonDeck will now automatically switch Steam account on host if needed.</div>
+              <div>&bull; MoonDeck will no longer remove manually added non-MoonDeck apps from MoonDeck collection.</div>
             </>
           }
           focusable={true}

@@ -47,6 +47,10 @@ export async function getMoonDeckRunPath(): Promise<string | null> {
   return MoonDeckRunPath;
 }
 
+export function isMoonDeckShortcut(details: AppDetails): boolean {
+  return details.strShortcutExe.includes("moondeckrun.sh");
+}
+
 export function checkExecPathMatch(execPath: string, shortcutExe: string): boolean {
   return new RegExp(`^${execPath}|"${execPath}"$`).test(shortcutExe);
 }

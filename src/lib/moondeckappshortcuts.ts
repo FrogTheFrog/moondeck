@@ -1,4 +1,4 @@
-import { AppType, EnvVars, addShortcut, getAppStoreEx, removeShortcut, restartSteamClient } from "./steamutils";
+import { AppType, EnvVars, addShortcut, getAppStoreEx, isMoonDeckShortcut, removeShortcut, restartSteamClient } from "./steamutils";
 import { getEnvKeyValueNumber, makeEnvKeyValue } from "./envutils";
 import { AppDetails } from "@decky/ui/dist/globals/steam-client/App";
 import { AppOverviewPatcher } from "./appoverviewpatcher";
@@ -48,13 +48,11 @@ export class MoonDeckAppShortcuts {
 
     for (const details of allDetails) {
       if (details !== null) {
-        const hasCorrectExec = details.strShortcutExe.includes("moondeckrun.sh");
-
         // First check is needed for backwards compat.
         const hasCorrectLaunchOptions = !details.strLaunchOptions.includes(EnvVars.AppType) ||
           details.strLaunchOptions.includes(makeEnvKeyValue(EnvVars.AppType, AppType.MoonDeck));
 
-        if (hasCorrectExec && hasCorrectLaunchOptions) {
+        if (isMoonDeckShortcut(details) && hasCorrectLaunchOptions) {
           moonDeckApps.push(details);
         }
       }
