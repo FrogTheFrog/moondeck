@@ -127,7 +127,7 @@ class MoonDeckAppLauncher:
     @staticmethod
     async def wait_for_app_to_close(client: BuddyClient):
         logger.info("Waiting for app to close")
-        pooler = TimedPooler(retries=1)
+        pooler = TimedPooler(retries=1, delay=0.25)
 
         async for req, in pooler(client.get_streamed_app_data):
             data = cast(StreamedAppDataResponse, req)["data"]
