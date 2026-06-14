@@ -1,6 +1,5 @@
 export * from "./addAppsToCollection";
 export * from "./addShortcut";
-export * from "./getOrCreateCollection";
 export * from "./getAllNonSteamAppIds";
 export * from "./getAppDetails";
 export * from "./getAppResolutionOverride";
@@ -11,6 +10,8 @@ export * from "./getCurrentDisplayMode";
 export * from "./getCurrentUserSteamId";
 export * from "./getDisplayIdentifiers";
 export * from "./getGameId";
+export * from "./getOrCreateCollection";
+export * from "./getSuspendResumeStore";
 export * from "./getSystemDisplayManagerStore";
 export * from "./getSystemNetworkStore";
 export * from "./launchApp";
