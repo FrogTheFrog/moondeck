@@ -2,9 +2,9 @@ import contextlib
 from . import constants
 
 from enum import Enum
-from typing import AsyncGenerator, Awaitable, List, Type
+from typing import Any, AsyncGenerator, Awaitable, Type, overload
 from .buddyrequests import BuddyRequests, PairingState, PcState, PcStateChange, BuddyException
-from .utils import T
+from .utils import T, T1, T2, T3
 
 
 class HelloResult(Enum):
@@ -323,6 +323,12 @@ class BuddyClient(contextlib.AbstractAsyncContextManager):
 
         return await self._try_request(request(), GetCurrentUserResult.Failed)
     
-    async def notify_on_changes(self, topic_types: List[Type[T]]) -> AsyncGenerator[List[T], None]:
+    @overload
+    async def notify_on_changes(self, t1: Type[T1], /) -> AsyncGenerator[tuple[T1], None]: ...
+    @overload
+    async def notify_on_changes(self, t1: Type[T1], t2: Type[T2], /) -> AsyncGenerator[tuple[T1, T2], None]: ...
+    @overload
+    async def notify_on_changes(self, t1: Type[T1], t2: Type[T2], t3: Type[T3], /) -> AsyncGenerator[tuple[T1, T2, T3], None]: ...
+    async def notify_on_changes(self, *topic_types: Type[Any]) -> AsyncGenerator[tuple[Any, ...], None]:
         await self.say_hello()
-        return self.__requests.notify_on_changes(topic_types)
+        return await self.__requests.notify_on_changes(*topic_types)

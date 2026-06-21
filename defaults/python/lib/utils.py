@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Any, AsyncGenerator, Callable, Coroutine, List, Literal, Optional, Type, TypedDict, Union, TypeVar, get_args, get_origin, is_typeddict, cast
+from typing import Any, AsyncGenerator, List, Literal, Optional, Type, TypedDict, Union, TypeVar, get_args, get_origin, is_typeddict, cast
 
 from .logger import logger
 from .constants import RUNNER_READY_FILE
@@ -11,6 +11,9 @@ class AnyTypedDict(TypedDict, total=False):
 
 T = TypeVar("T")
 TD = TypeVar("TD", bound=AnyTypedDict)
+T1 = TypeVar("T1")
+T2 = TypeVar("T2")
+T3 = TypeVar("T3")
 
 
 def is_typed_dict(data_type):

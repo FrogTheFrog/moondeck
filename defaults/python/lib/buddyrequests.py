@@ -2,7 +2,7 @@ import contextlib
 from . import utils
 from .logger import logger
 
-from typing import AsyncGenerator, List, Literal, Optional, Type, TypedDict
+from typing import Any, AsyncGenerator, List, Literal, Optional, Type, TypedDict, overload
 from enum import Enum
 
 
@@ -296,7 +296,13 @@ class BuddyRequests(contextlib.AbstractAsyncContextManager):
             data = await resp.json(encoding="utf-8")
             return utils.from_dict(CurrentUserResponse, data)
         
-    async def notify_on_changes(self, topic_types: List[Type[utils.T]]) -> AsyncGenerator[List[utils.T], None]:
+    @overload
+    def notify_on_changes(self, t1: Type[utils.T1], /) -> AsyncGenerator[tuple[utils.T1], None]: ...
+    @overload
+    def notify_on_changes(self, t1: Type[utils.T1], t2: Type[utils.T2], /) -> AsyncGenerator[tuple[utils.T1, utils.T2], None]: ...
+    @overload
+    def notify_on_changes(self, t1: Type[utils.T1], t2: Type[utils.T2], t3: Type[utils.T3], /) -> AsyncGenerator[tuple[utils.T1, utils.T2, utils.T3], None]: ...
+    async def notify_on_changes(self, *topic_types: Type[Any]) -> AsyncGenerator[tuple[Any, ...], None]:
         # Lazy import to improve CLI performance
         import aiohttp
 
@@ -318,7 +324,7 @@ class BuddyRequests(contextlib.AbstractAsyncContextManager):
             async for msg in ws:
                 if msg.type == aiohttp.WSMsgType.TEXT:
                     items = msg.json()
-                    yield [utils.from_dict(topic_type, item) for topic_type, item in zip(topic_types, items)]
+                    yield tuple(utils.from_dict(topic_type, item) for topic_type, item in zip(topic_types, items))
                 else:
                     logger.error(f"Unexpected WebSocket message: {msg}")
                     raise BuddyException(NotifyOnChangesResult.UnexpectedMessageType)
