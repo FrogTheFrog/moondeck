@@ -2,8 +2,8 @@ import contextlib
 from . import constants
 
 from enum import Enum
-from typing import Awaitable
-from .buddyrequests import BuddyRequests, PairingState, PcState, PcStateChange
+from typing import AsyncGenerator, Awaitable, List, Type
+from .buddyrequests import BuddyRequests, PairingState, PcState, PcStateChange, BuddyException
 from .utils import T
 
 
@@ -98,12 +98,6 @@ class GetNonSteamAppDataResult(Enum):
 
 class GetCurrentUserResult(Enum):
     Failed = "Failed to get current user id via Buddy!"
-
-
-class BuddyException(Exception):
-    def __init__(self, result: Enum):
-        super().__init__(result.value)
-        self.result = result
 
 
 class BuddyClient(contextlib.AbstractAsyncContextManager):
@@ -328,3 +322,7 @@ class BuddyClient(contextlib.AbstractAsyncContextManager):
             return await self.__requests.get_current_user()
 
         return await self._try_request(request(), GetCurrentUserResult.Failed)
+    
+    async def notify_on_changes(self, topic_types: List[Type[T]]) -> AsyncGenerator[List[T], None]:
+        await self.say_hello()
+        return self.__requests.notify_on_changes(topic_types)

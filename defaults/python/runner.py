@@ -14,7 +14,7 @@ add_plugin_to_path()
 # autopep8: on  
 
 
-from lib.buddyclient import BuddyException
+from lib.buddyrequests import BuddyException
 from lib.runner.moondeckapprunner import MoonDeckAppRunner
 from lib.runner.moonlightonlyrunner import MoonlightOnlyRunner
 from lib.logger import logger, set_logger_settings, enable_debug_level

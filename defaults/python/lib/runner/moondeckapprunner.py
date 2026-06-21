@@ -6,7 +6,8 @@ from ..runnerresult import Result, RunnerError
 from ..gamestreaminfo import get_server_info
 from ..logger import logger
 from ..moonlightproxy import CommandLineOptions, MoonlightProxy
-from ..buddyclient import BuddyClient, BuddyException, HelloResult
+from ..buddyclient import BuddyClient, HelloResult
+from ..buddyrequests import BuddyException
 from ..utils import TimedPooler
 
 

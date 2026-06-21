@@ -23,8 +23,8 @@ import lib.utils as utils
 from typing import Optional, cast
 from lib.plugin.settings import UserSettings, UserSettingsManager
 from lib.logger import logger, set_logger_settings
-from lib.buddyrequests import SteamUiMode, SteamUiModeResponse, CurrentUserResponse
-from lib.buddyclient import BuddyClient, PcStateChange, BuddyException
+from lib.buddyrequests import SteamUiMode, SteamUiModeResponse, CurrentUserResponse, BuddyException
+from lib.buddyclient import BuddyClient, PcStateChange
 from lib.utils import wake_on_lan, change_moondeck_runner_ready_state, TimedPooler
 from lib.runnerresult import Result, set_result, get_result
 

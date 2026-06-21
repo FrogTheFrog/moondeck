@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Any, Callable, Coroutine, List, Literal, Optional, Type, TypedDict, Union, TypeVar, get_args, get_origin, is_typeddict, cast
+from typing import Any, AsyncGenerator, Callable, Coroutine, List, Literal, Optional, Type, TypedDict, Union, TypeVar, get_args, get_origin, is_typeddict, cast
 
 from .logger import logger
 from .constants import RUNNER_READY_FILE
@@ -265,47 +265,43 @@ def change_moondeck_runner_ready_state(make_ready):
 
 
 class TimedPooler:
-    def __init__(self, retries: int, exception_on_retry_out: Exception | None = None, delay: float = 1) -> None:
-        self.delay = delay
-        self.retries = retries
-        self.exception_on_retry_out = exception_on_retry_out
-        self._first_run = False
+    def __init__(self, timeout: float | None, exception_on_timeout: Exception | None = None) -> None:
+        self.exception_on_timeout = exception_on_timeout
+        self.timeout = timeout
 
-    def __call__(self, *requests: Callable[[], Coroutine[Any, Any, Any]]):
-        return TimedPoolerGenerator(self, *requests)
+    @property
+    def timeout(self) -> float | None:
+        return self._timeout
 
+    @timeout.setter
+    def timeout(self, value: float | None) -> None:
+        self._timeout = value
+        self._start = None
 
-class TimedPoolerGenerator:
-    def __init__(self, pooler: TimedPooler, *requests: Callable[[], Coroutine[Any, Any, Any]]) -> None:
-        assert len(requests) > 0
-        self.pooler = pooler
-        self.requests = requests
-
-    def __aiter__(self):
-        return self
-
-    async def __anext__(self):
+    async def __call__(self, generator: AsyncGenerator[T, None]):
         # Lazy import to improve CLI performance
         import asyncio
 
-        if self.pooler.retries <= 0:
-            if self.pooler.exception_on_retry_out is not None:
-                raise self.pooler.exception_on_retry_out
-            raise StopAsyncIteration
+        loop = asyncio.get_running_loop()
+        while True:
+            remaining = None
+            if self._timeout is not None:
+                if self._start is None:
+                    self._start = loop.time()
 
-        if not self.pooler._first_run:
-            await asyncio.sleep(self.pooler.delay)
+                remaining = self._timeout - (loop.time() - self._start)
+                if remaining <= 0:
+                    if self.exception_on_timeout is not None:
+                        raise self.exception_on_timeout
+                    return
 
-        self.pooler.retries -= 1
-        self.pooler._first_run = False
+            try:
+                item = await asyncio.wait_for(generator.__anext__(), timeout=remaining)
+            except StopAsyncIteration:
+                return
+            except asyncio.TimeoutError:
+                if self.exception_on_timeout is not None:
+                    raise self.exception_on_timeout
+                return
 
-        tasks = [asyncio.create_task(req()) for req in self.requests]
-        try:
-            responses = await asyncio.gather(*tasks)
-        except Exception as err:
-            for task in tasks:
-                task.cancel()
-
-            raise err
-
-        return responses
+            yield item
