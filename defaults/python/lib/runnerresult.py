@@ -23,6 +23,7 @@ class Result(Enum):
     SteamDidNotReadyUpInTime = "Steam did not reach the \"ready\" state in time!"
     SteamUserSwitchNotReadyInTime = "Steam did not switch Steam user in time!"
     StreamDidNotEnd = "Stream did not end in time!"
+    BuddyDidNotRespond = "Buddy did not respond in time!"
     AppLaunchAborted = "App launch was aborted!"
     AppLaunchFailed = "Failed to launch app in time!"
     MoonlightClosed = "Moonlight has been closed!"
