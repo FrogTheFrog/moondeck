@@ -20,7 +20,7 @@ import lib.gamestreaminfo as gamestreaminfo
 import lib.constants as constants
 import lib.utils as utils
 
-from typing import Optional, cast
+from typing import Optional
 from lib.plugin.settings import UserSettings, UserSettingsManager
 from lib.logger import logger, set_logger_settings
 from lib.buddyrequests import SteamUiMode, SteamUiModeResponse, CurrentUserResponse, BuddyException
@@ -235,12 +235,12 @@ class Plugin:
                 await client.launch_steam(big_picture_mode=False, username=None)
 
                 logger.info("Waiting for Steam to be ready")
-                pooler = TimedPooler(retries=ready_timeout,
-                                     exception_on_retry_out=BuddyException(Result.SteamDidNotReadyUpInTime))
+                pooler = TimedPooler(timeout=ready_timeout,
+                                     exception_on_timeout=BuddyException(Result.SteamDidNotReadyUpInTime))
 
-                async for req1, req2 in pooler(client.get_steam_ui_mode, client.get_current_user):
-                    mode = cast(SteamUiModeResponse, req1)["mode"]
-                    current_user = cast(CurrentUserResponse, req2)["user"]
+                async for req1, req2 in pooler(await client.notify_on_changes(SteamUiModeResponse, CurrentUserResponse)):
+                    mode = req1["mode"]
+                    current_user = req2["user"]
                     
                     if mode != SteamUiMode.Unknown or current_user != None:
                         break
