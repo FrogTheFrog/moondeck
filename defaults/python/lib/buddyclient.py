@@ -331,4 +331,4 @@ class BuddyClient(contextlib.AbstractAsyncContextManager):
     async def notify_on_changes(self, t1: Type[T1], t2: Type[T2], t3: Type[T3], /) -> AsyncGenerator[tuple[T1, T2, T3], None]: ...
     async def notify_on_changes(self, *topic_types: Type[Any]) -> AsyncGenerator[tuple[Any, ...], None]:
         await self.say_hello()
-        return await self.__requests.notify_on_changes(*topic_types)
+        return self.__requests.notify_on_changes(*topic_types)
