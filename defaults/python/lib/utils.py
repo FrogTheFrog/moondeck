@@ -347,15 +347,15 @@ class TimedPooler:
                 except StopAsyncIteration:
                     return
                 except asyncio.TimeoutError:
-                    if is_a_repeat:
-                        self.repeat_timeout = None
-                    else:
+                    if not is_a_repeat:
                         if self.exception_on_timeout is not None:
                             raise self.exception_on_timeout
                         return
 
                 self.__pooler_active = True
                 yield last_yield_value
+                if self.__repeat_timeout_start is not None:
+                    self.repeat_timeout = None
         finally:
             if next_value_task is not None:
                 next_value_task.cancel()
