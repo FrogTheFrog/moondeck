@@ -334,7 +334,7 @@ class TimedPooler:
 
         next_value_task = None
         try:
-            last_yield_value = None
+            last_yield_value: T = cast(T, None)
             while True:
                 remaining, is_a_repeat = self.__calculate_remaining_time()
 
