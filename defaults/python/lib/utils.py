@@ -382,6 +382,8 @@ class TimedPooler:
                 finally:
                     if next_value_task is not None:
                         next_value_task.cancel()
+                        with contextlib.suppress(asyncio.CancelledError):
+                            await next_value_task
                     self.__generator_active = False
     
     def __init__(self, timeout: float | None, exception_on_timeout: Exception | None = None):
