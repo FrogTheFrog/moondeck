@@ -1,7 +1,8 @@
 import contextlib
 from . import utils
+from .logger import logger
 
-from typing import List, Literal, Optional, TypedDict
+from typing import Any, AsyncGenerator, List, Literal, Optional, Type, TypedDict, overload
 from enum import Enum
 
 
@@ -110,6 +111,18 @@ OsType = Literal["Windows", "Linux", "Other"]
 class HostInfoResponse(TypedDict):
     mac: str
     os: OsType
+
+
+class NotifyOnChangesResult(Enum):
+    BuddyRefused = "Buddy refused to notify on changes!"
+    UnexpectedMessageType = "Unexpected WebSocket message type!"
+    WebSocketClosed = "WebSocket was closed!"
+
+
+class BuddyException(Exception):
+    def __init__(self, result: Enum):
+        super().__init__(result.value)
+        self.result = result
 
 
 class BuddyRequests(contextlib.AbstractAsyncContextManager):
@@ -282,3 +295,39 @@ class BuddyRequests(contextlib.AbstractAsyncContextManager):
         async with self.__session.get(f"{self.base_url}/currentUser") as resp:
             data = await resp.json(encoding="utf-8")
             return utils.from_dict(CurrentUserResponse, data)
+        
+    @overload
+    def notify_on_changes(self, t1: Type[utils.T1], /) -> AsyncGenerator[tuple[utils.T1], None]: ...
+    @overload
+    def notify_on_changes(self, t1: Type[utils.T1], t2: Type[utils.T2], /) -> AsyncGenerator[tuple[utils.T1, utils.T2], None]: ...
+    @overload
+    def notify_on_changes(self, t1: Type[utils.T1], t2: Type[utils.T2], t3: Type[utils.T3], /) -> AsyncGenerator[tuple[utils.T1, utils.T2, utils.T3], None]: ...
+    async def notify_on_changes(self, *topic_types: Type[Any]) -> AsyncGenerator[tuple[Any, ...], None]:
+        # Lazy import to improve CLI performance
+        import aiohttp
+
+        topic_mapping = {
+            StreamedAppDataResponse: "StreamedAppData",
+            SteamUiModeResponse: "SteamUiMode",
+            CurrentUserResponse: "CurrentUser",
+            StreamStateResponse: "StreamState",
+        }
+        topics = [topic_mapping[topic_type] for topic_type in topic_types]
+
+        async with self.__session.ws_connect(f"{self.base_url}/notifyOnChanges") as ws:
+            await ws.send_json(topics)
+            response = utils.from_dict(ResultLikeResponse, await ws.receive_json())
+
+            if not response["result"]:
+                raise BuddyException(NotifyOnChangesResult.BuddyRefused)
+
+            async for msg in ws:
+                if msg.type == aiohttp.WSMsgType.TEXT:
+                    items = msg.json()
+                    yield tuple(utils.from_dict(topic_type, item) for topic_type, item in zip(topic_types, items))
+                else:
+                    logger.error(f"Unexpected WebSocket message: {msg}")
+                    raise BuddyException(NotifyOnChangesResult.UnexpectedMessageType)
+
+            if ws.closed:
+                raise BuddyException(NotifyOnChangesResult.WebSocketClosed)

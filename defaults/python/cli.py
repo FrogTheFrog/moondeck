@@ -21,7 +21,7 @@ from argparse import _SubParsersAction, ArgumentParser, ArgumentTypeError, HelpF
 from typing import Awaitable, Callable, cast
 
 from lib.logger import logger, set_logger_settings
-from lib.buddyclient import BuddyException
+from lib.buddyrequests import BuddyException
 from lib.cli.settings import CliSettingsManager
 
 

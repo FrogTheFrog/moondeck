@@ -1,7 +1,8 @@
 from lib.cli.utils import buddy_session, cmd_entry, host_pattern_matcher, settings_watcher
 from lib.cli.settings import CliSettings
 from lib.logger import logger
-from lib.buddyclient import BuddyClient, BuddyException, HelloResult, PairingResult
+from lib.buddyclient import BuddyClient, HelloResult, PairingResult
+from lib.buddyrequests import BuddyException
 
 
 @settings_watcher()

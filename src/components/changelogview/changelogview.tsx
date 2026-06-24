@@ -12,7 +12,7 @@ export const ChangelogView: FC = () => {
               <div>&bull; Bumped MoonDeckBuddy minimum version to v1.10.0.</div>
               <div>&bull; MoonDeck will now automatically switch Steam account on host if needed.</div>
               <div>&bull; MoonDeck will no longer remove manually added non-MoonDeck apps from MoonDeck collection.</div>
-              <div>&bull; Increased the polling rate for "is app closed on host" requests for faster disconnect from host.</div>
+              <div>&bull; MoonDeck and Buddy is now using WebSocket communication when streaming for increased responsiveness.</div>
             </>
           }
           focusable={true}

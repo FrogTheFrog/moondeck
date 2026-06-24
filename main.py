@@ -20,11 +20,11 @@ import lib.gamestreaminfo as gamestreaminfo
 import lib.constants as constants
 import lib.utils as utils
 
-from typing import Optional, cast
+from typing import Optional
 from lib.plugin.settings import UserSettings, UserSettingsManager
 from lib.logger import logger, set_logger_settings
-from lib.buddyrequests import SteamUiMode, SteamUiModeResponse, CurrentUserResponse
-from lib.buddyclient import BuddyClient, PcStateChange, BuddyException
+from lib.buddyrequests import SteamUiMode, SteamUiModeResponse, CurrentUserResponse, BuddyException
+from lib.buddyclient import BuddyClient, PcStateChange
 from lib.utils import wake_on_lan, change_moondeck_runner_ready_state, TimedPooler
 from lib.runnerresult import Result, set_result, get_result
 
@@ -235,15 +235,16 @@ class Plugin:
                 await client.launch_steam(big_picture_mode=False, username=None)
 
                 logger.info("Waiting for Steam to be ready")
-                pooler = TimedPooler(retries=ready_timeout,
-                                     exception_on_retry_out=BuddyException(Result.SteamDidNotReadyUpInTime))
+                pooler = TimedPooler(timeout=ready_timeout,
+                                     exception_on_timeout=BuddyException(Result.SteamDidNotReadyUpInTime))
 
-                async for req1, req2 in pooler(client.get_steam_ui_mode, client.get_current_user):
-                    mode = cast(SteamUiModeResponse, req1)["mode"]
-                    current_user = cast(CurrentUserResponse, req2)["user"]
-                    
-                    if mode != SteamUiMode.Unknown or current_user != None:
-                        break
+                async with pooler(await client.notify_on_changes(SteamUiModeResponse, CurrentUserResponse)) as notifications:
+                    async for n1, n2 in notifications:
+                        mode = n1["mode"]
+                        current_user = n2["user"]
+                        
+                        if mode != SteamUiMode.Unknown or current_user != None:
+                            break
 
                 return await client.get_non_steam_app_data(user_id=user_id)
 
