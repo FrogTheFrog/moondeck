@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Any, AsyncGenerator, List, Literal, Optional, Type, TypedDict, Union, TypeVar, get_args, get_origin, is_typeddict, cast
+from typing import Any, AsyncGenerator, Generic, List, Literal, Optional, Type, TypedDict, Union, TypeVar, get_args, get_origin, is_typeddict, cast
 
 from .logger import logger
 from .constants import RUNNER_READY_FILE
@@ -268,95 +268,125 @@ def change_moondeck_runner_ready_state(make_ready):
 
 
 class TimedPooler:
-    def __init__(self, timeout: float | None, exception_on_timeout: Exception | None = None) -> None:
-        self.exception_on_timeout = exception_on_timeout
-        self.timeout = timeout
-        self.__repeat_timeout = None
-        self.__repeat_timeout_start = None
-        self.__pooler_active = False
+    class ContextManager(Generic[T]):
+        def __init__(self, timeout: float | None, exception_on_timeout: Exception | None, generator: AsyncGenerator[T, None]):
+            self.__async_iterator = TimedPooler.ContextManagedAsyncIterator(timeout, exception_on_timeout, generator)
 
-    @property
-    def timeout(self) -> float | None:
-        return self.__timeout
+        async def __aenter__(self):
+            return self.__async_iterator
 
-    @timeout.setter
-    def timeout(self, value: float | None) -> None:
-        self.__timeout = value
-        self.__timeout_start = None
+        async def __aexit__(self, exc_type, exc_value, traceback):
+            await self.__async_iterator.aclose()
+    
+    class ContextManagedAsyncIterator(Generic[T]):
+        def __init__(self, timeout: float | None, exception_on_timeout: Exception | None, generator: AsyncGenerator[T, None]):
+            self.timeout = timeout
+            self.exception_on_timeout = exception_on_timeout
+            self.__repeat_timeout = None
+            self.__repeat_timeout_start = None
+            self.__generator_active = False
+            self.__generator = self.__wrap_generator(generator)
 
-    @property
-    def repeat_timeout(self) -> float | None:
-        return self.__repeat_timeout
+        async def aclose(self):
+            await self.__generator.aclose() 
 
-    @repeat_timeout.setter
-    def repeat_timeout(self, value: float | None) -> None:
-        assert self.__pooler_active
+        def __aiter__(self):
+            return self
 
-        self.__repeat_timeout = value
-        self.__repeat_timeout_start = None
+        async def __anext__(self):
+            return await self.__generator.__anext__()
 
-    def __calculate_remaining_time(self) -> tuple[float | None, bool]:
-        # Lazy import to improve CLI performance
-        import asyncio
+        @property
+        def timeout(self) -> float | None:
+            return self.__timeout
 
-        remaining = None
-        is_a_repeat = False
+        @timeout.setter
+        def timeout(self, value: float | None) -> None:
+            self.__timeout = value
+            self.__timeout_start = None
 
-        loop_time = asyncio.get_running_loop().time()
-        timeout_end_time = None
-        repeat_timeout_end_time = None
+        @property
+        def repeat_timeout(self) -> float | None:
+            return self.__repeat_timeout
 
-        if self.__timeout is not None and self.__timeout_start is None:
-            self.__timeout_start = loop_time
+        @repeat_timeout.setter
+        def repeat_timeout(self, value: float | None) -> None:
+            assert self.__generator_active
 
-        if self.__repeat_timeout is not None and self.__repeat_timeout_start is None:
-            self.__repeat_timeout_start = loop_time
+            self.__repeat_timeout = value
+            self.__repeat_timeout_start = None
 
-        timeout_end_time = None if self.__timeout is None else self.__timeout_start + self.__timeout
-        repeat_timeout_end_time = None if self.__repeat_timeout is None else self.__repeat_timeout_start + self.__repeat_timeout
+        def __calculate_remaining_time(self) -> tuple[float | None, bool]:
+            # Lazy import to improve CLI performance
+            import asyncio
 
-        # The repeat timeout should always extend the real timeout as needed and then in the next loop
-        # should the actual timeout raise an exception
-        if timeout_end_time is not None and repeat_timeout_end_time is not None:
-            if timeout_end_time < repeat_timeout_end_time:
-                self.__timeout_start = self.__repeat_timeout_start
-                self.__timeout = self.__repeat_timeout
+            remaining = None
+            is_a_repeat = False
 
-        end_time = repeat_timeout_end_time or timeout_end_time
-        remaining = None if end_time is None else end_time - loop_time
-        is_a_repeat = repeat_timeout_end_time is not None
+            loop_time = asyncio.get_running_loop().time()
+            timeout_end_time = None
+            repeat_timeout_end_time = None
 
-        return remaining, is_a_repeat
+            if self.__timeout is not None and self.__timeout_start is None:
+                self.__timeout_start = loop_time
 
-    async def __call__(self, generator: AsyncGenerator[T, None]):
-        # Lazy import to improve CLI performance
-        import asyncio
+            if self.__repeat_timeout is not None and self.__repeat_timeout_start is None:
+                self.__repeat_timeout_start = loop_time
 
-        next_value_task = None
-        try:
-            last_yield_value: T = cast(T, None)
-            while True:
-                remaining, is_a_repeat = self.__calculate_remaining_time()
+            timeout_end_time = None if self.__timeout is None else self.__timeout_start + self.__timeout
+            repeat_timeout_end_time = None if self.__repeat_timeout is None else self.__repeat_timeout_start + self.__repeat_timeout
 
-                if next_value_task is None:
-                    next_value_task = asyncio.create_task(generator.__anext__())
+            # The repeat timeout should always extend the real timeout as needed and then in the next loop
+            # should the actual timeout raise an exception
+            if timeout_end_time is not None and repeat_timeout_end_time is not None:
+                if timeout_end_time < repeat_timeout_end_time:
+                    self.__timeout_start = self.__repeat_timeout_start
+                    self.__timeout = self.__repeat_timeout
 
+            end_time = repeat_timeout_end_time or timeout_end_time
+            remaining = None if end_time is None else end_time - loop_time
+            is_a_repeat = repeat_timeout_end_time is not None
+
+            return remaining, is_a_repeat
+
+        async def __wrap_generator(self, generator: AsyncGenerator[T, None]):
+            # Lazy import to improve CLI performance
+            import asyncio
+            import contextlib
+
+            async with contextlib.aclosing(generator) as gen:
+                next_value_task = None
                 try:
-                    last_yield_value = await asyncio.wait_for(asyncio.shield(next_value_task), timeout=remaining)
-                    next_value_task = None
-                except StopAsyncIteration:
-                    return
-                except asyncio.TimeoutError:
-                    if not is_a_repeat:
-                        if self.exception_on_timeout is not None:
-                            raise self.exception_on_timeout
-                        return
+                    last_yield_value: T = cast(T, None)
+                    while True:
+                        remaining, is_a_repeat = self.__calculate_remaining_time()
 
-                self.__pooler_active = True
-                yield last_yield_value
-                if self.__repeat_timeout_start is not None:
-                    self.repeat_timeout = None
-        finally:
-            if next_value_task is not None:
-                next_value_task.cancel()
-            self.__pooler_active = False
+                        if next_value_task is None:
+                            next_value_task = asyncio.create_task(gen.__anext__())
+
+                        try:
+                            last_yield_value = await asyncio.wait_for(asyncio.shield(next_value_task), timeout=remaining)
+                            next_value_task = None
+                        except StopAsyncIteration:
+                            return
+                        except asyncio.TimeoutError:
+                            if not is_a_repeat:
+                                if self.exception_on_timeout is not None:
+                                    raise self.exception_on_timeout
+                                return
+
+                        self.__generator_active = True
+                        yield last_yield_value
+                        if self.__repeat_timeout_start is not None:
+                            self.repeat_timeout = None
+                finally:
+                    if next_value_task is not None:
+                        next_value_task.cancel()
+                    self.__generator_active = False
+    
+    def __init__(self, timeout: float | None, exception_on_timeout: Exception | None = None):
+        self.__timeout = timeout
+        self.__exception_on_timeout = exception_on_timeout
+
+    def __call__(self, generator: AsyncGenerator[T, None]):
+        return self.ContextManager(self.__timeout, self.__exception_on_timeout, generator)

@@ -18,11 +18,12 @@ class MoonDeckAppLauncher:
         pooler = TimedPooler(timeout=timeout,
                              exception_on_timeout=RunnerError(Result.StreamFailedToStart))
 
-        async for req, in pooler(await client.notify_on_changes(StreamStateResponse)):
-            state = req["state"]
+        async with pooler(await client.notify_on_changes(StreamStateResponse)) as notifications:
+            async for n1, in notifications:
+                state = n1["state"]
 
-            if state == StreamState.Streaming:
-                break
+                if state == StreamState.Streaming:
+                    break
 
     @staticmethod
     async def wait_for_steam_user_switch_to_be_ready(client: BuddyClient, user_id: str, timeout: int):
@@ -30,21 +31,22 @@ class MoonDeckAppLauncher:
         pooler = TimedPooler(timeout=timeout,
                              exception_on_timeout=RunnerError(Result.SteamUserSwitchNotReadyInTime))
 
-        steam_close_request_sent = False
-        async for req, in pooler(await client.notify_on_changes(CurrentUserResponse)):
-            current_user = req["user"]
-            current_user_id = current_user and current_user["id"]
+        async with pooler(await client.notify_on_changes(CurrentUserResponse)) as notifications:
+            steam_close_request_sent = False
+            async for n1, in notifications:
+                current_user = n1["user"]
+                current_user_id = current_user and current_user["id"]
 
-            if current_user_id == user_id:
-                break
+                if current_user_id == user_id:
+                    break
 
-            if current_user is None:
-                # Steam is not running
-                break
+                if current_user is None:
+                    # Steam is not running
+                    break
 
-            if not steam_close_request_sent:
-                await client.close_steam(keep_stream_alive=True)
-                steam_close_request_sent = True
+                if not steam_close_request_sent:
+                    await client.close_steam(keep_stream_alive=True)
+                    steam_close_request_sent = True
 
     @staticmethod
     async def wait_for_steam_to_be_ready(client: BuddyClient, big_picture_mode: bool, user_id: str | None, can_retry_user_switch: bool, timeout: int):
@@ -53,31 +55,32 @@ class MoonDeckAppLauncher:
         pooler = TimedPooler(timeout=max(stuck_null_user_wait_timeout, timeout),
                              exception_on_timeout=RunnerError(Result.SteamDidNotReadyUpInTime))
 
-        desired_mode = SteamUiMode.BigPicture if big_picture_mode else SteamUiMode.Desktop
-        async for req1, req2 in pooler(await client.notify_on_changes(SteamUiModeResponse, CurrentUserResponse)):
-            mode = req1["mode"]
-            current_user = req2["user"]
-            current_user_id = current_user and current_user["id"]
+        async with pooler(await client.notify_on_changes(SteamUiModeResponse, CurrentUserResponse)) as notifications:
+            desired_mode = SteamUiMode.BigPicture if big_picture_mode else SteamUiMode.Desktop
+            async for n1, n2 in notifications:
+                mode = n1["mode"]
+                current_user = n2["user"]
+                current_user_id = current_user and current_user["id"]
 
-            if user_id is None:
-                # Any logged-in user will do, but it must be logged-in
-                if current_user_id is None:
-                    continue
-            elif current_user:
-                if current_user_id is None:
-                    if stuck_null_user_wait_timeout is not None:
-                        pooler.repeat_timeout = stuck_null_user_wait_timeout
-                        stuck_null_user_wait_timeout = None
+                if user_id is None:
+                    # Any logged-in user will do, but it must be logged-in
+                    if current_user_id is None:
                         continue
+                elif current_user:
+                    if current_user_id is None:
+                        if stuck_null_user_wait_timeout is not None:
+                            notifications.repeat_timeout = stuck_null_user_wait_timeout
+                            stuck_null_user_wait_timeout = None
+                            continue
 
-                if current_user_id != user_id:
-                    if can_retry_user_switch:
-                        return True
-                    else:
-                        continue
+                    if current_user_id != user_id:
+                        if can_retry_user_switch:
+                            return True
+                        else:
+                            continue
 
-            if mode == desired_mode:
-                break
+                if mode == desired_mode:
+                    break
 
         return False
 
@@ -87,42 +90,43 @@ class MoonDeckAppLauncher:
         pooler = TimedPooler(timeout=launch_timeout,
                              exception_on_timeout=RunnerError(Result.AppLaunchFailed))
 
-        app_was_updating = False
-        async for req, in pooler(await client.notify_on_changes(StreamedAppDataResponse)):
-            data = req["data"]
-            if data is None:
-                raise RunnerError(Result.AppLaunchAborted)
+        async with pooler(await client.notify_on_changes(StreamedAppDataResponse)) as notifications:
+            app_was_updating = False
+            async for n1, in notifications:
+                data = n1["data"]
+                if data is None:
+                    raise RunnerError(Result.AppLaunchAborted)
 
-            state = data["app_state"]
-            if state == AppState.Updating:
-                app_was_updating = True
+                state = data["app_state"]
+                if state == AppState.Updating:
+                    app_was_updating = True
 
-                # No timeout while the app is updating
-                pooler.timeout = launch_timeout
-                pooler.repeat_timeout = None
-            elif state == AppState.Running:
-                # If it was updating, but is now running, there's no need to launch it again
-                app_was_updating = False
+                    # No timeout while the app is updating
+                    notifications.timeout = launch_timeout
+                    notifications.repeat_timeout = None
+                elif state == AppState.Running:
+                    # If it was updating, but is now running, there's no need to launch it again
+                    app_was_updating = False
 
-                # Reset the retry counter to the initial value for even more stability...
-                pooler.timeout = launch_timeout
+                    # Reset the retry counter to the initial value for even more stability...
+                    notifications.timeout = launch_timeout
 
-                # Counter is needed for apps that come with brain-dead launcher (EALink for example)
-                if pooler.repeat_timeout is None:
-                    pooler.repeat_timeout = stability_timeout
+                    # Counter is needed for apps that come with brain-dead launcher (EALink for example)
+                    if notifications.repeat_timeout is None:
+                        notifications.repeat_timeout = stability_timeout
+                    else:
+                        # Usual the Steam app state changes rapidly with launchers, so if it stays
+                        # consistent for like 15s, it should be good enough for us
+                        break
                 else:
-                    # Usual the Steam app state changes rapidly with launchers, so if it stays
-                    # consistent for like 15s, it should be good enough for us
-                    break
-            else:
-                if app_was_updating:
-                    # If the app is no longer updating we need to re-launch it by
-                    # returning this special value
-                    break
+                    if app_was_updating:
+                        # If the app is no longer updating we need to re-launch it by
+                        # returning this special value
+                        break
 
-                # See note above, we are want the app id to stay consistent for some configurable seconds,
-                # so the repeat timeout will only be enabled again in case the app is running
-                pooler.repeat_timeout = None
+                    # See note above, we are want the app id to stay consistent for some configurable seconds,
+                    # so the repeat timeout will only be enabled again in case the app is running
+                    notifications.repeat_timeout = None
 
         return app_was_updating
 
@@ -131,14 +135,15 @@ class MoonDeckAppLauncher:
         logger.info("Waiting for app to close")
         pooler = TimedPooler(timeout=None)
 
-        async for req, in pooler(await client.notify_on_changes(StreamedAppDataResponse)):
-            data = req["data"]
-            if data is None:
-                break
+        async with pooler(await client.notify_on_changes(StreamedAppDataResponse)) as notifications:
+            async for n1, in notifications:
+                data = n1["data"]
+                if data is None:
+                    break
 
-            state = data["app_state"]
-            if state == AppState.Stopped:
-                break
+                state = data["app_state"]
+                if state == AppState.Stopped:
+                    break
 
     @classmethod
     async def launch(cls, client: BuddyClient, big_picture_mode: bool, app_id: str, user: SteamUser | None, stream_rdy_timeout: int, steam_rdy_timeout: int, stability_timeout: int, launch_timeout: int, user_switch_timeout: int, cleanup_on_error: bool, manage_stream: bool):
@@ -228,28 +233,29 @@ class MoonDeckAppRunner:
         pooler = TimedPooler(timeout=timeout,
                              exception_on_timeout=RunnerError(Result.BuddyDidNotRespond))
 
-        async for req1, req2, req3 in pooler(await client.notify_on_changes(StreamStateResponse, StreamedAppDataResponse, CurrentUserResponse)):
-            state = req1["state"]
-            data = req2["data"]
-            current_user = req3["user"]
-            current_user_id = current_user and current_user["id"]
+        async with pooler(await client.notify_on_changes(StreamStateResponse, StreamedAppDataResponse, CurrentUserResponse)) as notifications:
+            async for n1, n2, n3 in notifications:
+                state = n1["state"]
+                data = n2["data"]
+                current_user = n3["user"]
+                current_user_id = current_user and current_user["id"]
 
-            if state == StreamState.StreamEnding:
-                pooler.exception_on_timeout = RunnerError(Result.StreamDidNotEnd)
+                if state == StreamState.StreamEnding:
+                    notifications.exception_on_timeout = RunnerError(Result.StreamDidNotEnd)
 
-            if state == StreamState.Streaming:
-                if data is None:
-                    # Stream is active, but the app was not started for some reason
-                    break
-                
-                if data["app_id"] == app_id and (user_id is None or current_user_id == user_id):
-                    # Already streaming this very app via the same account
-                    break
+                if state == StreamState.Streaming:
+                    if data is None:
+                        # Stream is active, but the app was not started for some reason
+                        break
+                    
+                    if data["app_id"] == app_id and (user_id is None or current_user_id == user_id):
+                        # Already streaming this very app via the same account
+                        break
 
-                pooler.exception_on_timeout = RunnerError(Result.AnotherSteamAppIsStreaming)
+                    notifications.exception_on_timeout = RunnerError(Result.AnotherSteamAppIsStreaming)
 
-            # All other states are OK
-            break
+                # All other states are OK
+                break
 
     @staticmethod
     async def start_moonlight(proxy: MoonlightProxy, hostname: str, host_app: str, cmd_options: CommandLineOptions):
@@ -273,11 +279,12 @@ class MoonDeckAppRunner:
         pooler = TimedPooler(timeout=timeout,
                              exception_on_timeout=RunnerError(Result.StreamDidNotEnd))
 
-        async for req, in pooler(await client.notify_on_changes(StreamStateResponse)):
-            state = req["state"]
+        async with pooler(await client.notify_on_changes(StreamStateResponse)) as notifications:
+            async for n1, in notifications:
+                state = n1["state"]
 
-            if state == StreamState.NotStreaming:
-                break
+                if state == StreamState.NotStreaming:
+                    break
 
     @classmethod
     async def end_successful_stream(cls, client: BuddyClient, close_steam: Optional[CloseSteam], timeout: int):

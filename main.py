@@ -238,12 +238,13 @@ class Plugin:
                 pooler = TimedPooler(timeout=ready_timeout,
                                      exception_on_timeout=BuddyException(Result.SteamDidNotReadyUpInTime))
 
-                async for req1, req2 in pooler(await client.notify_on_changes(SteamUiModeResponse, CurrentUserResponse)):
-                    mode = req1["mode"]
-                    current_user = req2["user"]
-                    
-                    if mode != SteamUiMode.Unknown or current_user != None:
-                        break
+                async with pooler(await client.notify_on_changes(SteamUiModeResponse, CurrentUserResponse)) as notifications:
+                    async for n1, n2 in notifications:
+                        mode = n1["mode"]
+                        current_user = n2["user"]
+                        
+                        if mode != SteamUiMode.Unknown or current_user != None:
+                            break
 
                 return await client.get_non_steam_app_data(user_id=user_id)
 
