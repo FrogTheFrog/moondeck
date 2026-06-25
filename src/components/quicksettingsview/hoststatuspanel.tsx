@@ -35,13 +35,19 @@ export const HostStatusPanel: FC<Props> = ({ currentHostSettings, currentSetting
   return (
     <PanelSection title="STATUS">
       <PanelSectionRow>
-        <HostSelectionDropdown
-          disableNoneOption={true}
-          disabled={false}
-          singleItemSelection={true}
-          currentSettings={currentSettings}
-          setHost={(value) => { settingsManager.update((settings) => { settings.currentHostId = value; }); }}
-        />
+        <Field
+          childrenContainerWidth="fixed"
+          spacingBetweenLabelAndChild="none"
+          childrenLayout="below"
+        >
+          <HostSelectionDropdown
+            disableNoneOption={true}
+            disabled={false}
+            singleItemSelection={true}
+            currentSettings={currentSettings}
+            setHost={(value) => { settingsManager.update((settings) => { settings.currentHostId = value; }); }}
+          />
+        </Field>
       </PanelSectionRow>
       <PanelSectionRow>
         <ServerStatusField label="GameStream" status={serverStatus} isRefreshing={serverRefreshStatus} noSeparator={true} />

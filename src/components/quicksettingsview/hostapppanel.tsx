@@ -27,6 +27,7 @@ export const HostAppPanel: FC<Props> = ({ currentSettings, currentHostSettings }
         <Field
           childrenContainerWidth="fixed"
           spacingBetweenLabelAndChild="none"
+          childrenLayout="below"
         >
           <HostAppSelectionDropdown
             currentIndex={currentHostSettings.buddy.hostApp.selectedAppIndex}

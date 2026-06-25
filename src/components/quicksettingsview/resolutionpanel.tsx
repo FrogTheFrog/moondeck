@@ -60,6 +60,7 @@ export const ResolutionPanel: FC<Props> = ({ currentSettings, currentHostSetting
               <Field
                 childrenContainerWidth="fixed"
                 spacingBetweenLabelAndChild="none"
+                childrenLayout="below"
               >
                 <ResolutionSelectionDropdown
                   focusable={currentHostSettings.resolution.dimensions.length > 1}

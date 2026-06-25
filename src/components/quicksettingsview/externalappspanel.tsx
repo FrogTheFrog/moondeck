@@ -20,6 +20,7 @@ export const ExternalAppsPanel: FC<Props> = ({ currentHostSettings }) => {
         <Field
           childrenContainerWidth="fixed"
           spacingBetweenLabelAndChild="none"
+          childrenLayout="below"
         >
           <ExternalAppsSyncButton text="Sync Non-Steam Apps" appType={AppType.NonSteam} noConfirmationDialog={true} />
         </Field>
@@ -33,6 +34,7 @@ export const ExternalAppsPanel: FC<Props> = ({ currentHostSettings }) => {
         <Field
           childrenContainerWidth="fixed"
           spacingBetweenLabelAndChild="none"
+          childrenLayout="below"
           bottomSeparator={nonSteamView ? "none" : "standard"}
         >
           <ExternalAppsSyncButton text="Sync GameStream Apps" appType={AppType.GameStream} noConfirmationDialog={true} />
