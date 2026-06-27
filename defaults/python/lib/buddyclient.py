@@ -60,6 +60,11 @@ class HibernateHostResult(Enum):
     Failed = "Failed to hibernate host via Buddy!"
 
 
+class AbortHostStateChangeResult(Enum):
+    BuddyRefused = "Buddy refused to abort host state change. Check the logs on host!"
+    Failed = "Failed to abort host state change via Buddy!"
+
+
 class SteamUiModeResult(Enum):
     Failed = "Failed to get Steam UI mode via Buddy!"
 
@@ -298,6 +303,22 @@ class BuddyClient(contextlib.AbstractAsyncContextManager):
                 raise BuddyException(HibernateHostResult.BuddyRefused)
 
         return await self._try_request(request(), HibernateHostResult.Failed)
+    
+    async def abort_host_state_change(self):
+        async def request():
+            try:
+                await self.say_hello()
+                return  # Buddy is in an "online" state, skip the request
+            except BuddyException as err:
+                valid_states = [HelloResult.Restarting, HelloResult.ShuttingDown, HelloResult.Suspending, HelloResult.Hibernating]
+                if err.result not in valid_states:
+                    raise err
+
+            resp = await self.__requests.post_abort_host_state_change()
+            if not resp["result"]:
+                raise BuddyException(AbortHostStateChangeResult.BuddyRefused)
+
+        return await self._try_request(request(), AbortHostStateChangeResult.Failed)
 
     async def get_host_info(self):
         async def request():

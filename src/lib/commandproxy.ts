@@ -1,5 +1,5 @@
+import { BuddyProxy, BuddyStatus } from "./buddyproxy";
 import { BehaviorSubject } from "rxjs";
-import { BuddyProxy } from "./buddyproxy";
 import { Mutex } from "async-mutex";
 import { ReadonlySubject } from "./readonlysubject";
 import { ServerProxy } from "./serverproxy";
@@ -48,6 +48,14 @@ async function hibernateHost(address: string, buddyPort: number, clientId: strin
   }
 }
 
+async function abortHostStateChange(address: string, buddyPort: number, clientId: string, timeout: number): Promise<void> {
+  try {
+    await call<[string, number, string, number], unknown>("abort_host_state_change", address, buddyPort, clientId, timeout);
+  } catch (message) {
+    logger.critical("Error while aborting host state change: ", message);
+  }
+}
+
 async function closeSteam(address: string, buddyPort: number, clientId: string, timeout: number): Promise<void> {
   try {
     await call<[string, number, string, number], unknown>("close_steam", address, buddyPort, clientId, timeout);
@@ -55,6 +63,8 @@ async function closeSteam(address: string, buddyPort: number, clientId: string, 
     logger.critical("Error while trying to close Steam on host PC: ", message);
   }
 }
+
+export const validAbortPcStateChangeStates: BuddyStatus[] = ["Restarting", "ShuttingDown", "Suspending", "Hibernating"];
 
 export class CommandProxy {
   private readonly settingsManager: SettingsManager;
@@ -66,11 +76,11 @@ export class CommandProxy {
 
   readonly executing = new ReadonlySubject(this.executingSubject);
 
-  private async changePcState(callback: (address: string, buddyPort: number, clientId: string) => Promise<void>): Promise<void> {
+  private async changePcState(callback: (address: string, buddyPort: number, clientId: string) => Promise<void>, validState: BuddyStatus[] = ["Online"]): Promise<void> {
     const release = await this.mutex.acquire();
     try {
       this.executingSubject.next(true);
-      if (this.buddyProxy.status.value === "Online") {
+      if (validState.includes(this.buddyProxy.status.value)) {
         const hostSettings = this.settingsManager.hostSettings;
         const address = hostSettings?.address ?? null;
         const buddyPort = hostSettings?.buddy.port ?? null;
@@ -120,26 +130,32 @@ export class CommandProxy {
 
   async restartPC(): Promise<void> {
     await this.changePcState(async (address: string, buddyPort: number, clientId: string) => {
-      await restartHost(address, buddyPort, clientId, 10, 5);
+      await restartHost(address, buddyPort, clientId, 10, 3);
     });
   }
 
   async shutdownPC(): Promise<void> {
     await this.changePcState(async (address: string, buddyPort: number, clientId: string) => {
-      await shutdownHost(address, buddyPort, clientId, 10, 5);
+      await shutdownHost(address, buddyPort, clientId, 10, 3);
     });
   }
 
   async suspendPC(): Promise<void> {
     await this.changePcState(async (address: string, buddyPort: number, clientId: string) => {
-      await suspendHost(address, buddyPort, clientId, 10, 5);
+      await suspendHost(address, buddyPort, clientId, 10, 3);
     });
   }
 
   async hibernatePC(): Promise<void> {
     await this.changePcState(async (address: string, buddyPort: number, clientId: string) => {
-      await hibernateHost(address, buddyPort, clientId, 10, 5);
+      await hibernateHost(address, buddyPort, clientId, 10, 3);
     });
+  }
+
+  async abortPcStateChange(): Promise<void> {
+    await this.changePcState(async (address: string, buddyPort: number, clientId: string) => {
+      await abortHostStateChange(address, buddyPort, clientId, 3);
+    }, validAbortPcStateChangeStates);
   }
 
   async closeSteam(triggerExecutionChange = true): Promise<void> {

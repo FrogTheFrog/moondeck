@@ -151,7 +151,7 @@ class Plugin:
                 await client.restart_host(delay_s)
 
         except BuddyException:
-            logger.exception(f"Buddy exception while restarting host")
+            logger.exception("Buddy exception while restarting host")
 
         except Exception:
             logger.exception("Unhandled exception")
@@ -163,7 +163,7 @@ class Plugin:
                 await client.shutdown_host(delay_s)
 
         except BuddyException:
-            logger.exception(f"Buddy exception while shutting down host")
+            logger.exception("Buddy exception while shutting down host")
 
         except Exception:
             logger.exception("Unhandled exception")
@@ -175,7 +175,7 @@ class Plugin:
                 await client.suspend_host(delay_s)
 
         except BuddyException:
-            logger.exception(f"Buddy exception while suspending host")
+            logger.exception("Buddy exception while suspending host")
 
         except Exception:
             logger.exception("Unhandled exception")
@@ -187,7 +187,19 @@ class Plugin:
                 await client.hibernate_host(delay_s)
 
         except BuddyException:
-            logger.exception(f"Buddy exception while hibernating host")
+            logger.exception("Buddy exception while hibernating host")
+
+        except Exception:
+            logger.exception("Unhandled exception")
+
+    @utils.async_scope_log(logger.info)
+    async def abort_host_state_change(self, address: str, buddy_port: int, client_id: str, timeout: float):
+        try:
+            async with BuddyClient(address, buddy_port, client_id, timeout) as client:
+                await client.abort_host_state_change()
+
+        except BuddyException:
+            logger.exception("Buddy exception while trying to abort host state change")
 
         except Exception:
             logger.exception("Unhandled exception")

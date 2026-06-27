@@ -1,4 +1,4 @@
-import { BuddyStatus, ServerStatus, logger } from "../../lib";
+import { BuddyStatus, ServerStatus, logger, validAbortPcStateChangeStates } from "../../lib";
 import { ButtonItem, PanelSection, PanelSectionRow } from "@decky/ui";
 import { CurrentHostSettings, useCommandExecutionStatus } from "../../hooks";
 import { FC, useContext } from "react";
@@ -35,14 +35,22 @@ export const HostCommandPanel: FC<Props> = ({ serverStatus, buddyStatus, current
       </ButtonItem>;
   }
 
+  const statusChangeCanBeAborted = validAbortPcStateChangeStates.includes(buddyStatus);
+  const enableWolButton = !executionStatus && (statusChangeCanBeAborted || (serverStatus === "Offline" && buddyStatus === "Offline"));
   return (
     <PanelSection title="COMMANDS" spinner={executionStatus}>
       <PanelSectionRow>
         <ButtonItem
           layout="below"
           bottomSeparator="none"
-          disabled={executionStatus || serverStatus === "Online" || buddyStatus === "Online"}
-          onClick={() => { connectivityManager.commandProxy.wakeOnLan().catch((e) => logger.critical(e)); }}
+          disabled={!enableWolButton}
+          onClick={() => {
+            if (statusChangeCanBeAborted) {
+              connectivityManager.commandProxy.abortPcStateChange().catch((e) => logger.critical(e));
+            } else {
+              connectivityManager.commandProxy.wakeOnLan().catch((e) => logger.critical(e));
+            }
+          }}
         >
           Wake On LAN
         </ButtonItem>

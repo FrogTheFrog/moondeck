@@ -263,6 +263,11 @@ class BuddyRequests(contextlib.AbstractAsyncContextManager):
         async with self.__session.post(f"{self.base_url}/hibernateHost", json=data) as resp:
             data = await resp.json(encoding="utf-8")
             return utils.from_dict(ResultLikeResponse, data)
+        
+    async def post_abort_host_state_change(self):
+        async with self.__session.post(f"{self.base_url}/abortHostStateChange") as resp:
+            data = await resp.json(encoding="utf-8")
+            return utils.from_dict(ResultLikeResponse, data)
 
     async def get_host_info(self):
         async with self.__session.get(f"{self.base_url}/hostInfo") as resp:
