@@ -24,7 +24,7 @@ from typing import Optional
 from lib.plugin.settings import UserSettings, UserSettingsManager
 from lib.logger import logger, set_logger_settings
 from lib.buddyrequests import SteamUiMode, SteamUiModeResponse, CurrentUserResponse, BuddyException
-from lib.buddyclient import BuddyClient, PcStateChange
+from lib.buddyclient import BuddyClient
 from lib.utils import wake_on_lan, change_moondeck_runner_ready_state, TimedPooler
 from lib.runnerresult import Result, set_result, get_result
 
@@ -145,14 +145,49 @@ class Plugin:
             logger.exception("Unhandled exception")
 
     @utils.async_scope_log(logger.info)
-    async def change_pc_state(self, address: str, buddy_port: int, client_id: str, state: str, timeout: float):
+    async def restart_host(self, address: str, buddy_port: int, client_id: str, delay_s: int, timeout: float):
         try:
-            state_enum = PcStateChange[state]
             async with BuddyClient(address, buddy_port, client_id, timeout) as client:
-                await client.change_pc_state(state_enum, 10)
+                await client.restart_host(delay_s)
 
         except BuddyException:
-            logger.exception(f"Buddy exception while changing PC state to {state}")
+            logger.exception(f"Buddy exception while restarting host")
+
+        except Exception:
+            logger.exception("Unhandled exception")
+
+    @utils.async_scope_log(logger.info)
+    async def shutdown_host(self, address: str, buddy_port: int, client_id: str, delay_s: int, timeout: float):
+        try:
+            async with BuddyClient(address, buddy_port, client_id, timeout) as client:
+                await client.shutdown_host(delay_s)
+
+        except BuddyException:
+            logger.exception(f"Buddy exception while shutting down host")
+
+        except Exception:
+            logger.exception("Unhandled exception")
+
+    @utils.async_scope_log(logger.info)
+    async def suspend_host(self, address: str, buddy_port: int, client_id: str, delay_s: int, timeout: float):
+        try:
+            async with BuddyClient(address, buddy_port, client_id, timeout) as client:
+                await client.suspend_host(delay_s)
+
+        except BuddyException:
+            logger.exception(f"Buddy exception while suspending host")
+
+        except Exception:
+            logger.exception("Unhandled exception")
+
+    @utils.async_scope_log(logger.info)
+    async def hibernate_host(self, address: str, buddy_port: int, client_id: str, delay_s: int, timeout: float):
+        try:
+            async with BuddyClient(address, buddy_port, client_id, timeout) as client:
+                await client.hibernate_host(delay_s)
+
+        except BuddyException:
+            logger.exception(f"Buddy exception while hibernating host")
 
         except Exception:
             logger.exception("Unhandled exception")

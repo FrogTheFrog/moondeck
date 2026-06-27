@@ -17,13 +17,8 @@ class PcState(Enum):
     Restarting = 1
     ShuttingDown = 2
     Suspending = 3
-    Transient = 4
-
-
-class PcStateChange(Enum):
-    Restart = 0
-    Shutdown = 1
-    Suspend = 2
+    Hibernating = 4
+    Transient = 5
 
 
 class StreamState(Enum):
@@ -232,14 +227,40 @@ class BuddyRequests(contextlib.AbstractAsyncContextManager):
         async with self.__session.get(f"{self.base_url}/pcState") as resp:
             data = await resp.json(encoding="utf-8")
             return utils.from_dict(PcStateResponse, data)
-
-    async def post_change_pc_state(self, state: PcStateChange, delay_s: int):
+        
+    async def post_restart_host(self, delay_s: int):
         data = {
-            "state": state.name,
             "delay": delay_s
         }
 
-        async with self.__session.post(f"{self.base_url}/changePcState", json=data) as resp:
+        async with self.__session.post(f"{self.base_url}/restartHost", json=data) as resp:
+            data = await resp.json(encoding="utf-8")
+            return utils.from_dict(ResultLikeResponse, data)
+        
+    async def post_shutdown_host(self, delay_s: int):
+        data = {
+            "delay": delay_s
+        }
+
+        async with self.__session.post(f"{self.base_url}/shutdownHost", json=data) as resp:
+            data = await resp.json(encoding="utf-8")
+            return utils.from_dict(ResultLikeResponse, data)
+        
+    async def post_suspend_host(self, delay_s: int):
+        data = {
+            "delay": delay_s
+        }
+
+        async with self.__session.post(f"{self.base_url}/suspendHost", json=data) as resp:
+            data = await resp.json(encoding="utf-8")
+            return utils.from_dict(ResultLikeResponse, data)
+        
+    async def post_hibernate_host(self, delay_s: int):
+        data = {
+            "delay": delay_s
+        }
+
+        async with self.__session.post(f"{self.base_url}/hibernateHost", json=data) as resp:
             data = await resp.json(encoding="utf-8")
             return utils.from_dict(ResultLikeResponse, data)
 

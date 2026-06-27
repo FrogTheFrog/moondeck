@@ -97,6 +97,7 @@ export interface BuddySettings {
   port: number;
   closeSteam: typeof closeSteamOption[number] | null;
   hostApp: HostApp;
+  hibernateHost: boolean;
 }
 
 export interface GameStreamAppsSettings {

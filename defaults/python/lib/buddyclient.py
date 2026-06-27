@@ -3,7 +3,7 @@ from . import constants
 
 from enum import Enum
 from typing import Any, AsyncGenerator, Awaitable, Type, overload
-from .buddyrequests import BuddyRequests, PairingState, PcState, PcStateChange, BuddyException
+from .buddyrequests import BuddyRequests, PairingState, PcState, BuddyException
 from .utils import T, T1, T2, T3
 
 
@@ -13,6 +13,7 @@ class HelloResult(Enum):
     Restarting = "Buddy is restarting the PC!"
     ShuttingDown = "Buddy is shutting down the PC!"
     Suspending = "Buddy is suspending the PC!"
+    Hibernating = "Buddy is hibernating the PC!"
     Pairing = "MoonDeck/Buddy is already pairing!"
     NotPaired = "MoonDeck/Buddy needs pairing!"
     Offline = "Buddy is offline!"
@@ -39,9 +40,24 @@ class CloseSteamBigPictureModeResult(Enum):
     Failed = "Failed to close BPM via Buddy!"
 
 
-class ChangePcStateResult(Enum):
-    BuddyRefused = "Buddy refused to change PC state. Check the logs on host!"
-    Failed = "Failed to change PC state via Buddy!"
+class RestartHostResult(Enum):
+    BuddyRefused = "Buddy refused to restart host. Check the logs on host!"
+    Failed = "Failed to restart host via Buddy!"
+
+
+class ShutdownHostResult(Enum):
+    BuddyRefused = "Buddy refused to shutdown host. Check the logs on host!"
+    Failed = "Failed to shutdown host via Buddy!"
+
+
+class SuspendHostResult(Enum):
+    BuddyRefused = "Buddy refused to suspend host. Check the logs on host!"
+    Failed = "Failed to suspend host via Buddy!"
+
+
+class HibernateHostResult(Enum):
+    BuddyRefused = "Buddy refused to hibernate host. Check the logs on host!"
+    Failed = "Failed to hibernate host via Buddy!"
 
 
 class SteamUiModeResult(Enum):
@@ -162,6 +178,8 @@ class BuddyClient(contextlib.AbstractAsyncContextManager):
                 raise BuddyException(HelloResult.ShuttingDown)
             elif resp["state"] == PcState.Suspending:
                 raise BuddyException(HelloResult.Suspending)
+            elif resp["state"] == PcState.Hibernating:
+                raise BuddyException(HelloResult.Hibernating)
             elif resp["state"] == PcState.Transient:
                 raise BuddyException(HelloResult.Offline)
             
@@ -245,14 +263,41 @@ class BuddyClient(contextlib.AbstractAsyncContextManager):
 
         return await self._try_request(request(), CloseSteamBigPictureModeResult.Failed)
 
-    async def change_pc_state(self, state: PcStateChange, delay_s: int):
+    async def restart_host(self, delay_s: int):
         async def request():
             await self.say_hello()
-            resp = await self.__requests.post_change_pc_state(state, delay_s)
+            resp = await self.__requests.post_restart_host(delay_s)
             if not resp["result"]:
-                raise BuddyException(ChangePcStateResult.BuddyRefused)
+                raise BuddyException(RestartHostResult.BuddyRefused)
 
-        return await self._try_request(request(), ChangePcStateResult.Failed)
+        return await self._try_request(request(), RestartHostResult.Failed)
+    
+    async def shutdown_host(self, delay_s: int):
+        async def request():
+            await self.say_hello()
+            resp = await self.__requests.post_shutdown_host(delay_s)
+            if not resp["result"]:
+                raise BuddyException(ShutdownHostResult.BuddyRefused)
+
+        return await self._try_request(request(), ShutdownHostResult.Failed)
+    
+    async def suspend_host(self, delay_s: int):
+        async def request():
+            await self.say_hello()
+            resp = await self.__requests.post_suspend_host(delay_s)
+            if not resp["result"]:
+                raise BuddyException(SuspendHostResult.BuddyRefused)
+
+        return await self._try_request(request(), SuspendHostResult.Failed)
+    
+    async def hibernate_host(self, delay_s: int):
+        async def request():
+            await self.say_hello()
+            resp = await self.__requests.post_hibernate_host(delay_s)
+            if not resp["result"]:
+                raise BuddyException(HibernateHostResult.BuddyRefused)
+
+        return await self._try_request(request(), HibernateHostResult.Failed)
 
     async def get_host_info(self):
         async def request():

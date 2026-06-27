@@ -1,5 +1,5 @@
 from lib.cli.utils import buddy_session, cmd_entry, host_pattern_matcher, settings_watcher
-from lib.buddyclient import BuddyClient, PcStateChange, HelloResult
+from lib.buddyclient import BuddyClient, HelloResult
 from lib.buddyrequests import BuddyException
 from lib.logger import logger
 
@@ -10,7 +10,7 @@ from lib.logger import logger
 @cmd_entry
 async def execute(buddy_client: BuddyClient, delay: int):
     try:
-        await buddy_client.change_pc_state(PcStateChange.Shutdown, delay)
+        await buddy_client.shutdown_host(delay)
     except BuddyException as err:
         if err.result != HelloResult.ShuttingDown:
             raise err

@@ -1,17 +1,39 @@
 import { BuddyStatus, ServerStatus, logger } from "../../lib";
 import { ButtonItem, PanelSection, PanelSectionRow } from "@decky/ui";
+import { CurrentHostSettings, useCommandExecutionStatus } from "../../hooks";
 import { FC, useContext } from "react";
 import { MoonDeckContext } from "../../contexts";
-import { useCommandExecutionStatus } from "../../hooks";
 
 interface Props {
   serverStatus: ServerStatus;
   buddyStatus: BuddyStatus;
+  currentHostSettings: CurrentHostSettings;
 }
 
-export const HostCommandPanel: FC<Props> = ({ serverStatus, buddyStatus }) => {
+export const HostCommandPanel: FC<Props> = ({ serverStatus, buddyStatus, currentHostSettings }) => {
   const { connectivityManager } = useContext(MoonDeckContext);
   const executionStatus = useCommandExecutionStatus();
+
+  let suspendOrHibernate = null;
+  if (currentHostSettings.buddy.hibernateHost) {
+    suspendOrHibernate =
+      <ButtonItem
+        layout="below"
+        disabled={executionStatus || buddyStatus !== "Online"}
+        onClick={() => { connectivityManager.commandProxy.suspendPC().catch((e) => logger.critical(e)); }}
+      >
+        Suspend PC
+      </ButtonItem>;
+  } else {
+    suspendOrHibernate =
+      <ButtonItem
+        layout="below"
+        disabled={executionStatus || buddyStatus !== "Online"}
+        onClick={() => { connectivityManager.commandProxy.hibernatePC().catch((e) => logger.critical(e)); }}
+      >
+        Hibernate PC
+      </ButtonItem>;
+  }
 
   return (
     <PanelSection title="COMMANDS" spinner={executionStatus}>
@@ -46,13 +68,7 @@ export const HostCommandPanel: FC<Props> = ({ serverStatus, buddyStatus }) => {
         </ButtonItem>
       </PanelSectionRow>
       <PanelSectionRow>
-        <ButtonItem
-          layout="below"
-          disabled={executionStatus || buddyStatus !== "Online"}
-          onClick={() => { connectivityManager.commandProxy.suspendPC().catch((e) => logger.critical(e)); }}
-        >
-          Suspend PC
-        </ButtonItem>
+        {suspendOrHibernate}
       </PanelSectionRow>
     </PanelSection>
   );

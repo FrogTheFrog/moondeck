@@ -64,6 +64,7 @@ class BuddySettings(TypedDict):
     port: int
     closeSteam: Optional[CloseSteamOption]
     hostApp: HostApp
+    hibernateHost: bool
 
 
 class GameStreamAppsSettings(TypedDict):
@@ -122,7 +123,7 @@ class ButtonStyleSettings(TypedDict):
 
 
 class UserSettings(TypedDict):
-    version: Literal[39]
+    version: Literal[40]
     clientId: str
     currentHostId: Optional[str]
     gameSession: GameSessionSettings
@@ -383,3 +384,7 @@ class UserSettingsManager(SettingsManager[UserSettings]):
             data["version"] = 39
             for host in data["hostSettings"].keys():
                 data["hostSettings"][host]["runnerTimeouts"]["userSwitch"] = 60
+        if data["version"] == 39:
+            data["version"] = 40
+            for host in data["hostSettings"].keys():
+                data["hostSettings"][host]["buddy"]["hibernateHost"] = False

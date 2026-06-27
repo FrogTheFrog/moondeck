@@ -8,8 +8,6 @@ import { call } from "@decky/api";
 import { logger } from "./logger";
 import { sleep } from "@decky/ui";
 
-type PcStateChange = "Restart" | "Shutdown" | "Suspend";
-
 async function wakeOnLan(hostName: string, address: string, mac: string, port: number, customExec: string | null): Promise<void> {
   try {
     await call<[string, string, string, number, string | null], unknown>("wake_on_lan", hostName, address, mac, port, customExec);
@@ -18,11 +16,35 @@ async function wakeOnLan(hostName: string, address: string, mac: string, port: n
   }
 }
 
-async function changePcState(address: string, buddyPort: number, clientId: string, state: PcStateChange, timeout: number): Promise<void> {
+async function restartHost(address: string, buddyPort: number, clientId: string, delaySecs: number, timeout: number): Promise<void> {
   try {
-    await call<[string, number, string, PcStateChange, number], unknown>("change_pc_state", address, buddyPort, clientId, state, timeout);
+    await call<[string, number, string, number, number], unknown>("restart_host", address, buddyPort, clientId, delaySecs, timeout);
   } catch (message) {
-    logger.critical("Error while changing PC state: ", message);
+    logger.critical("Error while restarting host: ", message);
+  }
+}
+
+async function shutdownHost(address: string, buddyPort: number, clientId: string, delaySecs: number, timeout: number): Promise<void> {
+  try {
+    await call<[string, number, string, number, number], unknown>("shutdown_host", address, buddyPort, clientId, delaySecs, timeout);
+  } catch (message) {
+    logger.critical("Error while shutting down host: ", message);
+  }
+}
+
+async function suspendHost(address: string, buddyPort: number, clientId: string, delaySecs: number, timeout: number): Promise<void> {
+  try {
+    await call<[string, number, string, number, number], unknown>("suspend_host", address, buddyPort, clientId, delaySecs, timeout);
+  } catch (message) {
+    logger.critical("Error while suspending host: ", message);
+  }
+}
+
+async function hibernateHost(address: string, buddyPort: number, clientId: string, delaySecs: number, timeout: number): Promise<void> {
+  try {
+    await call<[string, number, string, number, number], unknown>("hibernate_host", address, buddyPort, clientId, delaySecs, timeout);
+  } catch (message) {
+    logger.critical("Error while hibernating host: ", message);
   }
 }
 
@@ -44,7 +66,7 @@ export class CommandProxy {
 
   readonly executing = new ReadonlySubject(this.executingSubject);
 
-  async doChangePcState(state: PcStateChange): Promise<void> {
+  private async changePcState(callback: (address: string, buddyPort: number, clientId: string) => Promise<void>): Promise<void> {
     const release = await this.mutex.acquire();
     try {
       this.executingSubject.next(true);
@@ -55,7 +77,7 @@ export class CommandProxy {
         const clientId = this.settingsManager.settings.value?.clientId ?? null;
 
         if (address !== null && buddyPort !== null && clientId !== null) {
-          await changePcState(address, buddyPort, clientId, state, 5);
+          await callback(address, buddyPort, clientId);
           await sleep(2 * 1000);
           await this.buddyProxy.refreshStatus();
         }
@@ -97,15 +119,27 @@ export class CommandProxy {
   }
 
   async restartPC(): Promise<void> {
-    await this.doChangePcState("Restart");
+    await this.changePcState(async (address: string, buddyPort: number, clientId: string) => {
+      await restartHost(address, buddyPort, clientId, 10, 5);
+    });
   }
 
   async shutdownPC(): Promise<void> {
-    await this.doChangePcState("Shutdown");
+    await this.changePcState(async (address: string, buddyPort: number, clientId: string) => {
+      await shutdownHost(address, buddyPort, clientId, 10, 5);
+    });
   }
 
   async suspendPC(): Promise<void> {
-    await this.doChangePcState("Suspend");
+    await this.changePcState(async (address: string, buddyPort: number, clientId: string) => {
+      await suspendHost(address, buddyPort, clientId, 10, 5);
+    });
+  }
+
+  async hibernatePC(): Promise<void> {
+    await this.changePcState(async (address: string, buddyPort: number, clientId: string) => {
+      await hibernateHost(address, buddyPort, clientId, 10, 5);
+    });
   }
 
   async closeSteam(triggerExecutionChange = true): Promise<void> {

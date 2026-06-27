@@ -10,10 +10,10 @@ from lib.logger import logger
 @cmd_entry
 async def execute(buddy_client: BuddyClient, delay: int):
     try:
-        await buddy_client.restart_host(delay)
+        await buddy_client.hibernate_host(delay)
     except BuddyException as err:
-        if err.result != HelloResult.Restarting:
+        if err.result != HelloResult.Hibernating:
             raise err
 
-    logger.info("Host is restarting.")
+    logger.info("Host is hibernating.")
     return 0
