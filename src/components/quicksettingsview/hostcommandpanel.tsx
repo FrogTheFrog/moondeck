@@ -20,18 +20,18 @@ export const HostCommandPanel: FC<Props> = ({ serverStatus, buddyStatus, current
       <ButtonItem
         layout="below"
         disabled={executionStatus || buddyStatus !== "Online"}
-        onClick={() => { connectivityManager.commandProxy.suspendPC().catch((e) => logger.critical(e)); }}
+        onClick={() => { connectivityManager.commandProxy.hibernatePC().catch((e) => logger.critical(e)); }}
       >
-        Suspend PC
+        Hibernate PC
       </ButtonItem>;
   } else {
     suspendOrHibernate =
       <ButtonItem
         layout="below"
         disabled={executionStatus || buddyStatus !== "Online"}
-        onClick={() => { connectivityManager.commandProxy.hibernatePC().catch((e) => logger.critical(e)); }}
+        onClick={() => { connectivityManager.commandProxy.suspendPC().catch((e) => logger.critical(e)); }}
       >
-        Hibernate PC
+        Suspend PC
       </ButtonItem>;
   }
 
