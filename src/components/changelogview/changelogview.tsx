@@ -13,6 +13,8 @@ export const ChangelogView: FC = () => {
               <div>&bull; MoonDeck will now automatically switch Steam account on host if needed.</div>
               <div>&bull; MoonDeck will no longer remove manually added non-MoonDeck apps from MoonDeck collection.</div>
               <div>&bull; MoonDeck and Buddy is now using WebSocket communication when streaming for increased responsiveness.</div>
+              <div>&bull; Improved the WOL to try and interrupt Buddy if it's restarting/shutting down/suspending host.</div>
+              <div>&bull; Whether Buddy is suspending or hibernating host is now controllable from MoonDeck settings.</div>
             </>
           }
           focusable={true}
