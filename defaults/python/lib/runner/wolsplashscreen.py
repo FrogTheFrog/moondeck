@@ -158,6 +158,15 @@ class WolSplashScreen:
         else:
             self.timeout_end = None
 
+    async def __wol_loop(self):
+        while True:
+            await wake_on_lan(hostname=self.hostname,
+                              address=self.address,
+                              mac=self.mac,
+                              port=self.wol_port,
+                              custom_exec=self.custom_wol_exec)
+            await asyncio.sleep(10)
+
     async def __run_loop(self):
         while not self.close_flag:
             pyglet.clock.tick()
@@ -184,11 +193,7 @@ class WolSplashScreen:
         self.canvas = Canvas() # Added to pyglet.app.windows
         self.canvas.label.set_text(text=f"Checking connection to {self.hostname}...")
         self.close_flag = False
-        self.wol_task = asyncio.create_task(wake_on_lan(hostname=self.hostname,
-                                                        address=self.address,
-                                                        mac=self.mac,
-                                                        port=self.wol_port,
-                                                        custom_exec=self.custom_wol_exec))
+        self.wol_task = asyncio.create_task(self.__wol_loop())
         self.loop_task = asyncio.create_task(self.__run_loop())
         return self
 
