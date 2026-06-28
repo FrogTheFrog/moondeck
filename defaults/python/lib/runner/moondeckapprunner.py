@@ -212,7 +212,15 @@ class MoonDeckAppRunner:
                     buddy_status = True
                 except BuddyException as err:
                     buddy_status = False
-                    if err.result != HelloResult.Offline:
+
+                    if err.result in BuddyClient.CAN_BE_ABORTED_STATES:
+                        try:
+                            await client.abort_host_state_change()
+                        except BuddyException as abort_err:
+                            # this is irrelevant exception and subject to all sort of race conditions
+                            # so we just log it
+                            logger.info(f"Failed to abort host state change: {abort_err}")
+                    elif err.result != HelloResult.Offline:
                         raise RunnerError(err.result)
 
                 server_info = await get_server_info(address=client.address, 

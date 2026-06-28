@@ -123,6 +123,8 @@ class GetCurrentUserResult(Enum):
 
 class BuddyClient(contextlib.AbstractAsyncContextManager):
 
+    CAN_BE_ABORTED_STATES = [HelloResult.Restarting, HelloResult.ShuttingDown, HelloResult.Suspending, HelloResult.Hibernating]
+
     def __init__(self, address: str, port: int, client_id: str, timeout: float) -> None:
         super().__init__()
         self.__address = address
@@ -310,8 +312,7 @@ class BuddyClient(contextlib.AbstractAsyncContextManager):
                 await self.say_hello()
                 return  # Buddy is in an "online" state, skip the request
             except BuddyException as err:
-                valid_states = [HelloResult.Restarting, HelloResult.ShuttingDown, HelloResult.Suspending, HelloResult.Hibernating]
-                if err.result not in valid_states:
+                if err.result not in self.CAN_BE_ABORTED_STATES:
                     raise err
 
             resp = await self.__requests.post_abort_host_state_change()
