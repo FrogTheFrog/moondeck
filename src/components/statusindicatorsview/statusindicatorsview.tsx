@@ -65,6 +65,16 @@ export const StatusIndicatorsView: FC = () => {
           focusable={true}
         />
         <Field
+          label={stringifyBuddyStatus("Suspending")}
+          description="Buddy has issued the command for the host PC to suspend (sleep) and is now waiting for it to happen."
+          focusable={true}
+        />
+        <Field
+          label={stringifyBuddyStatus("Hibernating")}
+          description="Buddy has issued the command for the host PC to hibernate and is now waiting for it to happen."
+          focusable={true}
+        />
+        <Field
           label={stringifyBuddyStatus("SslVerificationFailed")}
           description="SSL certification could not be verified. Maybe a 100 years has already elapsed since this plugin was written or either Buddy or MoonDeck needs to be updated to the latest version."
           focusable={true}

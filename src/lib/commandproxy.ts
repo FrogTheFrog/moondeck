@@ -1,9 +1,9 @@
 import { BuddyProxy, BuddyStatus } from "./buddyproxy";
+import { HostSettings, SettingsManager, UserSettings } from "./settingsmanager";
+import { ServerProxy, ServerStatus } from "./serverproxy";
 import { BehaviorSubject } from "rxjs";
 import { Mutex } from "async-mutex";
 import { ReadonlySubject } from "./readonlysubject";
-import { ServerProxy } from "./serverproxy";
-import { SettingsManager } from "./settingsmanager";
 import { call } from "@decky/api";
 import { logger } from "./logger";
 import { sleep } from "@decky/ui";
@@ -64,6 +64,19 @@ async function closeSteam(address: string, buddyPort: number, clientId: string, 
   }
 }
 
+type Callback = () => Promise<void>;
+type CallbackWithSettings = (userSettings: Readonly<UserSettings>, hostSettings: Readonly<HostSettings>) => Promise<void>;
+interface InvocationOptions {
+  locked: boolean;
+  validBuddyStatus: BuddyStatus[];
+  validServerStatus: ServerStatus[];
+  updateExecutionState: boolean;
+}
+const defaultInvocationOptions: InvocationOptions = { locked: true, validBuddyStatus: [], validServerStatus: [], updateExecutionState: true };
+const defaultDelay = 10;
+const defaultTimeout = 3;
+const defaultSleepForUX = 2000;
+
 export const validAbortPcStateChangeStates: BuddyStatus[] = ["Restarting", "ShuttingDown", "Suspending", "Hibernating"];
 
 export class CommandProxy {
@@ -76,26 +89,78 @@ export class CommandProxy {
 
   readonly executing = new ReadonlySubject(this.executingSubject);
 
-  private async changePcState(callback: (address: string, buddyPort: number, clientId: string) => Promise<void>, validState: BuddyStatus[] = ["Online"]): Promise<void> {
-    const release = await this.mutex.acquire();
-    try {
-      this.executingSubject.next(true);
-      if (validState.includes(this.buddyProxy.status.value)) {
-        const hostSettings = this.settingsManager.hostSettings;
-        const address = hostSettings?.address ?? null;
-        const buddyPort = hostSettings?.buddy.port ?? null;
-        const clientId = this.settingsManager.settings.value?.clientId ?? null;
-
-        if (address !== null && buddyPort !== null && clientId !== null) {
-          await callback(address, buddyPort, clientId);
-          await sleep(2 * 1000);
-          await this.buddyProxy.refreshStatus();
-        }
+  private withMutex(callback: Callback) {
+    return async () => {
+      const release = await this.mutex.acquire();
+      try {
+        await callback();
+      } finally {
+        release();
       }
-    } finally {
-      this.executingSubject.next(false);
-      release();
+    };
+  }
+
+  private withBuddyStatus(callback: Callback, validStatus: BuddyStatus[]) {
+    return async () => {
+      if (validStatus.includes(this.buddyProxy.status.value)) {
+        await callback();
+      }
+    };
+  }
+
+  private withServerStatus(callback: Callback, validStatus: ServerStatus[]) {
+    return async () => {
+      if (validStatus.includes(this.serverProxy.status.value)) {
+        await callback();
+      }
+    };
+  }
+
+  private withExecutionState(callback: Callback) {
+    return async () => {
+      try {
+        this.executingSubject.next(true);
+        await callback();
+      } finally {
+        this.executingSubject.next(false);
+      }
+    };
+  }
+
+  private withSettings(callback: CallbackWithSettings) {
+    return async () => {
+      const userSettings = this.settingsManager.settings.value;
+      const hostSettings = this.settingsManager.hostSettings;
+      if (userSettings && hostSettings) {
+        await callback(userSettings, hostSettings);
+      }
+    };
+  }
+
+  private async invokeCallback(callback: CallbackWithSettings, options: InvocationOptions = defaultInvocationOptions) {
+    let wrappedCallback = this.withSettings(callback);
+    if (options.validBuddyStatus.length > 0) {
+      wrappedCallback = this.withBuddyStatus(wrappedCallback, options.validBuddyStatus);
     }
+    if (options.validServerStatus.length > 0) {
+      wrappedCallback = this.withServerStatus(wrappedCallback, options.validServerStatus);
+    }
+    if (options.updateExecutionState) {
+      wrappedCallback = this.withExecutionState(wrappedCallback);
+    }
+    if (options.locked) {
+      wrappedCallback = this.withMutex(wrappedCallback);
+    }
+
+    await wrappedCallback();
+  }
+
+  private async changePcState(callback: CallbackWithSettings, validBuddyStatus: BuddyStatus[] = ["Online"]): Promise<void> {
+    await this.invokeCallback(async (userSettings, hostSettings) => {
+      await callback(userSettings, hostSettings);
+      await sleep(defaultSleepForUX);
+      await this.buddyProxy.refreshStatus();
+    }, { ...defaultInvocationOptions, validBuddyStatus });
   }
 
   constructor(settingsManager: SettingsManager, buddyProxy: BuddyProxy, serverProxy: ServerProxy) {
@@ -105,82 +170,46 @@ export class CommandProxy {
   }
 
   async wakeOnLan(): Promise<void> {
-    const release = await this.mutex.acquire();
-    try {
-      this.executingSubject.next(true);
-      if (this.buddyProxy.status.value === "Offline" && this.serverProxy.status.value === "Offline") {
-        const hostSettings = this.settingsManager.hostSettings;
-        const hostName = hostSettings?.hostName ?? null;
-        const address = hostSettings?.address ?? null;
-        const mac = hostSettings?.mac ?? null;
-        const port = hostSettings?.wolSettings.port ?? null;
-        const useCustomExec = hostSettings?.wolSettings.useCustomWolExec ?? false;
-        const customExec = hostSettings?.wolSettings.customWolExecPath ?? null;
-
-        if (hostName !== null && address !== null && mac !== null && port !== null && (!useCustomExec || customExec !== null)) {
-          await wakeOnLan(hostName, address, mac, port, useCustomExec ? customExec : null);
-          await sleep(2 * 1000);
-        }
-      }
-    } finally {
-      this.executingSubject.next(false);
-      release();
-    }
+    await this.invokeCallback(async (_, { hostName, address, mac, wolSettings }) => {
+      await wakeOnLan(hostName, address, mac, wolSettings.port, wolSettings.useCustomWolExec ? wolSettings.customWolExecPath : null);
+      await sleep(defaultSleepForUX);
+    }, { ...defaultInvocationOptions, validBuddyStatus: ["Offline"], validServerStatus: ["Offline"] });
   }
 
   async restartPC(): Promise<void> {
-    await this.changePcState(async (address: string, buddyPort: number, clientId: string) => {
-      await restartHost(address, buddyPort, clientId, 10, 3);
+    await this.changePcState(async ({ clientId }, { address, buddy }) => {
+      await restartHost(address, buddy.port, clientId, defaultDelay, defaultTimeout);
     });
   }
 
   async shutdownPC(): Promise<void> {
-    await this.changePcState(async (address: string, buddyPort: number, clientId: string) => {
-      await shutdownHost(address, buddyPort, clientId, 10, 3);
+    await this.changePcState(async ({ clientId }, { address, buddy }) => {
+      await shutdownHost(address, buddy.port, clientId, defaultDelay, defaultTimeout);
     });
   }
 
   async suspendPC(): Promise<void> {
-    await this.changePcState(async (address: string, buddyPort: number, clientId: string) => {
-      await suspendHost(address, buddyPort, clientId, 10, 3);
+    await this.changePcState(async ({ clientId }, { address, buddy }) => {
+      await suspendHost(address, buddy.port, clientId, defaultDelay, defaultTimeout);
     });
   }
 
   async hibernatePC(): Promise<void> {
-    await this.changePcState(async (address: string, buddyPort: number, clientId: string) => {
-      await hibernateHost(address, buddyPort, clientId, 10, 3);
+    await this.changePcState(async ({ clientId }, { address, buddy }) => {
+      await hibernateHost(address, buddy.port, clientId, defaultDelay, defaultTimeout);
     });
   }
 
   async abortPcStateChange(): Promise<void> {
-    await this.changePcState(async (address: string, buddyPort: number, clientId: string) => {
-      await abortHostStateChange(address, buddyPort, clientId, 3);
+    await this.changePcState(async ({ clientId }, { address, buddy }) => {
+      await abortHostStateChange(address, buddy.port, clientId, defaultTimeout);
     }, validAbortPcStateChangeStates);
   }
 
-  async closeSteam(triggerExecutionChange = true): Promise<void> {
-    const release = await this.mutex.acquire();
-    try {
-      if (triggerExecutionChange) {
-        this.executingSubject.next(true);
-      }
-
-      if (this.buddyProxy.status.value === "Online") {
-        const hostSettings = this.settingsManager.hostSettings;
-        const address = hostSettings?.address ?? null;
-        const buddyPort = hostSettings?.buddy.port ?? null;
-        const clientId = this.settingsManager.settings.value?.clientId ?? null;
-
-        if (address !== null && buddyPort !== null && clientId !== null) {
-          await closeSteam(address, buddyPort, clientId, 5);
-          await sleep(2 * 1000);
-        }
-      }
-    } finally {
-      if (triggerExecutionChange) {
-        this.executingSubject.next(false);
-      }
-      release();
-    }
+  async closeSteam(updateExecutionState = true): Promise<void> {
+    await this.invokeCallback(async ({ clientId }, { address, buddy }) => {
+      await closeSteam(address, buddy.port, clientId, defaultTimeout);
+      await sleep(defaultSleepForUX);
+    }, { ...defaultInvocationOptions, validBuddyStatus: ["Online"], updateExecutionState });
   }
 }
