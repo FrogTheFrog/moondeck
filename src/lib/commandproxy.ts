@@ -48,11 +48,12 @@ async function hibernateHost(address: string, buddyPort: number, clientId: strin
   }
 }
 
-async function abortHostStateChange(address: string, buddyPort: number, clientId: string, timeout: number): Promise<void> {
+async function abortHostStateChange(address: string, buddyPort: number, clientId: string, timeout: number): Promise<boolean> {
   try {
-    await call<[string, number, string, number], unknown>("abort_host_state_change", address, buddyPort, clientId, timeout);
+    return await call<[string, number, string, number], boolean>("abort_host_state_change", address, buddyPort, clientId, timeout);
   } catch (message) {
     logger.critical("Error while aborting host state change: ", message);
+    return false;
   }
 }
 
@@ -64,8 +65,16 @@ async function closeSteam(address: string, buddyPort: number, clientId: string, 
   }
 }
 
-type Callback = () => Promise<void>;
-type CallbackWithSettings = (userSettings: Readonly<UserSettings>, hostSettings: Readonly<HostSettings>) => Promise<void>;
+async function endStream(address: string, buddyPort: number, clientId: string, timeout: number): Promise<void> {
+  try {
+    await call<[string, number, string, number], unknown>("end_stream", address, buddyPort, clientId, timeout);
+  } catch (message) {
+    logger.critical("Error while trying to end Stream on host PC: ", message);
+  }
+}
+
+type Callback<T = void> = () => Promise<T>;
+type CallbackWithSettings<T = void> = (userSettings: Readonly<UserSettings>, hostSettings: Readonly<HostSettings>) => Promise<T>;
 interface InvocationOptions {
   locked: boolean;
   validBuddyStatus: BuddyStatus[];
@@ -89,55 +98,58 @@ export class CommandProxy {
 
   readonly executing = new ReadonlySubject(this.executingSubject);
 
-  private withMutex(callback: Callback) {
+  private withMutex<T>(callback: Callback<T>) {
     return async () => {
       const release = await this.mutex.acquire();
       try {
-        await callback();
+        return await callback();
       } finally {
         release();
       }
     };
   }
 
-  private withBuddyStatus(callback: Callback, validStatus: BuddyStatus[]) {
+  private withBuddyStatus<T>(callback: Callback<T>, validStatus: BuddyStatus[]) {
     return async () => {
       if (validStatus.includes(this.buddyProxy.status.value)) {
-        await callback();
+        return await callback();
       }
+      return undefined;
     };
   }
 
-  private withServerStatus(callback: Callback, validStatus: ServerStatus[]) {
+  private withServerStatus<T>(callback: Callback<T>, validStatus: ServerStatus[]) {
     return async () => {
       if (validStatus.includes(this.serverProxy.status.value)) {
-        await callback();
+        return await callback();
       }
+      return undefined;
     };
   }
 
-  private withExecutionState(callback: Callback) {
+  private withExecutionState<T>(callback: Callback<T>) {
     return async () => {
       try {
         this.executingSubject.next(true);
-        await callback();
+        return await callback();
       } finally {
         this.executingSubject.next(false);
       }
     };
   }
 
-  private withSettings(callback: CallbackWithSettings) {
+  private withSettings<T>(callback: CallbackWithSettings<T>) {
     return async () => {
       const userSettings = this.settingsManager.settings.value;
       const hostSettings = this.settingsManager.hostSettings;
       if (userSettings && hostSettings) {
-        await callback(userSettings, hostSettings);
+        return await callback(userSettings, hostSettings);
       }
+      return undefined;
     };
   }
 
-  private async invokeCallback(callback: CallbackWithSettings, options: InvocationOptions = defaultInvocationOptions) {
+  private async invokeCallback<T>(callback: CallbackWithSettings<T>, options: InvocationOptions = defaultInvocationOptions) {
     let wrappedCallback = this.withSettings(callback);
     if (options.validBuddyStatus.length > 0) {
       wrappedCallback = this.withBuddyStatus(wrappedCallback, options.validBuddyStatus);
@@ -152,14 +164,15 @@ export class CommandProxy {
       wrappedCallback = this.withMutex(wrappedCallback);
     }
 
-    await wrappedCallback();
+    return await wrappedCallback();
   }
 
-  private async changePcState(callback: CallbackWithSettings, validBuddyStatus: BuddyStatus[] = ["Online"]): Promise<void> {
-    await this.invokeCallback(async (userSettings, hostSettings) => {
-      await callback(userSettings, hostSettings);
+  private async changePcState<T>(callback: CallbackWithSettings<T>, validBuddyStatus: BuddyStatus[] = ["Online"]) {
+    return await this.invokeCallback(async (userSettings, hostSettings) => {
+      const result = await callback(userSettings, hostSettings);
       await sleep(defaultSleepForUX);
       await this.buddyProxy.refreshStatus();
+      return result;
     }, { ...defaultInvocationOptions, validBuddyStatus });
   }
 
@@ -178,12 +191,16 @@ export class CommandProxy {
 
   async restartPC(): Promise<void> {
     await this.changePcState(async ({ clientId }, { address, buddy }) => {
+      await closeSteam(address, buddy.port, clientId, defaultTimeout);
+      await endStream(address, buddy.port, clientId, defaultTimeout);
       await restartHost(address, buddy.port, clientId, defaultDelay, defaultTimeout);
     });
   }
 
   async shutdownPC(): Promise<void> {
     await this.changePcState(async ({ clientId }, { address, buddy }) => {
+      await closeSteam(address, buddy.port, clientId, defaultTimeout);
+      await endStream(address, buddy.port, clientId, defaultTimeout);
       await shutdownHost(address, buddy.port, clientId, defaultDelay, defaultTimeout);
     });
   }
@@ -200,10 +217,10 @@ export class CommandProxy {
     });
   }
 
-  async abortPcStateChange(): Promise<void> {
-    await this.changePcState(async ({ clientId }, { address, buddy }) => {
-      await abortHostStateChange(address, buddy.port, clientId, defaultTimeout);
-    }, validAbortPcStateChangeStates);
+  async abortPcStateChange(): Promise<boolean> {
+    return await this.changePcState(async ({ clientId }, { address, buddy }) => {
+      return await abortHostStateChange(address, buddy.port, clientId, defaultTimeout);
+    }, validAbortPcStateChangeStates) ?? false;
   }
 
   async closeSteam(updateExecutionState = true): Promise<void> {

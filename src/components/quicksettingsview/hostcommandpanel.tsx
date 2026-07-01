@@ -45,11 +45,11 @@ export const HostCommandPanel: FC<Props> = ({ serverStatus, buddyStatus, current
           bottomSeparator="none"
           disabled={!enableWolButton}
           onClick={() => {
-            if (statusChangeCanBeAborted) {
-              connectivityManager.commandProxy.abortPcStateChange().catch((e) => logger.critical(e));
-            } else {
-              connectivityManager.commandProxy.wakeOnLan().catch((e) => logger.critical(e));
-            }
+            Promise.resolve().then(async () => {
+              if (!statusChangeCanBeAborted || !await connectivityManager.commandProxy.abortPcStateChange()) {
+                await connectivityManager.commandProxy.wakeOnLan();
+              }
+            }).catch((e) => logger.critical(e));
           }}
         >
           Wake On LAN

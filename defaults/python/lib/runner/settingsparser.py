@@ -49,6 +49,8 @@ class MoonlightOnlyRunnerSettings(TypedDict):
     mac: str
     address: str
     host_port: int
+    buddy_port: int
+    client_id: str
     timeouts: RunnerTimeouts
     moonlight_exec_path: Optional[str]
     custom_wol_exec_path: Optional[str]
@@ -214,6 +216,8 @@ async def parse_settings() -> MoonDeckAppRunnerSettings | MoonlightOnlyRunnerSet
             "mac": host_settings["mac"],
             "address": host_settings["address"],
             "host_port": host_settings["hostInfoPort"],
+            "buddy_port": host_settings["buddy"]["port"],
+            "client_id": user_settings["clientId"],
             "timeouts": host_settings["runnerTimeouts"],
             "moonlight_exec_path": user_settings["moonlightExecPath"] if user_settings["useMoonlightExec"] else None,
             "custom_wol_exec_path": host_settings["wolSettings"]["customWolExecPath"] if host_settings["wolSettings"]["useCustomWolExec"] else None,

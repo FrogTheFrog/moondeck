@@ -15,6 +15,7 @@ export const ChangelogView: FC = () => {
               <div>&bull; MoonDeck and Buddy is now using WebSocket communication when streaming for increased responsiveness.</div>
               <div>&bull; Improved the WOL to try and interrupt Buddy if it's restarting/shutting down/suspending host.</div>
               <div>&bull; Whether Buddy is suspending or hibernating host is now controllable from MoonDeck settings.</div>
+              <div>&bull; When host is suspended or hibernated, the stream will no longer be end and Steam will not close.</div>
             </>
           }
           focusable={true}

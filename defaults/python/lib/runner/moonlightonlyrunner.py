@@ -1,14 +1,17 @@
 from typing import Optional
+
 from .settingsparser import MoonlightOnlyRunnerSettings
 from ..runnerresult import Result, RunnerError
 from ..gamestreaminfo import get_server_info
 from ..logger import logger
 from ..moonlightproxy import CommandLineOptions, MoonlightProxy
+from ..buddyclient import BuddyClient
+from ..buddyrequests import BuddyException
 
 
 class MoonlightOnlyRunner:
     @staticmethod
-    async def check_connectivity(address: str, mac: str, host_id: str, hostname: str, host_port: int, wol_port: int, custom_wol_exec: Optional[str], wol_timeout: int, server_timeout: int):
+    async def check_connectivity(client: BuddyClient, address: str, mac: str, host_id: str, hostname: str, host_port: int, wol_port: int, custom_wol_exec: Optional[str], wol_timeout: int, server_timeout: int):
         logger.info("Checking connection to GameStream server")
 
         # Lazy import to improve CLI performance
@@ -16,6 +19,17 @@ class MoonlightOnlyRunner:
 
         async with WolSplashScreen(address, mac, wol_timeout, hostname, wol_port, custom_wol_exec) as splash:
             while True:
+                # Just in case the Buddy is online (not needed for this type of apps),
+                # try to abort any ongoing host change
+                try:
+                    await client.say_hello(force=True)
+                except BuddyException as err:
+                    if err.result in BuddyClient.CAN_BE_ABORTED_STATES:
+                        try:
+                            await client.abort_host_state_change()
+                        except BuddyException as abort_err:
+                            logger.info(f"Failed to abort host state change: {abort_err}")
+
                 server_info = await get_server_info(address=address, 
                                                     port=host_port, 
                                                     timeout=server_timeout)
@@ -40,11 +54,17 @@ class MoonlightOnlyRunner:
 
     @classmethod
     async def run(cls, settings: MoonlightOnlyRunnerSettings):
+        buddy_client = BuddyClient(
+            settings["address"],
+            settings["buddy_port"],
+            settings["client_id"],
+            settings["timeouts"]["buddyRequests"])
         moonlight_proxy = MoonlightProxy(
             settings["moonlight_exec_path"])
 
-        async with moonlight_proxy as proxy:
-            await cls.check_connectivity(address=settings["address"], 
+        async with buddy_client as client, moonlight_proxy as proxy:
+            await cls.check_connectivity(client=client,
+                                         address=settings["address"], 
                                          mac=settings["mac"],
                                          host_id=settings["host_id"],
                                          hostname=settings["hostname"],

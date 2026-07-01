@@ -24,7 +24,7 @@ from typing import Optional
 from lib.plugin.settings import UserSettings, UserSettingsManager
 from lib.logger import logger, set_logger_settings
 from lib.buddyrequests import SteamUiMode, SteamUiModeResponse, CurrentUserResponse, BuddyException
-from lib.buddyclient import BuddyClient
+from lib.buddyclient import BuddyClient, AbortHostStateChangeResult
 from lib.utils import wake_on_lan, change_moondeck_runner_ready_state, TimedPooler
 from lib.runnerresult import Result, set_result, get_result
 
@@ -197,12 +197,16 @@ class Plugin:
         try:
             async with BuddyClient(address, buddy_port, client_id, timeout) as client:
                 await client.abort_host_state_change()
+                return True
 
-        except BuddyException:
-            logger.exception("Buddy exception while trying to abort host state change")
+        except BuddyException as err:
+            if err.result != AbortHostStateChangeResult.BuddyRefused:
+                logger.exception("Buddy exception while trying to abort host state change")
+            return False
 
         except Exception:
             logger.exception("Unhandled exception")
+            return False
 
     @utils.async_scope_log(logger.info)
     async def get_moondeckrun_path(self):
@@ -255,6 +259,18 @@ class Plugin:
 
         except BuddyException:
             logger.exception("Buddy exception while closing steam")
+
+        except Exception:
+            logger.exception("Unhandled exception")
+
+    @utils.async_scope_log(logger.info)
+    async def end_stream(self, address: str, buddy_port: int, client_id: str, timeout: float):
+        try:
+            async with BuddyClient(address, buddy_port, client_id, timeout) as client:
+                await client.end_stream()
+
+        except BuddyException:
+            logger.exception("Buddy exception while ending stream")
 
         except Exception:
             logger.exception("Unhandled exception")
