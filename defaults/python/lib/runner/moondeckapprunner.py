@@ -57,6 +57,7 @@ class MoonDeckAppLauncher:
 
         async with pooler(await client.notify_on_changes(SteamUiModeResponse, CurrentUserResponse)) as notifications:
             desired_mode = SteamUiMode.BigPicture if big_picture_mode else SteamUiMode.Desktop
+            last_user_wait_ts = None
             async for n1, n2 in notifications:
                 mode = n1["mode"]
                 current_user = n2["user"]
@@ -68,9 +69,13 @@ class MoonDeckAppLauncher:
                         continue
                 elif current_user:
                     if current_user_id is None:
-                        if stuck_null_user_wait_timeout is not None:
-                            notifications.repeat_timeout = stuck_null_user_wait_timeout
-                            stuck_null_user_wait_timeout = None
+                        now = notifications.yield_time
+                        last_user_wait_ts = last_user_wait_ts or now
+                        elapsed_time = now - last_user_wait_ts
+                        remaining_wait_time = stuck_null_user_wait_timeout - elapsed_time
+                        
+                        if remaining_wait_time > 0:
+                            notifications.repeat_timeout = remaining_wait_time
                             continue
 
                     if current_user_id != user_id:

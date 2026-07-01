@@ -1,6 +1,7 @@
 # Warning! Slow to load, only import this module lazily!
 import pyglet
 import asyncio
+import contextlib
 
 from typing import Optional
 from datetime import datetime, timedelta, timezone
@@ -206,7 +207,8 @@ class WolSplashScreen:
                 _, pending = await asyncio.wait({self.wol_task}, timeout=1)
                 if self.wol_task in pending:
                     self.wol_task.cancel()
-                    await asyncio.wait({self.wol_task}) 
+                    with contextlib.suppress(asyncio.CancelledError):
+                        await self.wol_task
 
             self.loop_task.result()
 
