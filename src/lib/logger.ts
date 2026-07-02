@@ -1,6 +1,32 @@
-import { toaster } from "@decky/api";
+import { call, toaster } from "@decky/api";
+import { executeAsync } from "./executeasync";
+import { inspect } from "loupe";
+
+function serialize(...args: unknown[]) {
+  return args.map((arg) => inspect(arg)).join(" ");
+}
+
+function criticalConsoleLog(...args: unknown[]) {
+  console.error(
+    "%c MoonDeck %c Critical:",
+    "background: #16a085; color: black;",
+    "background: transparent;",
+    ...args
+  );
+}
+
+type PythonLogLevel = "DEBUG" | "INFO" | "WARNING" | "ERROR" | "CRITICAL";
+async function frontendLogEntry(level: PythonLogLevel, ...args: unknown[]): Promise<void> {
+  try {
+    await call<[PythonLogLevel, string], unknown>("frontend_log_entry", level, serialize(...args));
+  } catch (message) {
+    criticalConsoleLog("Error while trying to save frontend log: ", message);
+  }
+}
 
 class Logger {
+  public verbose: boolean = false;
+
   toast(entry: string, options: { duration?: number; output?: "debug" | "log" | "warn" | "error" | null } = {}): void {
     const { duration = 5000, output = "log" } = options;
     const critical = output === "error";
@@ -32,6 +58,9 @@ class Logger {
       "background: transparent;",
       ...args
     );
+    if (this.verbose) {
+      executeAsync(frontendLogEntry("DEBUG", ...args));
+    }
   }
 
   log(...args: unknown[]): void {
@@ -42,6 +71,7 @@ class Logger {
       "background: transparent;",
       ...args
     );
+    executeAsync(frontendLogEntry("INFO", ...args));
   }
 
   warn(...args: unknown[]): void {
@@ -52,6 +82,7 @@ class Logger {
       "background: transparent;",
       ...args
     );
+    executeAsync(frontendLogEntry("WARNING", ...args));
   }
 
   error(...args: unknown[]): void {
@@ -62,15 +93,12 @@ class Logger {
       "background: transparent;",
       ...args
     );
+    executeAsync(frontendLogEntry("ERROR", ...args));
   }
 
   critical(...args: unknown[]): void {
-    console.error(
-      "%c MoonDeck %c Critical:",
-      "background: #16a085; color: black;",
-      "background: transparent;",
-      ...args
-    );
+    criticalConsoleLog(...args);
+    executeAsync(frontendLogEntry("CRITICAL", ...args));
   }
 }
 

@@ -227,6 +227,7 @@ export class SettingsManager {
 
       const settings = await getUserSettings();
       if (!isEqual(this.settings.value, settings)) {
+        logger.verbose = settings?.runnerDebugLogs ?? false;
         this.settingsSubject.next(settings);
       }
     } finally {

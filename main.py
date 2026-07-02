@@ -15,6 +15,7 @@ add_plugin_to_path()
 
 
 import asyncio
+import logging
 import pathlib
 import lib.gamestreaminfo as gamestreaminfo
 import lib.constants as constants
@@ -22,15 +23,18 @@ import lib.utils as utils
 
 from typing import Optional
 from lib.plugin.settings import UserSettings, UserSettingsManager
-from lib.logger import logger, set_logger_settings
+from lib.logger import logger, set_logger_settings, get_logger
 from lib.buddyrequests import SteamUiMode, SteamUiModeResponse, CurrentUserResponse, BuddyException
 from lib.buddyclient import BuddyClient, AbortHostStateChangeResult
 from lib.utils import wake_on_lan, change_moondeck_runner_ready_state, TimedPooler
 from lib.runnerresult import Result, set_result, get_result
 from lib.moonlightproxy import MoonlightProxy
 
+set_logger_settings(logger, constants.LOG_FILE, rotate=True)
 
-set_logger_settings(constants.LOG_FILE, rotate=True)
+frontend_logger = get_logger("frontend")
+set_logger_settings(frontend_logger, constants.FRONTEND_LOG_FILE, rotate=True)
+
 settings_manager = UserSettingsManager(constants.get_config_file_path())
 
 
@@ -47,6 +51,12 @@ class Plugin:
     async def _unload(self):
         self.__cleanup_states()
 
+    async def frontend_log_entry(self, level: str, message: str):
+        try:
+            frontend_logger.log(logging._checkLevel(level), message)
+        except Exception:
+            logger.exception("Failed to save frontend log")
+
     @utils.async_scope_log(logger.info)
     async def set_runner_ready(self):
         change_moondeck_runner_ready_state(True)
@@ -57,11 +67,18 @@ class Plugin:
         # Cleanup is needed to differentiate between moondeck launches
         set_result(None)
         return result
+    
+    def set_log_levels(self, data: UserSettings):
+        level = logging.DEBUG if data["runnerDebugLogs"] else logging.INFO
+        logger.setLevel(level)
+        frontend_logger.setLevel(level)
 
     @utils.async_scope_log(logger.info)
     async def get_user_settings(self):
         try:
-            return await settings_manager.read_or_update()
+            data = await settings_manager.read_or_update()
+            self.set_log_levels(data)
+            return data
         except Exception:
             logger.exception("Failed to get user settings")
             return None
@@ -70,6 +87,7 @@ class Plugin:
     async def set_user_settings(self, data: UserSettings):
         try:
             await settings_manager.write(data)
+            self.set_log_levels(data)
         except Exception:
             logger.exception("Failed to set user settings")
 

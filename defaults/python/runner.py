@@ -13,11 +13,12 @@ add_plugin_to_path()
 # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 # autopep8: on  
 
+import logging
 
 from lib.buddyrequests import BuddyException
 from lib.runner.moondeckapprunner import MoonDeckAppRunner
 from lib.runner.moonlightonlyrunner import MoonlightOnlyRunner
-from lib.logger import logger, set_logger_settings, enable_debug_level
+from lib.logger import logger, set_logger_settings
 from lib.utils import is_moondeck_runner_ready
 from lib.runner.settingsparser import parse_settings, RunnerType
 
@@ -25,7 +26,7 @@ import lib.constants as constants
 import lib.runnerresult as runnerresult
 
 
-set_logger_settings(constants.RUNNER_LOG_FILE, rotate=False)
+set_logger_settings(logger, constants.RUNNER_LOG_FILE, rotate=False)
 
 async def main():
     try:
@@ -39,7 +40,7 @@ async def main():
         settings = await parse_settings()
 
         if settings["debug_logs"]:
-            enable_debug_level()
+            logger.setLevel(logging.DEBUG)
         
         if settings["runner_type"] == RunnerType.MoonDeck:
             await MoonDeckAppRunner.run(settings)

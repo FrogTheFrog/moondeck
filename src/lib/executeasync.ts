@@ -1,17 +1,22 @@
 import { logger } from "./logger";
 
-type AsyncCallback = () => Promise<void>;
+type VoidPromise = Promise<void>;
+type AsyncCallback = () => VoidPromise;
 
-export function executeAsyncWrapper(callback: AsyncCallback) {
+export function executeAsyncWrapper(input: AsyncCallback | VoidPromise) {
   return () => {
     Promise.resolve()
       .then(async () => {
-        await callback();
+        if (typeof input === "function") {
+          await input();
+        } else {
+          await input;
+        }
       })
       .catch((e) => logger.critical(e));
   };
 }
 
-export function executeAsync(callback: AsyncCallback) {
-  executeAsyncWrapper(callback)();
+export function executeAsync(input: AsyncCallback | VoidPromise) {
+  executeAsyncWrapper(input)();
 }
