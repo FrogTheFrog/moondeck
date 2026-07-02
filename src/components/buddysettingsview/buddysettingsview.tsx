@@ -39,6 +39,12 @@ export const BuddySettingsView: FC = () => {
           value={hostSettings.buddy.bigPictureMode}
           setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.buddy.bigPictureMode = value; })}
         />
+        <ToggleField
+          label="Hibernate PC"
+          description="Hibernate PC instead of suspending it."
+          value={hostSettings.buddy.hibernateHost}
+          setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.buddy.hibernateHost = value; })}
+        />
         <Field
           label="When the gaming session ends:"
           childrenContainerWidth="fixed"

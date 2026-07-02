@@ -6,9 +6,9 @@ import { call } from "@decky/api";
 import { isEqual } from "lodash";
 import { logger } from "./logger";
 
-async function killRunner(appId: number): Promise<void> {
+async function killRunner(appId: number | null): Promise<void> {
   try {
-    await call<[number], unknown>("kill_runner", appId);
+    await call<[number | null], unknown>("kill_runner", appId);
   } catch (message) {
     logger.critical("Error while killing runner script: ", message);
   }
@@ -137,8 +137,11 @@ export class MoonDeckAppProxy extends ReadonlySubject<MoonDeckAppData | null> {
     await this.commandProxy.closeSteam(false);
   }
 
-  async killApp(): Promise<void> {
+  async killApp(forceCleanup = false): Promise<void> {
     if (this.subject.value === null) {
+      if (forceCleanup) {
+        await killRunner(null);
+      }
       return;
     }
 
@@ -151,6 +154,11 @@ export class MoonDeckAppProxy extends ReadonlySubject<MoonDeckAppData | null> {
     if (!await terminateApp(appId, 5000)) {
       logger.warn("Failed to terminate, trying to kill!");
       await killRunner(appId);
+    }
+
+    // If someone cleared it already, we can exit YAY \0/
+    if (this.subject.value === null) {
+      return;
     }
 
     // Reset the original value

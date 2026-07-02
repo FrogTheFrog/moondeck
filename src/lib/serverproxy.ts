@@ -125,7 +125,8 @@ export class ServerProxy {
           hostApp: {
             selectedAppIndex: currentSettings?.buddy.hostApp.selectedAppIndex ?? -1,
             apps: currentSettings?.buddy.hostApp.apps ?? []
-          }
+          },
+          hibernateHost: currentSettings?.buddy.hibernateHost ?? false
         },
         gameStreamApps: {
           showQuickAccessButton: currentSettings?.gameStreamApps.showQuickAccessButton ?? false

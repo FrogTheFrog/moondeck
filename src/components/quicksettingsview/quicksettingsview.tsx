@@ -28,7 +28,7 @@ export const QuickSettingsView: FC = () => {
           </>}
       {
         currentHostSettings !== null &&
-        <HostCommandPanel serverStatus={serverStatus} buddyStatus={buddyStatus} />
+        <HostCommandPanel serverStatus={serverStatus} buddyStatus={buddyStatus} currentHostSettings={currentHostSettings} />
       }
     </>
   );

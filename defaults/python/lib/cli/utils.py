@@ -223,7 +223,7 @@ async def check_connectivity(client: BuddyClient, info_port: int, host_id: str, 
                         await client.say_hello(force=True)
                         status["buddy"] = True
                     except BuddyException as err:
-                        valid_errors = [HelloResult.Offline, HelloResult.Restarting, HelloResult.ShuttingDown, HelloResult.Suspending]
+                        valid_errors = [HelloResult.Offline, HelloResult.Restarting, HelloResult.ShuttingDown, HelloResult.Suspending, HelloResult.Hibernating]
                         if err.result in valid_errors:
                             status["buddy"] = False
                         else:

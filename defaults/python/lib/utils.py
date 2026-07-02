@@ -187,12 +187,13 @@ async def wake_on_lan(hostname: str, address: str, mac: str, port: int = 9, cust
             logger.info(f"WOL exec ({custom_exec}) output:{newline}{buffer.getvalue().strip(newline)}")
             if wol_proc.returncode:
                 raise Exception(f"Custom WOL failed with code {wol_proc.returncode}")
-        except asyncio.CancelledError:
+        except asyncio.CancelledError as err:
             if ps_proc:
                 assert wol_proc is not None
                 ps_signal(ps_proc, kill=True)
                 await wol_proc.wait()
                 logger.info(f"WOL exec ({custom_exec}) output before it was killed:{newline}{buffer.getvalue().strip(newline)}")
+            raise err
     else:
         # Lazy import to improve CLI performance
         import socket
@@ -285,6 +286,7 @@ class TimedPooler:
             self.__repeat_timeout = None
             self.__repeat_timeout_start = None
             self.__generator_active = False
+            self.__yield_time = None
             self.__generator = self.__wrap_generator(generator)
 
         async def aclose(self):
@@ -316,14 +318,23 @@ class TimedPooler:
             self.__repeat_timeout = value
             self.__repeat_timeout_start = None
 
-        def __calculate_remaining_time(self) -> tuple[float | None, bool]:
+        @property
+        def now(self):
             # Lazy import to improve CLI performance
             import asyncio
 
+            return asyncio.get_running_loop().time()
+        
+        @property
+        def yield_time(self):
+            assert self.__yield_time is not None
+            return self.__yield_time
+
+        def __calculate_remaining_time(self) -> tuple[float | None, bool]:
             remaining = None
             is_a_repeat = False
 
-            loop_time = asyncio.get_running_loop().time()
+            loop_time = self.now
             timeout_end_time = None
             repeat_timeout_end_time = None
 
@@ -376,15 +387,18 @@ class TimedPooler:
                                 return
 
                         self.__generator_active = True
+                        self.__yield_time = self.now
                         yield last_yield_value
                         if self.__repeat_timeout_start is not None:
                             self.repeat_timeout = None
+                        self.__yield_time = None
                 finally:
                     if next_value_task is not None:
                         next_value_task.cancel()
                         with contextlib.suppress(asyncio.CancelledError):
                             await next_value_task
                     self.__generator_active = False
+                    self.__yield_time = None
     
     def __init__(self, timeout: float | None, exception_on_timeout: Exception | None = None):
         self.__timeout = timeout

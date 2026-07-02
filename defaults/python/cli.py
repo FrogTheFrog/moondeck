@@ -329,6 +329,16 @@ def add_cmd_host(main_subparsers: _SubParsersAction[ArgumentParserWithRedirect])
     suspend_parser.add_argument(
         "--buddy-timeout", type=TYPE_TIMEOUT, default=DEF_TIMEOUT, help=DESC_BUDDY_TIMEOUT)
     
+    # -------- Setup `hibernate` command
+    hibernate_parser = host_subparsers.add_parser(
+        "hibernate", help="hibernate the paired host")
+    hibernate_parser.add_argument(
+        "--host", type=str, help=DESC_HOST)
+    hibernate_parser.add_argument(
+        "--delay", type=TYPE_DELAY, default=DEF_DELAY, help=DESC_DELAY)
+    hibernate_parser.add_argument(
+        "--buddy-timeout", type=TYPE_TIMEOUT, default=DEF_TIMEOUT, help=DESC_BUDDY_TIMEOUT)
+    
     # -------- Setup `wake` command
     wake_parser = host_subparsers.add_parser(
         "wake", help="send WOL to the host")
@@ -486,6 +496,7 @@ async def main():
                         "set"
                     ]
                 },
+                "hibernate",
                 "list",
                 "pair",
                 "ping",

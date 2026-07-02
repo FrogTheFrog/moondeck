@@ -24,9 +24,10 @@ from typing import Optional
 from lib.plugin.settings import UserSettings, UserSettingsManager
 from lib.logger import logger, set_logger_settings
 from lib.buddyrequests import SteamUiMode, SteamUiModeResponse, CurrentUserResponse, BuddyException
-from lib.buddyclient import BuddyClient, PcStateChange
+from lib.buddyclient import BuddyClient, AbortHostStateChangeResult
 from lib.utils import wake_on_lan, change_moondeck_runner_ready_state, TimedPooler
 from lib.runnerresult import Result, set_result, get_result
+from lib.moonlightproxy import MoonlightProxy
 
 
 set_logger_settings(constants.LOG_FILE, rotate=True)
@@ -145,17 +146,68 @@ class Plugin:
             logger.exception("Unhandled exception")
 
     @utils.async_scope_log(logger.info)
-    async def change_pc_state(self, address: str, buddy_port: int, client_id: str, state: str, timeout: float):
+    async def restart_host(self, address: str, buddy_port: int, client_id: str, delay_s: int, timeout: float):
         try:
-            state_enum = PcStateChange[state]
             async with BuddyClient(address, buddy_port, client_id, timeout) as client:
-                await client.change_pc_state(state_enum, 10)
+                await client.restart_host(delay_s)
 
         except BuddyException:
-            logger.exception(f"Buddy exception while changing PC state to {state}")
+            logger.exception("Buddy exception while restarting host")
 
         except Exception:
             logger.exception("Unhandled exception")
+
+    @utils.async_scope_log(logger.info)
+    async def shutdown_host(self, address: str, buddy_port: int, client_id: str, delay_s: int, timeout: float):
+        try:
+            async with BuddyClient(address, buddy_port, client_id, timeout) as client:
+                await client.shutdown_host(delay_s)
+
+        except BuddyException:
+            logger.exception("Buddy exception while shutting down host")
+
+        except Exception:
+            logger.exception("Unhandled exception")
+
+    @utils.async_scope_log(logger.info)
+    async def suspend_host(self, address: str, buddy_port: int, client_id: str, delay_s: int, timeout: float):
+        try:
+            async with BuddyClient(address, buddy_port, client_id, timeout) as client:
+                await client.suspend_host(delay_s)
+
+        except BuddyException:
+            logger.exception("Buddy exception while suspending host")
+
+        except Exception:
+            logger.exception("Unhandled exception")
+
+    @utils.async_scope_log(logger.info)
+    async def hibernate_host(self, address: str, buddy_port: int, client_id: str, delay_s: int, timeout: float):
+        try:
+            async with BuddyClient(address, buddy_port, client_id, timeout) as client:
+                await client.hibernate_host(delay_s)
+
+        except BuddyException:
+            logger.exception("Buddy exception while hibernating host")
+
+        except Exception:
+            logger.exception("Unhandled exception")
+
+    @utils.async_scope_log(logger.info)
+    async def abort_host_state_change(self, address: str, buddy_port: int, client_id: str, timeout: float):
+        try:
+            async with BuddyClient(address, buddy_port, client_id, timeout) as client:
+                await client.abort_host_state_change()
+                return True
+
+        except BuddyException as err:
+            if err.result != AbortHostStateChangeResult.BuddyRefused:
+                logger.exception("Buddy exception while trying to abort host state change")
+            return False
+
+        except Exception:
+            logger.exception("Unhandled exception")
+            return False
 
     @utils.async_scope_log(logger.info)
     async def get_moondeckrun_path(self):
@@ -174,15 +226,21 @@ class Plugin:
             return None
 
     @utils.async_scope_log(logger.info)
-    async def kill_runner(self, app_id: int):
+    async def kill_runner(self, app_id: int | None):
         try:
-            logger.info("Killing reaper and moonlight!")
-            kill_proc = await asyncio.create_subprocess_shell(f"pkill -f -e -i \"AppId={app_id}|moonlight\"",
-                                                              stdout=asyncio.subprocess.PIPE,
-                                                              stderr=asyncio.subprocess.STDOUT)
-            output, _ = await kill_proc.communicate()
-            newline = "\n"
-            logger.info(f"pkill output: {newline}{output.decode().strip(newline)}")
+            if app_id is not None:
+                logger.info("Killing reaper and moonlight!")
+                kill_proc = await asyncio.create_subprocess_shell(f"pkill -f -i \"AppId={app_id}\"",
+                                                                  stdout=asyncio.subprocess.PIPE,
+                                                                  stderr=asyncio.subprocess.STDOUT)
+                output, _ = await kill_proc.communicate()
+                if output:
+                    newline = "\n"
+                    logger.info(f"pkill output: {newline}{output.decode().strip(newline)}")
+            else:
+                logger.info("Killing moonlight!")
+
+            await MoonlightProxy.terminate_all_instances()
 
         except Exception:
             logger.exception("Unhandled exception")
@@ -208,6 +266,18 @@ class Plugin:
 
         except BuddyException:
             logger.exception("Buddy exception while closing steam")
+
+        except Exception:
+            logger.exception("Unhandled exception")
+
+    @utils.async_scope_log(logger.info)
+    async def end_stream(self, address: str, buddy_port: int, client_id: str, timeout: float):
+        try:
+            async with BuddyClient(address, buddy_port, client_id, timeout) as client:
+                await client.end_stream()
+
+        except BuddyException:
+            logger.exception("Buddy exception while ending stream")
 
         except Exception:
             logger.exception("Unhandled exception")

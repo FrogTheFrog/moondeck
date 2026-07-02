@@ -10,6 +10,7 @@ import { ExternalAppShortcuts } from "./externalappshortcuts";
 import { MoonDeckAppProxy } from "./moondeckapp";
 import { MoonDeckAppShortcuts } from "./moondeckappshortcuts";
 import { call } from "@decky/api";
+import { executeAsync } from "./executeasync";
 import { logger } from "./logger";
 
 async function setRunnerReady(): Promise<void> {
@@ -182,7 +183,7 @@ export class MoonDeckAppLauncher {
         return;
       }
 
-      Promise.resolve().then(async () => {
+      executeAsync(async () => {
         if (this.moonDeckApp.value === null) {
           // There should be no result in this state, unless the plugin is still loading app details
           // and did not manage to intercept calls OR some error has occured somewhere...
@@ -206,7 +207,7 @@ export class MoonDeckAppLauncher {
         if (!this.moonDeckApp.value.beingSuspended) {
           await this.moonDeckApp.clearApp();
         }
-      }).catch((e) => logger.critical(e));
+      });
     });
   }
 

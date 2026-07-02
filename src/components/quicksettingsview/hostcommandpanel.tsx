@@ -1,26 +1,43 @@
-import { BuddyStatus, ServerStatus, logger } from "../../lib";
+import { BuddyStatus, ServerStatus, executeAsyncWrapper, logger, validAbortPcStateChangeStates } from "../../lib";
 import { ButtonItem, PanelSection, PanelSectionRow } from "@decky/ui";
+import { CurrentHostSettings, useCommandExecutionStatus } from "../../hooks";
 import { FC, useContext } from "react";
 import { MoonDeckContext } from "../../contexts";
-import { useCommandExecutionStatus } from "../../hooks";
 
 interface Props {
   serverStatus: ServerStatus;
   buddyStatus: BuddyStatus;
+  currentHostSettings: CurrentHostSettings;
 }
 
-export const HostCommandPanel: FC<Props> = ({ serverStatus, buddyStatus }) => {
-  const { connectivityManager } = useContext(MoonDeckContext);
+export const HostCommandPanel: FC<Props> = ({ serverStatus, buddyStatus, currentHostSettings }) => {
+  const { connectivityManager, moonDeckAppLauncher } = useContext(MoonDeckContext);
   const executionStatus = useCommandExecutionStatus();
 
+  const additionalCleanup = async () => {
+    try {
+      await moonDeckAppLauncher.moonDeckApp.killApp(true);
+      await moonDeckAppLauncher.moonDeckApp.clearApp();
+    } catch (error) {
+      logger.critical(error);
+    }
+  };
+
+  const hibernateHost = currentHostSettings.buddy.hibernateHost;
+  const statusChangeCanBeAborted = validAbortPcStateChangeStates.includes(buddyStatus);
+  const enableWolButton = !executionStatus && (statusChangeCanBeAborted || (serverStatus === "Offline" && buddyStatus === "Offline"));
   return (
     <PanelSection title="COMMANDS" spinner={executionStatus}>
       <PanelSectionRow>
         <ButtonItem
           layout="below"
           bottomSeparator="none"
-          disabled={executionStatus || serverStatus === "Online" || buddyStatus === "Online"}
-          onClick={() => { connectivityManager.commandProxy.wakeOnLan().catch((e) => logger.critical(e)); }}
+          disabled={!enableWolButton}
+          onClick={executeAsyncWrapper(async () => {
+            if (!statusChangeCanBeAborted || !await connectivityManager.commandProxy.abortPcStateChange()) {
+              await connectivityManager.commandProxy.wakeOnLan();
+            }
+          })}
         >
           Wake On LAN
         </ButtonItem>
@@ -30,7 +47,7 @@ export const HostCommandPanel: FC<Props> = ({ serverStatus, buddyStatus }) => {
           layout="below"
           bottomSeparator="none"
           disabled={executionStatus || buddyStatus !== "Online"}
-          onClick={() => { connectivityManager.commandProxy.restartPC().catch((e) => logger.critical(e)); }}
+          onClick={executeAsyncWrapper(() => connectivityManager.commandProxy.restartPC(additionalCleanup))}
         >
           Restart PC
         </ButtonItem>
@@ -40,7 +57,7 @@ export const HostCommandPanel: FC<Props> = ({ serverStatus, buddyStatus }) => {
           layout="below"
           bottomSeparator="none"
           disabled={executionStatus || buddyStatus !== "Online"}
-          onClick={() => { connectivityManager.commandProxy.shutdownPC().catch((e) => logger.critical(e)); }}
+          onClick={executeAsyncWrapper(() => connectivityManager.commandProxy.shutdownPC(additionalCleanup))}
         >
           Shutdown PC
         </ButtonItem>
@@ -49,9 +66,13 @@ export const HostCommandPanel: FC<Props> = ({ serverStatus, buddyStatus }) => {
         <ButtonItem
           layout="below"
           disabled={executionStatus || buddyStatus !== "Online"}
-          onClick={() => { connectivityManager.commandProxy.suspendPC().catch((e) => logger.critical(e)); }}
+          onClick={
+            executeAsyncWrapper(() => hibernateHost ?
+                connectivityManager.commandProxy.hibernatePC(additionalCleanup) :
+                connectivityManager.commandProxy.suspendPC(additionalCleanup))
+          }
         >
-          Suspend PC
+          {hibernateHost ? "Hibernate PC" : "Suspend PC"}
         </ButtonItem>
       </PanelSectionRow>
     </PanelSection>
