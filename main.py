@@ -27,6 +27,7 @@ from lib.buddyrequests import SteamUiMode, SteamUiModeResponse, CurrentUserRespo
 from lib.buddyclient import BuddyClient, AbortHostStateChangeResult
 from lib.utils import wake_on_lan, change_moondeck_runner_ready_state, TimedPooler
 from lib.runnerresult import Result, set_result, get_result
+from lib.moonlightproxy import MoonlightProxy
 
 
 set_logger_settings(constants.LOG_FILE, rotate=True)
@@ -225,15 +226,21 @@ class Plugin:
             return None
 
     @utils.async_scope_log(logger.info)
-    async def kill_runner(self, app_id: int):
+    async def kill_runner(self, app_id: int | None):
         try:
-            logger.info("Killing reaper and moonlight!")
-            kill_proc = await asyncio.create_subprocess_shell(f"pkill -f -e -i \"AppId={app_id}|moonlight\"",
-                                                              stdout=asyncio.subprocess.PIPE,
-                                                              stderr=asyncio.subprocess.STDOUT)
-            output, _ = await kill_proc.communicate()
-            newline = "\n"
-            logger.info(f"pkill output: {newline}{output.decode().strip(newline)}")
+            if app_id is not None:
+                logger.info("Killing reaper and moonlight!")
+                kill_proc = await asyncio.create_subprocess_shell(f"pkill -f -i \"AppId={app_id}\"",
+                                                                  stdout=asyncio.subprocess.PIPE,
+                                                                  stderr=asyncio.subprocess.STDOUT)
+                output, _ = await kill_proc.communicate()
+                if output:
+                    newline = "\n"
+                    logger.info(f"pkill output: {newline}{output.decode().strip(newline)}")
+            else:
+                logger.info("Killing moonlight!")
+
+            await MoonlightProxy.terminate_all_instances()
 
         except Exception:
             logger.exception("Unhandled exception")

@@ -1,4 +1,4 @@
-import { BuddyStatus, ServerStatus, logger, validAbortPcStateChangeStates } from "../../lib";
+import { BuddyStatus, ServerStatus, executeAsyncWrapper, logger, validAbortPcStateChangeStates } from "../../lib";
 import { ButtonItem, PanelSection, PanelSectionRow } from "@decky/ui";
 import { CurrentHostSettings, useCommandExecutionStatus } from "../../hooks";
 import { FC, useContext } from "react";
@@ -11,30 +11,19 @@ interface Props {
 }
 
 export const HostCommandPanel: FC<Props> = ({ serverStatus, buddyStatus, currentHostSettings }) => {
-  const { connectivityManager } = useContext(MoonDeckContext);
+  const { connectivityManager, moonDeckAppLauncher } = useContext(MoonDeckContext);
   const executionStatus = useCommandExecutionStatus();
 
-  let suspendOrHibernate = null;
-  if (currentHostSettings.buddy.hibernateHost) {
-    suspendOrHibernate =
-      <ButtonItem
-        layout="below"
-        disabled={executionStatus || buddyStatus !== "Online"}
-        onClick={() => { connectivityManager.commandProxy.hibernatePC().catch((e) => logger.critical(e)); }}
-      >
-        Hibernate PC
-      </ButtonItem>;
-  } else {
-    suspendOrHibernate =
-      <ButtonItem
-        layout="below"
-        disabled={executionStatus || buddyStatus !== "Online"}
-        onClick={() => { connectivityManager.commandProxy.suspendPC().catch((e) => logger.critical(e)); }}
-      >
-        Suspend PC
-      </ButtonItem>;
-  }
+  const additionalCleanup = async () => {
+    try {
+      await moonDeckAppLauncher.moonDeckApp.killApp(true);
+      await moonDeckAppLauncher.moonDeckApp.clearApp();
+    } catch (error) {
+      logger.critical(error);
+    }
+  };
 
+  const hibernateHost = currentHostSettings.buddy.hibernateHost;
   const statusChangeCanBeAborted = validAbortPcStateChangeStates.includes(buddyStatus);
   const enableWolButton = !executionStatus && (statusChangeCanBeAborted || (serverStatus === "Offline" && buddyStatus === "Offline"));
   return (
@@ -44,13 +33,11 @@ export const HostCommandPanel: FC<Props> = ({ serverStatus, buddyStatus, current
           layout="below"
           bottomSeparator="none"
           disabled={!enableWolButton}
-          onClick={() => {
-            Promise.resolve().then(async () => {
-              if (!statusChangeCanBeAborted || !await connectivityManager.commandProxy.abortPcStateChange()) {
-                await connectivityManager.commandProxy.wakeOnLan();
-              }
-            }).catch((e) => logger.critical(e));
-          }}
+          onClick={executeAsyncWrapper(async () => {
+            if (!statusChangeCanBeAborted || !await connectivityManager.commandProxy.abortPcStateChange()) {
+              await connectivityManager.commandProxy.wakeOnLan();
+            }
+          })}
         >
           Wake On LAN
         </ButtonItem>
@@ -60,7 +47,7 @@ export const HostCommandPanel: FC<Props> = ({ serverStatus, buddyStatus, current
           layout="below"
           bottomSeparator="none"
           disabled={executionStatus || buddyStatus !== "Online"}
-          onClick={() => { connectivityManager.commandProxy.restartPC().catch((e) => logger.critical(e)); }}
+          onClick={executeAsyncWrapper(() => connectivityManager.commandProxy.restartPC(additionalCleanup))}
         >
           Restart PC
         </ButtonItem>
@@ -70,13 +57,23 @@ export const HostCommandPanel: FC<Props> = ({ serverStatus, buddyStatus, current
           layout="below"
           bottomSeparator="none"
           disabled={executionStatus || buddyStatus !== "Online"}
-          onClick={() => { connectivityManager.commandProxy.shutdownPC().catch((e) => logger.critical(e)); }}
+          onClick={executeAsyncWrapper(() => connectivityManager.commandProxy.shutdownPC(additionalCleanup))}
         >
           Shutdown PC
         </ButtonItem>
       </PanelSectionRow>
       <PanelSectionRow>
-        {suspendOrHibernate}
+        <ButtonItem
+          layout="below"
+          disabled={executionStatus || buddyStatus !== "Online"}
+          onClick={
+            executeAsyncWrapper(() => hibernateHost ?
+                connectivityManager.commandProxy.hibernatePC(additionalCleanup) :
+                connectivityManager.commandProxy.suspendPC(additionalCleanup))
+          }
+        >
+          {hibernateHost ? "Hibernate PC" : "Suspend PC"}
+        </ButtonItem>
       </PanelSectionRow>
     </PanelSection>
   );

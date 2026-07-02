@@ -182,9 +182,10 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
         log_task = asyncio.create_task(log_stream(self.process.stdout))
         await asyncio.wait([process_task, log_task], return_when=asyncio.ALL_COMPLETED)
 
-    async def terminate_all_instances(self):
-        await self.__kill_flatpak_app()
-        await self.__kill_any_moonlight_app()
+    @classmethod
+    async def terminate_all_instances(cls):
+        await cls.__kill_flatpak_app()
+        await cls.__kill_any_moonlight_app()
 
     async def is_moonlight_installed(self):
         # Lazy import to improve CLI performance
@@ -214,7 +215,8 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
 
         return False
     
-    def __get_flatpak_exec(self):
+    @staticmethod
+    def __get_flatpak_exec():
         import shutil
         return shutil.which("flatpak")
     
@@ -231,11 +233,12 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
 
         return exec, args
     
-    async def __kill_flatpak_app(self):
+    @classmethod
+    async def __kill_flatpak_app(cls):
         # Lazy import to improve CLI performance
         import asyncio
 
-        flatpak_exec = self.__get_flatpak_exec()
+        flatpak_exec = cls.__get_flatpak_exec()
         if flatpak_exec is None:
             return
 
@@ -247,7 +250,8 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
             newline = "\n"
             logger.info(f"flatpak kill output: {newline}{output.decode().strip(newline)}")
 
-    async def __kill_any_moonlight_app(self):
+    @staticmethod
+    async def __kill_any_moonlight_app():
         # Lazy import to improve CLI performance
         import asyncio
 

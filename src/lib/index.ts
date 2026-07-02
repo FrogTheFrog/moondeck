@@ -4,6 +4,7 @@ export * from "./asyncloop";
 export * from "./buddyproxy";
 export * from "./commandproxy";
 export * from "./connectivitymanager";
+export * from "./executeasync";
 export * from "./envutils";
 export * from "./incrementalloop";
 export * from "./logger";

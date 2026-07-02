@@ -189,30 +189,34 @@ export class CommandProxy {
     }, { ...defaultInvocationOptions, validBuddyStatus: ["Offline"], validServerStatus: ["Offline"] });
   }
 
-  async restartPC(): Promise<void> {
+  async restartPC(additionalCleanup?: Callback): Promise<void> {
     await this.changePcState(async ({ clientId }, { address, buddy }) => {
+      await additionalCleanup?.();
       await closeSteam(address, buddy.port, clientId, defaultTimeout);
       await endStream(address, buddy.port, clientId, defaultTimeout);
       await restartHost(address, buddy.port, clientId, defaultDelay, defaultTimeout);
     });
   }
 
-  async shutdownPC(): Promise<void> {
+  async shutdownPC(additionalCleanup?: Callback): Promise<void> {
     await this.changePcState(async ({ clientId }, { address, buddy }) => {
+      await additionalCleanup?.();
       await closeSteam(address, buddy.port, clientId, defaultTimeout);
       await endStream(address, buddy.port, clientId, defaultTimeout);
       await shutdownHost(address, buddy.port, clientId, defaultDelay, defaultTimeout);
     });
   }
 
-  async suspendPC(): Promise<void> {
+  async suspendPC(additionalCleanup?: Callback): Promise<void> {
     await this.changePcState(async ({ clientId }, { address, buddy }) => {
+      await additionalCleanup?.();
       await suspendHost(address, buddy.port, clientId, defaultDelay, defaultTimeout);
     });
   }
 
-  async hibernatePC(): Promise<void> {
+  async hibernatePC(additionalCleanup?: Callback): Promise<void> {
     await this.changePcState(async ({ clientId }, { address, buddy }) => {
+      await additionalCleanup?.();
       await hibernateHost(address, buddy.port, clientId, defaultDelay, defaultTimeout);
     });
   }
