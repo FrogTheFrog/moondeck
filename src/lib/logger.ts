@@ -1,9 +1,8 @@
 import { call, toaster } from "@decky/api";
-import { executeAsync } from "./executeasync";
 import { inspect } from "loupe";
 
 function serialize(...args: unknown[]) {
-  return args.map((arg) => inspect(arg)).join(" ");
+  return args.map((arg) => typeof arg === "string" ? arg : inspect(arg)).join(" ");
 }
 
 function criticalConsoleLog(...args: unknown[]) {
@@ -13,6 +12,10 @@ function criticalConsoleLog(...args: unknown[]) {
     "background: transparent;",
     ...args
   );
+}
+
+function executeAsyncSafe(input: Promise<void>) {
+  Promise.resolve(input).catch((e) => criticalConsoleLog(e));
 }
 
 type PythonLogLevel = "DEBUG" | "INFO" | "WARNING" | "ERROR" | "CRITICAL";
@@ -25,8 +28,6 @@ async function frontendLogEntry(level: PythonLogLevel, ...args: unknown[]): Prom
 }
 
 class Logger {
-  public verbose: boolean = false;
-
   toast(entry: string, options: { duration?: number; output?: "debug" | "log" | "warn" | "error" | null } = {}): void {
     const { duration = 5000, output = "log" } = options;
     const critical = output === "error";
@@ -58,9 +59,7 @@ class Logger {
       "background: transparent;",
       ...args
     );
-    if (this.verbose) {
-      executeAsync(frontendLogEntry("DEBUG", ...args));
-    }
+    executeAsyncSafe(frontendLogEntry("DEBUG", ...args));
   }
 
   log(...args: unknown[]): void {
@@ -71,7 +70,7 @@ class Logger {
       "background: transparent;",
       ...args
     );
-    executeAsync(frontendLogEntry("INFO", ...args));
+    executeAsyncSafe(frontendLogEntry("INFO", ...args));
   }
 
   warn(...args: unknown[]): void {
@@ -82,7 +81,7 @@ class Logger {
       "background: transparent;",
       ...args
     );
-    executeAsync(frontendLogEntry("WARNING", ...args));
+    executeAsyncSafe(frontendLogEntry("WARNING", ...args));
   }
 
   error(...args: unknown[]): void {
@@ -93,12 +92,12 @@ class Logger {
       "background: transparent;",
       ...args
     );
-    executeAsync(frontendLogEntry("ERROR", ...args));
+    executeAsyncSafe(frontendLogEntry("ERROR", ...args));
   }
 
   critical(...args: unknown[]): void {
     criticalConsoleLog(...args);
-    executeAsync(frontendLogEntry("CRITICAL", ...args));
+    executeAsyncSafe(frontendLogEntry("CRITICAL", ...args));
   }
 }
 

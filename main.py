@@ -30,10 +30,10 @@ from lib.utils import wake_on_lan, change_moondeck_runner_ready_state, TimedPool
 from lib.runnerresult import Result, set_result, get_result
 from lib.moonlightproxy import MoonlightProxy
 
-set_logger_settings(logger, constants.LOG_FILE, rotate=True)
+set_logger_settings(logger, constants.LOG_FILE, rotate=True, verbose=True)
 
 frontend_logger = get_logger("frontend")
-set_logger_settings(frontend_logger, constants.FRONTEND_LOG_FILE, rotate=True)
+set_logger_settings(frontend_logger, constants.FRONTEND_LOG_FILE, rotate=True, log_preamble="", verbose=True)
 
 settings_manager = UserSettingsManager(constants.get_config_file_path())
 
@@ -70,8 +70,10 @@ class Plugin:
     
     def set_log_levels(self, data: UserSettings):
         level = logging.DEBUG if data["runnerDebugLogs"] else logging.INFO
-        logger.setLevel(level)
-        frontend_logger.setLevel(level)
+        for instance in [logger, frontend_logger]:
+            if instance.level != level:
+                instance.setLevel(level)
+                instance.info(f"Set logger log level to {logging.getLevelName(level)}")
 
     @utils.async_scope_log(logger.info)
     async def get_user_settings(self):

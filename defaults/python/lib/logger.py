@@ -17,7 +17,7 @@ def set_logger_settings(instance: logging.Logger, filename: str | None, rotate: 
         )
 
         if log_preamble is not None:
-            optional_separator = "\n\n" if Path(filename).stat().st_size > 0 else ""
+            optional_separator = "\n\n" if Path(filename).stat().st_size > 0 and log_preamble != "" else ""
 
             handler.setFormatter(logging.Formatter("%(message)s"))
             handler.emit(logging.makeLogRecord({"msg": f"{optional_separator}{log_preamble}"}))
