@@ -68,8 +68,8 @@ export const HostCommandPanel: FC<Props> = ({ serverStatus, buddyStatus, current
           disabled={executionStatus || buddyStatus !== "Online"}
           onClick={
             executeAsyncWrapper(() => hibernateHost ?
-                connectivityManager.commandProxy.hibernatePC(additionalCleanup) :
-                connectivityManager.commandProxy.suspendPC(additionalCleanup))
+                connectivityManager.commandProxy.hibernatePC({ additionalCleanup }) :
+                connectivityManager.commandProxy.suspendPC({ additionalCleanup }))
           }
         >
           {hibernateHost ? "Hibernate PC" : "Suspend PC"}
