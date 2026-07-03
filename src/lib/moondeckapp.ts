@@ -176,7 +176,8 @@ export class MoonDeckAppProxy extends ReadonlySubject<MoonDeckAppData | null> {
     }
 
     this.subject.next({ ...this.subject.value, beingSuspended: true });
-    await this.commandProxy.suspendPC(() => this.killApp());
+    await this.killApp();
+    await this.commandProxy.suspendPC();
   }
 
   async getRunnerResult(): Promise<string | null> {

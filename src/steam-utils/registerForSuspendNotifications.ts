@@ -62,6 +62,7 @@ export function registerForSuspendNotifications(onSuspend: () => Promise<void>, 
       unregisterOnSuspend.unregister();
       unregisterOnResume.unregister();
       unblockSuspend?.();
+      unblockSuspend = null;
     };
   } catch (error) {
     logger.critical(error);
