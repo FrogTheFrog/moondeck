@@ -432,7 +432,7 @@ async def main():
     verbose = False
     try:
         # ---- Setup early logging to at least print something out
-        set_logger_settings(None, print_to_std=True)
+        set_logger_settings(logger, None, print_to_std=True)
 
         # ---- General parser setup [start]
         parser = ArgumentParserWithRedirect(
@@ -446,7 +446,8 @@ async def main():
         # -------- Setup logging (as early as possible)
         parser_args, _ = parser.parse_known_args()
         verbose = parser_args.verbose
-        set_logger_settings(parser_args.log_file,
+        set_logger_settings(logger,
+                            parser_args.log_file,
                             print_to_std=True,
                             log_preamble=f"Executing: {sys.argv[:]}, CWD: {Path.cwd()}",
                             verbose=verbose)

@@ -1,6 +1,6 @@
 import logging
 
-def set_logger_settings(filename: str | None, rotate: bool = True, log_preamble: str | None = None, print_to_std: bool = False, verbose: bool = False):
+def set_logger_settings(instance: logging.Logger, filename: str | None, rotate: bool = True, log_preamble: str | None = None, print_to_std: bool = False, verbose: bool = False):
     # Lazy import to improve CLI performance
     import sys
     from pathlib import Path
@@ -17,13 +17,12 @@ def set_logger_settings(filename: str | None, rotate: bool = True, log_preamble:
         )
 
         if log_preamble is not None:
-            optional_separator = "\n\n" if Path(filename).stat().st_size > 0 else ""
+            optional_separator = "\n\n" if Path(filename).stat().st_size > 0 and log_preamble != "" else ""
 
             handler.setFormatter(logging.Formatter("%(message)s"))
             handler.emit(logging.makeLogRecord({"msg": f"{optional_separator}{log_preamble}"}))
 
-        handler.setFormatter(logging.Formatter(
-            "[%(asctime)s] %(levelname)s: %(message)s"))
+        handler.setFormatter(logging.Formatter("[%(asctime)s] %(levelname)s: %(message)s"))
         handlers.append(handler)
 
     if print_to_std:
@@ -42,16 +41,20 @@ def set_logger_settings(filename: str | None, rotate: bool = True, log_preamble:
         handlers.append(stdout_handler)
         handlers.append(stderr_handler)
 
-    logging.basicConfig(handlers=handlers,
-                        level=logging.INFO,
-                        force=True)
+    for h in instance.handlers[:]:
+        instance.removeHandler(h)
+        h.close()
 
-    if verbose:
-        enable_debug_level()
+    for h in handlers:
+        instance.addHandler(h)
 
-
-def enable_debug_level():
-    logging.getLogger().setLevel(logging.DEBUG)
+    instance.setLevel(logging.DEBUG if verbose else logging.INFO)
 
 
-logger = logging.getLogger()
+def get_logger(name: str | None = None):
+    logger = logging.getLogger(name)
+    logger.propagate = False
+    return logger
+
+
+logger = get_logger()
