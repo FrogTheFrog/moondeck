@@ -12,7 +12,7 @@ export function getAllNonSteamAppIds(): number[] {
       return [];
     }
 
-    return Array.from(collectionStore.deckDesktopApps.allApps)
+    return Array.from(collectionStore.deckDesktopApps?.allApps ?? [])
       .filter((app) => app.is_available_on_current_platform)
       .map((app) => app.appid);
   } catch (error) {
