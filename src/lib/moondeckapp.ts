@@ -14,6 +14,24 @@ async function killRunner(appId: number | null): Promise<void> {
   }
 }
 
+async function suspendRunner(): Promise<boolean> {
+  try {
+    return await call<[], boolean>("suspend_runner");
+  } catch (message) {
+    logger.critical("Error while suspending runner script: ", message);
+    return false;
+  }
+}
+
+async function unsuspendRunner(): Promise<boolean> {
+  try {
+    return await call<[], boolean>("unsuspend_runner");
+  } catch (message) {
+    logger.critical("Error while unsuspending runner script: ", message);
+    return false;
+  }
+}
+
 async function isRunnerActive(appId: number): Promise<boolean> {
   try {
     await call<[number], boolean>("is_runner_active", appId);
@@ -33,6 +51,10 @@ async function getRunnerResult(): Promise<string | null> {
   return "Error while fetching runner result!";
 }
 
+function getAppId(appData: MoonDeckAppData) {
+  return appData.moonDeckAppId ?? appData.steamAppId;
+}
+
 export interface SessionOptions {
   nameSetToAppId: boolean;
 }
@@ -44,7 +66,6 @@ export interface MoonDeckAppData {
   appType: AppType;
   redirected: boolean;
   beingKilled: boolean;
-  beingSuspended: boolean;
   sessionOptions: SessionOptions;
 }
 
@@ -64,7 +85,6 @@ export class MoonDeckAppProxy extends ReadonlySubject<MoonDeckAppData | null> {
       appType,
       redirected: false,
       beingKilled: false,
-      beingSuspended: false,
       sessionOptions
     });
   }
@@ -148,7 +168,7 @@ export class MoonDeckAppProxy extends ReadonlySubject<MoonDeckAppData | null> {
     this.subject.next({ ...this.subject.value, beingKilled: true });
 
     const nameSetToAppId = this.subject.value.sessionOptions.nameSetToAppId;
-    const appId = this.subject.value.moonDeckAppId ?? this.subject.value.steamAppId;
+    const appId = getAppId(this.subject.value);
     // Necessary, otherwise the termination fails
     await this.changeName(false);
     if (!await terminateApp(appId, 5000)) {
@@ -175,12 +195,34 @@ export class MoonDeckAppProxy extends ReadonlySubject<MoonDeckAppData | null> {
       return;
     }
 
-    this.subject.next({ ...this.subject.value, beingSuspended: true });
-    await this.killApp();
+    if (!await suspendRunner()) {
+      await this.killApp();
+      await this.clearApp();
+
+      // Even if we failed to suspend app, we should still continue suspending
+      // host PC at least.
+    }
 
     // The buddy status state might not be up to date unless we have
     // explicitly updated it, however if the app is running we can assume it is...
     await this.commandProxy.suspendPC({ ignoreStatus: true });
+  }
+
+  async unsuspendApp(): Promise<void> {
+    if (this.subject.value === null) {
+      return;
+    }
+
+    await unsuspendRunner();
+    return;
+
+    // if (await this.isStillRunning() && await unsuspendRunner()) {
+    //   return;
+    // }
+
+    // // Cleanup any leftovers and clear the state
+    // await this.killApp();
+    // await this.clearApp();
   }
 
   async getRunnerResult(): Promise<string | null> {
@@ -197,7 +239,7 @@ export class MoonDeckAppProxy extends ReadonlySubject<MoonDeckAppData | null> {
       return false;
     }
 
-    const appId = this.subject.value.moonDeckAppId ?? this.subject.value.steamAppId;
+    const appId = getAppId(this.subject.value);
     return await isRunnerActive(appId);
   }
 }

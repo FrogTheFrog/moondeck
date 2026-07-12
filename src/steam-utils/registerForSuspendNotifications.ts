@@ -1,3 +1,4 @@
+import { ESuspendResumeProgressState, SuspendProgress } from "@decky/ui/dist/globals/steam-client/User";
 import { findModuleExport } from "@decky/ui";
 import { getSuspendResumeStore } from "./getSuspendResumeStore";
 import { logger } from "../lib/logger";
@@ -47,15 +48,15 @@ export function registerForSuspendNotifications(onSuspend: () => Promise<void>, 
           });
       }
     };
-    const handleResume = () => {
-      if (!unblockSuspend) {
+    const handleResume = (progress: SuspendProgress) => {
+      if (!unblockSuspend && progress.state === ESuspendResumeProgressState.Complete) {
         unblockSuspend = suspendResumeStore.BlockSuspendAction();
         onResume().catch((err) => logger.critical(err));
       }
     };
 
     const unregisterOnSuspend = sleepManager.RegisterForNotifyRequestSuspend((..._args) => handleSuspend());
-    const unregisterOnResume = sleepManager.RegisterForNotifyResumeFromSuspend((..._args) => handleResume());
+    const unregisterOnResume = SteamClient.User.RegisterForResumeSuspendedGamesProgress((progress) => handleResume(progress));
 
     unblockSuspend = suspendResumeStore.BlockSuspendAction();
     return () => {

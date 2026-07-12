@@ -12,6 +12,7 @@ import { MoonDeckAppShortcuts } from "./moondeckappshortcuts";
 import { call } from "@decky/api";
 import { executeAsync } from "./executeasync";
 import { logger } from "./logger";
+import { sleep } from "@decky/ui";
 
 async function setRunnerReady(): Promise<void> {
   try {
@@ -200,13 +201,11 @@ export class MoonDeckAppLauncher {
         }
 
         const result = await this.moonDeckApp.getRunnerResult();
-        if (result !== null && !this.moonDeckApp.value.beingSuspended && !this.moonDeckApp.value.beingKilled) {
+        if (result !== null && this.moonDeckApp.value?.beingKilled === false) {
           logger.toast(result, { output: "warn" });
         }
 
-        if (!this.moonDeckApp.value.beingSuspended) {
-          await this.moonDeckApp.clearApp();
-        }
+        await this.moonDeckApp.clearApp();
       });
     });
   }
@@ -220,25 +219,28 @@ export class MoonDeckAppLauncher {
     }, async () => {
       const resumeAfterSuspend = this.settingsManager.settings.value?.gameSession.resumeAfterSuspend ?? false;
       if (!resumeAfterSuspend) {
+        await this.moonDeckApp.killApp();
         await this.moonDeckApp.clearApp();
         return;
       }
 
-      logger.log("Waiting for internet connection to resume MoonDeck app.");
-      const connection = await waitForNetworkConnection(this.settingsManager.hostSettings?.runnerTimeouts.networkReconnectAfterSuspend ?? networkReconnectAfterSuspendDefault);
+      await this.moonDeckApp.unsuspendApp();
 
-      if (this.moonDeckApp.value === null) {
-        logger.log("MoonDeck app has been started manually already.");
-        return;
-      }
+      // logger.log("Waiting for internet connection to resume MoonDeck app.");
+      // const connection = await waitForNetworkConnection(this.settingsManager.hostSettings?.runnerTimeouts.networkReconnectAfterSuspend ?? networkReconnectAfterSuspendDefault);
 
-      if (connection) {
-        logger.log(`Relaunching app ${this.moonDeckApp.value.steamAppId} after suspend.`);
-        await this.launchApp(this.moonDeckApp.value.steamAppId, this.moonDeckApp.value.name, this.moonDeckApp.value.appType, true);
-      } else {
-        logger.toast("Not resuming session - no network connection!", { output: "warn" });
-        await this.moonDeckApp.clearApp();
-      }
+      // if (this.moonDeckApp.value === null) {
+      //   logger.log("MoonDeck app has been started manually already.");
+      //   return;
+      // }
+
+      // if (connection) {
+      //   logger.log(`Relaunching app ${this.moonDeckApp.value.steamAppId} after suspend.`);
+      //   await this.launchApp(this.moonDeckApp.value.steamAppId, this.moonDeckApp.value.name, this.moonDeckApp.value.appType, true);
+      // } else {
+      //   logger.toast("Not resuming session - no network connection!", { output: "warn" });
+      //   await this.moonDeckApp.clearApp();
+      // }
     });
   }
 

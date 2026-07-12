@@ -2,7 +2,7 @@ from enum import Enum
 from typing import Any, AsyncGenerator, Generic, List, Literal, Optional, Type, TypedDict, Union, TypeVar, get_args, get_origin, is_typeddict, cast
 
 from .logger import logger
-from .constants import RUNNER_READY_FILE
+from .constants import RUNNER_PID_FILE, RUNNER_READY_FILE, RUNNER_SUSPENDED_FILE
 
 
 class AnyTypedDict(TypedDict, total=False):
@@ -163,12 +163,7 @@ async def wake_on_lan(hostname: str, address: str, mac: str, port: int = 9, cust
         wol_proc = None
         ps_proc = None
         try:
-            env = os.environ.copy()
-            env.pop("LD_LIBRARY_PATH", None)
-            wol_proc = await asyncio.create_subprocess_exec(custom_exec, hostname, address, f"{port}", mac,
-                                                            stdout=asyncio.subprocess.PIPE,
-                                                            stderr=asyncio.subprocess.STDOUT,
-                                                            env=env)
+            wol_proc = await create_subprocess_exec(custom_exec, hostname, address, f"{port}", mac)
             ps_proc = psutil.Process(wol_proc.pid)
 
             async def handle_stream(stream: Optional[asyncio.StreamReader]):
@@ -257,7 +252,7 @@ def is_moondeck_runner_ready():
     return pathlib.Path(RUNNER_READY_FILE).exists()
 
 
-def change_moondeck_runner_ready_state(make_ready):
+def change_moondeck_runner_ready_state(make_ready: bool):
     # Lazy import to improve CLI performance
     import pathlib
 
@@ -266,6 +261,129 @@ def change_moondeck_runner_ready_state(make_ready):
         path.touch(exist_ok=True)
     else:
         path.unlink(missing_ok=True)
+
+
+def is_moondeck_runner_suspended():
+    # Lazy import to improve CLI performance
+    import pathlib
+
+    return pathlib.Path(RUNNER_SUSPENDED_FILE).exists()
+
+
+def change_moondeck_runner_suspended_state(make_suspended: bool):
+    # Lazy import to improve CLI performance
+    import pathlib
+
+    path = pathlib.Path(RUNNER_SUSPENDED_FILE)
+    if make_suspended:
+        path.touch(exist_ok=True)
+    else:
+        path.unlink(missing_ok=True)
+
+
+async def wait_moondeck_runner_suspended_state(expected_suspended: bool):
+    # Lazy import to improve CLI performance
+    import asyncio
+
+    async with asyncio.timeout(5):
+        while True:
+            if is_moondeck_runner_suspended() == expected_suspended:
+                return
+            
+            await asyncio.sleep(0.25)
+
+
+def acquire_runner_pid_lock():
+    # Lazy import to improve CLI performance
+    import errno
+    import fcntl
+    import os
+
+    fd = os.open(RUNNER_PID_FILE, os.O_CREAT | os.O_RDWR)
+    file = os.fdopen(fd, "r+")
+    try:
+        fcntl.flock(file, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError as err:
+        file.close()
+
+        if err.errno not in [errno.EACCES, errno.EAGAIN]:
+            raise err
+        
+        raise Exception("Runner PID file is already locked!") from None
+
+    # We own the file, thus write the PID
+    file.truncate(0)
+    file.write(str(os.getpid()))
+    file.flush()
+    return file
+
+
+def get_runner_pid():
+    # Lazy import to improve CLI performance
+    import errno
+    import fcntl
+    import pathlib
+
+    path = pathlib.Path(RUNNER_PID_FILE)
+    with open(path, "r") as file:
+        try:
+            fcntl.flock(file, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError as err:
+            if err.errno not in [errno.EACCES, errno.EAGAIN]:
+                raise err
+
+            # Could not acquire the lock - runner is holding it so the PID is legit
+            return int(file.read().strip())
+
+    # No lock means no runner instance - outdated PID file.
+    path.unlink(missing_ok=True)
+    raise Exception("No runner instance is active!")
+
+
+async def create_subprocess_shell(program: str, stderr_to_devnull = False):
+    # Lazy import to improve CLI performance
+    import asyncio
+    import os
+
+    # workaround for the "undefined symbol: rl_trim_arg_from_keyseq"
+    env = os.environ.copy()
+    env.pop("LD_LIBRARY_PATH", None)
+
+    return await asyncio.create_subprocess_shell(program,
+                                                 stdout=asyncio.subprocess.PIPE,
+                                                 stderr=asyncio.subprocess.DEVNULL if stderr_to_devnull else asyncio.subprocess.STDOUT,
+                                                 env=env)
+
+
+async def create_subprocess_exec(program: str, *args: str, stderr_to_devnull = False):
+    # Lazy import to improve CLI performance
+    import asyncio
+    import os
+
+    # workaround for the "undefined symbol: rl_trim_arg_from_keyseq"
+    env = os.environ.copy()
+    env.pop("LD_LIBRARY_PATH", None)
+
+    return await asyncio.create_subprocess_exec(program, *args,
+                                                stdout=asyncio.subprocess.PIPE,
+                                                stderr=asyncio.subprocess.DEVNULL if stderr_to_devnull else asyncio.subprocess.STDOUT,
+                                                env=env)
+
+
+async def pkill(pattern: str, signal: str = "TERM"):
+    kill_proc = await create_subprocess_shell(f"pkill -{signal} -f -e -i \"{pattern}\"")
+    output, _ = await kill_proc.communicate()
+    if output:
+        newline = "\n"
+        logger.info(f"pkill output:{newline}{output.decode().strip(newline)}")
+
+
+async def kill(pid: str, signal: str = "TERM"):
+    kill_proc = await create_subprocess_shell(f"kill -{signal} {pid}")
+    output, _ = await kill_proc.communicate()
+    if output:
+        newline = "\n"
+        logger.info(f"kill output:{newline}{output.decode().strip(newline)}")
 
 
 class TimedPooler:

@@ -250,13 +250,7 @@ class Plugin:
         try:
             if app_id is not None:
                 logger.info("Killing reaper and moonlight!")
-                kill_proc = await asyncio.create_subprocess_shell(f"pkill -f -i \"AppId={app_id}\"",
-                                                                  stdout=asyncio.subprocess.PIPE,
-                                                                  stderr=asyncio.subprocess.STDOUT)
-                output, _ = await kill_proc.communicate()
-                if output:
-                    newline = "\n"
-                    logger.info(f"pkill output: {newline}{output.decode().strip(newline)}")
+                await utils.pkill(f"AppId={app_id}")
             else:
                 logger.info("Killing moonlight!")
 
@@ -266,12 +260,36 @@ class Plugin:
             logger.exception("Unhandled exception")
 
     @utils.async_scope_log(logger.info)
+    async def suspend_runner(self):
+        try:
+            await utils.kill(utils.get_runner_pid(), signal="USR1")
+            await utils.wait_moondeck_runner_suspended_state(expected_suspended=True)
+            return True
+
+        except Exception:
+            logger.exception("Unhandled exception")
+            return False
+        
+    @utils.async_scope_log(logger.info)
+    async def unsuspend_runner(self):
+        try:
+            await utils.kill(utils.get_runner_pid(), signal="USR2")
+            await utils.wait_moondeck_runner_suspended_state(expected_suspended=False)
+            return True
+
+        except Exception:
+            logger.exception("Unhandled exception")
+            return False
+
+    @utils.async_scope_log(logger.info)
     async def is_runner_active(self, app_id: int):
         try:
-            kill_proc = await asyncio.create_subprocess_shell(f"pgrep -f -i \"AppId={app_id}\"",
-                                                              stdout=asyncio.subprocess.PIPE,
-                                                              stderr=asyncio.subprocess.DEVNULL)
+            kill_proc = await utils.create_subprocess_shell(f"pgrep -f -i \"AppId={app_id}\"",
+                                                            stderr_to_devnull=True)
             output, _ = await kill_proc.communicate()
+            if output:
+                newline = "\n"
+                logger.info(f"pgrep output:{newline}{output.decode().strip(newline)}")
             return any(chr.isdigit() for chr in output.decode())
 
         except Exception:
