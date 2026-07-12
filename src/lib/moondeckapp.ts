@@ -205,7 +205,7 @@ export class MoonDeckAppProxy extends ReadonlySubject<MoonDeckAppData | null> {
 
     // The buddy status state might not be up to date unless we have
     // explicitly updated it, however if the app is running we can assume it is...
-    await this.commandProxy.suspendPC({ ignoreStatus: true });
+    // await this.commandProxy.suspendPC({ ignoreStatus: true });
   }
 
   async unsuspendApp(): Promise<void> {
