@@ -66,11 +66,7 @@ export const HostCommandPanel: FC<Props> = ({ serverStatus, buddyStatus, current
         <ButtonItem
           layout="below"
           disabled={executionStatus || buddyStatus !== "Online"}
-          onClick={
-            executeAsyncWrapper(() => hibernateHost ?
-                connectivityManager.commandProxy.hibernatePC({ additionalCleanup }) :
-                connectivityManager.commandProxy.suspendPC({ additionalCleanup }))
-          }
+          onClick={executeAsyncWrapper(() => connectivityManager.commandProxy.suspendOrHibernatePC({ additionalCleanup }))}
         >
           {hibernateHost ? "Hibernate PC" : "Suspend PC"}
         </ButtonItem>

@@ -34,5 +34,4 @@ export * from "./waitForAppDetails";
 export * from "./waitForAppOverview";
 export * from "./waitForAppResolutionOverride";
 export * from "./waitForAppStartNotification";
-export * from "./waitForNetworkConnection";
 export * from "./waitForServicesInitialized";

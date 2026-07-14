@@ -41,7 +41,7 @@ export const BuddySettingsView: FC = () => {
         />
         <ToggleField
           label="Hibernate PC"
-          description="Hibernate PC instead of suspending it."
+          description="Hibernate PC instead of suspending it (putting it to sleep)."
           value={hostSettings.buddy.hibernateHost}
           setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.buddy.hibernateHost = value; })}
         />

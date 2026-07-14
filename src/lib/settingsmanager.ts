@@ -38,8 +38,6 @@ export const appUpdateDefault = 15 as const;
 export const streamEndDefault = 15 as const;
 export const wakeOnLanDefault = 60 as const;
 export const steamLaunchDefault = 5 as const;
-export const steamLaunchAfterSuspendDefault = 15 as const;
-export const networkReconnectAfterSuspendDefault = 15 as const;
 
 export type OsType = "Windows" | "Linux" | "Other";
 
@@ -55,8 +53,6 @@ export interface RunnerTimeouts {
   streamEnd: number;
   wakeOnLan: number;
   steamLaunch: number;
-  steamLaunchAfterSuspend: number;
-  networkReconnectAfterSuspend: number;
 }
 
 export interface HostApp {
@@ -138,6 +134,7 @@ export interface HostSettings {
 export interface GameSessionSettings {
   autoApplyAppId: boolean;
   resumeAfterSuspend: boolean;
+  autoSuspendHost: boolean;
   controllerConfig: keyof typeof ControllerConfigValues | null;
 }
 

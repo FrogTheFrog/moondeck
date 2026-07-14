@@ -30,7 +30,7 @@ from lib.utils import wake_on_lan, change_moondeck_runner_ready_state, TimedPool
 from lib.runnerresult import Result, set_result, get_result
 from lib.moonlightproxy import MoonlightProxy
 
-set_logger_settings(logger, constants.LOG_FILE, rotate=True, verbose=True)
+set_logger_settings(logger, constants.BACKEND_LOG_FILE, rotate=True, verbose=True)
 
 frontend_logger = get_logger("frontend")
 set_logger_settings(frontend_logger, constants.FRONTEND_LOG_FILE, rotate=True, log_preamble="", verbose=True)

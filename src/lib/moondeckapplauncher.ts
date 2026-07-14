@@ -1,5 +1,5 @@
-import { AppStartResult, AppType, ControllerConfigOption, EnvVars, checkExecPathMatch, getAppDetails, getAudioDevices, getCurrentDisplayModeString, getCurrentUserSteamId, getDisplayIdentifiers, getMoonDeckRunPath, getSystemNetworkStore, launchApp, registerForGameLaunchIntercept, registerForGameLifetime, registerForSuspendNotifications, setAppHiddenState, setAppLaunchOptions, setAppResolutionOverride, setOverrideResolutionForInternalDisplay, setShortcutName, waitForNetworkConnection } from "./steamutils";
-import { ControllerConfigValues, Dimension, HostResolution, HostSettings, SettingsManager, networkReconnectAfterSuspendDefault } from "./settingsmanager";
+import { AppStartResult, AppType, ControllerConfigOption, EnvVars, checkExecPathMatch, getAppDetails, getAudioDevices, getCurrentDisplayModeString, getCurrentUserSteamId, getDisplayIdentifiers, getMoonDeckRunPath, getSystemNetworkStore, launchApp, registerForGameLaunchIntercept, registerForGameLifetime, registerForSuspendNotifications, setAppHiddenState, setAppLaunchOptions, setAppResolutionOverride, setOverrideResolutionForInternalDisplay, setShortcutName } from "./steamutils";
+import { ControllerConfigValues, Dimension, HostResolution, HostSettings, SettingsManager } from "./settingsmanager";
 import { Subscription, pairwise } from "rxjs";
 import { getEnvKeyValueString, makeEnvKeyValue } from "./envutils";
 import { AppDetails } from "@decky/ui/dist/globals/steam-client/App";
@@ -12,7 +12,6 @@ import { MoonDeckAppShortcuts } from "./moondeckappshortcuts";
 import { call } from "@decky/api";
 import { executeAsync } from "./executeasync";
 import { logger } from "./logger";
-import { sleep } from "@decky/ui";
 
 async function setRunnerReady(): Promise<void> {
   try {
@@ -215,32 +214,24 @@ export class MoonDeckAppLauncher {
       if (this.moonDeckApp.value !== null) {
         logger.log("Suspending MoonDeck app.");
         await this.moonDeckApp.suspendApp();
+
+        // Always suspend how, even if suspending app could have failed.
+        const settings = this.settingsManager.settings.value;
+        if (settings && settings.gameSession.autoSuspendHost) {
+          // The buddy status state might not be up to date unless we have
+          // explicitly updated it, however if the app is running we can assume it is...
+          await this.commandProxy.suspendOrHibernatePC({ delay: 30, ignoreStatus: true });
+        }
       }
     }, async () => {
-      const resumeAfterSuspend = this.settingsManager.settings.value?.gameSession.resumeAfterSuspend ?? false;
-      if (!resumeAfterSuspend) {
+      const settings = this.settingsManager.settings.value;
+      if (settings === null || !settings.gameSession.resumeAfterSuspend) {
         await this.moonDeckApp.killApp();
         await this.moonDeckApp.clearApp();
         return;
       }
 
       await this.moonDeckApp.unsuspendApp();
-
-      // logger.log("Waiting for internet connection to resume MoonDeck app.");
-      // const connection = await waitForNetworkConnection(this.settingsManager.hostSettings?.runnerTimeouts.networkReconnectAfterSuspend ?? networkReconnectAfterSuspendDefault);
-
-      // if (this.moonDeckApp.value === null) {
-      //   logger.log("MoonDeck app has been started manually already.");
-      //   return;
-      // }
-
-      // if (connection) {
-      //   logger.log(`Relaunching app ${this.moonDeckApp.value.steamAppId} after suspend.`);
-      //   await this.launchApp(this.moonDeckApp.value.steamAppId, this.moonDeckApp.value.name, this.moonDeckApp.value.appType, true);
-      // } else {
-      //   logger.toast("Not resuming session - no network connection!", { output: "warn" });
-      //   await this.moonDeckApp.clearApp();
-      // }
     });
   }
 
@@ -280,7 +271,7 @@ export class MoonDeckAppLauncher {
     private readonly settingsManager: SettingsManager,
     private readonly moonDeckAppShortcuts: MoonDeckAppShortcuts,
     private readonly externalAppShortcuts: ExternalAppShortcuts,
-    commandProxy: CommandProxy
+    readonly commandProxy: CommandProxy
   ) {
     this.moonDeckApp = new MoonDeckAppProxy(commandProxy);
   }
@@ -311,7 +302,7 @@ export class MoonDeckAppLauncher {
     }
   }
 
-  async launchApp(appId: number, appName: string, appType: AppType, afterSuspend = false): Promise<void> {
+  async launchApp(appId: number, appName: string, appType: AppType): Promise<void> {
     if (this.moonDeckAppShortcuts.initializing || this.externalAppShortcuts.initializing) {
       logger.toast("Plugin is still initializing...");
       return;
@@ -419,8 +410,7 @@ export class MoonDeckAppLauncher {
       this.moonDeckApp.setApp(appId, details.unAppID, appName, appType, sessionOptions);
       await this.moonDeckApp.clearRunnerResult();
 
-      const launchTimeout = afterSuspend ? hostSettings.runnerTimeouts.steamLaunchAfterSuspend : hostSettings.runnerTimeouts.steamLaunch;
-      const launchResult = await launchApp(details.unAppID, launchTimeout * 1000);
+      const launchResult = await launchApp(details.unAppID, hostSettings.runnerTimeouts.steamLaunch * 1000);
       if (launchResult !== AppStartResult.Started) {
         if (launchResult === AppStartResult.TimeoutOrError) {
           logger.toast("Failed to launch shortcut!", { output: "error" });

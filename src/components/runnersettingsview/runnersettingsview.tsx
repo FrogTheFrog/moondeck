@@ -1,7 +1,7 @@
 import { DialogBody, DialogControlsSection, DialogControlsSectionHeader, Field } from "@decky/ui";
 import { FC, useContext } from "react";
 import { LabelWithIcon, NumericTextInput, ToggleField } from "../shared";
-import { appLaunchDefault, appLaunchStabilityDefault, buddyRequestsDefault, initialConditionsDefault, networkReconnectAfterSuspendDefault, servicePingDefault, steamLaunchAfterSuspendDefault, steamLaunchDefault, steamReadinessDefault, streamEndDefault, streamReadinessDefault, userSwitch, wakeOnLanDefault } from "../../lib";
+import { appLaunchDefault, appLaunchStabilityDefault, buddyRequestsDefault, initialConditionsDefault, servicePingDefault, steamLaunchDefault, steamReadinessDefault, streamEndDefault, streamReadinessDefault, userSwitch, wakeOnLanDefault } from "../../lib";
 import { useCurrentHostSettings, useCurrentSettings } from "../../hooks";
 import { HostOff } from "../icons";
 import { MoonDeckContext } from "../../contexts";
@@ -161,28 +161,6 @@ export const RunnerSettingsView: FC = () => {
             min={1}
             value={hostSettings.runnerTimeouts.steamLaunch}
             setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.runnerTimeouts.steamLaunch = value; })}
-          />
-        </Field>
-        <Field
-          label={`steamLaunchAfterSuspend (default: ${steamLaunchAfterSuspendDefault})`}
-          description="Timeout for how long to wait until Steam launches MoonDeck app after system resumes from suspension."
-          childrenContainerWidth="fixed"
-        >
-          <NumericTextInput
-            min={1}
-            value={hostSettings.runnerTimeouts.steamLaunchAfterSuspend}
-            setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.runnerTimeouts.steamLaunchAfterSuspend = value; })}
-          />
-        </Field>
-        <Field
-          label={`networkReconnectAfterSuspend (default: ${networkReconnectAfterSuspendDefault})`}
-          description="Timeout for how long to wait for connection to be available to relaunch MoonDeck app."
-          childrenContainerWidth="fixed"
-        >
-          <NumericTextInput
-            min={1}
-            value={hostSettings.runnerTimeouts.networkReconnectAfterSuspend}
-            setValue={(value) => settingsManager.updateHost((hostSettings) => { hostSettings.runnerTimeouts.networkReconnectAfterSuspend = value; })}
           />
         </Field>
       </DialogControlsSection>

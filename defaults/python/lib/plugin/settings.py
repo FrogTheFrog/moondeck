@@ -105,6 +105,7 @@ class HostSettings(TypedDict):
 class GameSessionSettings(TypedDict):
     autoApplyAppId: bool
     resumeAfterSuspend: bool
+    autoSuspendHost: bool
     controllerConfig: Optional[ControllerConfigOption]
 
 
@@ -123,7 +124,7 @@ class ButtonStyleSettings(TypedDict):
 
 
 class UserSettings(TypedDict):
-    version: Literal[40]
+    version: Literal[41]
     clientId: str
     currentHostId: Optional[str]
     gameSession: GameSessionSettings
@@ -150,6 +151,7 @@ class UserSettingsManager(SettingsManager[UserSettings]):
             "gameSession": {
                 "autoApplyAppId": False,
                 "resumeAfterSuspend": False,
+                "autoSuspendHost": False,
                 "controllerConfig": None
             },
             "buttonPosition": {
@@ -388,3 +390,9 @@ class UserSettingsManager(SettingsManager[UserSettings]):
             data["version"] = 40
             for host in data["hostSettings"].keys():
                 data["hostSettings"][host]["buddy"]["hibernateHost"] = False
+        if data["version"] == 40:
+            data["version"] = 41
+            data["gameSession"]["autoSuspendHost"] = False
+            for host in data["hostSettings"].keys():
+                del data["hostSettings"][host]["runnerTimeouts"]["steamLaunchAfterSuspend"]
+                del data["hostSettings"][host]["runnerTimeouts"]["networkReconnectAfterSuspend"]

@@ -1,5 +1,5 @@
 BUDDY_API_VERSION = 8
-LOG_FILE = "/tmp/moondeck.log"
+BACKEND_LOG_FILE = "/tmp/moondeck-backend.log"
 FRONTEND_LOG_FILE = "/tmp/moondeck-frontend.log"
 RUNNER_LOG_FILE = "/tmp/moondeck-runner.log"
 MOONLIGHT_LOG_FILE = "/tmp/moondeck-runner-moonlight.log"

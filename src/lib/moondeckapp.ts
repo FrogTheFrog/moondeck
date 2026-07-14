@@ -198,14 +198,7 @@ export class MoonDeckAppProxy extends ReadonlySubject<MoonDeckAppData | null> {
     if (!await suspendRunner()) {
       await this.killApp();
       await this.clearApp();
-
-      // Even if we failed to suspend app, we should still continue suspending
-      // host PC at least.
     }
-
-    // The buddy status state might not be up to date unless we have
-    // explicitly updated it, however if the app is running we can assume it is...
-    // await this.commandProxy.suspendPC({ ignoreStatus: true });
   }
 
   async unsuspendApp(): Promise<void> {
@@ -213,16 +206,10 @@ export class MoonDeckAppProxy extends ReadonlySubject<MoonDeckAppData | null> {
       return;
     }
 
-    await unsuspendRunner();
-    return;
-
-    // if (await this.isStillRunning() && await unsuspendRunner()) {
-    //   return;
-    // }
-
-    // // Cleanup any leftovers and clear the state
-    // await this.killApp();
-    // await this.clearApp();
+    if (!await unsuspendRunner()) {
+      await this.killApp();
+      await this.clearApp();
+    }
   }
 
   async getRunnerResult(): Promise<string | null> {
