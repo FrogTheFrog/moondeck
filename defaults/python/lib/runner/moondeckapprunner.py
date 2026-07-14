@@ -9,6 +9,7 @@ from ..moonlightproxy import CommandLineOptions, MoonlightProxy
 from ..buddyclient import BuddyClient, HelloResult
 from ..buddyrequests import BuddyException
 from ..utils import TimedPooler
+from ..splashscreen.overlay import OverlayStack
 
 
 class MoonDeckAppLauncher:
@@ -211,13 +212,13 @@ class MoonDeckAppLauncher:
 
 class MoonDeckAppRunner:
     @staticmethod
-    async def check_connectivity(client: BuddyClient, mac: str, host_id: str, hostname: str, host_port: int, wol_port: int, custom_wol_exec: Optional[str], wol_timeout: int, server_timeout: int):
+    async def check_connectivity(client: BuddyClient, overlay_stack: OverlayStack, mac: str, host_id: str, hostname: str, host_port: int, wol_port: int, custom_wol_exec: Optional[str], wol_timeout: int, server_timeout: int):
         logger.info("Checking connection to Buddy and GameStream server")
 
         # Lazy import to improve CLI performance
         from .wolsplashscreen import WolSplashScreen
 
-        async with WolSplashScreen(client.address, mac, wol_timeout, hostname, wol_port, custom_wol_exec) as splash:
+        async with WolSplashScreen(overlay_stack, client.address, mac, wol_timeout, hostname, wol_port, custom_wol_exec) as splash:
             while True:
                 try:
                     await client.say_hello(force=True)
@@ -322,7 +323,7 @@ class MoonDeckAppRunner:
                                           timeout=timeout)
 
     @classmethod
-    async def run(cls, settings: MoonDeckAppRunnerSettings):
+    async def run(cls, settings: MoonDeckAppRunnerSettings, overlay_stack: OverlayStack):
         # Lazy import to improve CLI performance
         import asyncio
         import contextlib
@@ -336,7 +337,8 @@ class MoonDeckAppRunner:
             settings["moonlight_exec_path"])
 
         async with buddy_client as client, moonlight_proxy as proxy:
-            await cls.check_connectivity(client=client, 
+            await cls.check_connectivity(client=client,
+                                         overlay_stack=overlay_stack,
                                          mac=settings["mac"],
                                          host_id=settings["host_id"],
                                          hostname=settings["hostname"],

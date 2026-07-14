@@ -7,17 +7,18 @@ from ..logger import logger
 from ..moonlightproxy import CommandLineOptions, MoonlightProxy
 from ..buddyclient import BuddyClient
 from ..buddyrequests import BuddyException
+from ..splashscreen.overlay import OverlayStack
 
 
 class MoonlightOnlyRunner:
     @staticmethod
-    async def check_connectivity(client: BuddyClient, address: str, mac: str, host_id: str, hostname: str, host_port: int, wol_port: int, custom_wol_exec: Optional[str], wol_timeout: int, server_timeout: int):
+    async def check_connectivity(client: BuddyClient, overlay_stack: OverlayStack, address: str, mac: str, host_id: str, hostname: str, host_port: int, wol_port: int, custom_wol_exec: Optional[str], wol_timeout: int, server_timeout: int):
         logger.info("Checking connection to GameStream server")
 
         # Lazy import to improve CLI performance
         from .wolsplashscreen import WolSplashScreen
 
-        async with WolSplashScreen(address, mac, wol_timeout, hostname, wol_port, custom_wol_exec) as splash:
+        async with WolSplashScreen(overlay_stack, address, mac, wol_timeout, hostname, wol_port, custom_wol_exec) as splash:
             while True:
                 # Just in case the Buddy is online (not needed for this type of apps),
                 # try to abort any ongoing host change
@@ -53,7 +54,7 @@ class MoonlightOnlyRunner:
         await proxy.start(hostname, host_app, cmd_options)
 
     @classmethod
-    async def run(cls, settings: MoonlightOnlyRunnerSettings):
+    async def run(cls, settings: MoonlightOnlyRunnerSettings, overlay_stack: OverlayStack):
         buddy_client = BuddyClient(
             settings["address"],
             settings["buddy_port"],
@@ -64,6 +65,7 @@ class MoonlightOnlyRunner:
 
         async with buddy_client as client, moonlight_proxy as proxy:
             await cls.check_connectivity(client=client,
+                                         overlay_stack=overlay_stack,
                                          address=settings["address"], 
                                          mac=settings["mac"],
                                          host_id=settings["host_id"],
