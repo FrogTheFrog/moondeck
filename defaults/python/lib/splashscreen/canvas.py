@@ -6,7 +6,7 @@ from .overlay import Overlay, OverlayStack
 
 class Canvas(pyglet.window.Window, OverlayStack):
     def __init__(self):
-        super().__init__(fullscreen=True, visible=False, resizable=True, caption="MoonDeck")
+        super().__init__(fullscreen=False, visible=False, resizable=True, caption="MoonDeck")
         self.__overlays: list[Overlay] = []
         self.__last_size = {}
 

@@ -2,63 +2,55 @@
 import pyglet
 from datetime import datetime, timedelta, timezone
 
-from .pallete import TEXT_COLOR, ACTIVE_COLOR, INACTIVE_COLOR
-from .overlay import Overlay, OverlayStack
+from .pallete import TEXT_COLOR, ACTIVE_COLOR, INACTIVE_COLOR, DEFAULT_FONT
+from .mainscreen import MainScreenRunning
+from .overlay import OverlayStack
 
 
 class LoadingBar:
     def __init__(self):
-        self.current_block = 0
-        self.blocks : list[pyglet.shapes.Rectangle] = []
-        self.batch = pyglet.graphics.Batch()
+        self.__batch = pyglet.graphics.Batch()
+        self.__background_bar = pyglet.shapes.Rectangle(x=0, y=0, width=0, height=0, color=INACTIVE_COLOR, batch=self.__batch)
+        self.__moving_bar = pyglet.shapes.Rectangle(x=0, y=0, width=0, height=0, color=ACTIVE_COLOR, batch=self.__batch)
+        self.__scroll_x_percent = 0
 
-        for _ in range(15):
-            self.blocks.append(pyglet.shapes.Rectangle(x=0, y=0, width=0, height=0,
-                                                       color=INACTIVE_COLOR, batch=self.batch)) # type: ignore
+    def set_bar_pos(self, percent: float):
+        self.__scroll_x_percent = percent
+        percent = percent / 100
+
+        start_x = self.__background_bar.x - self.__moving_bar.width
+        self.__moving_bar.x = start_x + ((self.__background_bar.width + self.__moving_bar.width) * percent)
 
     def resize(self, width: float, height: float):
-        width_ratio = 4/6
-        bar_width = width_ratio * width
+        width_ratio = 8/10
+        height_ratio = 1/100
 
-        bar_slice = bar_width / len(self.blocks)
-        gap_size = bar_slice / 4
-        block_size = bar_slice - gap_size
+        self.__background_bar.x = (1 - width_ratio) * width / 2
+        self.__background_bar.y = self.__moving_bar.y = height_ratio * height * 15
+        self.__background_bar.width = width_ratio * width
+        self.__background_bar.height = self.__moving_bar.height = height_ratio * height / 1.5
 
-        x = ((1 - width_ratio) / 2) * width
-        y = height / 2 - 5
-
-        for block in self.blocks:
-            block.width=block_size
-            block.height=block_size
-            block.y = y - block_size
-            block.x = x
-
-            x += block_size + gap_size
+        self.set_bar_pos(self.__scroll_x_percent)
+        self.__moving_bar.width = (1 - width_ratio) * width * 1.25
 
     def draw(self):
-        refresh_interval = timedelta(milliseconds=100)
-        now = datetime.now(timezone.utc)
-        if now - getattr(self, "__last_color_swap", now - timedelta(days=100)) > refresh_interval:
-            setattr(self, "__last_color_swap", now)
+        pyglet.gl.glEnable(pyglet.gl.GL_SCISSOR_TEST)
+        pyglet.gl.glScissor(int(self.__background_bar.x), int(self.__background_bar.y),
+                            int(self.__background_bar.width), int(self.__background_bar.height))
 
-            current = self.current_block
-            next = self.current_block + 1
+        next_pos = self.__scroll_x_percent + 1
+        next_pos = 0 if next_pos > 100 else next_pos
+        self.set_bar_pos(next_pos)
 
-            if next >= len(self.blocks):
-                next = 0
+        self.__batch.draw()
 
-            self.blocks[current].color = INACTIVE_COLOR
-            self.blocks[next].color = ACTIVE_COLOR
-            self.current_block = next
-
-        self.batch.draw()
-
+        pyglet.gl.glDisable(pyglet.gl.GL_SCISSOR_TEST)
 
 class LoadingLabel:
     def __init__(self, text: str):
         def make_label():
-            return pyglet.text.Label(x=0, y=0, anchor_y="bottom",
-                                     weight="bold", font_size=0,
+            return pyglet.text.Label(x=0, y=0, font_name=DEFAULT_FONT,
+                                     weight="normal", font_size=0,
                                      color=TEXT_COLOR)
 
         self.__label_main = make_label()
@@ -68,15 +60,17 @@ class LoadingLabel:
         self.set_text(text=text)
 
     def resize(self, width: float, height: float):
-        width_ratio = 4/6
-        self.__x = ((1 - width_ratio) / 2) * width
+        width_ratio = 8/10
+        height_ratio = 1/100
+
+        self.__x = (1 - width_ratio) * width / 2
         self.__width = round(width * width_ratio)
         self.__scroll_speed = self.__width / 320
 
         self.__label_main.x = self.__label_repeat.x = self.__x
-        self.__label_main.y = self.__label_repeat.y = height / 2 + 5
+        self.__label_main.y = self.__label_repeat.y = height_ratio * height / 1.5
 
-        font_size_pts = 24
+        font_size_pts = 34
         self.__label_main.font_size = self.__label_repeat.font_size = int(((width_ratio * width) / font_size_pts) * 0.83)
 
     def set_text(self, text):
@@ -107,7 +101,7 @@ class LoadingLabel:
         pyglet.gl.glDisable(pyglet.gl.GL_SCISSOR_TEST)
 
 
-class WolScreen(Overlay):
+class WolScreen(MainScreenRunning):
     def __init__(self, stack: OverlayStack, text: str):
         super().__init__(stack)
 
@@ -118,9 +112,11 @@ class WolScreen(Overlay):
         self.__label.set_text(text)
 
     def resize(self, width: float, height: float):
+        super().resize(width=width, height=height)
         self.__label.resize(width=width, height=height)
         self.__bar.resize(width=width, height=height)
 
     def draw(self):
+        super().draw()
         self.__label.draw()
         self.__bar.draw()

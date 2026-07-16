@@ -2,11 +2,16 @@
 import pyglet
 import asyncio
 import contextlib
+import pathlib 
 
 from .canvas import Canvas
 
 
 class SplashScreen:
+    def __init__(self):
+        script_dir = pathlib.Path(__file__).parent.resolve()
+        pyglet.font.add_file(str(script_dir.joinpath("./IBM_Plex_Sans/IBMPlexSans-VariableFont_wdth,wght.ttf")))
+
     async def __run_loop(self):
         try:
             while not self.close_flag:

@@ -1,7 +1,7 @@
 # Warning! Slow to load, only import this module lazily!
 import pyglet
 
-from .pallete import TEXT_COLOR, ACTIVE_COLOR, INACTIVE_COLOR
+from .pallete import TEXT_COLOR, ACTIVE_COLOR, INACTIVE_COLOR, DEFAULT_FONT
 from .overlay import Overlay, OverlayStack
 
 
@@ -10,11 +10,13 @@ class MainScreenLabel(Overlay):
         super().__init__(stack)
 
         self.__label_main = pyglet.text.Label(x=0, y=0, anchor_x='center', anchor_y='bottom',
+                                              font_name=DEFAULT_FONT,
                                               weight="bold", font_size=0, color=TEXT_COLOR,
                                               text="MoonDeck")
         
         self.__label_secondary = pyglet.text.Label(x=0, y=0, anchor_x='center', anchor_y='top',
-                                                   weight="bold", font_size=0)
+                                                   font_name=DEFAULT_FONT,
+                                                   weight="normal", font_size=0)
 
     def _set_suspended(self, suspended: bool):
         if suspended:
@@ -28,17 +30,17 @@ class MainScreenLabel(Overlay):
         width_ratio = 4/6
         center_width = width / 2
         center_height = height / 2
-        gap = 20
+        gap = 10
 
         self.__label_main.x = center_width
-        self.__label_main.y = center_height + (gap / 2)
+        self.__label_main.y = center_height
 
         self.__label_secondary.x = center_width
-        self.__label_secondary.y = center_height + (gap / 2)
+        self.__label_secondary.y = center_height - gap
 
         font_size_pts = 16
         self.__label_main.font_size = int(((width_ratio * width) / font_size_pts) * 0.83)
-        self.__label_secondary.font_size = int(((width_ratio * width) / font_size_pts) * 0.4)
+        self.__label_secondary.font_size = int(((width_ratio * width) / font_size_pts) * 0.45)
 
     def draw(self):
         self.__label_main.draw()
