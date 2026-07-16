@@ -49,9 +49,7 @@ class LoadingBar:
 class LoadingLabel:
     def __init__(self, text: str):
         def make_label():
-            return pyglet.text.Label(x=0, y=0, font_name=DEFAULT_FONT,
-                                     weight="normal", font_size=0,
-                                     color=TEXT_COLOR)
+            return pyglet.text.Label(font_name=DEFAULT_FONT, weight="normal", color=TEXT_COLOR)
 
         self.__label_main = make_label()
         self.__label_repeat = make_label()

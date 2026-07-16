@@ -9,14 +9,12 @@ class MainScreenLabel(Overlay):
     def __init__(self, stack: OverlayStack):
         super().__init__(stack)
 
-        self.__label_main = pyglet.text.Label(x=0, y=0, anchor_x='center', anchor_y='bottom',
-                                              font_name=DEFAULT_FONT,
-                                              weight="bold", font_size=0, color=TEXT_COLOR,
+        self.__label_main = pyglet.text.Label(anchor_x='center', anchor_y='bottom',
+                                              font_name=DEFAULT_FONT, weight="bold", color=TEXT_COLOR,
                                               text="MoonDeck")
         
-        self.__label_secondary = pyglet.text.Label(x=0, y=0, anchor_x='center', anchor_y='top',
-                                                   font_name=DEFAULT_FONT,
-                                                   weight="normal", font_size=0)
+        self.__label_secondary = pyglet.text.Label(anchor_x='center', anchor_y='top',
+                                                   font_name=DEFAULT_FONT, weight="normal")
 
     def _set_suspended(self, suspended: bool):
         if suspended:
