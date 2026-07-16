@@ -31,8 +31,14 @@ from lib.splashscreen.wolscreen import WolScreen
 
 async def main():
     async with SplashScreen() as screen:
-        async with WolScreen(screen.canvas, "FrogStation FrogStation FrogStation FrogStation FrogStation FrogStation"):
-            await asyncio.sleep(10)
+        async with WolScreen(screen.canvas, "FrogStation", False, False) as wol:
+            await asyncio.sleep(5)
+            wol.set_status(False, True)
+            await asyncio.sleep(5)
+            wol.set_status(True, False)
+            await asyncio.sleep(5)
+            wol.set_status(True, True)
+            await asyncio.sleep(5)
 
 
 if __name__ == "__main__":

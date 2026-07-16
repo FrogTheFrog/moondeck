@@ -1,8 +1,7 @@
 # Warning! Slow to load, only import this module lazily!
 import pyglet
-from datetime import datetime, timedelta, timezone
 
-from .pallete import TEXT_COLOR, ACTIVE_COLOR, INACTIVE_COLOR, DEFAULT_FONT
+from .pallete import TEXT_COLOR, ACTIVE_COLOR, INACTIVE_COLOR, LIGHT_INACTIVE_COLOR, DEFAULT_FONT
 from .mainscreen import MainScreenRunning
 from .overlay import OverlayStack
 
@@ -47,68 +46,92 @@ class LoadingBar:
         pyglet.gl.glDisable(pyglet.gl.GL_SCISSOR_TEST)
 
 class LoadingLabel:
-    def __init__(self, text: str):
-        def make_label():
-            return pyglet.text.Label(font_name=DEFAULT_FONT, weight="normal", color=TEXT_COLOR, anchor_y="top")
+    def __init__(self, text: str, gamestream: bool, buddy: bool):
+        def make_label(**kwargs):
+            return pyglet.text.Label(font_name=DEFAULT_FONT, weight="normal", color=TEXT_COLOR, anchor_y="top", **kwargs)
 
         self.__label_main = make_label()
         self.__label_repeat = make_label()
+        self.__label_gamestream = make_label(text="GameStream", anchor_x="right")
+        self.__label_buddy = make_label(text="Buddy", anchor_x="right")
+        self.__label_separator = make_label(text="|", anchor_x="right")
         self.__scroll_x = 0
 
         self.set_text(text=text)
+        self.set_status(gamestream=gamestream, buddy=buddy)
+
+    def set_text(self, text):
+        self.__label_main.text = self.__label_repeat.text = text
+
+    def set_status(self, gamestream: bool, buddy: bool):
+        self.__label_gamestream.color = ACTIVE_COLOR if gamestream else LIGHT_INACTIVE_COLOR
+        self.__label_buddy.color = ACTIVE_COLOR if buddy else LIGHT_INACTIVE_COLOR
 
     def resize(self, width: float, height: float):
         width_ratio = 8/10
         height_ratio = 1/100
 
         self.__x = (1 - width_ratio) * width / 2
-        self.__width = round(width * width_ratio / 2)
+        self.__width = round(width * width_ratio)
         self.__scroll_speed = self.__width / 320
 
         self.__label_main.x = self.__label_repeat.x = self.__x
-        self.__label_main.y = self.__label_repeat.y = height_ratio * height * 15
+        self.__label_main.y = self.__label_repeat.y = self.__label_gamestream.y = \
+            self.__label_buddy.y = self.__label_separator.y = height_ratio * height * 15
 
-        font_size_pts = 34
-        self.__label_main.font_size = self.__label_repeat.font_size = int(((width_ratio * width) / font_size_pts) * 0.83)
+        font_size_pts = 44
+        self.__label_main.font_size = self.__label_repeat.font_size = self.__label_gamestream.font_size = \
+            self.__label_buddy.font_size = self.__label_separator.font_size = int(((width_ratio * width) / font_size_pts) * 0.83)
 
-    def set_text(self, text):
-        self.__label_main.text = self.__label_repeat.text = text
+        self.__label_buddy.x = self.__x + self.__width
+        self.__width -= self.__label_buddy.content_width
+        self.__label_separator.x = self.__x + self.__width
+        self.__width -= self.__label_separator.content_width
+        self.__label_gamestream.x = self.__x + self.__width
+        self.__width -= self.__label_gamestream.content_width
+
 
     def draw(self):
         if self.__label_main.content_width <= self.__width:
             self.__label_main.draw()
-            return
-        
-        pyglet.gl.glEnable(pyglet.gl.GL_SCISSOR_TEST)
-        pyglet.gl.glScissor(int(self.__x), int(self.__label_main.y - self.__label_main.content_height),
-                            int(self.__width), int(self.__label_main.content_height))
+        else:
+            pyglet.gl.glEnable(pyglet.gl.GL_SCISSOR_TEST)
+            pyglet.gl.glScissor(int(self.__x), int(self.__label_main.y - self.__label_main.content_height),
+                                int(self.__width), int(self.__label_main.content_height))
 
-        def set_scroll_offset(offset):
-            distance_between_labels = 60
-            self.__scroll_x = offset
-            self.__label_main.x = self.__x - self.__scroll_x
-            self.__label_repeat.x = self.__label_main.x + self.__label_main.content_width + distance_between_labels
+            def set_scroll_offset(offset):
+                distance_between_labels = 60
+                self.__scroll_x = offset
+                self.__label_main.x = self.__x - self.__scroll_x
+                self.__label_repeat.x = self.__label_main.x + self.__label_main.content_width + distance_between_labels
 
-        set_scroll_offset(self.__scroll_x + self.__scroll_speed)
+            set_scroll_offset(self.__scroll_x + self.__scroll_speed)
 
-        if self.__label_repeat.x < self.__x:
-            set_scroll_offset(self.__x - self.__label_repeat.x)
+            if self.__label_repeat.x < self.__x:
+                set_scroll_offset(self.__x - self.__label_repeat.x)
 
-        self.__label_main.draw()
-        self.__label_repeat.draw()
+            self.__label_main.draw()
+            self.__label_repeat.draw()
 
-        pyglet.gl.glDisable(pyglet.gl.GL_SCISSOR_TEST)
+            pyglet.gl.glDisable(pyglet.gl.GL_SCISSOR_TEST)
+
+        self.__label_buddy.draw()
+        self.__label_separator.draw()
+        self.__label_gamestream.draw()
 
 
 class WolScreen(MainScreenRunning):
-    def __init__(self, stack: OverlayStack, text: str):
+    def __init__(self, stack: OverlayStack, text: str, gamestream: bool, buddy: bool):
         super().__init__(stack)
 
-        self.__label = LoadingLabel(text)
+        self.__label = LoadingLabel(text, gamestream, buddy)
         self.__bar = LoadingBar()
 
     def set_label_text(self, text: str):
         self.__label.set_text(text)
+
+    def set_status(self, gamestream: bool, buddy: bool):
+        self.__label.set_status(gamestream, buddy)
 
     def resize(self, width: float, height: float):
         super().resize(width=width, height=height)

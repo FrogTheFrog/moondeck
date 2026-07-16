@@ -1,7 +1,7 @@
 # Warning! Slow to load, only import this module lazily!
 import pyglet
 
-from .pallete import TEXT_COLOR, ACTIVE_COLOR, INACTIVE_COLOR, DEFAULT_FONT
+from .pallete import TEXT_COLOR, ACTIVE_COLOR, LIGHT_INACTIVE_COLOR, DEFAULT_FONT
 from .overlay import Overlay, OverlayStack
 
 
@@ -19,7 +19,7 @@ class MainScreenLabel(Overlay):
     def _set_suspended(self, suspended: bool):
         if suspended:
             self.__label_secondary.text = "Suspended"
-            self.__label_secondary.color = INACTIVE_COLOR
+            self.__label_secondary.color = LIGHT_INACTIVE_COLOR
         else:
             self.__label_secondary.text = "Running"
             self.__label_secondary.color = ACTIVE_COLOR
