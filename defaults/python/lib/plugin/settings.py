@@ -21,8 +21,6 @@ class RunnerTimeouts(TypedDict):
     streamEnd: int
     wakeOnLan: int
     steamLaunch: int
-    steamLaunchAfterSuspend: int
-    networkReconnectAfterSuspend: int
 
 
 class HostApp(TypedDict):
