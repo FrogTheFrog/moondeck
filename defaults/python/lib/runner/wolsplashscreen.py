@@ -20,7 +20,8 @@ class WolSplashScreen:
         if timeout > 0:
             self.__timeout_data = {
                 "end": datetime.now(timezone.utc) + timedelta(seconds=timeout),
-                "wol_screen": WolScreen(stack, f"Checking connection to {self.__hostname}...")
+                "wol_screen": WolScreen(stack, self.__hostname, None, None),
+                "wol_shown": False
             }
         else:
             self.__timeout_data = None
@@ -38,7 +39,6 @@ class WolSplashScreen:
         if self.__timeout_data is None:
             return self
         
-        await self.__timeout_data["wol_screen"].__aenter__()
         self.__wol_task = asyncio.create_task(self.__wol_loop())
         return self
 
@@ -50,9 +50,10 @@ class WolSplashScreen:
             with contextlib.suppress(asyncio.CancelledError):
                 await self.__wol_task
 
-            await self.__timeout_data["wol_screen"].__aexit__(exc_type, exc, tb)
+            if self.__timeout_data["wol_shown"]:
+                await self.__timeout_data["wol_screen"].__aexit__(exc_type, exc, tb)
 
-    def update(self, buddy_status, server_status) -> bool:
+    async def update(self, buddy_status, server_status) -> bool:
         logger.info(f"Buddy: {buddy_status}, Server: {server_status}")
         if self.__timeout_data is None:
             return False
@@ -60,5 +61,12 @@ class WolSplashScreen:
         if ((buddy_status is None or buddy_status) and server_status) or (datetime.now(timezone.utc) > self.__timeout_data["end"]):
             return False
         
-        self.__timeout_data["wol_screen"].set_label_text(text=f"Waiting for {self.__hostname}...")
+        show_status = buddy_status is not None and server_status is not None
+        self.__timeout_data["wol_screen"].set_status(gamestream=server_status if show_status else None,
+                                                     buddy=buddy_status if show_status else None)
+        
+        if not self.__timeout_data["wol_shown"]:
+            self.__timeout_data["wol_shown"] = True
+            await self.__timeout_data["wol_screen"].__aenter__()
+        
         return True

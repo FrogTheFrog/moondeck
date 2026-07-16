@@ -36,7 +36,7 @@ class MoonlightOnlyRunner:
                                                     timeout=server_timeout)
                 server_status = server_info is not None and server_info["uniqueId"] == host_id
                 
-                if not splash.update(None, server_status):
+                if not await splash.update(None, server_status):
                     if not server_status:
                         raise RunnerError(Result.GameStreamDead)
                     return
