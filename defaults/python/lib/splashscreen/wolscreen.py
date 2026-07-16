@@ -133,7 +133,7 @@ class LoadingLabel:
 
 
 class WolScreen(MainScreenRunning):
-    def __init__(self, stack: OverlayStack, text: str, gamestream: bool, buddy: bool):
+    def __init__(self, stack: OverlayStack, text: str, gamestream: bool | None, buddy: bool | None):
         super().__init__(stack)
 
         self.__label = LoadingLabel(text, gamestream, buddy)
