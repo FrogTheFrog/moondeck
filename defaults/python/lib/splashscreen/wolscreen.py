@@ -49,7 +49,7 @@ class LoadingBar:
 class LoadingLabel:
     def __init__(self, text: str):
         def make_label():
-            return pyglet.text.Label(font_name=DEFAULT_FONT, weight="normal", color=TEXT_COLOR)
+            return pyglet.text.Label(font_name=DEFAULT_FONT, weight="normal", color=TEXT_COLOR, anchor_y="top")
 
         self.__label_main = make_label()
         self.__label_repeat = make_label()
@@ -62,11 +62,11 @@ class LoadingLabel:
         height_ratio = 1/100
 
         self.__x = (1 - width_ratio) * width / 2
-        self.__width = round(width * width_ratio)
+        self.__width = round(width * width_ratio / 2)
         self.__scroll_speed = self.__width / 320
 
         self.__label_main.x = self.__label_repeat.x = self.__x
-        self.__label_main.y = self.__label_repeat.y = height_ratio * height / 1.5
+        self.__label_main.y = self.__label_repeat.y = height_ratio * height * 15
 
         font_size_pts = 34
         self.__label_main.font_size = self.__label_repeat.font_size = int(((width_ratio * width) / font_size_pts) * 0.83)
@@ -80,7 +80,8 @@ class LoadingLabel:
             return
         
         pyglet.gl.glEnable(pyglet.gl.GL_SCISSOR_TEST)
-        pyglet.gl.glScissor(int(self.__x), int(self.__label_main.y), self.__width, self.__label_main.content_height)
+        pyglet.gl.glScissor(int(self.__x), int(self.__label_main.y - self.__label_main.content_height),
+                            int(self.__width), int(self.__label_main.content_height))
 
         def set_scroll_offset(offset):
             distance_between_labels = 60
