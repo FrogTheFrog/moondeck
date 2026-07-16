@@ -46,34 +46,42 @@ class LoadingBar:
         pyglet.gl.glDisable(pyglet.gl.GL_SCISSOR_TEST)
 
 class LoadingLabel:
-    def __init__(self, text: str, gamestream: bool, buddy: bool):
+    def __init__(self, text: str, gamestream: bool | None, buddy: bool | None):
         def make_label(**kwargs):
             return pyglet.text.Label(font_name=DEFAULT_FONT, weight="normal", color=TEXT_COLOR, anchor_y="top", **kwargs)
 
         self.__label_main = make_label()
         self.__label_repeat = make_label()
-        self.__label_gamestream = make_label(text="GameStream", anchor_x="right")
-        self.__label_buddy = make_label(text="Buddy", anchor_x="right")
-        self.__label_separator = make_label(text="|", anchor_x="right")
+        self.__label_gamestream = make_label(anchor_x="right")
+        self.__label_buddy = make_label(anchor_x="right")
+        self.__label_separator = make_label(anchor_x="right")
         self.__scroll_x = 0
+        self.__resize_width = 0
+        self.__resize_height = 0
 
         self.set_text(text=text)
         self.set_status(gamestream=gamestream, buddy=buddy)
 
     def set_text(self, text):
         self.__label_main.text = self.__label_repeat.text = text
+        self.resize(width=self.__resize_width, height=self.__resize_height)
 
-    def set_status(self, gamestream: bool, buddy: bool):
+    def set_status(self, gamestream: bool | None, buddy: bool | None):
         self.__label_gamestream.color = ACTIVE_COLOR if gamestream else LIGHT_INACTIVE_COLOR
         self.__label_buddy.color = ACTIVE_COLOR if buddy else LIGHT_INACTIVE_COLOR
+        self.__label_gamestream.text = "" if gamestream is None else "GameStream"
+        self.__label_buddy.text = "" if buddy is None else "Buddy"
+        self.__label_separator.text = "" if buddy is None or gamestream is None else "|"
+        self.resize(width=self.__resize_width, height=self.__resize_height)
 
     def resize(self, width: float, height: float):
+        self.__resize_width = width
+        self.__resize_height = height
+
         width_ratio = 8/10
         height_ratio = 1/100
 
         self.__x = (1 - width_ratio) * width / 2
-        self.__width = round(width * width_ratio)
-        self.__scroll_speed = self.__width / 320
 
         self.__label_main.x = self.__label_repeat.x = self.__x
         self.__label_main.y = self.__label_repeat.y = self.__label_gamestream.y = \
@@ -83,12 +91,16 @@ class LoadingLabel:
         self.__label_main.font_size = self.__label_repeat.font_size = self.__label_gamestream.font_size = \
             self.__label_buddy.font_size = self.__label_separator.font_size = int(((width_ratio * width) / font_size_pts) * 0.83)
 
+        self.__width = round(width * width_ratio)
+
         self.__label_buddy.x = self.__x + self.__width
-        self.__width -= self.__label_buddy.content_width
+        self.__width -= self.__label_buddy.content_width if self.__label_buddy.text else 0
         self.__label_separator.x = self.__x + self.__width
-        self.__width -= self.__label_separator.content_width
+        self.__width -= self.__label_separator.content_width if self.__label_separator.text else 0
         self.__label_gamestream.x = self.__x + self.__width
-        self.__width -= self.__label_gamestream.content_width
+        self.__width -= self.__label_gamestream.content_width if self.__label_gamestream.text else 0
+
+        self.__scroll_speed = self.__width / 320
 
 
     def draw(self):
@@ -130,7 +142,7 @@ class WolScreen(MainScreenRunning):
     def set_label_text(self, text: str):
         self.__label.set_text(text)
 
-    def set_status(self, gamestream: bool, buddy: bool):
+    def set_status(self, gamestream: bool | None, buddy: bool | None):
         self.__label.set_status(gamestream, buddy)
 
     def resize(self, width: float, height: float):

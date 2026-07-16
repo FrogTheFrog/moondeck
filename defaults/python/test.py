@@ -31,13 +31,13 @@ from lib.splashscreen.wolscreen import WolScreen
 
 async def main():
     async with SplashScreen() as screen:
-        async with WolScreen(screen.canvas, "FrogStation", False, False) as wol:
+        async with WolScreen(screen.canvas, "FrogStation FrogStation FrogStation FrogStation FrogStation FrogStation FrogStation", False, False) as wol:
             await asyncio.sleep(5)
-            wol.set_status(False, True)
+            wol.set_status(None, True)
             await asyncio.sleep(5)
-            wol.set_status(True, False)
+            wol.set_status(True, None)
             await asyncio.sleep(5)
-            wol.set_status(True, True)
+            wol.set_status(None, None)
             await asyncio.sleep(5)
 
 
