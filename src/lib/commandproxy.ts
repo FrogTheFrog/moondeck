@@ -207,18 +207,13 @@ export class CommandProxy {
     });
   }
 
-  async suspendPC(additionalCleanup?: Callback): Promise<void> {
+  async suspendOrHibernatePC(options: { additionalCleanup?: Callback; ignoreStatus?: boolean; delay?: number } = {}): Promise<void> {
     await this.changePcState(async ({ clientId }, { address, buddy }) => {
-      await additionalCleanup?.();
-      await suspendHost(address, buddy.port, clientId, defaultDelay, defaultTimeout);
-    });
-  }
+      await options.additionalCleanup?.();
 
-  async hibernatePC(additionalCleanup?: Callback): Promise<void> {
-    await this.changePcState(async ({ clientId }, { address, buddy }) => {
-      await additionalCleanup?.();
-      await hibernateHost(address, buddy.port, clientId, defaultDelay, defaultTimeout);
-    });
+      const fnPointer = buddy.hibernateHost ? hibernateHost : suspendHost;
+      await fnPointer(address, buddy.port, clientId, options.delay ?? defaultDelay, defaultTimeout);
+    }, options.ignoreStatus ? [] : ["Online"]);
   }
 
   async abortPcStateChange(): Promise<boolean> {

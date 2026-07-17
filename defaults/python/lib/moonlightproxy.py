@@ -48,7 +48,7 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
     
     async def get_apps(self, hostname: str):
         # Lazy import to improve CLI performance
-        import asyncio
+        from . import utils
         import psutil
 
         assert self.process is None, "Another instance of Moonlight has been started already!"
@@ -56,9 +56,7 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
 
         args += ["list", hostname]
         logger.info(f"Executing: {exec} {' '.join(args)}")
-        self.process = await asyncio.create_subprocess_exec(exec, *args,
-                                                            stdout=asyncio.subprocess.PIPE,
-                                                            stderr=asyncio.subprocess.DEVNULL)
+        self.process = await utils.create_subprocess_exec(exec, *args, stderr_to_devnull=True)
         self.__proc = psutil.Process(self.process.pid)
 
         output, _ = await self.process.communicate()
@@ -79,7 +77,7 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
 
     async def start(self, hostname: str, host_app: str, cmd_options: Optional[CommandLineOptions] = None):
         # Lazy import to improve CLI performance
-        import asyncio
+        from . import utils
         import psutil
         
         assert self.process is None, "Another instance of Moonlight has been started already!"
@@ -129,9 +127,7 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
         args += ["stream", hostname, host_app]
 
         logger.info(f"Executing: {exec} {' '.join(args)}")
-        self.process = await asyncio.create_subprocess_exec(exec, *args,
-                                                            stdout=asyncio.subprocess.PIPE,
-                                                            stderr=asyncio.subprocess.STDOUT)
+        self.process = await utils.create_subprocess_exec(exec, *args)
         self.__proc = psutil.Process(self.process.pid)
 
     async def terminate(self):
@@ -189,7 +185,7 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
 
     async def is_moonlight_installed(self):
         # Lazy import to improve CLI performance
-        import asyncio
+        from . import utils
         import os
 
         if self.exec_path is None:
@@ -198,9 +194,7 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
                 logger.error("flatpak is not installed!")
                 return False
 
-            list_proc = await asyncio.create_subprocess_exec(flatpak_exec, "list",
-                                                             stdout=asyncio.subprocess.PIPE,
-                                                             stderr=asyncio.subprocess.DEVNULL)
+            list_proc = await utils.create_subprocess_exec(flatpak_exec, "list", stderr_to_devnull=True)
             output, _ = await list_proc.communicate()
             if output:
                 return output.decode().find(MoonlightProxy.flatpak_moonlight) != -1
@@ -236,15 +230,13 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
     @classmethod
     async def __kill_flatpak_app(cls):
         # Lazy import to improve CLI performance
-        import asyncio
+        from . import utils
 
         flatpak_exec = cls.__get_flatpak_exec()
         if flatpak_exec is None:
             return
 
-        kill_proc = await asyncio.create_subprocess_exec(flatpak_exec, "kill", MoonlightProxy.flatpak_moonlight,
-                                                         stdout=asyncio.subprocess.PIPE,
-                                                         stderr=asyncio.subprocess.STDOUT)
+        kill_proc = await utils.create_subprocess_exec(flatpak_exec, "kill", MoonlightProxy.flatpak_moonlight)
         output, _ = await kill_proc.communicate()
         if output:
             newline = "\n"
@@ -253,13 +245,5 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
     @staticmethod
     async def __kill_any_moonlight_app():
         # Lazy import to improve CLI performance
-        import asyncio
-
-        kill_proc = await asyncio.create_subprocess_shell("pkill -f -e -i \"moonlight\"",
-                                                          stdout=asyncio.subprocess.PIPE,
-                                                          stderr=asyncio.subprocess.STDOUT)
-        output, _ = await kill_proc.communicate()
-        if output:
-            newline = "\n"
-            logger.info(f"pkill output: {newline}{output.decode().strip(newline)}")
-        
+        from .utils import pkill
+        await pkill("moonlight")

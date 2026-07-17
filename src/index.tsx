@@ -5,30 +5,47 @@ import { RouteManager } from "./routes";
 import { TitleView } from "./components/titleview";
 import { definePlugin } from "@decky/api";
 import { getDefaultContext } from "./contexts";
+import { sleep } from "@decky/ui";
 
 export default definePlugin(() => {
   const { moonDeckAppShortcuts, externalAppShortcuts, settingsManager, connectivityManager, moonDeckAppLauncher } = getDefaultContext(true);
   const routeManager = new RouteManager();
 
+  let initializing = false;
   const initCallback = async (username: string): Promise<void> => {
     if (await waitForServicesInitialized()) {
       logger.log(`Initializing plugin for ${username}`);
-      const allAppDetails = await getAllNonSteamAppDetails();
+      initializing = true;
+      do {
+        const allAppDetails = await getAllNonSteamAppDetails();
+        if (!initializing) {
+          return;
+        }
 
-      externalAppShortcuts.init(allAppDetails);
-      moonDeckAppShortcuts.init(allAppDetails);
-      settingsManager.init();
-      connectivityManager.init();
-      moonDeckAppLauncher.init();
+        if (allAppDetails === null) {
+          logger.error(`Delaying initialization by 5 seconds.`);
+          await sleep(5000);
+          continue;
+        }
 
-      // Always the last
-      routeManager.init();
+        externalAppShortcuts.init(allAppDetails);
+        moonDeckAppShortcuts.init(allAppDetails);
+        settingsManager.init();
+        connectivityManager.init();
+        moonDeckAppLauncher.init();
+
+        // Always the last
+        routeManager.init();
+        initializing = false;
+      } while (initializing);
     } else {
       logger.toast(`Failed to initialize Steam lib for ${username}!`, { output: "error" });
     }
   };
   const deinitCallback = (): void => {
     logger.log("Deinitializing plugin");
+    initializing = false;
+
     // Always the first
     routeManager.deinit();
 

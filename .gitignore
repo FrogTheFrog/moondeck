@@ -89,3 +89,6 @@ cli/decky
 # Ignore python link
 python
 !*/python
+
+# Ignore random testing stuff
+defaults/python/config.json

@@ -59,16 +59,26 @@ export const GameSessionView: FC = () => {
           setValue={(value) => settingsManager.update((settings) => { settings.gameSession.autoApplyAppId = value; })}
         />
         <ToggleField
-          label="Resume game session after system suspension"
+          label="Resume game after system suspension"
           description={
             <>
-              <div>Will try to automatically relaunch the gamestream session once the system resumes from suspension.</div>
-              <br />
-              <div>If the internet connection is not restored within 5 seconds, the session will not be resumed.</div>
+              <div>Will try to resume stream once the system resumes from suspension.</div>
             </>
           }
           value={settings.gameSession.resumeAfterSuspend}
           setValue={(value) => settingsManager.update((settings) => { settings.gameSession.resumeAfterSuspend = value; })}
+        />
+        <ToggleField
+          label="Suspend (or hibernate) the PC when the system is being suspended"
+          description={
+            <>
+              <div>Use with caution and only if your PC is capable!</div>
+              <br />
+              <div>Some PCs don't like being suspended, especially under heavy load like a game and might crash!</div>
+            </>
+          }
+          value={settings.gameSession.autoSuspendHost}
+          setValue={(value) => settingsManager.update((settings) => { settings.gameSession.autoSuspendHost = value; })}
         />
       </DialogControlsSection>
     </DialogBody>

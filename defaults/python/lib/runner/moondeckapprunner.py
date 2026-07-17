@@ -9,6 +9,7 @@ from ..moonlightproxy import CommandLineOptions, MoonlightProxy
 from ..buddyclient import BuddyClient, HelloResult
 from ..buddyrequests import BuddyException
 from ..utils import TimedPooler
+from ..splashscreen.overlay import OverlayStack
 
 
 class MoonDeckAppLauncher:
@@ -152,6 +153,10 @@ class MoonDeckAppLauncher:
 
     @classmethod
     async def launch(cls, client: BuddyClient, big_picture_mode: bool, app_id: str, user: SteamUser | None, stream_rdy_timeout: int, steam_rdy_timeout: int, stability_timeout: int, launch_timeout: int, user_switch_timeout: int, cleanup_on_error: bool, manage_stream: bool):
+        # Lazy import to improve CLI performance
+        import asyncio
+        from .. import constants
+
         try:
             if manage_stream:
                 await cls.wait_for_stream_to_be_ready(client=client,
@@ -186,7 +191,10 @@ class MoonDeckAppLauncher:
             await cls.wait_for_app_to_close(client=client)
 
         except BaseException as err:
-            if cleanup_on_error:
+            is_being_suspended = isinstance(err, asyncio.CancelledError) \
+                                 and err.args and err.args[0] == constants.RUNNER_SUSPEND_CANCEL_MSG
+
+            if cleanup_on_error and not is_being_suspended:
                 if manage_stream:
                     try:
                         logger.warning("Ending stream") 
@@ -204,13 +212,13 @@ class MoonDeckAppLauncher:
 
 class MoonDeckAppRunner:
     @staticmethod
-    async def check_connectivity(client: BuddyClient, mac: str, host_id: str, hostname: str, host_port: int, wol_port: int, custom_wol_exec: Optional[str], wol_timeout: int, server_timeout: int):
+    async def check_connectivity(client: BuddyClient, overlay_stack: OverlayStack, mac: str, host_id: str, hostname: str, host_port: int, wol_port: int, custom_wol_exec: Optional[str], wol_timeout: int, server_timeout: int):
         logger.info("Checking connection to Buddy and GameStream server")
 
         # Lazy import to improve CLI performance
         from .wolsplashscreen import WolSplashScreen
 
-        async with WolSplashScreen(client.address, mac, wol_timeout, hostname, wol_port, custom_wol_exec) as splash:
+        async with WolSplashScreen(overlay_stack, False, False, client.address, mac, wol_timeout, hostname, wol_port, custom_wol_exec) as splash:
             while True:
                 try:
                     await client.say_hello(force=True)
@@ -233,7 +241,7 @@ class MoonDeckAppRunner:
                                                     timeout=server_timeout)
                 server_status = server_info is not None and server_info["uniqueId"] == host_id
                 
-                if not splash.update(buddy_status, server_status):
+                if not await splash.update(buddy_status, server_status):
                     if not buddy_status:
                         raise RunnerError(HelloResult.Offline)
                     if not server_status:
@@ -315,9 +323,10 @@ class MoonDeckAppRunner:
                                           timeout=timeout)
 
     @classmethod
-    async def run(cls, settings: MoonDeckAppRunnerSettings):
+    async def run(cls, settings: MoonDeckAppRunnerSettings, overlay_stack: OverlayStack):
         # Lazy import to improve CLI performance
         import asyncio
+        import contextlib
 
         buddy_client = BuddyClient(
             settings["address"],
@@ -328,7 +337,8 @@ class MoonDeckAppRunner:
             settings["moonlight_exec_path"])
 
         async with buddy_client as client, moonlight_proxy as proxy:
-            await cls.check_connectivity(client=client, 
+            await cls.check_connectivity(client=client,
+                                         overlay_stack=overlay_stack,
                                          mac=settings["mac"],
                                          host_id=settings["host_id"],
                                          hostname=settings["hostname"],
@@ -358,18 +368,28 @@ class MoonDeckAppRunner:
                                                                          user_switch_timeout=settings["timeouts"]["userSwitch"],
                                                                          cleanup_on_error=True,
                                                                          manage_stream=True))
+            all_tasks = {proxy_task, launch_task}
 
-            done, _ = await asyncio.wait({proxy_task, launch_task}, return_when=asyncio.FIRST_COMPLETED)
-            if proxy_task in done:
-                done, _ = await asyncio.wait({launch_task}, timeout=2)
-                if launch_task in done:
-                    launch_task.result()
-                else:
-                    launch_task.cancel()
+            cancel_msg = None
+            try:
+                await asyncio.wait(all_tasks, return_when=asyncio.FIRST_COMPLETED)
+                if proxy_task.done():
                     await asyncio.wait({launch_task}, timeout=2)
-                    raise RunnerError(Result.MoonlightClosed)
-            else:
-                launch_task.result()
+                    if not launch_task.done():
+                        raise RunnerError(Result.MoonlightClosed)
+            except asyncio.CancelledError as err:
+                # Forward the suspension args from the runner if any
+                cancel_msg = err.args[0] if err.args else None
+                raise err
+            finally:
+                for task in all_tasks:
+                    if not task.done():
+                        task.cancel(msg=cancel_msg)
+
+                # We always await here even if we didn't cancel to check the results from try block
+                for task in all_tasks:
+                    with contextlib.suppress(asyncio.CancelledError):
+                        await task
 
             await cls.end_successful_stream(client=client,
                                             close_steam=settings["close_steam"],

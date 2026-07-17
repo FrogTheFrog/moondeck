@@ -2,12 +2,12 @@ import { AppType, UserSettings, isAppTypeSupported, logger } from "../../lib";
 import { Button, Focusable, appDetailsClasses, appDetailsHeaderClasses, basicAppDetailsSectionStylerClasses, joinClassNames, playSectionClasses, showModal, sleep } from "@decky/ui";
 import { CSSProperties, FC, useContext, useEffect, useRef, useState } from "react";
 import { OffsetStyle, achorPositionName } from "./offsetstyle";
-import { useCurrentSettings, useMoonDeckAppData } from "../../hooks";
 import { ButtonStyle } from "./buttonstyle";
 import { ContainerStyle } from "./containerstyle";
 import { LaunchPromptModal } from "./launchpromptmodal";
 import { MoonDeckContext } from "../../contexts";
 import { MoonDeckMain } from "../icons";
+import { useCurrentSettings } from "../../hooks";
 
 interface Props {
   appId: number;
@@ -54,10 +54,9 @@ export const MoonDeckLaunchButtonShell: FC<ShellProps> = ({ onClick, buttonPosit
 
 const MoonDeckLaunchButton: FC<Props> = ({ appId, appName, appType }) => {
   const { moonDeckAppLauncher } = useContext(MoonDeckContext);
-  const appData = useMoonDeckAppData();
   const settings = useCurrentSettings();
 
-  if (!isAppTypeSupported(appType) || settings === null || appData?.beingSuspended) {
+  if (!isAppTypeSupported(appType) || settings === null) {
     return null;
   }
 

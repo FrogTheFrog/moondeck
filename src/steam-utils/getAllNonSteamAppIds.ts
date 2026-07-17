@@ -4,19 +4,24 @@ import { logger } from "../lib/logger";
 /**
  * @returns all the ids for the Non-Steam apps.
  */
-export function getAllNonSteamAppIds(): number[] {
+export function getAllNonSteamAppIds(): number[] | null {
   try {
     const collectionStore = getCollectionStore();
     if (collectionStore === null) {
       logger.error("Could not get all Non-Steam app ids - null collectionStore!");
-      return [];
+      return null;
     }
 
-    return Array.from(collectionStore.deckDesktopApps.allApps)
+    if (!collectionStore.deckDesktopApps) {
+      logger.error("Could not get all Non-Steam app ids - null deckDesktopApps!");
+      return null;
+    }
+
+    return Array.from(collectionStore.deckDesktopApps.allApps ?? [])
       .filter((app) => app.is_available_on_current_platform)
       .map((app) => app.appid);
   } catch (error) {
     logger.critical(error);
-    return [];
+    return null;
   }
 }
