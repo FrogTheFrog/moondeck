@@ -18,7 +18,7 @@ class MoonlightOnlyRunner:
         # Lazy import to improve CLI performance
         from .wolsplashscreen import WolSplashScreen
 
-        async with WolSplashScreen(overlay_stack, address, mac, wol_timeout, hostname, wol_port, custom_wol_exec) as splash:
+        async with WolSplashScreen(overlay_stack, None, None, address, mac, wol_timeout, hostname, wol_port, custom_wol_exec) as splash:
             while True:
                 # Just in case the Buddy is online (not needed for this type of apps),
                 # try to abort any ongoing host change

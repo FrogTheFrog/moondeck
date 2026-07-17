@@ -218,7 +218,7 @@ class MoonDeckAppRunner:
         # Lazy import to improve CLI performance
         from .wolsplashscreen import WolSplashScreen
 
-        async with WolSplashScreen(overlay_stack, client.address, mac, wol_timeout, hostname, wol_port, custom_wol_exec) as splash:
+        async with WolSplashScreen(overlay_stack, False, False, client.address, mac, wol_timeout, hostname, wol_port, custom_wol_exec) as splash:
             while True:
                 try:
                     await client.say_hello(force=True)
