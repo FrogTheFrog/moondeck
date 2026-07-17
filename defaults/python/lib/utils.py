@@ -285,7 +285,7 @@ async def wait_moondeck_runner_suspended_state(expected_suspended: bool):
     # Lazy import to improve CLI performance
     import asyncio
 
-    async with asyncio.timeout(5):
+    async with asyncio.timeout(10):
         while True:
             if is_moondeck_runner_suspended() == expected_suspended:
                 return
