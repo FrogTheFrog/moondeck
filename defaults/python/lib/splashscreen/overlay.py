@@ -11,15 +11,15 @@ class Overlay:
         self.__stack.pop_overlay()
 
     def resize(self, width: float, height: float) -> None:
-        raise NotImplemented
+        raise NotImplementedError
 
     def draw(self) -> None:
-        raise NotImplemented
+        raise NotImplementedError
 
 
 class OverlayStack:
     def push_overlay(self, overlay) -> None:
-        raise NotImplemented
+        raise NotImplementedError
 
     def pop_overlay(self) -> None:
-        raise NotImplemented
+        raise NotImplementedError
