@@ -60,8 +60,12 @@ export async function getAppDetailsForAppIds(appIds: number[]): Promise<AppDetai
   return (await throttleAll(100, tasks)).filter((details) => details !== null);
 }
 
-export async function getAllNonSteamAppDetails(): Promise<AppDetails[]> {
+export async function getAllNonSteamAppDetails(): Promise<AppDetails[] | null> {
   const appIds = getAllNonSteamAppIds();
+  if (appIds === null) {
+    return null;
+  }
+
   return await getAppDetailsForAppIds(appIds);
 }
 
