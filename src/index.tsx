@@ -18,6 +18,10 @@ export default definePlugin(() => {
       initializing = true;
       do {
         const allAppDetails = await getAllNonSteamAppDetails();
+        if (!initializing) {
+          return;
+        }
+
         if (allAppDetails === null) {
           logger.error(`Delaying initialization by 5 seconds.`);
           await sleep(5000);
