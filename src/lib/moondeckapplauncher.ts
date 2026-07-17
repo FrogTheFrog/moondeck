@@ -220,6 +220,8 @@ export class MoonDeckAppLauncher {
         if (settings && settings.gameSession.autoSuspendHost) {
           // The buddy status state might not be up to date unless we have
           // explicitly updated it, however if the app is running we can assume it is...
+          // Additionally, the delay is set to 30 secs to give user some time to cancel
+          // it in case the SteamDeck is being suspended by accident.
           await this.commandProxy.suspendOrHibernatePC({ delay: 30, ignoreStatus: true });
         }
       }
