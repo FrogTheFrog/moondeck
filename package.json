@@ -7,7 +7,7 @@
     "setup": "pnpm i && ([ -f ./cli/decky ] || pnpm run setup:cli) && (which docker >/dev/null || echo 'Docker not found, you will need it for backend development.')",
     "setup:cli": "mkdir -p cli && case \"$(uname -s)-$(uname -m)\" in 'Linux-x86_64') url=decky-linux-x86_64 ;; 'Darwin-x86_64') url=decky-macOS-x86_64 ;; 'Darwin-arm64') url=decky-macOS-aarch64 ;; *) echo \"Unsupported system: $(uname -s)-$(uname -m)\"; exit 1 ;; esac && curl -L \"https://github.com/SteamDeckHomebrew/cli/releases/latest/download/$url\" -o ./cli/decky && chmod +x ./cli/decky",
     "build": "rollup -c",
-    "build:plugin": "pnpm run build && ./cli/decky plugin build -s directory",
+    "build:plugin": "./cli/decky plugin build -s directory",
     "build:deploy": "pnpm run build:plugin && pnpm run deploy",
     "deploy": "dotenv -- sh -c \"pnpm --silent run deploy:dotenv 'pnpm --silent run deploy:scp && pnpm --silent run deploy:rmdir && pnpm --silent run deploy:mkdir && pnpm --silent run deploy:chown && pnpm --silent run deploy:extract && pnpm --silent run deploy:restart'\"",
     "deploy:dotenv": "set -e; echo \"🛠️  Setting up ENV\"; export PLUGIN_SAFE_NAME=$(echo \"$PLUGIN_NAME\" | tr ' ' '-'); PLUGIN_DIR=\"$DECK_DIR/homebrew/plugins/$PLUGIN_SAFE_NAME\" OUT_FILE=\"out/$PLUGIN_NAME.zip\" TMP_FILE=\"/tmp/$PLUGIN_NAME.zip\" SHARED_OPTS=\"$DECK_PORT -o StrictHostKeyChecking=no -o ConnectTimeout=10 $DECK_KEY\" SCP_OPTS=\"-q -P $SHARED_OPTS\" SSH_OPTS=\"-C -p $SHARED_OPTS $DECK_USER@$DECK_IP\" SUDO=\"sudo -p '' -S\" sh -c \"$@\"",
