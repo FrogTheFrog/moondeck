@@ -89,6 +89,14 @@ export class MoonDeckAppProxy extends ReadonlySubject<MoonDeckAppData | null> {
     });
   }
 
+  getAppId() {
+    if (this.subject.value === null) {
+      return false;
+    }
+
+    return getAppId(this.subject.value);
+  }
+
   async applySessionOptions(): Promise<void> {
     const options = this.subject.value?.sessionOptions ?? null;
     if (options === null) {

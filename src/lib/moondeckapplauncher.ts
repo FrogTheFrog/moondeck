@@ -179,7 +179,10 @@ export class MoonDeckAppLauncher {
 
   private initLifetime(): void {
     this.unregisterLifetime = registerForGameLifetime((data) => {
-      if (data.bRunning) {
+      if (data.bRunning && data.unAppID === this.moonDeckApp.getAppId()) {
+        executeAsync(async () => {
+          await this.moonDeckApp.applySessionOptions();
+        });
         return;
       }
 
@@ -421,8 +424,6 @@ export class MoonDeckAppLauncher {
         await this.moonDeckApp.clearApp();
         return;
       }
-
-      await this.moonDeckApp.applySessionOptions();
     } catch (error) {
       logger.toast("Exception while trying to launch shortcut!", { output: null });
       logger.critical(error);
