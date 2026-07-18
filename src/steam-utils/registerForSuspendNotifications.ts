@@ -1,4 +1,3 @@
-import { ESuspendResumeProgressState, SuspendProgress } from "@decky/ui/dist/globals/steam-client/User";
 import { findModuleExport } from "@decky/ui";
 import { getSuspendResumeStore } from "./getSuspendResumeStore";
 import { logger } from "../lib/logger";
@@ -34,9 +33,15 @@ export function registerForSuspendNotifications(onSuspend: () => Promise<void>, 
   try {
     let unblockSuspend: typeof NullCallback | null = null;
     let handlingSuspend = false;
+    let handlingResume = false;
+    let requestedSuspendDuringResume = false;
 
     const handleSuspend = () => {
-      if (unblockSuspend && !handlingSuspend) {
+      if (handlingResume) {
+        requestedSuspendDuringResume = true;
+      }
+
+      if (unblockSuspend && !handlingSuspend && !handlingResume) {
         handlingSuspend = true;
         onSuspend()
           .catch((err) => logger.critical(err))
@@ -48,15 +53,24 @@ export function registerForSuspendNotifications(onSuspend: () => Promise<void>, 
           });
       }
     };
-    const handleResume = (progress: SuspendProgress) => {
-      if (!unblockSuspend && progress.state === ESuspendResumeProgressState.Complete) {
+    const handleResume = () => {
+      if (!unblockSuspend) {
+        handlingResume = true;
         unblockSuspend = suspendResumeStore.BlockSuspendAction();
-        onResume().catch((err) => logger.critical(err));
+        onResume()
+          .catch((err) => logger.critical(err))
+          .finally(() => {
+            handlingResume = false;
+            if (requestedSuspendDuringResume) {
+              requestedSuspendDuringResume = false;
+              suspendResumeStore.RequestSleep();
+            }
+          });
       }
     };
 
     const unregisterOnSuspend = sleepManager.RegisterForNotifyRequestSuspend((..._args) => handleSuspend());
-    const unregisterOnResume = SteamClient.User.RegisterForResumeSuspendedGamesProgress((progress) => handleResume(progress));
+    const unregisterOnResume = sleepManager.RegisterForNotifyResumeFromSuspend((..._args) => handleResume());
 
     unblockSuspend = suspendResumeStore.BlockSuspendAction();
     return () => {
