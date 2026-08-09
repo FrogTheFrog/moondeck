@@ -106,6 +106,7 @@ export interface NonSteamAppsSettings {
 
 export interface WolSettings {
   useCustomWolExec: boolean;
+  sendOnce: boolean;
   customWolExecPath: string;
   port: number;
 }
