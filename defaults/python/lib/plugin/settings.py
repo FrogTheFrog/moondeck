@@ -75,6 +75,7 @@ class NonSteamAppsSettings(TypedDict):
 
 class WolSettings(TypedDict):
     useCustomWolExec: bool
+    sendOnce: bool
     customWolExecPath: str
     port: int
 
@@ -122,7 +123,7 @@ class ButtonStyleSettings(TypedDict):
 
 
 class UserSettings(TypedDict):
-    version: Literal[41]
+    version: Literal[42]
     clientId: str
     currentHostId: Optional[str]
     gameSession: GameSessionSettings
@@ -394,3 +395,7 @@ class UserSettingsManager(SettingsManager[UserSettings]):
             for host in data["hostSettings"].keys():
                 del data["hostSettings"][host]["runnerTimeouts"]["steamLaunchAfterSuspend"]
                 del data["hostSettings"][host]["runnerTimeouts"]["networkReconnectAfterSuspend"]
+        if data["version"] == 41:
+            data["version"] = 42
+            for host in data["hostSettings"].keys():
+                data["hostSettings"][host]["wolSettings"]["sendOnce"] = False

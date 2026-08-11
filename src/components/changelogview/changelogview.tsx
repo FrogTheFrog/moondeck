@@ -18,6 +18,7 @@ export const ChangelogView: FC = () => {
               <div>&bull; When host is suspended, the stream will no longer be ended and Steam will not close.</div>
               <div>&bull; MoonDeck Runner now has a permanent window in the background which fixes various issues with resume/suspend handling just by existing.</div>
               <div>&bull; MoonDeck can now suspend the host PC whenever the SteamDeck is being suspended.</div>
+              <div>&bull; Added an option to send WOL only once if the host PC is off and there is enough time.</div>
             </>
           }
           focusable={true}

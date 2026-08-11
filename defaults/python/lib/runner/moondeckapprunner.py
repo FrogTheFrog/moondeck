@@ -212,13 +212,13 @@ class MoonDeckAppLauncher:
 
 class MoonDeckAppRunner:
     @staticmethod
-    async def check_connectivity(client: BuddyClient, overlay_stack: OverlayStack, mac: str, host_id: str, hostname: str, host_port: int, wol_port: int, custom_wol_exec: Optional[str], wol_timeout: int, server_timeout: int):
+    async def check_connectivity(client: BuddyClient, overlay_stack: OverlayStack, mac: str, host_id: str, hostname: str, host_port: int, wol_port: int, send_wol_once: bool, custom_wol_exec: Optional[str], wol_timeout: int, server_timeout: int):
         logger.info("Checking connection to Buddy and GameStream server")
 
         # Lazy import to improve CLI performance
         from .wolsplashscreen import WolSplashScreen
 
-        async with WolSplashScreen(overlay_stack, False, False, client.address, mac, wol_timeout, hostname, wol_port, custom_wol_exec) as splash:
+        async with WolSplashScreen(overlay_stack, False, False, client.address, mac, wol_timeout, hostname, wol_port, send_wol_once, custom_wol_exec) as splash:
             while True:
                 try:
                     await client.say_hello(force=True)
@@ -344,6 +344,7 @@ class MoonDeckAppRunner:
                                          hostname=settings["hostname"],
                                          host_port=settings["host_port"],
                                          wol_port=settings["wol_port"],
+                                         send_wol_once=settings["send_wol_once"],
                                          custom_wol_exec=settings["custom_wol_exec_path"],
                                          wol_timeout=settings["timeouts"]["wakeOnLan"],
                                          server_timeout=settings["timeouts"]["servicePing"])

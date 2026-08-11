@@ -134,6 +134,7 @@ export class ServerProxy {
         },
         wolSettings: {
           useCustomWolExec: currentSettings?.wolSettings.useCustomWolExec ?? false,
+          sendOnce: currentSettings?.wolSettings.sendOnce ?? false,
           customWolExecPath: currentSettings?.wolSettings.customWolExecPath ?? "",
           port: currentSettings?.wolSettings.port ?? 9
         }
