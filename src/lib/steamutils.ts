@@ -14,6 +14,7 @@ export enum EnvVars {
   SteamAppId = "MOONDECK_STEAM_APP_ID",
   SteamUserId = "MOONDECK_STEAM_USER_ID",
   AppName = "MOONDECK_APP_NAME",
+  LinkedSourceAppId = "MOONDECK_LINKED_SOURCE_APP_ID",
   Python = "MOONDECK_PYTHON"
 }
 
@@ -67,6 +68,10 @@ export async function getAllNonSteamAppDetails(): Promise<AppDetails[] | null> {
   }
 
   return await getAppDetailsForAppIds(appIds);
+}
+
+export function isNonSteamShortcut(appType: number): boolean {
+  return appType === 1073741824;
 }
 
 export function isAppTypeSupported(appType: number): boolean {

@@ -1,6 +1,6 @@
 import { AppType, EnvVars, addAppsToCollection, addShortcut, checkExecPathMatch, getAppDetailsForAppIds, getAppStoreEx, getMoonDeckRunPath, getOrCreateCollection, isMoonDeckShortcut, removeAppsFromCollection, removeShortcut, restartSteamClient, setAppLaunchOptions } from "./steamutils";
 import { HostSettings, SettingsManager } from "./settingsmanager";
-import { getEnvKeyValueString, makeEnvKeyValue } from "./envutils";
+import { getEnvKeyValueNumber, getEnvKeyValueString, makeEnvKeyValue } from "./envutils";
 import { AppDetails } from "@decky/ui/dist/globals/steam-client/App";
 import { AppSyncState } from "./appsyncstate";
 import { BehaviorSubject } from "rxjs";
@@ -149,6 +149,10 @@ export class ExternalAppShortcuts {
       }
 
       if (details.strLaunchOptions.includes(makeEnvKeyValue(EnvVars.AppType, AppType.GameStream))) {
+        if (getEnvKeyValueNumber(details.strLaunchOptions, EnvVars.LinkedSourceAppId) !== null) {
+          continue;
+        }
+
         const appType = AppType.GameStream;
         this.managedApps.set(details.unAppID, { appId: details.unAppID, appName: details.strDisplayName, appType, gameId: overview.gameid });
         addAppInfo(details, appType);

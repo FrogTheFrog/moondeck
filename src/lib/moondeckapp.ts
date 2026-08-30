@@ -52,7 +52,7 @@ async function getRunnerResult(): Promise<string | null> {
 }
 
 function getAppId(appData: MoonDeckAppData) {
-  return appData.moonDeckAppId ?? appData.steamAppId;
+  return appData.runnerAppId;
 }
 
 export interface SessionOptions {
@@ -61,6 +61,7 @@ export interface SessionOptions {
 
 export interface MoonDeckAppData {
   steamAppId: number;
+  runnerAppId: number;
   moonDeckAppId: number | null;
   name: string;
   appType: AppType;
@@ -77,10 +78,11 @@ export class MoonDeckAppProxy extends ReadonlySubject<MoonDeckAppData | null> {
     this.commandProxy = commandProxy;
   }
 
-  setApp(steamAppId: number, moonDeckAppId: number, name: string, appType: AppType, sessionOptions: SessionOptions): void {
+  setApp(steamAppId: number, runnerAppId: number, name: string, appType: AppType, sessionOptions: SessionOptions): void {
     this.subject.next({
       steamAppId,
-      moonDeckAppId: appType === AppType.MoonDeck ? moonDeckAppId : null,
+      runnerAppId,
+      moonDeckAppId: appType === AppType.MoonDeck ? runnerAppId : null,
       name,
       appType,
       redirected: false,

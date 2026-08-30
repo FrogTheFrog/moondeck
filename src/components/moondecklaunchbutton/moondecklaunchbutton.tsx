@@ -1,10 +1,11 @@
-import { AppType, UserSettings, isAppTypeSupported, logger } from "../../lib";
+import { AppType, UserSettings, isAppTypeSupported, isNonSteamShortcut, logger } from "../../lib";
 import { Button, Focusable, appDetailsClasses, appDetailsHeaderClasses, basicAppDetailsSectionStylerClasses, joinClassNames, playSectionClasses, showModal, sleep } from "@decky/ui";
 import { CSSProperties, FC, useContext, useEffect, useRef, useState } from "react";
 import { OffsetStyle, achorPositionName } from "./offsetstyle";
 import { ButtonStyle } from "./buttonstyle";
 import { ContainerStyle } from "./containerstyle";
 import { LaunchPromptModal } from "./launchpromptmodal";
+import { LinkGameStreamAppModal } from "./linkgamestreamappmodal";
 import { MoonDeckContext } from "../../contexts";
 import { MoonDeckMain } from "../icons";
 import { useCurrentSettings } from "../../hooks";
@@ -53,10 +54,11 @@ export const MoonDeckLaunchButtonShell: FC<ShellProps> = ({ onClick, buttonPosit
 };
 
 const MoonDeckLaunchButton: FC<Props> = ({ appId, appName, appType }) => {
-  const { moonDeckAppLauncher } = useContext(MoonDeckContext);
+  const { linkedAppShortcuts, moonDeckAppLauncher } = useContext(MoonDeckContext);
   const settings = useCurrentSettings();
+  const nonSteamShortcut = isNonSteamShortcut(appType);
 
-  if (!isAppTypeSupported(appType) || settings === null) {
+  if ((!isAppTypeSupported(appType) && !nonSteamShortcut) || settings === null) {
     return null;
   }
 
@@ -65,8 +67,18 @@ const MoonDeckLaunchButton: FC<Props> = ({ appId, appName, appType }) => {
       buttonPosition={settings.buttonPosition}
       buttonStyle={settings.buttonStyle}
       onClick={(onDone: () => void) => {
+        const helperAppId = nonSteamShortcut ? linkedAppShortcuts.getId(appId) : null;
+        if (nonSteamShortcut && helperAppId === null) {
+          showModal(<LinkGameStreamAppModal closeModal={onDone} sourceAppId={appId} sourceAppName={appName} />);
+          return;
+        }
+
         const launchApp = async (): Promise<void> => {
-          await moonDeckAppLauncher.launchApp(appId, appName, AppType.MoonDeck);
+          if (nonSteamShortcut && helperAppId !== null) {
+            await moonDeckAppLauncher.launchApp(helperAppId, appName, AppType.GameStream, appId);
+          } else {
+            await moonDeckAppLauncher.launchApp(appId, appName, AppType.MoonDeck);
+          }
           await sleep(1000);
         };
 

@@ -57,7 +57,13 @@ function patchLibraryApp(route: string): RoutePatch {
             return ret;
           }
 
-          if (moonDeckAppLauncher.moonDeckApp.value?.moonDeckAppId === appId) {
+          const activeMoonDeckApp = moonDeckAppLauncher.moonDeckApp.value;
+          const isTechnicalRunner =
+            activeMoonDeckApp !== null &&
+            activeMoonDeckApp.runnerAppId === appId &&
+            activeMoonDeckApp.steamAppId !== appId;
+
+          if (activeMoonDeckApp?.moonDeckAppId === appId || isTechnicalRunner) {
             // We are suppressing the navigation to custom shortcut ONLY if this happens after
             // launch via the moondeck button and we MUST navigate back ONLY once
             if (moonDeckAppLauncher.moonDeckApp.canRedirect()) {
