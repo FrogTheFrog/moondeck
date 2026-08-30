@@ -6,6 +6,7 @@ import { GameSessionView } from "../components/gamesessionview";
 import { GameStreamAppsView } from "../components/gamestreamappsview";
 import { HostInfoView } from "../components/hostinfoview";
 import { HostSelectionView } from "../components/hostselectionview";
+import { LinkedNonSteamAppsView } from "../components/linkednonsteamappsview";
 import { MoonDeckAppsView } from "../components/moondeckappsview";
 import { MoonlightSettingsView } from "../components/moonlightsettingsview";
 import { NonSteamAppsView } from "../components/nonsteamappsview/nonsteamappsview";
@@ -87,6 +88,12 @@ const MoonDeckRouter: FC<object> = () => {
           title: "GameStream Apps",
           content: <GameStreamAppsView />,
           route: "/moondeck/gamestream-apps",
+          visible: true
+        },
+        {
+          title: "Linked Non-Steam Apps",
+          content: <LinkedNonSteamAppsView />,
+          route: "/moondeck/linked-non-steam-apps",
           visible: true
         },
         {

@@ -1,12 +1,13 @@
 import { AppStartResult, AppType, ControllerConfigOption, EnvVars, checkExecPathMatch, getAppDetails, getAudioDevices, getCurrentDisplayModeString, getCurrentUserSteamId, getDisplayIdentifiers, getMoonDeckRunPath, getSystemNetworkStore, launchApp, registerForGameLaunchIntercept, registerForGameLifetime, registerForSuspendNotifications, setAppHiddenState, setAppLaunchOptions, setAppResolutionOverride, setOverrideResolutionForInternalDisplay, setShortcutName } from "./steamutils";
 import { ControllerConfigValues, Dimension, HostResolution, HostSettings, SettingsManager } from "./settingsmanager";
 import { Subscription, pairwise } from "rxjs";
-import { getEnvKeyValueString, makeEnvKeyValue } from "./envutils";
+import { getEnvKeyValueNumber, getEnvKeyValueString, makeEnvKeyValue } from "./envutils";
 import { AppDetails } from "@decky/ui/dist/globals/steam-client/App";
 import { AppSyncState } from "./appsyncstate";
 import { CommandProxy } from "./commandproxy";
 import { EThirdPartyControllerConfiguration } from "@decky/ui/dist/globals/steam-client/Input";
 import { ExternalAppShortcuts } from "./externalappshortcuts";
+import { LinkedAppShortcuts } from "./linkedappshortcuts";
 import { MoonDeckAppProxy } from "./moondeckapp";
 import { MoonDeckAppShortcuts } from "./moondeckappshortcuts";
 import { call } from "@decky/api";
@@ -87,6 +88,11 @@ function getLaunchOptionsString(currentValue: string, appId: number, appType: Ap
     }
 
     launchOptions.push(makeEnvKeyValue(EnvVars.AppName, appNameFromOptions));
+
+    const linkedSourceAppId = getEnvKeyValueNumber(currentValue, EnvVars.LinkedSourceAppId);
+    if (linkedSourceAppId !== null) {
+      launchOptions.push(makeEnvKeyValue(EnvVars.LinkedSourceAppId, linkedSourceAppId));
+    }
   } else {
     const appIdFromOptions = getEnvKeyValueString(currentValue, EnvVars.SteamAppId);
     if (appIdFromOptions === null) {
@@ -244,7 +250,11 @@ export class MoonDeckAppLauncher {
     this.subscription = new Subscription();
     this.subscription.add(this.moonDeckApp.asObservable().pipe(pairwise()).subscribe(([prev, next]) => {
       if (prev !== null && next === null) {
-        this.moonDeckAppShortcuts.updateAppLaunchTimestamp(prev.steamAppId);
+        if (prev.appType === AppType.MoonDeck) {
+          this.moonDeckAppShortcuts.updateAppLaunchTimestamp(prev.steamAppId);
+        } else if (this.linkedAppShortcuts.getId(prev.steamAppId) !== null) {
+          this.linkedAppShortcuts.updateAppLaunchTimestamp(prev.steamAppId);
+        }
       }
     }));
   }
@@ -275,6 +285,7 @@ export class MoonDeckAppLauncher {
     private readonly appSyncState: AppSyncState,
     private readonly settingsManager: SettingsManager,
     private readonly moonDeckAppShortcuts: MoonDeckAppShortcuts,
+    private readonly linkedAppShortcuts: LinkedAppShortcuts,
     private readonly externalAppShortcuts: ExternalAppShortcuts,
     readonly commandProxy: CommandProxy
   ) {
@@ -307,8 +318,13 @@ export class MoonDeckAppLauncher {
     }
   }
 
-  async launchApp(appId: number, appName: string, appType: AppType): Promise<void> {
-    if (this.moonDeckAppShortcuts.initializing || this.externalAppShortcuts.initializing) {
+  async launchApp(
+    appId: number,
+    appName: string,
+    appType: AppType,
+    sourceAppId: number = appId
+  ): Promise<void> {
+    if (this.moonDeckAppShortcuts.initializing || this.linkedAppShortcuts.initializing || this.externalAppShortcuts.initializing) {
       logger.toast("Plugin is still initializing...");
       return;
     }
@@ -412,7 +428,7 @@ export class MoonDeckAppLauncher {
         };
       }
 
-      this.moonDeckApp.setApp(appId, details.unAppID, appName, appType, sessionOptions);
+      this.moonDeckApp.setApp(sourceAppId, details.unAppID, appName, appType, sessionOptions);
       await this.moonDeckApp.clearRunnerResult();
 
       const launchResult = await launchApp(details.unAppID, hostSettings.runnerTimeouts.steamLaunch * 1000);
