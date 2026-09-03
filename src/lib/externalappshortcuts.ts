@@ -1,53 +1,44 @@
-import { AppType, EnvVars, addAppsToCollection, addShortcut, checkExecPathMatch, getAppDetailsForAppIds, getAppStoreEx, getMoonDeckRunPath, getOrCreateCollection, isMoonDeckShortcut, removeAppsFromCollection, removeShortcut, restartSteamClient, setAppLaunchOptions } from "./steamutils";
+import { AppStoreOverview, AppType, EnvVars, addAppsToCollection, addShortcut, checkExecPathMatch, getAppDetailsForAppIds, getAppStoreEx, getMoonDeckRunPath, getOrCreateCollection, isMoonDeckShortcut, removeAppsFromCollection, removeShortcut, restartSteamClient, setAppLaunchOptions } from "./steamutils";
 import { HostSettings, SettingsManager } from "./settingsmanager";
-import { getEnvKeyValueString, makeEnvKeyValue } from "./envutils";
+import { getEnvKeyValueNumber, getEnvKeyValueString, makeEnvKeyValue } from "./envutils";
 import { AppDetails } from "@decky/ui/dist/globals/steam-client/App";
 import { AppSyncState } from "./appsyncstate";
 import { BehaviorSubject } from "rxjs";
 import { BuddyProxy } from "./buddyproxy";
 import { ReadonlySubject } from "./readonlysubject";
+import { isEqual } from "lodash";
 import { logger } from "./logger";
 
-export interface GameStreamAppInfo {
+export interface AppInfo {
   appId: number;
   appName: string;
+  gameId: string;
+  entryId: string | null;
+  manuallyLinkedApp?: number | null;
+}
+export interface GameStreamAppInfo extends AppInfo {
   appType: AppType.GameStream;
 }
-
-export interface NonSteamAppInfo {
-  appId: number;
-  appName: string;
+export interface NonSteamAppInfo extends AppInfo {
   appType: AppType.NonSteam;
 }
 
 export type ExternalAppInfo = GameStreamAppInfo | NonSteamAppInfo;
 export type ExternalAppType = ExternalAppInfo["appType"];
 
-export interface ManagedApp {
-  appId: number;
+interface HostData {
   appName: string;
-  appType: ExternalAppType;
-  gameId: string;
+  entryId: string;
 }
-
-interface GameStreamHostData {
+interface GameStreamHostData extends HostData {
   appType: AppType.GameStream;
-  appName: string;
-  entryId: string;
-  entryType: EnvVars.AppName;
 }
-
-interface NonSteamHostData {
+interface NonSteamHostData extends HostData {
   appType: AppType.NonSteam;
-  appName: string;
-  appId: string;
-  entryId: string;
-  entryType: EnvVars.SteamAppId;
 }
+type ExternalHostData = GameStreamHostData | NonSteamHostData;
 
-type HostData = GameStreamHostData | NonSteamHostData;
-
-async function getHostData(appType: ExternalAppType, buddyProxy: BuddyProxy, hostSettings: HostSettings): Promise<HostData[] | null> {
+async function getHostData(appType: ExternalAppType, buddyProxy: BuddyProxy, hostSettings: HostSettings): Promise<ExternalHostData[] | null> {
   if (appType === AppType.GameStream) {
     let gameStreamApps = await buddyProxy.getGameStreamAppNames();
     if (gameStreamApps === null) {
@@ -62,7 +53,7 @@ async function getHostData(appType: ExternalAppType, buddyProxy: BuddyProxy, hos
 
     // Filter out the custom MoonDeck host apps
     gameStreamApps = gameStreamApps.filter((app) => !moonDeckHostApps.includes(app));
-    return gameStreamApps.map((appName) => { return { appType: AppType.GameStream, appName, entryId: appName, entryType: EnvVars.AppName }; });
+    return gameStreamApps.map((appName) => { return { appType: AppType.GameStream, appName, entryId: appName }; });
   }
 
   const nonSteamApps = await buddyProxy.getNonSteamAppData();
@@ -71,20 +62,53 @@ async function getHostData(appType: ExternalAppType, buddyProxy: BuddyProxy, hos
     return null;
   }
 
-  return nonSteamApps.map(({ app_id: appId, app_name: appName }) => { return { appType: AppType.NonSteam, appId, appName, entryId: appId, entryType: EnvVars.SteamAppId }; });
+  return nonSteamApps.map(({ app_id: appId, app_name: appName }) => { return { appType: AppType.NonSteam, appName, entryId: appId }; });
 }
 
-function makeLaunchOptions(data: HostData): string {
+function mapAppTypeToEnv(appType: ExternalAppType) {
+  switch (appType) {
+    case AppType.GameStream:
+      return EnvVars.AppName;
+    case AppType.NonSteam:
+      return EnvVars.SteamAppId;
+  }
+}
+
+function makeLaunchOptions(appType: ExternalAppType, entryId: string, manuallyLinkedApp?: number | null): string {
   const launchOptions: string[] = [];
-  launchOptions.push(`${makeEnvKeyValue(EnvVars.AppType, data.appType)}`);
-  launchOptions.push(`${makeEnvKeyValue(data.entryType, data.entryId)}`);
+  launchOptions.push(`${makeEnvKeyValue(EnvVars.AppType, appType)}`);
+  launchOptions.push(`${makeEnvKeyValue(mapAppTypeToEnv(appType), entryId)}`);
+
+  if (manuallyLinkedApp !== undefined) {
+    launchOptions.push(`${makeEnvKeyValue(EnvVars.ManuallyLinkedApp, manuallyLinkedApp === null ? "null" : manuallyLinkedApp)}`);
+  }
+
   launchOptions.push("%command%");
   return launchOptions.join(" ");
 }
 
-async function updateLaunchOptions(appId: number, data: HostData): Promise<boolean> {
-  if (!await setAppLaunchOptions(appId, makeLaunchOptions(data))) {
-    logger.error(`Failed to set shortcut launch options for ${data.appName}!`);
+function parseManuallyLinkedApp(launchOptions: string): number | null | undefined {
+  const valueString = getEnvKeyValueString(launchOptions, EnvVars.ManuallyLinkedApp);
+  if (valueString === null) {
+    return undefined;
+  }
+
+  if (valueString === "null") {
+    return null;
+  }
+
+  const valueNumber = Number(valueString);
+  if (Number.isNaN(valueNumber)) {
+    logger.error(`Failed to convert ENV key ${EnvVars.ManuallyLinkedApp} value to a number. ENV string: ${valueString}`);
+    return undefined;
+  }
+
+  return valueNumber;
+}
+
+async function updateLaunchOptions(appId: number, appName: string, appType: ExternalAppType, entryId: string, manuallyLinkedApp?: number | null): Promise<boolean> {
+  if (!await setAppLaunchOptions(appId, makeLaunchOptions(appType, entryId, manuallyLinkedApp))) {
+    logger.error(`Failed to set shortcut launch options for ${appName}!`);
     return false;
   }
   return true;
@@ -105,7 +129,6 @@ export class ExternalAppShortcuts {
   private unregisterCallback: (() => void) | null = null;
   private doneInitializing = false;
   private readonly appInfoSubject = new BehaviorSubject<Map<number, ExternalAppInfo>>(new Map());
-  private readonly managedApps: Map<number, ManagedApp> = new Map();
 
   readonly appInfo = new ReadonlySubject(this.appInfoSubject);
 
@@ -119,9 +142,9 @@ export class ExternalAppShortcuts {
     this.unobserveCallback = appStoreEx.observe((change) => {
       if (change.type === "delete") {
         const updatedMap = new Map([...this.appInfoSubject.value]);
-        updatedMap.delete(change.name);
-        this.managedApps.delete(change.name);
-        this.appInfoSubject.next(updatedMap);
+        if (updatedMap.delete(change.name)) {
+          this.appInfoSubject.next(updatedMap);
+        }
       }
     });
   }
@@ -134,7 +157,9 @@ export class ExternalAppShortcuts {
     }
 
     const appInfo: Map<number, ExternalAppInfo> = new Map();
-    const addAppInfo = (details: AppDetails, appType: ExternalAppType): void => { appInfo.set(details.unAppID, { appId: details.unAppID, appName: details.strDisplayName, appType }); };
+    const addAppInfo = (details: AppDetails, overview: AppStoreOverview, appType: ExternalAppType, entryId: string | null, manuallyLinkedApp?: number | null): void => {
+      appInfo.set(details.unAppID, { appId: details.unAppID, appName: details.strDisplayName, appType, gameId: overview.gameid, entryId, manuallyLinkedApp });
+    };
     for (const details of appDetails) {
       const overview = appStoreEx.getAppOverview(details.unAppID);
       if (overview === null) {
@@ -144,26 +169,29 @@ export class ExternalAppShortcuts {
 
       // Add app info for legacy GameStream apps so that they can be removed/updated.
       if (details.strLaunchOptions.includes("MOONDECK_MANAGED=1")) {
-        addAppInfo(details, AppType.GameStream);
+        addAppInfo(details, overview, AppType.GameStream, null, undefined);
         continue;
       }
 
-      if (details.strLaunchOptions.includes(makeEnvKeyValue(EnvVars.AppType, AppType.GameStream))) {
-        const appType = AppType.GameStream;
-        this.managedApps.set(details.unAppID, { appId: details.unAppID, appName: details.strDisplayName, appType, gameId: overview.gameid });
-        addAppInfo(details, appType);
-        continue;
-      }
-
-      if (details.strLaunchOptions.includes(makeEnvKeyValue(EnvVars.AppType, AppType.NonSteam))) {
-        const appType = AppType.NonSteam;
-        this.managedApps.set(details.unAppID, { appId: details.unAppID, appName: details.strDisplayName, appType, gameId: overview.gameid });
-        addAppInfo(details, appType);
+      const appType = getEnvKeyValueNumber(details.strLaunchOptions, EnvVars.AppType) as AppType | null;
+      if (appType === AppType.GameStream || appType === AppType.NonSteam) {
+        // If entryId is null, it's fine since user can re-sync it, but not launch it, since it's borked...
+        const entryId = getEnvKeyValueString(details.strLaunchOptions, mapAppTypeToEnv(appType));
+        const manuallyLinkedApp = parseManuallyLinkedApp(details.strLaunchOptions);
+        addAppInfo(details, overview, appType, entryId, manuallyLinkedApp);
         continue;
       }
     }
 
-    this.appInfoSubject.next(new Map([...this.appInfoSubject.value, ...appInfo]));
+    for (const [appId, info] of appInfo) {
+      if (isEqual(this.appInfoSubject.value.get(appId), info)) {
+        continue;
+      }
+
+      // at least one app info is different, merge everything with existing data
+      this.appInfoSubject.next(new Map([...this.appInfoSubject.value, ...appInfo]));
+      break;
+    }
   }
 
   private async removeApps(appIds: number[]): Promise<boolean> {
@@ -174,10 +202,11 @@ export class ExternalAppShortcuts {
       this.appSyncState.incrementCount();
       success = await removeShortcut(appId) && success;
       updatedMap.delete(appId);
-      this.managedApps.delete(appId);
     }
 
-    this.appInfoSubject.next(updatedMap);
+    if (!isEqual(updatedMap, this.appInfoSubject.value)) {
+      this.appInfoSubject.next(updatedMap);
+    }
     return success;
   }
 
@@ -193,7 +222,9 @@ export class ExternalAppShortcuts {
 
   deinit(): void {
     this.doneInitializing = false;
-    this.managedApps.clear();
+    if (this.appInfoSubject.value.size > 0) {
+      this.appInfoSubject.next(new Map());
+    }
 
     if (this.unregisterCallback !== null) {
       this.unregisterCallback();
@@ -206,10 +237,10 @@ export class ExternalAppShortcuts {
     }
   }
 
-  getEntryByGameId(gameId: string): ManagedApp | null {
-    for (const [, value] of this.managedApps.entries()) {
+  getValidEntryByGameId(gameId: string): ExternalAppInfo | null {
+    for (const [, value] of this.appInfoSubject.value.entries()) {
       if (value.gameId === gameId) {
-        return value;
+        return value.entryId === null ? null : value;
       }
     }
     return null;
@@ -257,31 +288,23 @@ export class ExternalAppShortcuts {
 
       const existingApps = new Map<string, AppDetails>();
       for (const shortcut of currentAppDetails) {
-        if (appType === AppType.GameStream) {
-          const appName = getEnvKeyValueString(shortcut.strLaunchOptions, EnvVars.AppName);
-          if (appName !== null) {
-            existingApps.set(`${EnvVars.AppName}_${appName}`, shortcut);
-            continue;
-          }
-        } else if (appType === AppType.NonSteam) {
-          const appId = getEnvKeyValueString(shortcut.strLaunchOptions, EnvVars.SteamAppId);
-          if (appId !== null) {
-            existingApps.set(`${EnvVars.SteamAppId}_${appId}`, shortcut);
-            continue;
-          }
+        const entryId = getEnvKeyValueString(shortcut.strLaunchOptions, mapAppTypeToEnv(appType));
+        if (entryId !== null) {
+          existingApps.set(`${appType}_${entryId}`, shortcut);
+          continue;
         }
 
         // Add app to the map so that it's deleted later
         existingApps.set(`${shortcut.unAppID}`, shortcut);
       }
 
-      const appsToAdd: HostData[] = [];
+      const appsToAdd: ExternalHostData[] = [];
       const appsToRemove: number[] = [];
       let success = true;
 
       // Check which apps need to be added or updated
       for (const data of hostData) {
-        const details = existingApps.get(`${data.entryType}_${data.entryId}`);
+        const details = existingApps.get(`${data.appType}_${data.entryId}`);
         if (!details) {
           appsToAdd.push(data);
         } else if (!checkExecPathMatch(execPath, details.strShortcutExe)) {
@@ -292,7 +315,7 @@ export class ExternalAppShortcuts {
 
       // Check which ones are no longer in the list and needs to be removed
       for (const [key, details] of existingApps) {
-        if (!hostData.find((data) => `${data.entryType}_${data.entryId}` === key)) {
+        if (!hostData.find((data) => `${data.appType}_${data.entryId}` === key)) {
           appsToRemove.push(details.unAppID);
         }
       }
@@ -306,7 +329,7 @@ export class ExternalAppShortcuts {
         const appId = await addExternalShortcut(app.appName, execPath);
         if (appId !== null) {
           addedAppIds.add(appId);
-          success = await updateLaunchOptions(appId, app) && success;
+          success = await updateLaunchOptions(appId, app.appName, app.appType, app.entryId) && success;
         } else {
           success = false;
         }
@@ -372,12 +395,33 @@ export class ExternalAppShortcuts {
     }
   }
 
+  async setManuallyLinkedApp(appId: number, linkedApp: number | null | undefined): Promise<void> {
+    const entry = this.appInfoSubject.value.get(appId);
+    if (!entry || entry.entryId === null) {
+      logger.toast(`App ${appId} cannot be linked/unlinked as it is not a valid entry!`, { output: "error" });
+      return;
+    }
+
+    if (entry.manuallyLinkedApp === linkedApp) {
+      return;
+    }
+
+    if (await updateLaunchOptions(appId, entry.appName, entry.appType, entry.entryId, linkedApp)) {
+      entry.manuallyLinkedApp = linkedApp;
+      this.appInfoSubject.next(new Map([...this.appInfoSubject.value]));
+    }
+  }
+
+  async removeManuallyLinkedApp(appId: number): Promise<void> {
+    await this.setManuallyLinkedApp(appId, undefined);
+  }
+
   async updateCollection(): Promise<void> {
     const collectionTag = "MoonDeck";
     const collection = await getOrCreateCollection(collectionTag, true);
-    if (collection !== null || this.managedApps.size > 0) {
+    if (collection !== null || this.appInfoSubject.value.size > 0) {
       const collectionApps = collection ? Array.from(collection.apps.keys()) : [];
-      const someRandomApps = collectionApps.filter((appId) => !this.managedApps.has(appId));
+      const someRandomApps = collectionApps.filter((appId) => !this.appInfoSubject.value.has(appId));
 
       let leftoverMoonDeckApps: number[] = [];
       if (collection) {
@@ -391,7 +435,7 @@ export class ExternalAppShortcuts {
           .map((item) => item.unAppID);
       }
 
-      await addAppsToCollection(collectionTag, Array.from(this.managedApps.keys()));
+      await addAppsToCollection(collectionTag, Array.from(this.appInfoSubject.value.keys()));
       await removeAppsFromCollection(collectionTag, leftoverMoonDeckApps);
     }
   }
