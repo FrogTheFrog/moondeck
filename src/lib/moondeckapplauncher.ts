@@ -97,6 +97,12 @@ function getLaunchOptionsString(currentValue: string, appId: number, appType: Ap
     launchOptions.push(makeEnvKeyValue(EnvVars.SteamAppId, appIdFromOptions));
   }
 
+  // Preserve the current value
+  const manuallyLinkedApp = getEnvKeyValueString(currentValue, EnvVars.ManuallyLinkedApp);
+  if (manuallyLinkedApp !== null) {
+    launchOptions.push(makeEnvKeyValue(EnvVars.ManuallyLinkedApp, manuallyLinkedApp));
+  }
+
   if (autoResolution && displayMode !== null) {
     launchOptions.push(makeEnvKeyValue(EnvVars.AutoResolution, displayMode));
   }
@@ -251,7 +257,7 @@ export class MoonDeckAppLauncher {
 
   private initInterceptor(): void {
     this.unregisterInterceptor = registerForGameLaunchIntercept((gameId, cancel) => {
-      const entry = this.externalAppShortcuts.getEntryByGameId(gameId);
+      const entry = this.externalAppShortcuts.getValidEntryByGameId(gameId);
       if (entry !== null) {
         if (this.moonDeckApp.value !== null) {
           if (this.moonDeckApp.value.steamAppId !== entry.appId || !this.moonDeckApp.canRedirect()) {
