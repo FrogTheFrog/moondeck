@@ -10,7 +10,7 @@ export const ChangelogView: FC = () => {
           description={
             <>
               <div>&bull; Fixed unhandled exception when trying to terminate moonlight process.</div>
-              
+              <div>&bull; Fixed an issue where a secondary mouse cursor will be visible because of the new MoonDeck Runner window.</div>
             </>
           }
           focusable={true}
