@@ -9,6 +9,7 @@ class Canvas(pyglet.window.Window, OverlayStack):
         super().__init__(fullscreen=True, visible=False, resizable=True, caption="MoonDeck")
         self.__overlays: list[Overlay] = []
         self.__last_size = {}
+        self.set_mouse_visible(False)
 
     def push_overlay(self, overlay: Overlay) -> None:
         self.__overlays.append(overlay)
@@ -41,3 +42,13 @@ class Canvas(pyglet.window.Window, OverlayStack):
 
             for overlay in self.__overlays:
                 overlay.resize(width=width, height=height)
+
+    # A workaround and verification for not capturing the KB+M
+    def _update_exclusivity(self):
+        orig_value = self._fullscreen
+        self._fullscreen = False
+        super()._update_exclusivity()
+        self._fullscreen = orig_value
+
+        assert not self._applied_mouse_exclusive
+        assert not self._applied_keyboard_exclusive
