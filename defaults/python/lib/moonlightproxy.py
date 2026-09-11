@@ -140,6 +140,12 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
 
         assert self.__proc is not None
         try:
+            if self.process.returncode is not None:
+                # Moonlight has already exited on its own (e.g. the stream was quit from the
+                # client) and has been reaped, so there is nothing left to signal.
+                logger.info(f"Moonlight has already exited with code {self.process.returncode}.")
+                return
+
             logger.info("Trying to gracefully terminate Moonlight...")
             ps_signal(self.__proc, kill=False)
             try:
