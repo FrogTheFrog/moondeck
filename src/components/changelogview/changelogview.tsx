@@ -6,6 +6,16 @@ export const ChangelogView: FC = () => {
     <DialogBody>
       <DialogControlsSection>
         <Field
+          label="1.12.1"
+          description={
+            <>
+              <div>&bull; Fixed unhandled exception when trying to terminate moonlight process.</div>
+              
+            </>
+          }
+          focusable={true}
+        />
+        <Field
           label="1.12.0"
           description={
             <>

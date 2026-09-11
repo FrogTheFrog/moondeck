@@ -131,21 +131,21 @@ def async_scope_log(log_fn):
 
 def ps_signal(process, kill: bool):
     import psutil
-
+    import contextlib
+    
     def do_signal(proc_or_child):
-        try:
+        with contextlib.suppress(psutil.NoSuchProcess):
             if kill:
                 proc_or_child.kill()
             else:
                 proc_or_child.terminate()
-        except psutil.NoSuchProcess:
-            pass
     
-    proc = cast(psutil.Process, process)
-    for child in list(proc.children(recursive=True)):
-        do_signal(child)
+    with contextlib.suppress(psutil.NoSuchProcess):
+        proc = cast(psutil.Process, process)
+        for child in list(proc.children(recursive=True)):
+            do_signal(child)
 
-    do_signal(proc)
+        do_signal(proc)
 
 
 async def wake_on_lan(hostname: str, address: str, mac: str, port: int = 9, custom_exec: Optional[str] = None):
