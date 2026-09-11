@@ -36,7 +36,7 @@ export const GameSessionPanel: FC<Props> = ({ appData }) => {
   };
 
   let gameSession = null;
-  if (appData.appType === AppType.MoonDeck) {
+  if (appData.appType !== AppType.GameStream) {
     gameSession =
       <PanelSection title="Game Session">
         <PanelSectionRow>
@@ -54,14 +54,16 @@ export const GameSessionPanel: FC<Props> = ({ appData }) => {
             Exit game on host
           </ButtonItem>
         </PanelSectionRow>
-        <PanelSectionRow>
-          <ToggleField
-            label="AppId as game title"
-            disabled={isDisabled}
-            checked={appData.sessionOptions.nameSetToAppId}
-            onChange={() => handleNameChange()}
-          />
-        </PanelSectionRow>
+        {appData.appType === AppType.MoonDeck && (
+          <PanelSectionRow>
+            <ToggleField
+              label="AppId as game title"
+              disabled={isDisabled}
+              checked={appData.sessionOptions.nameSetToAppId}
+              onChange={() => handleNameChange()}
+            />
+          </PanelSectionRow>
+        )}
       </PanelSection>;
   }
 

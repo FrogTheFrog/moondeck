@@ -426,19 +426,21 @@ export class MoonDeckAppLauncher {
         };
       }
 
-      const bindHostExit = appType === AppType.MoonDeck && settings.gameSession.stopHostGameOnExit;
+      const bindHostExit = appType !== AppType.GameStream && settings.gameSession.stopHostGameOnExit;
       const gameId = bindHostExit ? await getGameId(details.unAppID) : null;
-      if (bindHostExit && gameId === null) {
+      const hostAppId = appType === AppType.MoonDeck ? String(appId) : getEnvKeyValueString(details.strLaunchOptions, EnvVars.SteamAppId);
+      if (bindHostExit && (gameId === null || hostAppId === null)) {
         logger.toast("Could not identify the local game session.", { output: "error" });
         return;
       }
-      this.moonDeckApp.setApp(appId, details.unAppID, appName, appType, sessionOptions, gameId === null ?
+      this.moonDeckApp.setApp(appId, details.unAppID, appName, appType, sessionOptions, gameId === null || hostAppId === null ?
         null :
           {
             address: hostSettings.address,
             buddyPort: hostSettings.buddy.port,
             clientId: settings.clientId,
-            gameId
+            gameId,
+            appId: hostAppId
           });
       await this.moonDeckApp.clearRunnerResult();
 

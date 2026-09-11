@@ -64,6 +64,7 @@ export interface HostGameControl {
   buddyPort: number;
   clientId: string;
   gameId: string;
+  appId: string;
 }
 
 export interface MoonDeckAppData {
@@ -178,7 +179,7 @@ export class MoonDeckAppProxy extends ReadonlySubject<MoonDeckAppData | null> {
 
   shouldStopHost(gameId: string): boolean {
     const app = this.subject.value;
-    return app !== null && app.appType === AppType.MoonDeck && !app.beingKilled && app.hostControl !== null &&
+    return app !== null && app.appType !== AppType.GameStream && !app.beingKilled && app.hostControl !== null &&
       [app.hostControl.gameId, String(app.steamAppId), String(app.moonDeckAppId)].includes(gameId);
   }
 
@@ -188,15 +189,15 @@ export class MoonDeckAppProxy extends ReadonlySubject<MoonDeckAppData | null> {
       return;
     }
     const host = app.hostControl;
-    if (app.appType !== AppType.MoonDeck || host === null) {
+    if (app.appType === AppType.GameStream || host === null) {
       await this.killApp();
       return;
     }
     this.subject.next({ ...app, quittingHost: true });
     try {
-      logger.log(`Stopping host Steam app ${app.steamAppId} before ending stream.`);
+      logger.log(`Stopping host Steam app ${host.appId} before ending stream.`);
       const stopped = await call<[string, number, string, string], boolean>(
-        "stop_steam_app", host.address, host.buddyPort, host.clientId, String(app.steamAppId)
+        "stop_steam_app", host.address, host.buddyPort, host.clientId, host.appId
       );
       if (!stopped) {
         logger.toast("Could not stop the game on the host. Please quit through the game's menu.", { output: "error" });

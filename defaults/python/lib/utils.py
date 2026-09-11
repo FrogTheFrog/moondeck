@@ -142,7 +142,11 @@ def ps_signal(process, kill: bool):
             pass
     
     proc = cast(psutil.Process, process)
-    for child in list(proc.children(recursive=True)):
+    try:
+        children = proc.children(recursive=True)
+    except psutil.NoSuchProcess:
+        return
+    for child in children:
         do_signal(child)
 
     do_signal(proc)

@@ -39,8 +39,14 @@ const make = (type=AppType.MoonDeck,id=728880)=>{
   app.setApp(123,456,'Next',AppType.MoonDeck,{nameSetToAppId:false},{address:'192.0.2.2',buddyPort:59999,clientId:'other',gameId:'789',appId:'123'});
   resolve(true);await pending;assert.equal(terminated.length,0,'old reply cannot terminate a new session');
   app=make(); await app.killApp(); assert.equal(calls.length,0,'internal cleanup never stops host game');
-  app=make(AppType.NonSteam);assert.equal(app.shouldStopHost('728880'),false);
+  app=make(AppType.NonSteam,2349239998);
+  app.setApp(2349239998,2349239998,'Non-Steam',AppType.NonSteam,{nameSetToAppId:false},{address:'192.0.2.1',buddyPort:59999,clientId:'test-client',gameId:'10089999999000000000',appId:'11586750990639955968'});
+  assert.equal(app.shouldStopHost('10089999999000000000'),true);
+  assert.equal(app.shouldStopHost('2349239998'),true);
+  await app.quitApp();
+  assert.equal(calls[0][4],'11586750990639955968','host shortcut ID retains all 64 bits');
+  assert.deepEqual(terminated,[2349239998]);
   app=make(AppType.GameStream);assert.equal(app.shouldStopHost('728880'),false);
   app=make();app.setApp(728880,2168823603,'Test',AppType.MoonDeck,{nameSetToAppId:false},null);assert.equal(app.shouldStopHost('728880'),false,'disabled option keeps normal behavior');
-  console.log('PASS: explicit exit, unrelated game, failure, duplicate click, session change, internal cleanup, unsupported app');
+  console.log('PASS: explicit exit, unrelated game, failure, duplicate click, session change, internal cleanup, non-Steam 64-bit identity, unsupported app');
 })().catch(e=>{console.error(e);process.exitCode=1;});

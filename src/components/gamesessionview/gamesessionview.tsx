@@ -60,7 +60,7 @@ export const GameSessionView: FC = () => {
         />
         <ToggleField
           label="Stop host game when choosing Exit game"
-          description="For native Steam games launched with MoonDeck, stop the game on the host before ending the stream. Requires a compatible MoonDeck Buddy. Games that ignore the close request are force-stopped; save progress before exiting. Disconnects and suspension leave the game running."
+          description="Stop the host game before ending the stream. Supports Steam games and Windows non-Steam shortcuts that Buddy can identify: game executables, Xbox/Game Pass apps, and supported launcher shortcuts. Requires a compatible MoonDeck Buddy. Games that ignore the close request are force-stopped; save progress before exiting. Disconnects and suspension leave the game running."
           value={settings.gameSession.stopHostGameOnExit}
           setValue={(value) => settingsManager.update((settings) => { settings.gameSession.stopHostGameOnExit = value; })}
         />
