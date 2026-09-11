@@ -1,6 +1,7 @@
-import { AppStartResult, AppType, ControllerConfigOption, EnvVars, checkExecPathMatch, getAppDetails, getAudioDevices, getCurrentDisplayModeString, getCurrentUserSteamId, getDisplayIdentifiers, getMoonDeckRunPath, getSystemNetworkStore, launchApp, registerForGameLaunchIntercept, registerForGameLifetime, registerForSuspendNotifications, setAppHiddenState, setAppLaunchOptions, setAppResolutionOverride, setOverrideResolutionForInternalDisplay, setShortcutName } from "./steamutils";
+import { AppStartResult, AppType, ControllerConfigOption, EnvVars, checkExecPathMatch, getAppDetails, getAudioDevices, getCurrentDisplayModeString, getCurrentUserSteamId, getDisplayIdentifiers, getGameId, getMoonDeckRunPath, getSystemNetworkStore, launchApp, registerForGameLaunchIntercept, registerForGameLifetime, registerForSuspendNotifications, setAppHiddenState, setAppLaunchOptions, setAppResolutionOverride, setOverrideResolutionForInternalDisplay, setShortcutName } from "./steamutils";
 import { ControllerConfigValues, Dimension, HostResolution, HostSettings, SettingsManager } from "./settingsmanager";
 import { Subscription, pairwise } from "rxjs";
+import { callOriginal, replacePatch } from "@decky/ui";
 import { getEnvKeyValueString, makeEnvKeyValue } from "./envutils";
 import { AppDetails } from "@decky/ui/dist/globals/steam-client/App";
 import { AppSyncState } from "./appsyncstate";
@@ -129,6 +130,7 @@ export class MoonDeckAppLauncher {
   private unregisterLifetime: (() => void) | null = null;
   private unregisterSuspension: (() => void) | null = null;
   private unregisterInterceptor: (() => void) | null = null;
+  private unregisterExit: (() => void) | null = null;
   private interceptedLaunch = false;
   private subscription: Subscription | null = null;
   readonly moonDeckApp: MoonDeckAppProxy;
@@ -286,9 +288,21 @@ export class MoonDeckAppLauncher {
     this.initSuspension();
     this.initMoonDeckAppTimestampUpdater();
     this.initInterceptor();
+    const exitPatch = replacePatch(SteamClient.Apps, "TerminateApp", ([gameId]) => {
+      if (!this.moonDeckApp.shouldStopHost(String(gameId))) {
+        return callOriginal;
+      }
+      void this.moonDeckApp.quitApp().catch((error) => logger.critical(error));
+      return undefined;
+    });
+    this.unregisterExit = () => exitPatch.unpatch();
   }
 
   deinit(): void {
+    if (this.unregisterExit !== null) {
+      this.unregisterExit();
+      this.unregisterExit = null;
+    }
     if (this.unregisterInterceptor !== null) {
       this.unregisterInterceptor();
       this.unregisterInterceptor = null;
@@ -412,7 +426,20 @@ export class MoonDeckAppLauncher {
         };
       }
 
-      this.moonDeckApp.setApp(appId, details.unAppID, appName, appType, sessionOptions);
+      const bindHostExit = appType === AppType.MoonDeck && settings.gameSession.stopHostGameOnExit;
+      const gameId = bindHostExit ? await getGameId(details.unAppID) : null;
+      if (bindHostExit && gameId === null) {
+        logger.toast("Could not identify the local game session.", { output: "error" });
+        return;
+      }
+      this.moonDeckApp.setApp(appId, details.unAppID, appName, appType, sessionOptions, gameId === null ?
+        null :
+          {
+            address: hostSettings.address,
+            buddyPort: hostSettings.buddy.port,
+            clientId: settings.clientId,
+            gameId
+          });
       await this.moonDeckApp.clearRunnerResult();
 
       const launchResult = await launchApp(details.unAppID, hostSettings.runnerTimeouts.steamLaunch * 1000);

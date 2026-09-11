@@ -40,6 +40,21 @@ export const GameSessionPanel: FC<Props> = ({ appData }) => {
     gameSession =
       <PanelSection title="Game Session">
         <PanelSectionRow>
+          <ButtonItem
+            disabled={isDisabled || appData.hostControl === null}
+            layout="below"
+            onClick={() => {
+              setIsDisabled(true);
+              Navigation.CloseSideMenus();
+              moonDeckAppLauncher.moonDeckApp.quitApp()
+                .catch((e) => logger.critical(e))
+                .finally(() => setIsDisabled(false));
+            }}
+          >
+            Exit game on host
+          </ButtonItem>
+        </PanelSectionRow>
+        <PanelSectionRow>
           <ToggleField
             label="AppId as game title"
             disabled={isDisabled}

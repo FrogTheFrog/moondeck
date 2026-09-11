@@ -24,7 +24,7 @@ import lib.utils as utils
 from typing import Optional
 from lib.plugin.settings import UserSettings, UserSettingsManager
 from lib.logger import logger, set_logger_settings, get_logger
-from lib.buddyrequests import SteamUiMode, SteamUiModeResponse, CurrentUserResponse, BuddyException
+from lib.buddyrequests import SteamUiMode, SteamUiModeResponse, CurrentUserResponse, BuddyException, BuddyRequests, AppState
 from lib.buddyclient import BuddyClient, AbortHostStateChangeResult
 from lib.utils import wake_on_lan, change_moondeck_runner_ready_state, TimedPooler
 from lib.runnerresult import Result, set_result, get_result
@@ -307,6 +307,25 @@ class Plugin:
 
         except Exception:
             logger.exception("Unhandled exception")
+
+    async def stop_steam_app(self, address: str, buddy_port: int, client_id: str, app_id: str):
+        """Stop the explicitly selected host game before closing its local stream."""
+        try:
+            async with asyncio.timeout(8):
+                async with BuddyRequests(address, buddy_port, client_id, 3) as requests:
+                    response = await requests.post_stop_steam_app(app_id)
+                    if not response["result"]:
+                        return False
+                    while True:
+                        state = (await requests.get_app_data(app_id))["data"]
+                        if state is not None and state["app_id"] == app_id and state["app_state"] == AppState.Stopped:
+                            return True
+                        if state is not None and state["app_id"] != app_id:
+                            return False
+                        await asyncio.sleep(0.2)
+        except Exception:
+            logger.exception("Failed to stop host Steam app %s", app_id)
+            return False
 
     @utils.async_scope_log(logger.info)
     async def end_stream(self, address: str, buddy_port: int, client_id: str, timeout: float):

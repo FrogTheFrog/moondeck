@@ -59,6 +59,13 @@ export interface SessionOptions {
   nameSetToAppId: boolean;
 }
 
+export interface HostGameControl {
+  address: string;
+  buddyPort: number;
+  clientId: string;
+  gameId: string;
+}
+
 export interface MoonDeckAppData {
   steamAppId: number;
   moonDeckAppId: number | null;
@@ -66,6 +73,8 @@ export interface MoonDeckAppData {
   appType: AppType;
   redirected: boolean;
   beingKilled: boolean;
+  quittingHost: boolean;
+  hostControl: HostGameControl | null;
   sessionOptions: SessionOptions;
 }
 
@@ -77,7 +86,7 @@ export class MoonDeckAppProxy extends ReadonlySubject<MoonDeckAppData | null> {
     this.commandProxy = commandProxy;
   }
 
-  setApp(steamAppId: number, moonDeckAppId: number, name: string, appType: AppType, sessionOptions: SessionOptions): void {
+  setApp(steamAppId: number, moonDeckAppId: number, name: string, appType: AppType, sessionOptions: SessionOptions, hostControl: HostGameControl | null): void {
     this.subject.next({
       steamAppId,
       moonDeckAppId: appType === AppType.MoonDeck ? moonDeckAppId : null,
@@ -85,6 +94,8 @@ export class MoonDeckAppProxy extends ReadonlySubject<MoonDeckAppData | null> {
       appType,
       redirected: false,
       beingKilled: false,
+      quittingHost: false,
+      hostControl,
       sessionOptions
     });
   }
@@ -163,6 +174,46 @@ export class MoonDeckAppProxy extends ReadonlySubject<MoonDeckAppData | null> {
     }
 
     await this.commandProxy.closeSteam(false);
+  }
+
+  shouldStopHost(gameId: string): boolean {
+    const app = this.subject.value;
+    return app !== null && app.appType === AppType.MoonDeck && !app.beingKilled && app.hostControl !== null &&
+      [app.hostControl.gameId, String(app.steamAppId), String(app.moonDeckAppId)].includes(gameId);
+  }
+
+  async quitApp(): Promise<void> {
+    const app = this.subject.value;
+    if (app === null || app.quittingHost) {
+      return;
+    }
+    const host = app.hostControl;
+    if (app.appType !== AppType.MoonDeck || host === null) {
+      await this.killApp();
+      return;
+    }
+    this.subject.next({ ...app, quittingHost: true });
+    try {
+      logger.log(`Stopping host Steam app ${app.steamAppId} before ending stream.`);
+      const stopped = await call<[string, number, string, string], boolean>(
+        "stop_steam_app", host.address, host.buddyPort, host.clientId, String(app.steamAppId)
+      );
+      if (!stopped) {
+        logger.toast("Could not stop the game on the host. Please quit through the game's menu.", { output: "error" });
+        return;
+      }
+      // Normal game-exit handling may already have closed this session.
+      if (this.subject.value?.hostControl === host) {
+        await this.killApp();
+      }
+    } catch (error) {
+      logger.critical(error);
+      logger.toast("Could not confirm that the host game stopped.", { output: "error" });
+    } finally {
+      if (this.subject.value?.hostControl === host) {
+        this.subject.next({ ...this.subject.value, quittingHost: false });
+      }
+    }
   }
 
   async killApp(forceCleanup = false): Promise<void> {

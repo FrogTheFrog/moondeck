@@ -209,6 +209,10 @@ class BuddyRequests(contextlib.AbstractAsyncContextManager):
             data = await resp.json(encoding="utf-8")
             return utils.from_dict(ResultLikeResponse, data)
 
+    async def post_stop_steam_app(self, app_id: str):
+        async with self.__session.post(f"{self.base_url}/stopSteamApp", json={"app_id": app_id}) as resp:
+            return utils.from_dict(ResultLikeResponse, await resp.json(encoding="utf-8"))
+
     async def post_close_steam(self, keep_stream_alive: bool):
         data = {
             "keep_stream_alive": keep_stream_alive
