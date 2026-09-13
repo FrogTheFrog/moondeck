@@ -4,4 +4,4 @@
 CURRENT_DIR=`dirname "$(readlink -f "$0")"`
 cd "$CURRENT_DIR";
 
-exec ${MOONDECK_PYTHON:-/usr/bin/python} ./runner.py
+exec ${MOONDECK_PYTHON:-/usr/bin/python} ./moondeckrun.py

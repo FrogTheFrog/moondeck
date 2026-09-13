@@ -11,6 +11,8 @@ export const ChangelogView: FC = () => {
             <>
               <div>&bull; Fixed unhandled exception when trying to terminate moonlight process.</div>
               <div>&bull; Fixed an issue where a secondary mouse cursor will be visible because of the new MoonDeck Runner window.</div>
+              <div>&bull; Fixed an issue where switching between apps is incorrectly detected as MoonDeck Runner exit.</div>
+              <div>&bull; MoonDeck now perform a graceful termination on runner exit.</div>
             </>
           }
           focusable={true}

@@ -246,14 +246,10 @@ class Plugin:
             return None
 
     @utils.async_scope_log(logger.info)
-    async def kill_runner(self, app_id: int | None):
+    async def kill_runner(self):
         try:
-            if app_id is not None:
-                logger.info("Killing reaper and moonlight!")
-                await utils.pkill(f"AppId={app_id}")
-            else:
-                logger.info("Killing moonlight!")
-
+            logger.info("Killing MoonDeck runner and moonlight!")
+            await utils.pkill("moondeckrun.py")
             await MoonlightProxy.terminate_all_instances()
 
         except Exception:
@@ -282,9 +278,9 @@ class Plugin:
             return False
 
     @utils.async_scope_log(logger.info)
-    async def is_runner_active(self, app_id: int):
+    async def is_runner_active(self):
         try:
-            kill_proc = await utils.create_subprocess_shell(f"pgrep -f -i \"AppId={app_id}\"",
+            kill_proc = await utils.create_subprocess_shell(f"pgrep -f -i \"moondeckrun.py\"",
                                                             stderr_to_devnull=True)
             output, _ = await kill_proc.communicate()
             if output:

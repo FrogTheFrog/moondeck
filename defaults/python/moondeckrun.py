@@ -59,6 +59,11 @@ async def run_with_suspend_resume(settings: MoonDeckAppRunnerSettings | Moonligh
 
                 try:
                     await asyncio.wait({runner_task, suspend_wait_task}, return_when=asyncio.FIRST_COMPLETED)
+                except asyncio.CancelledError:
+                    runner_task.cancel()
+                    with contextlib.suppress(asyncio.CancelledError):
+                        await runner_task
+                    raise
                 finally:
                     if not suspend_wait_task.done():
                         suspend_wait_task.cancel()
@@ -83,6 +88,12 @@ async def run_with_suspend_resume(settings: MoonDeckAppRunnerSettings | Moonligh
 
 
 async def main():
+    # Handle the SIGTERM in a similar way to SIGINT
+    loop = asyncio.get_running_loop()
+    main_task = asyncio.current_task()
+    assert main_task    
+    loop.add_signal_handler(signal.SIGTERM, main_task.cancel)
+
     try:
         with acquire_runner_pid_lock():
             logger.info("Resetting runner result and suspended state")
@@ -100,6 +111,9 @@ async def main():
 
             await run_with_suspend_resume(settings)
             runnerresult.set_result(None)
+
+    except asyncio.CancelledError:
+        runnerresult.set_result(runnerresult.Result.Terminated)
 
     except runnerresult.RunnerError as err:
         runnerresult.set_result(err.result)

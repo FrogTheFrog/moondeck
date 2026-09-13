@@ -28,6 +28,7 @@ class Result(Enum):
     AppLaunchFailed = "Failed to launch app in time!"
     MoonlightClosed = "Moonlight has been closed!"
     MoonlightIsNotInstalled = "Moonlight executable/flatpak not found!"
+    Terminated = "TERMINATED"
 
 
 class RunnerError(Exception):

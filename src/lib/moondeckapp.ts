@@ -6,9 +6,11 @@ import { call } from "@decky/api";
 import { isEqual } from "lodash";
 import { logger } from "./logger";
 
-async function killRunner(appId: number | null): Promise<void> {
+export type RunnerResult = "TERMINATED" | (string & {}) | null;
+
+async function killRunner(): Promise<void> {
   try {
-    await call<[number | null], unknown>("kill_runner", appId);
+    await call<[], unknown>("kill_runner");
   } catch (message) {
     logger.critical("Error while killing runner script: ", message);
   }
@@ -32,18 +34,18 @@ async function unsuspendRunner(): Promise<boolean> {
   }
 }
 
-async function isRunnerActive(appId: number): Promise<boolean> {
+async function isRunnerActive(): Promise<boolean> {
   try {
-    await call<[number], boolean>("is_runner_active", appId);
+    return await call<[], boolean>("is_runner_active");
   } catch (message) {
     logger.critical("Error while getting runner status: ", message);
   }
   return false;
 }
 
-async function getRunnerResult(): Promise<string | null> {
+async function getRunnerResult(): Promise<RunnerResult> {
   try {
-    return await call<[], string | null>("get_runner_result");
+    return await call<[], RunnerResult>("get_runner_result");
   } catch (message) {
     logger.critical("Error while fetching runner result: ", message);
   }
@@ -65,7 +67,6 @@ export interface MoonDeckAppData {
   name: string;
   appType: AppType;
   redirected: boolean;
-  beingKilled: boolean;
   sessionOptions: SessionOptions;
 }
 
@@ -84,7 +85,6 @@ export class MoonDeckAppProxy extends ReadonlySubject<MoonDeckAppData | null> {
       name,
       appType,
       redirected: false,
-      beingKilled: false,
       sessionOptions
     });
   }
@@ -168,12 +168,10 @@ export class MoonDeckAppProxy extends ReadonlySubject<MoonDeckAppData | null> {
   async killApp(forceCleanup = false): Promise<void> {
     if (this.subject.value === null) {
       if (forceCleanup) {
-        await killRunner(null);
+        await killRunner();
       }
       return;
     }
-
-    this.subject.next({ ...this.subject.value, beingKilled: true });
 
     const nameSetToAppId = this.subject.value.sessionOptions.nameSetToAppId;
     const appId = getAppId(this.subject.value);
@@ -181,7 +179,7 @@ export class MoonDeckAppProxy extends ReadonlySubject<MoonDeckAppData | null> {
     await this.changeName(false);
     if (!await terminateApp(appId, 5000)) {
       logger.warn("Failed to terminate, trying to kill!");
-      await killRunner(appId);
+      await killRunner();
     }
 
     // If someone cleared it already, we can exit YAY \0/
@@ -220,7 +218,7 @@ export class MoonDeckAppProxy extends ReadonlySubject<MoonDeckAppData | null> {
     }
   }
 
-  async getRunnerResult(): Promise<string | null> {
+  async getRunnerResult(): Promise<RunnerResult> {
     return await getRunnerResult();
   }
 
@@ -230,11 +228,6 @@ export class MoonDeckAppProxy extends ReadonlySubject<MoonDeckAppData | null> {
   }
 
   async isStillRunning(): Promise<boolean> {
-    if (this.subject.value === null) {
-      return false;
-    }
-
-    const appId = getAppId(this.subject.value);
-    return await isRunnerActive(appId);
+    return await isRunnerActive();
   }
 }

@@ -81,7 +81,7 @@ export const GameSessionPanel: FC<Props> = ({ appData }) => {
             bottomSeparator={closeSteam ? "none" : "standard"}
             onClick={() => handleTermination()}
           >
-            Exit MoonDeck runner
+            Exit MoonDeck
           </ButtonItem>
         </PanelSectionRow>
         {closeSteam}

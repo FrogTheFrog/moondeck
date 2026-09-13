@@ -191,7 +191,7 @@ export class MoonDeckAppLauncher {
           // There should be no result in this state, unless the plugin is still loading app details
           // and did not manage to intercept calls OR some error has occured somewhere...
           const result = await this.moonDeckApp.getRunnerResult();
-          if (result !== null) {
+          if (result !== null && result !== "TERMINATED") {
             logger.toast(result, { output: "warn" });
           }
           return;
@@ -203,7 +203,7 @@ export class MoonDeckAppLauncher {
         }
 
         const result = await this.moonDeckApp.getRunnerResult();
-        if (result !== null && this.moonDeckApp.value?.beingKilled === false) {
+        if (result !== null && result !== "TERMINATED") {
           logger.toast(result, { output: "warn" });
         }
 
