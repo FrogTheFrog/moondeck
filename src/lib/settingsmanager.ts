@@ -134,6 +134,7 @@ export interface HostSettings {
 
 export interface GameSessionSettings {
   autoApplyAppId: boolean;
+  closeHostAppOnExit: boolean;
   resumeAfterSuspend: boolean;
   autoSuspendHost: boolean;
   controllerConfig: keyof typeof ControllerConfigValues | null;

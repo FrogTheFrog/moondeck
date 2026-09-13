@@ -79,6 +79,11 @@ class LaunchSteamAppResult(Enum):
     Failed = "Failed to launch Steam app via Buddy!"
 
 
+class CloseSteamAppResult(Enum):
+    BuddyRefused = "Buddy refused to close Steam app. Check the logs on host!"
+    Failed = "Failed to close Steam app via Buddy!"
+
+
 class GetHostInfoResult(Enum):
     Failed = "Failed to get host info via Buddy!"
 
@@ -89,10 +94,6 @@ class GetHostPcInfoResult(Enum):
 
 class StreamStateResult(Enum):
     Failed = "Failed to get stream state via Buddy!"
-
-
-class StreamedAppDataResult(Enum):
-    Failed = "Failed to get streamed app data via Buddy!"
 
 
 class AppDataResult(Enum):
@@ -252,6 +253,15 @@ class BuddyClient(contextlib.AbstractAsyncContextManager):
 
         return await self._try_request(request(), LaunchSteamAppResult.Failed)
 
+    async def close_app(self, app_id: str):
+        async def request():
+            await self.say_hello()
+            resp = await self.__requests.post_close_steam_app(app_id)
+            if not resp["result"]:
+                raise BuddyException(CloseSteamAppResult.BuddyRefused)
+
+        return await self._try_request(request(), CloseSteamAppResult.Failed)
+
     async def close_steam(self, keep_stream_alive: bool = False):
         async def request():
             await self.say_hello()
@@ -335,14 +345,7 @@ class BuddyClient(contextlib.AbstractAsyncContextManager):
 
         return await self._try_request(request(), StreamStateResult.Failed)
     
-    async def get_streamed_app_data(self):
-        async def request():
-            await self.say_hello()
-            return await self.__requests.get_streamed_app_data()
-
-        return await self._try_request(request(), StreamedAppDataResult.Failed)
-    
-    async def get_app_data(self, app_id: str):
+    async def get_app_data(self, app_id: str | None):
         async def request():
             await self.say_hello()
             return await self.__requests.get_app_data(app_id)

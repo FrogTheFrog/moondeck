@@ -6,6 +6,16 @@ export const ChangelogView: FC = () => {
     <DialogBody>
       <DialogControlsSection>
         <Field
+          label="1.13.0"
+          description={
+            <>
+              <div>&bull; Bumped MoonDeckBuddy minimum version to v1.11.0.</div>
+              <div>&bull; Added an option to automatically try and close a Steam app on host.</div>
+            </>
+          }
+          focusable={true}
+        />
+        <Field
           label="1.12.2"
           description="Bumped external dependency 'pyglet' to 2.1.16 so that MoonDeck does not crash on SteamOS 3.9.1"
           focusable={true}
