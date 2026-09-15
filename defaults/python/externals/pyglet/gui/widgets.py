@@ -265,7 +265,7 @@ class PushButton(WidgetBase):
             return
         self._sprite.image = self._unpressed_img
         self._pressed = False
-        self.dispatch_event('on_release')
+        self.dispatch_event('on_release', self)
 
     def on_mouse_motion(self, x: int, y: int, dx: int, dy: int) -> None:
         if not self.enabled or self._pressed:
@@ -601,7 +601,7 @@ class TextEntry(WidgetBase):
             self._caret.on_text_motion_select(motion)
 
     def on_commit(self, widget: TextEntry, text: str) -> None:
-        """Event: dispatches the current text when commited via Enter/Return key."""
+        """Event: dispatches the current text when committed via Enter/Return key."""
 
 
 TextEntry.register_event_type('on_commit')

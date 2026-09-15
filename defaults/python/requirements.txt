@@ -1,7 +1,7 @@
 # Main
 aiohttp == 3.11.18
 psutil == 7.0.0
-pyglet == 2.1.6
+pyglet == 2.1.16
 wakeonlan == 3.1.0
 zeroconf == 0.147.0
 

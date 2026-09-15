@@ -8,11 +8,18 @@ import pyglet
 from pyglet.libs.win32 import com
 from pyglet.media.devices import get_audio_device_manager
 from pyglet.media.devices.base import DeviceFlow
+from pyglet.media.exceptions import MediaException
 from pyglet.util import debug_print
 
 from . import lib_xaudio2 as lib
 
 _debug = debug_print('debug_media')
+
+SAMPLE_FORMATS = {"U8": lib.WAVE_FORMAT_PCM,
+                  "S16": lib.WAVE_FORMAT_PCM,
+                  "S24": lib.WAVE_FORMAT_PCM,
+                  "S32": lib.WAVE_FORMAT_PCM,
+                  "F32": 3}
 
 
 def create_xa2_buffer(audio_data):
@@ -27,8 +34,16 @@ def create_xa2_buffer(audio_data):
 
 
 def create_xa2_waveformat(audio_format):
+    if audio_format.channels > 2 \
+            or audio_format.sample_format not in SAMPLE_FORMATS:
+        raise MediaException(
+            f"XAudio2 does not support '{audio_format.channels}-channel, "
+            f"{audio_format.sample_size}-bit "
+            f"{audio_format.sample_type}' audio.")
+
+
     wfx = lib.WAVEFORMATEX()
-    wfx.wFormatTag = lib.WAVE_FORMAT_PCM
+    wfx.wFormatTag = SAMPLE_FORMATS[audio_format.sample_format]
     wfx.nChannels = audio_format.channels
     wfx.nSamplesPerSec = audio_format.sample_rate
     wfx.wBitsPerSample = audio_format.sample_size
@@ -88,7 +103,7 @@ class XA2EngineCallback(com.COMObject):
     def OnCriticalError(self, hresult):
         # This is a textbook bad example, yes.
         # It's probably safe though: assuming that XA2 has ceased to operate if we ever end up
-        # here, nothing can release the lock inbetween.
+        # here, nothing can release the lock in between.
         if self._lock.locked():
             self._lock.release()
         raise Exception("Critical Error:", hresult)
@@ -438,7 +453,7 @@ class XA2SourceVoice:
         self.channel_count = channel_count
         self.sample_size = sample_size
 
-        # How many samples the voice had played when it was most recently readded into the
+        # How many samples the voice had played when it was most recently re-added into the
         # pool of available voices.
         self.samples_played_at_last_recycle = 0
 

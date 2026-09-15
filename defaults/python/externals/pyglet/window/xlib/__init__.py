@@ -28,7 +28,7 @@ from functools import lru_cache
 from typing import TYPE_CHECKING, Sequence
 
 import pyglet
-from pyglet.display.xlib import XlibCanvas
+from pyglet.display.xlib import XlibCanvas, XlibScreenXinerama
 from pyglet.event import EventDispatcher
 from pyglet.libs.x11 import cursorfont, xlib
 from pyglet.util import asbytes
@@ -229,8 +229,6 @@ class XlibWindow(BaseWindow):
             root = xlib.XRootWindow(self._x_display, self._x_screen_id)
 
             visual_info = self.config.get_visual_info()
-            if self.style in ('transparent', 'overlay'):
-                xlib.XMatchVisualInfo(self._x_display, self._x_screen_id, 32, xlib.TrueColor, visual_info)
 
             visual = visual_info.visual
             visual_id = xlib.XVisualIDFromVisual(visual)
@@ -302,6 +300,11 @@ class XlibWindow(BaseWindow):
                                                   False))
             protocols = (c_ulong * len(protocols))(*protocols)
             xlib.XSetWMProtocols(self._x_display, self._window, protocols, len(protocols))
+
+            # Overlay should allow mouse to pass through and stay on top.
+            if self._style == "overlay":
+                self.set_mouse_passthrough(True)
+                self._set_wm_state("_NET_WM_STATE_ABOVE")
 
             # Create window resize sync counter
             if self._enable_xsync:
@@ -435,6 +438,16 @@ class XlibWindow(BaseWindow):
         self.set_mouse_platform_visible()
         self._applied_mouse_exclusive = None
         self._update_exclusivity()
+
+    def set_mouse_passthrough(self, state: bool) -> None:
+        """Sets the clickable area in the application to an empty region if enabled."""
+        if state:
+            region = xlib.XCreateRegion()
+            xsync.XShapeCombineRegion(self._x_display, self._window, xsync.ShapeInput, 0, 0, region, xsync.ShapeSet)
+            xlib.XDestroyRegion(region)
+        else:
+            # Reset input shape to default
+            xsync.XShapeCombineMask(self._x_display, self._window, xsync.ShapeInput, 0, 0, 0, xsync.ShapeSet)
 
     def _map(self) -> None:
         if self._mapped:
@@ -730,7 +743,10 @@ class XlibWindow(BaseWindow):
                 y = self._height // 2
                 self._mouse_exclusive_client = x, y
                 self.set_mouse_position(x, y)
-            elif self._fullscreen and not self.screen._xinerama:  # noqa: SLF001
+            elif self._fullscreen:  # noqa: SLF001
+                if isinstance(self.screen, XlibScreenXinerama) and self.screen._xinerama:
+                    return
+
                 # Restrict to fullscreen area (prevent viewport scrolling)
                 self.set_mouse_position(0, 0)
                 r = xlib.XGrabPointer(self._x_display, self._view,
@@ -899,8 +915,6 @@ class XlibWindow(BaseWindow):
 
             text = text_bytes.decode('utf-8')
 
-        self._clipboard_str = text
-
         xlib.XFree(data)
         return text
 
@@ -1022,7 +1036,7 @@ class XlibWindow(BaseWindow):
 
     def dispatch_pending_events(self) -> None:
         while self._event_queue:
-            EventDispatcher.dispatch_event(self, *self._event_queue.pop(0))
+            EventDispatcher.dispatch_event(self, *self._event_queue.popleft())
 
         # Dispatch any context-related events
         if self._lost_context:
@@ -1519,7 +1533,7 @@ class XlibWindow(BaseWindow):
         """Translate mouse button values to match mouse constants.
 
         Given a Xevent.xbutton.button value, convert it to the mouse
-        contants defined in :py:module:`~pyglet.window.mouse`. This
+        contents defined in :py:module:`~pyglet.window.mouse`. This
         means shifting the value, and also skipping over values of
         4~7, which are used for boolean scrolling.
         """

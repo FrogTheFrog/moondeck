@@ -25,6 +25,12 @@ class WaveSource(StreamingSource):
 
         nchannels, sampwidth, framerate, nframes, comptype, compname = self._wave.getparams()
 
+        if nchannels not in (1, 2):
+            raise WAVEDecodeException(f"incompatible channel count {nchannels}")
+
+        if sampwidth not in (1, 2):
+            raise WAVEDecodeException(f"incompatible sample width {sampwidth}")
+
         self.audio_format = AudioFormat(channels=nchannels, sample_size=sampwidth * 8, sample_rate=framerate)
 
         self._bytes_per_frame = nchannels * sampwidth
@@ -64,7 +70,7 @@ class WaveDecoder(MediaDecoder):
     def get_file_extensions(self):
         return '.wav', '.wave', '.riff'
 
-    def decode(self, filename, file, streaming=True):
+    def decode(self, filename, file, streaming=True, **kwargs):
         if streaming:
             return WaveSource(filename, file)
         else:

@@ -15,6 +15,7 @@ from typing import (
 
 import pyglet
 from pyglet import graphics
+from pyglet.font.base import GlyphPosition
 from pyglet.gl import (
     GL_BLEND,
     GL_DEPTH_ATTACHMENT,
@@ -33,7 +34,6 @@ from pyglet.gl import (
 )
 from pyglet.graphics import Group
 from pyglet.text import runlist
-from pyglet.font.base import GlyphPosition
 
 if TYPE_CHECKING:
     from pyglet.customtypes import AnchorX, AnchorY, ContentVAlign, HorizontalAlign
@@ -448,7 +448,7 @@ class _GlyphBox(_AbstractBox):
               rotation: float, visible: bool, anchor_x: float, anchor_y: float, context: _LayoutContext) -> None:
         # Creates the initial attributes and vertex lists of the glyphs.
         # line_x/line_y are calculated when lines shift. To prevent having to destroy and recalculate the layout
-        # everytime it moves, they are merged into the vertices. This way the translation can be moved directly.
+        # every time it moves, they are merged into the vertices. This way the translation can be moved directly.
         assert self.glyphs
         assert not self.vertex_lists
         try:
@@ -461,23 +461,25 @@ class _GlyphBox(_AbstractBox):
         vertices = []
         tex_coords = []
         baseline = 0
-        x1 = line_x
+        x1 = round(line_x)
         for start, end, baseline_ in context.baseline_iter.ranges(i, i + n_glyphs):
             baseline = layout._parse_distance(baseline_)  # noqa: SLF001
             assert len(self.glyphs[start - i:end - i]) == end - start
-            for (kern, glyph, glyph_pos) in self.glyphs[start - i:end - i]:
-                x1 += kern
+            y1 = round(line_y + baseline)
+            for kern, glyph, glyph_pos in self.glyphs[start - i:end - i]:
+                x1 += round(kern)
                 v0, v1, v2, v3 = glyph.vertices
-                v0 += x1 + glyph_pos.x_offset
-                v2 += x1 + glyph_pos.x_offset
-                v1 += line_y + baseline + glyph_pos.y_offset
-                v3 += line_y + baseline + glyph_pos.y_offset
-                vertices.extend(map(round, [v0, v1, 0, v2, v1, 0, v2, v3, 0, v0, v3, 0]))
-                t = glyph.tex_coords
-                tex_coords.extend(t)
-                x1 += glyph.advance + glyph_pos.x_advance
-                v1 += glyph_pos.y_advance
-                v3 += glyph_pos.y_advance
+                # Translate the whole glyph as a block. Rounding v0/v1/v2/v3 can distort vertices.
+                gx = x1 + round(glyph_pos.x_offset)
+                gy = y1 + round(glyph_pos.y_offset)
+                vertices.extend([
+                    v0 + gx, v1 + gy, 0,
+                    v2 + gx, v1 + gy, 0,
+                    v2 + gx, v3 + gy, 0,
+                    v0 + gx, v3 + gy, 0,
+                ])
+                tex_coords.extend(glyph.tex_coords)
+                x1 += round(glyph.advance + glyph_pos.x_advance)
 
         # Text color
         colors = []
@@ -603,7 +605,7 @@ class _GlyphBox(_AbstractBox):
     def update_rotation(self, rotation: float) -> None:
         rot = (rotation,)
         for _vertex_list in self.vertex_lists:
-            _vertex_list.rotation[:] = (rot * _vertex_list.count)
+            _vertex_list.rotation[:] = rot * _vertex_list.count
 
     def update_visibility(self, visible: bool) -> None:
         visible_tuple = (visible,)
@@ -939,6 +941,7 @@ class TextLayout:
         # Boxes are all existing _AbstractBoxes, these are used to gather line information.
         # Note that this is only relevant to layouts that do not store directly on lines.
         self._boxes = []
+        self._lines = []
 
         #: :meta private:
         self.group_cache = {}
@@ -1139,10 +1142,12 @@ class TextLayout:
 
         anchor_y = self._get_top_anchor()
 
-        acc_anchor_x = self._anchor_left
-        for box in self._boxes:
-            box.update_anchor(acc_anchor_x, anchor_y)
-            acc_anchor_x += box.advance
+        for line in self._lines:
+            acc_anchor_x = self._anchor_left
+            for box in line.boxes:
+                place_anchor_x = round(acc_anchor_x) if self._rotation == 0 else acc_anchor_x
+                box.update_anchor(place_anchor_x, anchor_y)
+                acc_anchor_x += box.advance
 
     @property
     def visible(self) -> bool:
@@ -1453,6 +1458,7 @@ class TextLayout:
 
         self._vertex_lists.clear()
         self._boxes.clear()
+        self._lines.clear()
         self.group_cache.clear()
 
         if not self._document or not self._document.text:
@@ -1462,9 +1468,9 @@ class TextLayout:
             self._anchor_bottom = 0
             return
 
-        lines = self._get_lines()
-        self._ascent = lines[0].ascent
-        self._descent = lines[0].descent
+        self._lines = self._get_lines()
+        self._ascent = self._lines[0].ascent
+        self._descent = self._lines[0].descent
 
         colors_iter = self._document.get_style_runs("color")
 
@@ -1476,7 +1482,7 @@ class TextLayout:
 
         context = _StaticLayoutContext(self, self._document, colors_iter, background_iter)
 
-        for line in lines:
+        for line in self._lines:
             self._boxes.extend(line.boxes)
             self._create_vertex_lists(line.x, line.y, self._anchor_left, anchor_top, line.start, line.boxes, context)
 
@@ -1918,7 +1924,7 @@ class TextLayout:
                 owner_glyphs.extend(zip([kern] * (kern_end - kern_start), gs, os))
             if owner is None:
                 # Assume glyphs are already boxes.
-                for kern, glyph in owner_glyphs:
+                for _, glyph, _ in owner_glyphs:
                     line.add_box(glyph)
             else:
                 line.add_box(_GlyphBox(owner, font, owner_glyphs, width))
@@ -1998,7 +2004,8 @@ class TextLayout:
         acc_anchor_x = anchor_x
         # GlyphBoxes (boxes) are collection of Glyphs/Inline Elements. A line can have multiple GlyphBoxes.
         for box in boxes:
-            box.place(self, i, self._x, self._y, self._z, line_x, line_y, self._rotation, self._visible, acc_anchor_x,
+            place_anchor_x = round(acc_anchor_x) if self._rotation == 0 else acc_anchor_x
+            box.place(self, i, self._x, self._y, self._z, line_x, line_y, self._rotation, self._visible, place_anchor_x,
                       anchor_y, context)
             i += box.length
             acc_anchor_x += box.advance

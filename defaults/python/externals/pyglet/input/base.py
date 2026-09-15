@@ -71,7 +71,7 @@ class Device:
         Args:
             window:
                 Optional window to associate with the device.  The behaviour
-                of this parameter is device and operating system dependant.
+                of this parameter is device and operating system dependent.
                 It can usually be omitted for most devices.
             exclusive:
                 If ``True`` the device will be opened exclusively so that no
@@ -103,7 +103,7 @@ class Device:
         string. This is generated from the hardware identifiers,
         and is in the same format as was popularized by SDL2.
         GUIDs differ between platforms, but are generally 32
-        hexidecimal characters.
+        hexadecimal characters.
         """
         raise NotImplementedError('abstract')
 
@@ -506,7 +506,7 @@ class Controller(EventDispatcher):
     """
 
     def __init__(self, device: Device, mapping: dict):
-        """Create a Controller instace mapped to a Device.
+        """Create a Controller instance mapped to a Device.
 
         .. versionadded:: 2.0
         """
@@ -520,6 +520,7 @@ class Controller(EventDispatcher):
         #: The unique guid for this Device
         self.guid: str = mapping.get('guid')
 
+        # Pollable
         self.a: bool = False
         self.b: bool = False
         self.x: bool = False
@@ -534,6 +535,10 @@ class Controller(EventDispatcher):
 
         self.lefttrigger: float = 0.0
         self.righttrigger: float = 0.0
+        self.dpad: Vec2 = Vec2()
+        self.leftanalog: Vec2 = Vec2()
+        self.rightanalog: Vec2 = Vec2()
+
         self.leftx: float = 0.0
         self.lefty: float = 0.0
         self.rightx: float = 0.0
@@ -575,7 +580,7 @@ class Controller(EventDispatcher):
             A string, currently one of "PS", "XB", or "GENERIC".
         """
         product_id = None
-        # TODO: add more checks for vender hardware ids.
+        # TODO: add more checks for vendor hardware ids.
 
         # Windows
         if self.name == 'XINPUTCONTROLLER':
@@ -617,12 +622,14 @@ class Controller(EventDispatcher):
             @control.event
             def on_change(value):
                 self.dpady = round(value * scale + bias) * sign    # normalized
+                self.dpad = Vec2(self.dpadx, self.dpady)
                 self.dispatch_event('on_dpad_motion', self, Vec2(self.dpadx, self.dpady))
 
         elif axis_name in ("dpleft", "dpright"):
             @control.event
             def on_change(value):
                 self.dpadx = round(value * scale + bias) * sign     # normalized
+                self.dpad = Vec2(self.dpadx, self.dpady)
                 self.dispatch_event('on_dpad_motion', self, Vec2(self.dpadx, self.dpady))
 
         elif axis_name in ("lefttrigger", "righttrigger"):
@@ -637,14 +644,16 @@ class Controller(EventDispatcher):
             def on_change(value):
                 normalized_value = value * scale + bias
                 setattr(self, axis_name, normalized_value)
-                self.dispatch_event('on_stick_motion', self, "leftstick", Vec2(self.leftx, -self.lefty))
+                self.left_analog = Vec2(self.leftx, -self.lefty)
+                self.dispatch_event('on_stick_motion', self, "leftstick", self.left_analog)
 
         elif axis_name in ("rightx", "righty"):
             @control.event
             def on_change(value):
                 normalized_value = value * scale + bias
                 setattr(self, axis_name, normalized_value)
-                self.dispatch_event('on_stick_motion', self, "rightstick", Vec2(self.rightx, -self.righty))
+                self.right_analog = Vec2(self.rightx, -self.righty)
+                self.dispatch_event('on_stick_motion', self, "rightstick", self.right_analog)
 
     def _bind_button_control(self, relation: Relation, control: Button, button_name: str) -> None:
         if button_name in ("dpleft", "dpright", "dpup", "dpdown"):
@@ -655,7 +664,8 @@ class Controller(EventDispatcher):
             def on_change(value):
                 target, bias = defaults[button_name]
                 setattr(self, target, bias * value)
-                self.dispatch_event('on_dpad_motion', self, Vec2(self.dpadx, self.dpady))
+                self.dpad = Vec2(self.dpadx, self.dpady)
+                self.dispatch_event('on_dpad_motion', self, self.dpad)
         else:
             @control.event
             def on_change(value):
@@ -672,7 +682,7 @@ class Controller(EventDispatcher):
     def _bind_dedicated_hat(self, relation: Relation, control: AbsoluteAxis) -> None:
         # 8-directional hat encoded as a single control (Windows/Mac)
         _vecs = (Vec2(0.0, 1.0), Vec2(1.0, 1.0), Vec2(1.0, 0.0), Vec2(1.0, -1.0),       # n, ne, e, se
-                  Vec2(0.0, -1.0), Vec2(-1.0, -1.0), Vec2(-1.0, 0.0), Vec2(-1.0, 1.0))   # s, sw, w, nw
+                 Vec2(0.0, -1.0), Vec2(-1.0, -1.0), Vec2(-1.0, 0.0), Vec2(-1.0, 1.0))   # s, sw, w, nw
         _input_map = {key: val for key, val in zip(range(int(control.min), int(control.max + 1)), _vecs)}
 
         # For some Directinput devices:
@@ -681,7 +691,7 @@ class Controller(EventDispatcher):
         @control.event
         def on_change(value):
             vector = _input_map.get(value // _scale, Vec2(0.0, 0.0))
-            self.dpadx, self.dpady = vector
+            self.dpad = vector
             self.dispatch_event('on_dpad_motion', self, vector)
 
     def _initialize_controls(self) -> None:
@@ -730,8 +740,8 @@ class Controller(EventDispatcher):
 
                         self._bind_axis_control(relation, control, dpname)
 
-            except IndexError:
-                warnings.warn(f"Could not map '{relation}' to '{name}'")
+            except (IndexError, AttributeError, KeyError):
+                warnings.warn(f"Could not map physical Control '{relation}' to '{name}'")
                 continue
 
     def open(self, window: None | BaseWindow = None, exclusive: bool = False) -> None:
@@ -1096,7 +1106,7 @@ class ControllerManager(EventDispatcher):
 
     def on_connect(self, controller) -> Controller:
         """A Controller has been connected. If this is
-        a previously dissconnected Controller that is
+        a previously disconnected Controller that is
         being re-connected, the same Controller instance
         will be returned.
         """

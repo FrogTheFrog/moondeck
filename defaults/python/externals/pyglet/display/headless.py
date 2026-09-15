@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import Literal
+
 import pyglet
 import warnings
 
@@ -21,7 +25,7 @@ class HeadlessDisplay(Display):
         if num_devices.value > 0:
             headless_device = pyglet.options['headless_device']
             if headless_device < 0 or headless_device >= num_devices.value:
-                raise ValueError(f'Invalid EGL devide id: {headless_device}')
+                raise ValueError(f'Invalid EGL device id: {headless_device}')
             devices = (eglext.EGLDeviceEXT * num_devices.value)()
             eglext.eglQueryDevicesEXT(num_devices.value, devices, byref(num_devices))
             self._display_connection = eglext.eglGetPlatformDisplayEXT(
@@ -69,3 +73,10 @@ class HeadlessScreen(Screen):
 
     def restore_mode(self):
         pass
+
+    def get_display_id(self) -> str | int:
+        # No real unique ID is available, just hash together the properties.
+        return hash((self.x, self.y, self.width, self.height))
+
+    def get_monitor_name(self) -> str | Literal["Unknown"]:
+        return "Headless"

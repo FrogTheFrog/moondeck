@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import ctypes
 import io
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, BinaryIO, List, Optional, Union
 
-from pyglet.media.exceptions import MediaException, CannotSeekException
-from pyglet.util import next_or_equal_power_of_two
+from pyglet.media.exceptions import CannotSeekException, MediaException
 
 if TYPE_CHECKING:
     from pyglet.image import AbstractImage
@@ -25,14 +27,34 @@ class AudioFormat:
             (pyglet does not yet support surround-sound sources).
         sample_size (int): Bits per sample; only 8 or 16 are supported.
         sample_rate (int): Samples per second (in Hertz).
+        sample_type (str): "int", "uint" or "float"
     """
 
-    def __init__(self, channels: int, sample_size: int, sample_rate: int) -> None:
+    SAMPLE_TYPE_INT = 'int'
+    SAMPLE_TYPE_UINT = 'uint'
+    SAMPLE_TYPE_FLOAT = 'float'
+
+    _VALID_TYPES = (SAMPLE_TYPE_INT, SAMPLE_TYPE_UINT, SAMPLE_TYPE_FLOAT)
+
+    def __init__(self, channels: int, sample_size: int, sample_rate: int,
+                 sample_type: str | None = None) -> None:
         self.channels = channels
         self.sample_size = sample_size
         self.sample_rate = sample_rate
+        if sample_type is None:
+            if self.sample_size == 8:
+                sample_type = self.SAMPLE_TYPE_UINT
+            else:
+                sample_type = self.SAMPLE_TYPE_INT
+        if sample_type not in self._VALID_TYPES:
+            raise ValueError(f"sample_type must be one of {self._VALID_TYPES}")
+        self.sample_type = sample_type
 
         # Convenience
+        prefixes = {self.SAMPLE_TYPE_INT: "S",
+                    self.SAMPLE_TYPE_UINT: "U",
+                    self.SAMPLE_TYPE_FLOAT: "F"}
+        self.sample_format = f"{prefixes[self.sample_type]}{self.sample_size}"
 
         self.bytes_per_frame = (sample_size // 8) * channels
         self.bytes_per_second = self.bytes_per_frame * sample_rate
@@ -69,15 +91,19 @@ class AudioFormat:
         if isinstance(other, AudioFormat):
             return (self.channels == other.channels and
                     self.sample_size == other.sample_size and
-                    self.sample_rate == other.sample_rate)
+                    self.sample_rate == other.sample_rate and
+                    self.sample_type == other.sample_type)
         return NotImplemented
 
     def __repr__(self) -> str:
-        return '%s(channels=%d, sample_size=%d, sample_rate=%d)' % (
-            self.__class__.__name__, self.channels, self.sample_size,
-            self.sample_rate)
+        return (
+            '%s(channels=%d, sample_size=%d, sample_rate=%d, sample_type=%s)'
+            % (self.__class__.__name__, self.channels, self.sample_size,
+               self.sample_rate, self.sample_type)
+        )
 
 
+@dataclass
 class VideoFormat:
     """Video details.
 
@@ -98,20 +124,10 @@ class VideoFormat:
 
             .. versionadded:: 1.2
     """
-
-    def __init__(self, width: int, height: int, sample_aspect: float = 1.0) -> None:
-        self.width = width
-        self.height = height
-        self.sample_aspect = sample_aspect
-        self.frame_rate = None
-
-    def __eq__(self, other) -> bool:
-        if isinstance(other, VideoFormat):
-            return (self.width == other.width and
-                    self.height == other.height and
-                    self.sample_aspect == other.sample_aspect and
-                    self.frame_rate == other.frame_rate)
-        return False
+    width: int
+    height: int
+    sample_aspect: float = 0.0
+    frame_rate: float | None = None
 
 
 class AudioData:
@@ -132,14 +148,14 @@ class AudioData:
             `timestamp` and `duration` are unused and will be removed eventually.
     """
 
-    __slots__ = 'data', 'length', 'timestamp', 'duration', 'events', 'pointer'
+    __slots__ = 'data', 'duration', 'events', 'length', 'pointer', 'timestamp'
 
     def __init__(self,
-                 data: Union[bytes, ctypes.Array],
+                 data: bytes | ctypes.Array,
                  length: int,
                  timestamp: float = 0.0,
                  duration: float = 0.0,
-                 events: Optional[List['MediaEvent']] = None) -> None:
+                 events: list[MediaEvent] | None = None) -> None:
 
         if isinstance(data, bytes):
             # bytes are treated specially by ctypes and can be cast to a void pointer, get
@@ -163,6 +179,7 @@ class AudioData:
         self.events = [] if events is None else events
 
 
+@dataclass
 class SourceInfo:
     """Source metadata information.
 
@@ -180,15 +197,14 @@ class SourceInfo:
 
     .. versionadded:: 1.2
     """
-
-    title = ''
-    author = ''
-    copyright = ''
-    comment = ''
-    album = ''
-    year = 0
-    track = 0
-    genre = ''
+    title: str = ''
+    author: str = ''
+    copyright: str = ''
+    comment: str = ''
+    album: str = ''
+    year: int = 0
+    track: int = 0
+    genre: str = ''
 
 
 class Source:
@@ -255,9 +271,8 @@ class Source:
         player.on_player_eos = _on_player_eos
         return player
 
-    def get_animation(self) -> 'Animation':
-        """
-        Import all video frames into memory.
+    def get_animation(self) -> Animation:
+        """Import all video frames into memory.
 
         An empty animation will be returned if the source has no video.
         Otherwise, the animation will contain all unplayed video frames (the

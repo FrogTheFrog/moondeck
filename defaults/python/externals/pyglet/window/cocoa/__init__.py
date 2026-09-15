@@ -70,6 +70,11 @@ class CocoaWindow(BaseWindow):
                                       cocoapy.NSClosableWindowMask |
                                       cocoapy.NSUtilityWindowMask,
         BaseWindow.WINDOW_STYLE_BORDERLESS: cocoapy.NSBorderlessWindowMask,
+        BaseWindow.WINDOW_STYLE_TRANSPARENT: cocoapy.NSTitledWindowMask |
+                                         cocoapy.NSClosableWindowMask |
+                                         cocoapy.NSMiniaturizableWindowMask,
+        BaseWindow.WINDOW_STYLE_OVERLAY: cocoapy.NSBorderlessWindowMask,
+
     }
 
     def __init__(self, *args, **kwargs) -> None:  # noqa: ANN002, ANN003
@@ -161,6 +166,17 @@ class CocoaWindow(BaseWindow):
             # Then create a view and set it as our NSWindow's content view.
             self._nsview = PygletView.alloc().initWithFrame_cocoaWindow_(content_rect, self)
             self._nsview.setWantsBestResolutionOpenGLSurface_(True)
+
+            if not self._fullscreen:
+                if self._style in ("transparent", "overlay"):
+                    self._nswindow.setOpaque_(False)
+                    self._nswindow.setBackgroundColor_(NSColor.clearColor())
+                    self._nswindow.setHasShadow_(False)
+
+                    if self._style == "overlay":
+                        self.set_mouse_passthrough(True)
+                        self._nswindow.setLevel_(cocoapy.NSStatusWindowLevel)
+
             self._nswindow.setContentView_(self._nsview)
             self._nswindow.makeFirstResponder_(self._nsview)
 
@@ -215,6 +231,17 @@ class CocoaWindow(BaseWindow):
             return self._nswindow.backingScaleFactor()
 
         return 1.0
+
+    def _get_mouse_scale(self) -> float:
+        """The mouse scale factoring in the DPI.
+
+        On Mac, this is always 1.0.
+        """
+        return 1.0
+
+    def set_mouse_passthrough(self, state: bool) -> None:
+        with AutoReleasePool():
+            self._nswindow.setIgnoresMouseEvents_(state)
 
     def _set_nice_window_location(self) -> None:
         # Construct a list of all visible windows that aren't us.
@@ -335,7 +362,7 @@ class CocoaWindow(BaseWindow):
 
     def dispatch_pending_events(self) -> None:
         while self._event_queue:
-            event = self._event_queue.pop(0)
+            event = self._event_queue.popleft()
             EventDispatcher.dispatch_event(self, *event)
 
     def set_caption(self, caption: str) -> None:

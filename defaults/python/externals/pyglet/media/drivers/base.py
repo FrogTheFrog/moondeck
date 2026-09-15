@@ -378,7 +378,7 @@ class AbstractAudioPlayer(metaclass=ABCMeta):
             # Player falling behind
             # Skip at most 12ms if this is a minor desync, otherwise skip the entire
             # difference. this will be noticeable, but the desync is
-            # likely already noticable in context of whatever the application does.
+            # likely already noticeable in context of whatever the application does.
             compensated_bytes = (-desync_bytes
                                  if extreme_desync
                                  else min(-desync_bytes, self.desync_correction_bytes_minor))
@@ -448,6 +448,12 @@ class AbstractAudioDriver(metaclass=ABCMeta):
 
     @abstractmethod
     def get_listener(self):
+        pass
+
+    @property
+    @abstractmethod
+    def sample_formats(self):
+        """Get list of supported sample formats ("U8", "S16", "S32", "F32")."""
         pass
 
     @abstractmethod

@@ -58,6 +58,7 @@ from pyglet.gl.gl import (
     glUnmapBuffer,
     glUseProgram,
     glVertexAttribDivisor,
+    glVertexAttribIPointer,
     glVertexAttribPointer,
 )
 from pyglet.graphics.vertexbuffer import AttributeBufferObject, BufferObject
@@ -119,6 +120,11 @@ _uniform_setters: dict[int, tuple[GLDataType, GLFunc, GLFunc, int]] = {
     gl.GL_INT_VEC3: (gl.GLint, gl.glUniform3iv, gl.glProgramUniform3iv, 3),
     gl.GL_INT_VEC4: (gl.GLint, gl.glUniform4iv, gl.glProgramUniform4iv, 4),
 
+    gl.GL_UNSIGNED_INT:      (gl.GLuint, gl.glUniform1uiv, gl.glProgramUniform1uiv, 1),
+    gl.GL_UNSIGNED_INT_VEC2: (gl.GLuint, gl.glUniform2uiv, gl.glProgramUniform2uiv, 2),
+    gl.GL_UNSIGNED_INT_VEC3: (gl.GLuint, gl.glUniform3uiv, gl.glProgramUniform3uiv, 3),
+    gl.GL_UNSIGNED_INT_VEC4: (gl.GLuint, gl.glUniform4uiv, gl.glProgramUniform4uiv, 4),
+
     gl.GL_FLOAT: (gl.GLfloat, gl.glUniform1fv, gl.glProgramUniform1fv, 1),
     gl.GL_FLOAT_VEC2: (gl.GLfloat, gl.glUniform2fv, gl.glProgramUniform2fv, 2),
     gl.GL_FLOAT_VEC3: (gl.GLfloat, gl.glUniform3fv, gl.glProgramUniform3fv, 3),
@@ -158,7 +164,7 @@ _uniform_setters: dict[int, tuple[GLDataType, GLFunc, GLFunc, int]] = {
     gl.GL_UNSIGNED_INT_SAMPLER_3D: (gl.GLint, gl.glUniform1iv, gl.glProgramUniform1iv, 1),
 
     gl.GL_FLOAT_MAT2: (gl.GLfloat, gl.glUniformMatrix2fv, gl.glProgramUniformMatrix2fv, 4),
-    gl.GL_FLOAT_MAT3: (gl.GLfloat, gl.glUniformMatrix3fv, gl.glProgramUniformMatrix3fv, 6),
+    gl.GL_FLOAT_MAT3: (gl.GLfloat, gl.glUniformMatrix3fv, gl.glProgramUniformMatrix3fv, 9),
     gl.GL_FLOAT_MAT4: (gl.GLfloat, gl.glUniformMatrix4fv, gl.glProgramUniformMatrix4fv, 16),
 
     # TODO: test/implement these:
@@ -173,16 +179,37 @@ _uniform_setters: dict[int, tuple[GLDataType, GLFunc, GLFunc, int]] = {
     gl.GL_IMAGE_2D: (gl.GLint, gl.glUniform1iv, gl.glProgramUniform1iv, 1),
     gl.GL_IMAGE_2D_RECT: (gl.GLint, gl.glUniform1iv, gl.glProgramUniform1iv, 1),
     gl.GL_IMAGE_3D: (gl.GLint, gl.glUniform1iv, gl.glProgramUniform1iv, 1),
-
     gl.GL_IMAGE_1D_ARRAY: (gl.GLint, gl.glUniform1iv, gl.glProgramUniform1iv, 1),
     gl.GL_IMAGE_2D_ARRAY: (gl.GLint, gl.glUniform1iv, gl.glProgramUniform1iv, 1),
-
     gl.GL_IMAGE_2D_MULTISAMPLE: (gl.GLint, gl.glUniform1iv, gl.glProgramUniform1iv, 1),
     gl.GL_IMAGE_2D_MULTISAMPLE_ARRAY: (gl.GLint, gl.glUniform1iv, gl.glProgramUniform1iv, 1),
-
     gl.GL_IMAGE_BUFFER: (gl.GLint, gl.glUniform1iv, gl.glProgramUniform1iv, 1),
     gl.GL_IMAGE_CUBE: (gl.GLint, gl.glUniform1iv, gl.glProgramUniform1iv, 1),
     gl.GL_IMAGE_CUBE_MAP_ARRAY: (gl.GLint, gl.glUniform1iv, gl.glProgramUniform1iv, 1),
+
+    gl.GL_INT_IMAGE_1D: (gl.GLint, gl.glUniform1iv, gl.glProgramUniform1iv, 1),
+    gl.GL_INT_IMAGE_2D: (gl.GLint, gl.glUniform1iv, gl.glProgramUniform1iv, 1),
+    gl.GL_INT_IMAGE_3D: (gl.GLint, gl.glUniform1iv, gl.glProgramUniform1iv, 1),
+    gl.GL_INT_IMAGE_2D_RECT: (gl.GLint, gl.glUniform1iv, gl.glProgramUniform1iv, 1),
+    gl.GL_INT_IMAGE_CUBE: (gl.GLint, gl.glUniform1iv, gl.glProgramUniform1iv, 1),
+    gl.GL_INT_IMAGE_BUFFER: (gl.GLint, gl.glUniform1iv, gl.glProgramUniform1iv, 1),
+    gl.GL_INT_IMAGE_1D_ARRAY: (gl.GLint, gl.glUniform1iv, gl.glProgramUniform1iv, 1),
+    gl.GL_INT_IMAGE_2D_ARRAY: (gl.GLint, gl.glUniform1iv, gl.glProgramUniform1iv, 1),
+    gl.GL_INT_IMAGE_CUBE_MAP_ARRAY: (gl.GLint, gl.glUniform1iv, gl.glProgramUniform1iv, 1),
+    gl.GL_INT_IMAGE_2D_MULTISAMPLE: (gl.GLint, gl.glUniform1iv, gl.glProgramUniform1iv, 1),
+    gl.GL_INT_IMAGE_2D_MULTISAMPLE_ARRAY: (gl.GLint, gl.glUniform1iv, gl.glProgramUniform1iv, 1),
+
+    gl.GL_UNSIGNED_INT_IMAGE_1D: (gl.GLint, gl.glUniform1iv, gl.glProgramUniform1iv, 1),
+    gl.GL_UNSIGNED_INT_IMAGE_2D: (gl.GLint, gl.glUniform1iv, gl.glProgramUniform1iv, 1),
+    gl.GL_UNSIGNED_INT_IMAGE_3D: (gl.GLint, gl.glUniform1iv, gl.glProgramUniform1iv, 1),
+    gl.GL_UNSIGNED_INT_IMAGE_2D_RECT: (gl.GLint, gl.glUniform1iv, gl.glProgramUniform1iv, 1),
+    gl.GL_UNSIGNED_INT_IMAGE_CUBE: (gl.GLint, gl.glUniform1iv, gl.glProgramUniform1iv, 1),
+    gl.GL_UNSIGNED_INT_IMAGE_BUFFER: (gl.GLint, gl.glUniform1iv, gl.glProgramUniform1iv, 1),
+    gl.GL_UNSIGNED_INT_IMAGE_1D_ARRAY: (gl.GLint, gl.glUniform1iv, gl.glProgramUniform1iv, 1),
+    gl.GL_UNSIGNED_INT_IMAGE_2D_ARRAY: (gl.GLint, gl.glUniform1iv, gl.glProgramUniform1iv, 1),
+    gl.GL_UNSIGNED_INT_IMAGE_CUBE_MAP_ARRAY: (gl.GLint, gl.glUniform1iv, gl.glProgramUniform1iv, 1),
+    gl.GL_UNSIGNED_INT_IMAGE_2D_MULTISAMPLE: (gl.GLint, gl.glUniform1iv, gl.glProgramUniform1iv, 1),
+    gl.GL_UNSIGNED_INT_IMAGE_2D_MULTISAMPLE_ARRAY: (gl.GLint, gl.glUniform1iv, gl.glProgramUniform1iv, 1),
 }
 
 _attribute_types: dict[int, tuple[int, str]] = {
@@ -257,6 +284,9 @@ class Attribute:
         self.element_size = sizeof(self.c_type)
         self.stride = count * self.element_size
 
+        self._is_int = gl_type in (gl.GL_INT, gl.GL_SHORT, gl.GL_BYTE, gl.GL_UNSIGNED_INT,
+                                   gl.GL_UNSIGNED_SHORT, gl.GL_UNSIGNED_BYTE) and self.normalize is False
+
     def enable(self) -> None:
         """Enable the attribute."""
         glEnableVertexAttribArray(self.location)
@@ -271,7 +301,10 @@ class Attribute:
                 Pointer offset to the currently bound buffer for this attribute.
 
         """
-        glVertexAttribPointer(self.location, self.count, self.gl_type, self.normalize, self.stride, ptr)
+        if self._is_int:
+            glVertexAttribIPointer(self.location, self.count, self.gl_type, self.stride, ptr)
+        else:
+            glVertexAttribPointer(self.location, self.count, self.gl_type, self.normalize, self.stride, ptr)
 
     def set_divisor(self) -> None:
         glVertexAttribDivisor(self.location, 1)

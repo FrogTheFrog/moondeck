@@ -6,6 +6,11 @@ export const ChangelogView: FC = () => {
     <DialogBody>
       <DialogControlsSection>
         <Field
+          label="1.12.2"
+          description="Bumped external dependency 'pyglet' to 2.1.16 so that MoonDeck does not crash on SteamOS 3.9.1"
+          focusable={true}
+        />
+        <Field
           label="1.12.1"
           description={
             <>

@@ -207,10 +207,12 @@ class _DWriteTextRenderer(com.COMObject):
         self.pixels_per_dip = 1.0
         self.dmatrix = DWRITE_MATRIX()
 
-    def _get_font_reference(self, font_face: IDWriteFontFace) -> tuple[c_void_p, int]:
+    @staticmethod
+    def _get_font_reference(font_face: IDWriteFontFace) -> tuple[int, int]:
         """Unique identifier for each font face."""
         font_file = _get_font_file(font_face)
-        return _get_font_ref(font_file, release_file=True)
+        ptr, size = _get_font_ref(font_file, release_file=True)
+        return ptr.value, size
 
     def DrawUnderline(self, *_args) -> int:  # noqa: ANN002, N802
         return com.E_NOTIMPL
@@ -247,6 +249,9 @@ class _DWriteTextRenderer(com.COMObject):
         glyph_renderer: DirectWriteGlyphRenderer = cast(drawing_context, py_object).value
         glyph_run = glyph_run_ptr.contents
 
+        # Font reference to cache glyphs otherwise cache misses may occur with other glyph indices.
+        font_ref = self._get_font_reference(glyph_run.fontFace)
+
         if glyph_run.glyphCount == 0:
             glyph = glyph_renderer.font._zero_glyph  # noqa: SLF001
             glyph_renderer.current_glyphs.append(glyph)
@@ -257,7 +262,7 @@ class _DWriteTextRenderer(com.COMObject):
         missing = []
         for i in range(glyph_run.glyphCount):
             glyph_indice = glyph_run.glyphIndices[i]
-            if glyph_indice not in glyph_renderer.font.glyphs and glyph_indice not in missing:
+            if (font_ref, glyph_indice) not in glyph_renderer.font.glyphs and glyph_indice not in missing:
                 missing.append(glyph_indice)
 
         # Missing glyphs, get their info.
@@ -266,13 +271,13 @@ class _DWriteTextRenderer(com.COMObject):
 
             for idx, glyph_indice in enumerate(missing):
                 glyph = glyph_renderer.render_single_glyph(glyph_run.fontFace, glyph_indice, metrics[idx], mode)
-                glyph_renderer.font.glyphs[glyph_indice] = glyph
+                glyph_renderer.font.glyphs[(font_ref, glyph_indice)] = glyph
 
         # Set glyphs for run.
         current = []
         for i in range(glyph_run.glyphCount):
             glyph_indice = glyph_run.glyphIndices[i]
-            glyph = glyph_renderer.font.glyphs[glyph_indice]
+            glyph = glyph_renderer.font.glyphs[(font_ref, glyph_indice)]
             current.append(glyph)
             # In some cases (italics) the offsets may be NULL.
             if glyph_run.glyphOffsets:
@@ -600,7 +605,7 @@ class DirectWriteGlyphRenderer(base.GlyphRenderer):  # noqa: D101
 
     def _create_bitmap(self, width: int, height: int) -> None:
         """Creates a bitmap using Direct2D and WIC."""
-        # Create a new bitmap, try to re-use the bitmap as much as we can to minimize creations.
+        # Create a new bitmap, try to reuse the bitmap as much as we can to minimize creations.
         if self._bitmap_dimensions[0] != width or self._bitmap_dimensions[1] != height:
             # If dimensions aren't the same, release bitmap to create new ones.
             if self._render_target:
@@ -641,7 +646,7 @@ def _get_font_file(font_face: IDWriteFontFace) -> IDWriteFontFile:
     font_files = (IDWriteFontFile * file_ct.value)()
     font_face.GetFiles(byref(file_ct), font_files)
 
-    return font_files[font_face.GetIndex()]
+    return font_files[0]
 
 def _get_font_ref(font_file: IDWriteFontFile, release_file: bool=True) -> tuple[c_void_p, int]:
     """Get a unique font reference for the font face.
@@ -1048,7 +1053,7 @@ class Win32DirectWriteFont(base.Font):
             if hr != 0:
                 raise Exception("This font file data is not not a font or unsupported.")
 
-            # We have to rebuild collection everytime we add a font.
+            # We have to rebuild collection every time we add a font.
             # No way to add fonts to the collection once the FontSet and Collection are created.
             # Release old one and renew.
             if cls._custom_collection:
@@ -1158,7 +1163,7 @@ class Win32DirectWriteFont(base.Font):
         metrics = DWRITE_TEXT_METRICS()
         layout.GetMetrics(byref(metrics))
         layout.Release()
-        return round(metrics.width), round(metrics.height)
+        return round(metrics.widthIncludingTrailingWhitespace), round(metrics.height)
 
     @classmethod
     def have_font(cls: type[Win32DirectWriteFont], name: str) -> bool:
