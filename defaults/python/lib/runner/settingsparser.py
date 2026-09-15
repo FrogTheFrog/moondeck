@@ -39,6 +39,7 @@ class MoonDeckAppRunnerSettings(TypedDict):
     app_id: str
     steam_user: Optional[SteamUser]
     debug_logs: bool
+    close_host_app_on_exit: bool
     runner_type: Literal[RunnerType.MoonDeck]
 
 
@@ -205,6 +206,7 @@ async def parse_settings() -> MoonDeckAppRunnerSettings | MoonlightOnlyRunnerSet
             "app_id": env_settings["app_id"],
             "steam_user": SteamUser(id=env_settings["user_id"], name=env_settings["username"]),
             "debug_logs": user_settings["runnerDebugLogs"],
+            "close_host_app_on_exit": user_settings["gameSession"]["closeHostAppOnExit"],
             "runner_type": RunnerType.MoonDeck
         })
     else:

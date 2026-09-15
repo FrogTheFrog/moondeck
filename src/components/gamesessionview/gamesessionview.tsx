@@ -59,12 +59,20 @@ export const GameSessionView: FC = () => {
           setValue={(value) => settingsManager.update((settings) => { settings.gameSession.autoApplyAppId = value; })}
         />
         <ToggleField
-          label="Resume game after system suspension"
+          label="Close Steam app on host on user game exit"
           description={
             <>
-              <div>Will try to resume stream once the system resumes from suspension.</div>
+              <div>Whenever the MoonDeck runner is manually terminated (after it launches the app on host), Buddy will try to close the Steam app on host.</div>
+              <br />
+              <div>This only works if the app is already running on host. If it is updating or being installed, it will not work.</div>
             </>
           }
+          value={settings.gameSession.closeHostAppOnExit}
+          setValue={(value) => settingsManager.update((settings) => { settings.gameSession.closeHostAppOnExit = value; })}
+        />
+        <ToggleField
+          label="Resume stream after system suspension"
+          description="Will try to resume stream once the system resumes from suspension."
           value={settings.gameSession.resumeAfterSuspend}
           setValue={(value) => settingsManager.update((settings) => { settings.gameSession.resumeAfterSuspend = value; })}
         />

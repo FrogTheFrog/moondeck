@@ -1,7 +1,7 @@
 from typing import Optional
 
 from .settingsparser import MoonDeckAppRunnerSettings, CloseSteam, SteamUser
-from ..buddyrequests import AppState, CurrentUserResponse, SteamUiMode, StreamState, StreamStateResponse, SteamUiModeResponse, StreamedAppDataResponse
+from ..buddyrequests import AppState, CurrentUserResponse, SteamUiMode, StreamState, StreamStateResponse, SteamUiModeResponse, AppDataResponse
 from ..runnerresult import Result, RunnerError
 from ..gamestreaminfo import get_server_info
 from ..logger import logger
@@ -96,7 +96,7 @@ class MoonDeckAppLauncher:
         pooler = TimedPooler(timeout=launch_timeout,
                              exception_on_timeout=RunnerError(Result.AppLaunchFailed))
 
-        async with pooler(await client.notify_on_changes(StreamedAppDataResponse)) as notifications:
+        async with pooler(await client.notify_on_changes(AppDataResponse)) as notifications:
             app_was_updating = False
             async for n1, in notifications:
                 data = n1["data"]
@@ -141,7 +141,7 @@ class MoonDeckAppLauncher:
         logger.info("Waiting for app to close")
         pooler = TimedPooler(timeout=None)
 
-        async with pooler(await client.notify_on_changes(StreamedAppDataResponse)) as notifications:
+        async with pooler(await client.notify_on_changes(AppDataResponse)) as notifications:
             async for n1, in notifications:
                 data = n1["data"]
                 if data is None:
@@ -152,11 +152,12 @@ class MoonDeckAppLauncher:
                     break
 
     @classmethod
-    async def launch(cls, client: BuddyClient, big_picture_mode: bool, app_id: str, user: SteamUser | None, stream_rdy_timeout: int, steam_rdy_timeout: int, stability_timeout: int, launch_timeout: int, user_switch_timeout: int, cleanup_on_error: bool, manage_stream: bool):
+    async def launch(cls, client: BuddyClient, big_picture_mode: bool, app_id: str, user: SteamUser | None, stream_rdy_timeout: int, steam_rdy_timeout: int, stability_timeout: int, launch_timeout: int, user_switch_timeout: int, close_host_app_on_exit: bool, cleanup_on_error: bool, manage_stream: bool):
         # Lazy import to improve CLI performance
         import asyncio
         from .. import constants
 
+        can_try_close_app_on_host = False
         try:
             if manage_stream:
                 await cls.wait_for_stream_to_be_ready(client=client,
@@ -182,7 +183,8 @@ class MoonDeckAppLauncher:
             while retry_launch_sequence:
                 logger.info(f"Sending request to launch app {app_id}")
                 await client.launch_app(app_id)
-                
+
+                can_try_close_app_on_host = True
                 retry_launch_sequence = await cls.wait_for_app_to_be_launched(client=client,
                                                                               app_id=app_id,
                                                                               stability_timeout=stability_timeout,
@@ -191,8 +193,19 @@ class MoonDeckAppLauncher:
             await cls.wait_for_app_to_close(client=client)
 
         except BaseException as err:
-            is_being_suspended = isinstance(err, asyncio.CancelledError) \
-                                 and err.args and err.args[0] == constants.RUNNER_SUSPEND_CANCEL_MSG
+            is_being_cancelled = isinstance(err, asyncio.CancelledError)
+            is_being_suspended = is_being_cancelled and err.args and err.args[0] == constants.RUNNER_SUSPEND_CANCEL_MSG
+            can_try_close_app_on_host = can_try_close_app_on_host and is_being_cancelled and not is_being_suspended
+
+            close_err = None
+            if close_host_app_on_exit and can_try_close_app_on_host:
+                try:
+                    logger.info(f"Trying to close Steam app {app_id} on host")
+                    await client.close_app(app_id)
+                except BuddyException as caught_close_err:
+                    close_err = caught_close_err
+                except BaseException:
+                    logger.exception("Failed to close app on host")
 
             if cleanup_on_error and not is_being_suspended:
                 if manage_stream:
@@ -208,6 +221,8 @@ class MoonDeckAppLauncher:
                     except Exception:
                         logger.exception("Failed to clear streamed app data")
 
+            if close_err is not None:
+                raise err from close_err
             raise err
 
 class MoonDeckAppRunner:
@@ -254,7 +269,7 @@ class MoonDeckAppRunner:
         pooler = TimedPooler(timeout=timeout,
                              exception_on_timeout=RunnerError(Result.BuddyDidNotRespond))
 
-        async with pooler(await client.notify_on_changes(StreamStateResponse, StreamedAppDataResponse, CurrentUserResponse)) as notifications:
+        async with pooler(await client.notify_on_changes(StreamStateResponse, AppDataResponse, CurrentUserResponse)) as notifications:
             async for n1, n2, n3 in notifications:
                 state = n1["state"]
                 data = n2["data"]
@@ -326,7 +341,6 @@ class MoonDeckAppRunner:
     async def run(cls, settings: MoonDeckAppRunnerSettings, overlay_stack: OverlayStack):
         # Lazy import to improve CLI performance
         import asyncio
-        import contextlib
 
         buddy_client = BuddyClient(
             settings["address"],
@@ -367,11 +381,13 @@ class MoonDeckAppRunner:
                                                                          stability_timeout=settings["timeouts"]["appLaunchStability"],
                                                                          launch_timeout=settings["timeouts"]["appLaunch"],
                                                                          user_switch_timeout=settings["timeouts"]["userSwitch"],
+                                                                         close_host_app_on_exit=settings["close_host_app_on_exit"],
                                                                          cleanup_on_error=True,
                                                                          manage_stream=True))
             all_tasks = {proxy_task, launch_task}
 
             cancel_msg = None
+            pending_err = None
             try:
                 await asyncio.wait(all_tasks, return_when=asyncio.FIRST_COMPLETED)
                 if proxy_task.done():
@@ -381,6 +397,7 @@ class MoonDeckAppRunner:
             except asyncio.CancelledError as err:
                 # Forward the suspension args from the runner if any
                 cancel_msg = err.args[0] if err.args else None
+                pending_err = err
                 raise err
             finally:
                 for task in all_tasks:
@@ -389,8 +406,13 @@ class MoonDeckAppRunner:
 
                 # We always await here even if we didn't cancel to check the results from try block
                 for task in all_tasks:
-                    with contextlib.suppress(asyncio.CancelledError):
+                    try:
                         await task
+                    except asyncio.CancelledError as task_err:
+                        # Surface a close_app failure (chained onto launch_task's CancelledError)
+                        # on the exception that's actually propagating out of this method
+                        if pending_err is not None and task_err.__cause__ is not None:
+                            pending_err.__cause__ = task_err.__cause__
 
             await cls.end_successful_stream(client=client,
                                             close_steam=settings["close_steam"],

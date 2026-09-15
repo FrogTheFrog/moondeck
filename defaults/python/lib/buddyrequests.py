@@ -44,11 +44,6 @@ class NonSteamAppDataItem(TypedDict):
     app_name: str
 
 
-class StreamedAppData(TypedDict):
-    app_id: str
-    app_state: AppState
-
-
 class AppData(TypedDict):
     app_id: str
     app_state: AppState
@@ -88,10 +83,6 @@ class CurrentUserResponse(TypedDict):
 
 class StreamStateResponse(TypedDict):
     state: StreamState
-
-
-class StreamedAppDataResponse(TypedDict):
-    data: Optional[StreamedAppData]
 
 
 class AppDataResponse(TypedDict):
@@ -209,6 +200,15 @@ class BuddyRequests(contextlib.AbstractAsyncContextManager):
             data = await resp.json(encoding="utf-8")
             return utils.from_dict(ResultLikeResponse, data)
 
+    async def post_close_steam_app(self, app_id: str):
+        data = {
+            "app_id": app_id
+        }
+
+        async with self.__session.post(f"{self.base_url}/closeSteamApp", json=data) as resp:
+            data = await resp.json(encoding="utf-8")
+            return utils.from_dict(ResultLikeResponse, data)
+
     async def post_close_steam(self, keep_stream_alive: bool):
         data = {
             "keep_stream_alive": keep_stream_alive
@@ -278,16 +278,11 @@ class BuddyRequests(contextlib.AbstractAsyncContextManager):
         async with self.__session.get(f"{self.base_url}/streamState") as resp:
             data = await resp.json(encoding="utf-8")
             return utils.from_dict(StreamStateResponse, data)
-
-    async def get_streamed_app_data(self):
-        async with self.__session.get(f"{self.base_url}/streamedAppData") as resp:
-            data = await resp.json(encoding="utf-8")
-            return utils.from_dict(StreamedAppDataResponse, data)
         
-    async def get_app_data(self, app_id: str):
+    async def get_app_data(self, app_id: Optional[str]):
         data = {
             "app_id": app_id
-        }
+        } if app_id is not None else None
 
         async with self.__session.get(f"{self.base_url}/appData", json=data) as resp:
             data = await resp.json(encoding="utf-8")
@@ -333,7 +328,7 @@ class BuddyRequests(contextlib.AbstractAsyncContextManager):
         import aiohttp
 
         topic_mapping = {
-            StreamedAppDataResponse: "StreamedAppData",
+            AppDataResponse: "StreamedAppData",
             SteamUiModeResponse: "SteamUiMode",
             CurrentUserResponse: "CurrentUser",
             StreamStateResponse: "StreamState",
