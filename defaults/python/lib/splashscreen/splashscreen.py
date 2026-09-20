@@ -49,8 +49,7 @@ class AsyncEventLoop(pyglet.app.EventLoop):
 
 
 class SplashScreen:
-    def __init__(self, pause_when_unfocused: bool = False):
-        self.__pause_when_unfocused = pause_when_unfocused
+    def __init__(self):
         script_dir = pathlib.Path(__file__).parent.resolve()
         pyglet.font.add_file(str(script_dir.joinpath("./IBM_Plex_Sans/IBMPlexSans-VariableFont_wdth,wght.ttf")))
 
@@ -61,7 +60,7 @@ class SplashScreen:
         pyglet.app.event_loop = AsyncEventLoop()
         self.__async_loop = pyglet.app.event_loop.run()
 
-        self.canvas = Canvas(pause_when_unfocused=self.__pause_when_unfocused) # Added to pyglet.app.windows
+        self.canvas = Canvas() # Added to pyglet.app.windows
         return self
 
     async def __aexit__(self, exc_type, exc, tb):

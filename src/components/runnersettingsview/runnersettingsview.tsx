@@ -34,12 +34,6 @@ export const RunnerSettingsView: FC = () => {
           value={userSettings.runnerDebugLogs}
           setValue={(value) => settingsManager.update((userSettings) => { userSettings.runnerDebugLogs = value; })}
         />
-        <ToggleField
-          label="Pause splash rendering when unfocused"
-          description="Stops the background splash from drawing while Moonlight has focus. This can prevent extra refreshes with VRR in Gaming Mode. Applies on the next launch."
-          value={userSettings.pauseUnfocusedSplash}
-          setValue={(value) => settingsManager.update((userSettings) => { userSettings.pauseUnfocusedSplash = value; })}
-        />
         <PythonExecutableSection />
       </DialogControlsSection>
       <DialogControlsSection>

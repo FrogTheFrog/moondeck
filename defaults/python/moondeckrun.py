@@ -50,7 +50,7 @@ async def run_with_suspend_resume(settings: MoonDeckAppRunnerSettings | Moonligh
     loop.add_signal_handler(signal.SIGUSR1, suspend_requested.set)
     loop.add_signal_handler(signal.SIGUSR2, resume_requested.set)
 
-    async with SplashScreen(pause_when_unfocused=settings["pause_unfocused_splash"]) as screen:
+    async with SplashScreen() as screen:
         async with MainScreenRunning(screen.canvas):
             while True:
                 suspend_requested.clear()

@@ -39,7 +39,6 @@ class MoonDeckAppRunnerSettings(TypedDict):
     app_id: str
     steam_user: Optional[SteamUser]
     debug_logs: bool
-    pause_unfocused_splash: bool
     runner_type: Literal[RunnerType.MoonDeck]
 
 
@@ -59,7 +58,6 @@ class MoonlightOnlyRunnerSettings(TypedDict):
     custom_wol_exec_path: Optional[str]
     wol_port: int
     debug_logs: bool
-    pause_unfocused_splash: bool
     runner_type: Literal[RunnerType.MoonlightOnly]
 
 
@@ -207,7 +205,6 @@ async def parse_settings() -> MoonDeckAppRunnerSettings | MoonlightOnlyRunnerSet
             "app_id": env_settings["app_id"],
             "steam_user": SteamUser(id=env_settings["user_id"], name=env_settings["username"]),
             "debug_logs": user_settings["runnerDebugLogs"],
-            "pause_unfocused_splash": user_settings["pauseUnfocusedSplash"],
             "runner_type": RunnerType.MoonDeck
         })
     else:
@@ -230,6 +227,5 @@ async def parse_settings() -> MoonDeckAppRunnerSettings | MoonlightOnlyRunnerSet
             "custom_wol_exec_path": host_settings["wolSettings"]["customWolExecPath"] if host_settings["wolSettings"]["useCustomWolExec"] else None,
             "wol_port": host_settings["wolSettings"]["port"],
             "debug_logs": user_settings["runnerDebugLogs"],
-            "pause_unfocused_splash": user_settings["pauseUnfocusedSplash"],
             "runner_type": RunnerType.MoonlightOnly
         })

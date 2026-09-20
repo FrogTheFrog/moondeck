@@ -164,7 +164,6 @@ export interface UserSettings {
   enableMoondeckButtonPrompt: boolean;
   hostSettings: { [key: string]: HostSettings };
   runnerDebugLogs: boolean;
-  pauseUnfocusedSplash: boolean;
   useMoonlightExec: boolean;
   moonlightExecPath: string;
   pythonExecPath: string;
