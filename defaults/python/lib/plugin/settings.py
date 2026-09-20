@@ -123,7 +123,7 @@ class ButtonStyleSettings(TypedDict):
 
 
 class UserSettings(TypedDict):
-    version: Literal[42]
+    version: Literal[43]
     clientId: str
     currentHostId: Optional[str]
     gameSession: GameSessionSettings
@@ -133,6 +133,7 @@ class UserSettings(TypedDict):
     enableMoondeckButtonPrompt: bool
     hostSettings: Dict[str, HostSettings]
     runnerDebugLogs: bool
+    pauseUnfocusedSplash: bool
     useMoonlightExec: bool
     moonlightExecPath: str
     pythonExecPath: str
@@ -169,6 +170,7 @@ class UserSettingsManager(SettingsManager[UserSettings]):
             "enableMoondeckButtonPrompt": False,
             "hostSettings": {},
             "runnerDebugLogs": False,
+            "pauseUnfocusedSplash": False,
             "useMoonlightExec": False,
             "moonlightExecPath": "",
             "pythonExecPath": ""
@@ -399,3 +401,7 @@ class UserSettingsManager(SettingsManager[UserSettings]):
             data["version"] = 42
             for host in data["hostSettings"].keys():
                 data["hostSettings"][host]["wolSettings"]["sendOnce"] = False
+
+        if data["version"] == 42:
+            data["version"] = 43
+            data["pauseUnfocusedSplash"] = False

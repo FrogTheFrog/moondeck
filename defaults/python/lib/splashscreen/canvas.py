@@ -5,7 +5,9 @@ from .overlay import Overlay, OverlayStack
 
 
 class Canvas(pyglet.window.Window, OverlayStack):
-    def __init__(self):
+    def __init__(self, pause_when_unfocused: bool = False):
+        self.__pause_when_unfocused = pause_when_unfocused
+        self.__redraw_enabled = True
         super().__init__(fullscreen=True, visible=False, resizable=True, caption="MoonDeck")
         self.__overlays: list[Overlay] = []
         self.__last_size = {}
@@ -23,6 +25,19 @@ class Canvas(pyglet.window.Window, OverlayStack):
 
     def on_show(self):
         self.handle_resize(width=self.width, height=self.height)
+
+    def on_activate(self):
+        self.__redraw_enabled = True
+
+    def on_deactivate(self):
+        self.__redraw_enabled = False
+
+    def draw(self, dt: float) -> None:
+        # Pyglet swaps buffers after on_draw, even if on_draw does nothing.
+        # Skip the whole draw while Moonlight or another window has focus so
+        # background splash frames cannot trigger extra Gamescope refreshes.
+        if not self.__pause_when_unfocused or self.__redraw_enabled:
+            super().draw(dt)
 
     def on_draw(self):
         overlay_size = len(self.__overlays)
