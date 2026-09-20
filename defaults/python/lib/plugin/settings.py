@@ -103,6 +103,7 @@ class HostSettings(TypedDict):
 
 class GameSessionSettings(TypedDict):
     autoApplyAppId: bool
+    closeHostAppOnExit: bool
     resumeAfterSuspend: bool
     autoSuspendHost: bool
     controllerConfig: Optional[ControllerConfigOption]
@@ -123,7 +124,7 @@ class ButtonStyleSettings(TypedDict):
 
 
 class UserSettings(TypedDict):
-    version: Literal[42]
+    version: Literal[43]
     clientId: str
     currentHostId: Optional[str]
     gameSession: GameSessionSettings
@@ -149,6 +150,7 @@ class UserSettingsManager(SettingsManager[UserSettings]):
             "currentHostId": None,
             "gameSession": {
                 "autoApplyAppId": False,
+                "closeHostAppOnExit": False,
                 "resumeAfterSuspend": False,
                 "autoSuspendHost": False,
                 "controllerConfig": None
@@ -399,3 +401,6 @@ class UserSettingsManager(SettingsManager[UserSettings]):
             data["version"] = 42
             for host in data["hostSettings"].keys():
                 data["hostSettings"][host]["wolSettings"]["sendOnce"] = False
+        if data["version"] == 42:
+            data["version"] = 43
+            data["gameSession"]["closeHostAppOnExit"] = False

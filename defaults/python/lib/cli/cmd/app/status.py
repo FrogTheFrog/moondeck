@@ -18,7 +18,7 @@ class AppData(TypedDict):
 @buddy_session()
 @cmd_entry
 async def execute(buddy_client: BuddyClient, app_id: str | None, json: bool):
-    resp = await buddy_client.get_streamed_app_data() if app_id is None else await buddy_client.get_app_data(app_id)
+    resp = await buddy_client.get_app_data(app_id)
     data = AppData({ "status": None })
 
     if resp["data"]:

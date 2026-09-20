@@ -124,6 +124,16 @@ def add_cmd_app(main_subparsers: _SubParsersAction[ArgumentParserWithRedirect]):
         "--host", type=str, help=DESC_HOST)
     clear_parser.add_argument(
         "--buddy-timeout", type=TYPE_TIMEOUT, default=DEF_TIMEOUT, help=DESC_BUDDY_TIMEOUT)
+
+    # -------- Setup `close` command
+    close_parser = app_subparsers.add_parser(
+        "close", help="close Steam app via Buddy")
+    close_parser.add_argument(
+        "app-id", type=str, help="the app id to close")
+    close_parser.add_argument(
+        "--host", type=str, help=DESC_HOST)
+    close_parser.add_argument(
+        "--buddy-timeout", type=TYPE_TIMEOUT, default=DEF_TIMEOUT, help=DESC_BUDDY_TIMEOUT)
     
     # -------- Setup `list` group
     list_parser = app_subparsers.add_parser(
@@ -480,6 +490,7 @@ async def main():
         cmds = {
             "app": [
                 "clear",
+                "close",
                 "launch",
                 {
                     "list": [

@@ -47,6 +47,7 @@ async def execute(buddy_client: BuddyClient, settings: CliSettings, host_id: str
                                      stability_timeout=stability_retries,
                                      launch_timeout=launch_retries,
                                      user_switch_timeout=user_switch_retries,
+                                     close_host_app_on_exit=False,
                                      cleanup_on_error=not no_cleanup,
                                      manage_stream=not no_stream)
 

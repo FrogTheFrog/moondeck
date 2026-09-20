@@ -59,10 +59,15 @@ async def run_with_suspend_resume(settings: MoonDeckAppRunnerSettings | Moonligh
 
                 try:
                     await asyncio.wait({runner_task, suspend_wait_task}, return_when=asyncio.FIRST_COMPLETED)
-                except asyncio.CancelledError:
+                except asyncio.CancelledError as err:
                     runner_task.cancel()
-                    with contextlib.suppress(asyncio.CancelledError):
+                    try:
                         await runner_task
+                    except asyncio.CancelledError as nested_err:
+                        # Propagate the BuddyException all the way from the launcher to
+                        # to the main try...except
+                        if nested_err.__cause__ is not None:
+                            err.__cause__ = nested_err.__cause__
                     raise
                 finally:
                     if not suspend_wait_task.done():
@@ -112,8 +117,11 @@ async def main():
             await run_with_suspend_resume(settings)
             runnerresult.set_result(None)
 
-    except asyncio.CancelledError:
-        runnerresult.set_result(runnerresult.Result.Terminated)
+    except asyncio.CancelledError as err:
+        if isinstance(err.__cause__, BuddyException):
+            runnerresult.set_result(err.__cause__.result)
+        else:
+            runnerresult.set_result(runnerresult.Result.Terminated)
 
     except runnerresult.RunnerError as err:
         runnerresult.set_result(err.result)
