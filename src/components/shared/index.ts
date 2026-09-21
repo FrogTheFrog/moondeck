@@ -1,6 +1,7 @@
 export * from "./anytextinput";
 export * from "./buddystatusfield";
 export * from "./externalappspurgebutton";
+export * from "./externalappsshortcutlist";
 export * from "./externalappssyncbutton";
 export * from "./hostappselectiondropdown";
 export * from "./labelwithicon";

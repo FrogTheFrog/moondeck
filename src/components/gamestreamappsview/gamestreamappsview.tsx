@@ -1,5 +1,5 @@
-import { DialogBody, DialogButton, DialogControlsSection, DialogControlsSectionHeader, Field, Navigation } from "@decky/ui";
-import { ExternalAppsPurgeButton, ExternalAppsSyncButton, LabelWithIcon, ToggleField } from "../shared";
+import { DialogBody, DialogControlsSection, DialogControlsSectionHeader, Field } from "@decky/ui";
+import { ExternalAppsPurgeButton, ExternalAppsShortcutList, ExternalAppsSyncButton, LabelWithIcon, ToggleField } from "../shared";
 import { FC, ReactNode, useContext } from "react";
 import { useCurrentHostSettings, useCurrentSettings, useGameStreamAppShortcuts } from "../../hooks";
 import { AppType } from "../../lib";
@@ -43,27 +43,6 @@ export const GameStreamAppsView: FC = () => {
       </DialogControlsSection>;
   }
 
-  let shortcutsList: ReactNode = null;
-  if (shortcuts.length > 0) {
-    shortcutsList =
-      <DialogControlsSection>
-        <DialogControlsSectionHeader>Generated Shortcuts</DialogControlsSectionHeader>
-        {shortcuts.map((shortcut) => {
-          return (
-            <Field
-              key={shortcut.appId}
-              label={shortcut.appName}
-              childrenContainerWidth="min"
-            >
-              <DialogButton onClick={() => Navigation.Navigate(`/library/app/${shortcut.appId}`)}>
-                Open
-              </DialogButton>
-            </Field>
-          );
-        })}
-      </DialogControlsSection>;
-  }
-
   return (
     <DialogBody>
       <DialogControlsSection>
@@ -94,7 +73,7 @@ export const GameStreamAppsView: FC = () => {
         </Field>
       </DialogControlsSection>
       {syncButton}
-      {shortcutsList}
+      <ExternalAppsShortcutList shortcuts={shortcuts} />
     </DialogBody>
   );
 };
