@@ -8,7 +8,7 @@ import { getDefaultContext } from "./contexts";
 import { sleep } from "@decky/ui";
 
 export default definePlugin(() => {
-  const { moonDeckAppShortcuts, externalAppShortcuts, settingsManager, connectivityManager, moonDeckAppLauncher } = getDefaultContext(true);
+  const { moonDeckAppShortcuts, linkedAppShortcuts, externalAppShortcuts, settingsManager, connectivityManager, moonDeckAppLauncher } = getDefaultContext(true);
   const routeManager = new RouteManager();
 
   let initializing = false;
@@ -30,6 +30,7 @@ export default definePlugin(() => {
 
         externalAppShortcuts.init(allAppDetails);
         moonDeckAppShortcuts.init(allAppDetails);
+        linkedAppShortcuts.init(allAppDetails);
         settingsManager.init();
         connectivityManager.init();
         moonDeckAppLauncher.init();
@@ -52,6 +53,7 @@ export default definePlugin(() => {
     moonDeckAppLauncher.deinit();
     connectivityManager.deinit();
     settingsManager.deinit();
+    linkedAppShortcuts.deinit();
     moonDeckAppShortcuts.deinit();
     externalAppShortcuts.deinit();
   };
