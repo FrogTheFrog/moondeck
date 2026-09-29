@@ -1,11 +1,13 @@
 # autopep8: off
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 def add_plugin_to_path():
+    import platform
     import sys
     from pathlib import Path
 
     script_dir = Path(__file__).parent.resolve()
-    directories = [["lib"], ["externals"]]
+    # Arch-specific externals (e.g. aarch64 psutil) must shadow the default x86_64 ones; the dir only exists where needed
+    directories = [["lib"], [f"externals-{platform.machine()}"], ["externals"]]
     for dir in directories:
         sys.path.append(str(script_dir.joinpath(*dir)))
 
