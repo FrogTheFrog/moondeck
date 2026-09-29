@@ -214,10 +214,17 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
         import shutil
         return shutil.which("flatpak")
     
+    @staticmethod
+    def __get_flatpak_arch_args():
+        import platform
+        # Flatpak arch names match platform.machine() for the arches Moonlight is published for
+        arch = platform.machine()
+        return [f"--arch={arch}"] if arch in ("x86_64", "aarch64") else []
+
     def __get_exec_with_args(self):
         if self.exec_path is None:
             exec = self.__get_flatpak_exec()
-            args = ["run", "--arch=x86_64", "--command=moonlight", self.flatpak_moonlight]
+            args = ["run", *self.__get_flatpak_arch_args(), "--command=moonlight", self.flatpak_moonlight]
 
             if exec is None:
                 raise Exception("Moonlight is not installed!")
