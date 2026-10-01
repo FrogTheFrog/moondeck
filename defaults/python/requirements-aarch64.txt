@@ -1,0 +1,4 @@
+# Packages from requirements.txt that have no pure-Python fallback and therefore need an
+# aarch64 build in externals-aarch64 (the default externals are x86_64-only).
+# Keep versions in sync with requirements.txt. abi3 wheels work with any CPython >= 3.6.
+psutil == 7.0.0

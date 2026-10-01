@@ -116,7 +116,12 @@ def parse_resolution_settings(host_settings: HostSettings, env_settings: EnvSett
             
         logger.info(f"Using auto resolution from MoonDeck: {auto_resolution}")
         if auto_resolution:
-            dimensions["size"] = { "width": auto_resolution["width"], "height": auto_resolution["height"] }
+            # Fractional display scaling can yield odd sizes (e.g. 1919x1078), which host video encoders reject
+            width = auto_resolution["width"] - auto_resolution["width"] % 2
+            height = auto_resolution["height"] - auto_resolution["height"] % 2
+            if (width, height) != (auto_resolution["width"], auto_resolution["height"]):
+                logger.info(f"Rounded auto resolution down to even dimensions: {width}x{height}")
+            dimensions["size"] = { "width": width, "height": height }
         else:
             logger.warning(f"Cannot use automatic resolution! MoonDeck did not pass resolution. Still continuing...")
  
