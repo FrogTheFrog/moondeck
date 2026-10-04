@@ -524,3 +524,181 @@ class TimedPooler:
 
     def __call__(self, generator: AsyncGenerator[T, None]):
         return self.ContextManager(self.__timeout, self.__exception_on_timeout, generator)
+
+
+class ProcessReaper:
+    __PROCESS_UNAVAILABLE_ERRORS = (FileNotFoundError, ProcessLookupError, PermissionError)
+
+    def __init__(self, pattern_or_pid: str | int) -> None:
+        if isinstance(pattern_or_pid, int):
+            pids = [pattern_or_pid]
+        else:
+            pids = self.__get_pids_matching_pattern(pattern_or_pid)
+
+        self.__stats: dict[int, tuple[int, int]] = {}
+        for pid in pids:
+            try:
+                self.__stats[pid] = self.__get_stat(pid)
+            except self.__PROCESS_UNAVAILABLE_ERRORS:
+                continue
+
+    def exists(self) -> bool:
+        for pid, (_, create_time) in self.__stats.items():
+            try:
+                if self.__get_stat(pid)[1] == create_time:
+                    return True
+            except self.__PROCESS_UNAVAILABLE_ERRORS:
+                continue
+
+        return False
+
+    def send_signal(self, signal: int, children=False) -> None:
+        all_stats = self.__get_all_stats() if children else {}
+
+        for pid, (_, create_time) in self.__stats.items():
+            if pid in all_stats and all_stats[pid][1] == create_time:
+                for child in reversed(self.__get_all_children_pids_recursively(pid, all_stats)):
+                    self.__signal_pid(child, all_stats[child][1], signal)
+
+            self.__signal_pid(pid, create_time, signal)
+
+    def send_kill(self, children=False) -> None:
+        # Lazy import to improve CLI performance
+        import signal
+
+        self.send_signal(signal.SIGKILL, children)
+
+    def send_terminate(self, children=False) -> None:
+        # Lazy import to improve CLI performance
+        import signal
+
+        self.send_signal(signal.SIGTERM, children)
+
+    def send_usr1(self, children=False) -> None:
+        # Lazy import to improve CLI performance
+        import signal
+
+        self.send_signal(signal.SIGUSR1, children)
+
+    def send_usr2(self, children=False) -> None:
+        # Lazy import to improve CLI performance
+        import signal
+
+        self.send_signal(signal.SIGUSR2, children)
+
+    @staticmethod
+    def __signal_pid(pid: int, create_time: int, signal: int) -> None:
+        # Lazy import to improve CLI performance
+        import os
+        import signal as signal_module
+
+        try:
+            # Open the FD to avoid race conditions (instead of using os.kill)
+            pidfd = os.pidfd_open(pid)
+        except ProcessLookupError:
+            return
+
+        try:
+            if ProcessReaper.__get_stat(pid)[1] != create_time:
+                return
+
+            signal_module.pidfd_send_signal(pidfd, signal)
+        except ProcessReaper.__PROCESS_UNAVAILABLE_ERRORS:
+            pass
+        finally:
+            os.close(pidfd)
+
+    @staticmethod
+    def __get_cmdline(pid: int) -> str:
+        # Lazy import to improve CLI performance
+        import os
+
+        with open(f"/proc/{pid}/cmdline", "rb") as file:
+            data = file.read()
+
+        # See `man 5 proc_pid_cmdline`
+        return os.fsdecode(data.replace(b"\0", b" ")).strip()
+
+    @staticmethod
+    def __get_stat(pid: int) -> tuple[int, int]:
+        """
+        Returns (parent pid, creation time)
+        """
+        with open(f"/proc/{pid}/stat", "rb") as file:
+            data = file.read()
+
+        # See `man proc_pid_stat`
+        fields = data[data.rindex(b")") + 2:].split()
+        ppid = int(fields[1])
+        create_time = int(fields[19])
+
+        return ppid, create_time
+
+    @staticmethod
+    def __iter_pids():
+        # Lazy import to improve CLI performance
+        import os
+
+        for entry in os.listdir("/proc"):
+            if entry.isdigit():
+                yield int(entry)
+
+    @staticmethod
+    def __get_pids_matching_pattern(pattern: str) -> list[int]:
+        # Lazy import to improve CLI performance
+        import os
+        import re
+
+        regex = re.compile(pattern, re.IGNORECASE)
+        own_pid = os.getpid()
+
+        pids = []
+        for pid in ProcessReaper.__iter_pids():
+            if pid == own_pid:
+                continue
+
+            try:
+                cmdline = ProcessReaper.__get_cmdline(pid)
+            except ProcessReaper.__PROCESS_UNAVAILABLE_ERRORS:
+                continue
+
+            if regex.search(cmdline):
+                pids.append(pid)
+
+        return pids
+
+    @staticmethod
+    def __get_all_stats() -> dict[int, tuple[int, int]]:
+        stats = {}
+        for pid in ProcessReaper.__iter_pids():
+            try:
+                stats[pid] = ProcessReaper.__get_stat(pid)
+            except ProcessReaper.__PROCESS_UNAVAILABLE_ERRORS:
+                continue
+
+        return stats
+
+    @staticmethod
+    def __get_all_children_pids_recursively(pid: int, stats: dict[int, tuple[int, int]]) -> list[int]:
+        children_map: dict[int, list[int]] = {}
+        for child_pid, (ppid, _) in stats.items():
+            children_map.setdefault(ppid, []).append(child_pid)
+
+        children = []
+        parents = [pid]
+        while parents:
+            parent = parents.pop()
+            parent_stat = stats.get(parent)
+            if parent_stat is None:
+                continue
+
+            for child in children_map.get(parent, []):
+                # Child cannot be older than its parent
+                if stats[child][1] < parent_stat[1]:
+                    continue
+
+                children.append(child)
+                parents.append(child)
+
+        return children
+        
