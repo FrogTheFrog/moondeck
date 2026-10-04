@@ -249,7 +249,7 @@ class Plugin:
     async def kill_runner(self):
         try:
             logger.info("Killing MoonDeck runner and moonlight!")
-            utils.ProcessReaper("moondeckrun.py").send_terminate()
+            utils.ProcessReaper("moondeckrun.py").send_terminate(children=False)
             await MoonlightProxy.terminate_all_instances()
 
         except Exception:
