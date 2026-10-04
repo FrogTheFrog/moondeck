@@ -249,7 +249,7 @@ class Plugin:
     async def kill_runner(self):
         try:
             logger.info("Killing MoonDeck runner and moonlight!")
-            await utils.pkill("moondeckrun.py")
+            utils.ProcessReaper("moondeckrun.py").send_terminate()
             await MoonlightProxy.terminate_all_instances()
 
         except Exception:
@@ -258,7 +258,7 @@ class Plugin:
     @utils.async_scope_log(logger.info)
     async def suspend_runner(self):
         try:
-            await utils.kill(utils.get_runner_pid(), signal="USR1")
+            utils.ProcessReaper(utils.get_runner_pid()).send_usr1()
             await utils.wait_moondeck_runner_suspended_state(expected_suspended=True)
             return True
 
@@ -269,7 +269,7 @@ class Plugin:
     @utils.async_scope_log(logger.info)
     async def unsuspend_runner(self):
         try:
-            await utils.kill(utils.get_runner_pid(), signal="USR2")
+            utils.ProcessReaper(utils.get_runner_pid()).send_usr2()
             await utils.wait_moondeck_runner_suspended_state(expected_suspended=False)
             return True
 
@@ -280,13 +280,7 @@ class Plugin:
     @utils.async_scope_log(logger.info)
     async def is_runner_active(self):
         try:
-            kill_proc = await utils.create_subprocess_shell(f"pgrep -f -i \"moondeckrun.py\"",
-                                                            stderr_to_devnull=True)
-            output, _ = await kill_proc.communicate()
-            if output:
-                newline = "\n"
-                logger.info(f"pgrep output:{newline}{output.decode().strip(newline)}")
-            return any(chr.isdigit() for chr in output.decode())
+            return utils.ProcessReaper("moondeckrun.py").exists()
 
         except Exception:
             logger.exception("Unhandled exception")

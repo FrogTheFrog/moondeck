@@ -129,42 +129,21 @@ def async_scope_log(log_fn):
     return decorator
 
 
-def ps_signal(process, kill: bool):
-    import psutil
-    import contextlib
-    
-    def do_signal(proc_or_child):
-        with contextlib.suppress(psutil.NoSuchProcess):
-            if kill:
-                proc_or_child.kill()
-            else:
-                proc_or_child.terminate()
-    
-    with contextlib.suppress(psutil.NoSuchProcess):
-        proc = cast(psutil.Process, process)
-        for child in list(proc.children(recursive=True)):
-            do_signal(child)
-
-        do_signal(proc)
-
-
 async def wake_on_lan(hostname: str, address: str, mac: str, port: int = 9, custom_exec: Optional[str] = None):
     assert port > 0 and port <= 65535
 
     if custom_exec:
         # Lazy import to improve CLI performance
         import asyncio
-        import os
-        import psutil
         import io
 
         newline = "\n"
         buffer = io.StringIO()
         wol_proc = None
-        ps_proc = None
+        reaper = None
         try:
             wol_proc = await create_subprocess_exec(custom_exec, hostname, address, f"{port}", mac)
-            ps_proc = psutil.Process(wol_proc.pid)
+            reaper = ProcessReaper(wol_proc.pid)
 
             async def handle_stream(stream: Optional[asyncio.StreamReader]):
                 if not stream:
@@ -183,9 +162,9 @@ async def wake_on_lan(hostname: str, address: str, mac: str, port: int = 9, cust
             if wol_proc.returncode:
                 raise Exception(f"Custom WOL failed with code {wol_proc.returncode}")
         except asyncio.CancelledError as err:
-            if ps_proc:
+            if reaper:
                 assert wol_proc is not None
-                ps_signal(ps_proc, kill=True)
+                reaper.send_kill()
                 await wol_proc.wait()
                 logger.info(f"WOL exec ({custom_exec}) output before it was killed:{newline}{buffer.getvalue().strip(newline)}")
             raise err
@@ -370,22 +349,6 @@ async def create_subprocess_exec(program: str, *args: str, stderr_to_devnull = F
                                                 env=env)
 
 
-async def pkill(pattern: str, signal: str = "TERM"):
-    kill_proc = await create_subprocess_shell(f"pkill -{signal} -f -e -i \"{pattern}\"")
-    output, _ = await kill_proc.communicate()
-    if output:
-        newline = "\n"
-        logger.info(f"pkill output:{newline}{output.decode().strip(newline)}")
-
-
-async def kill(pid: str, signal: str = "TERM"):
-    kill_proc = await create_subprocess_shell(f"kill -{signal} {pid}")
-    output, _ = await kill_proc.communicate()
-    if output:
-        newline = "\n"
-        logger.info(f"kill output:{newline}{output.decode().strip(newline)}")
-
-
 class TimedPooler:
     class ContextManager(Generic[T]):
         def __init__(self, timeout: float | None, exception_on_timeout: Exception | None, generator: AsyncGenerator[T, None]):
@@ -562,13 +525,13 @@ class ProcessReaper:
 
             self.__signal_pid(pid, create_time, signal)
 
-    def send_kill(self, children=False) -> None:
+    def send_kill(self, children=True) -> None:
         # Lazy import to improve CLI performance
         import signal
 
         self.send_signal(signal.SIGKILL, children)
 
-    def send_terminate(self, children=False) -> None:
+    def send_terminate(self, children=True) -> None:
         # Lazy import to improve CLI performance
         import signal
 

@@ -33,12 +33,12 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
 
     def __init__(self, exec_path: Optional[str]) -> None:
         # Lazy import to improve CLI performance
-        import psutil
+        from . import utils
         from asyncio.subprocess import Process
 
         self.exec_path = exec_path
         self.process: Optional[Process] = None
-        self.__proc: Optional[psutil.Process] = None
+        self.__reaper: Optional[utils.ProcessReaper] = None
 
     async def __aenter__(self):
         return self
@@ -49,7 +49,6 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
     async def get_apps(self, hostname: str):
         # Lazy import to improve CLI performance
         from . import utils
-        import psutil
 
         assert self.process is None, "Another instance of Moonlight has been started already!"
         exec, args = self.__get_exec_with_args()
@@ -57,12 +56,12 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
         args += ["list", hostname]
         logger.info(f"Executing: {exec} {' '.join(args)}")
         self.process = await utils.create_subprocess_exec(exec, *args, stderr_to_devnull=True)
-        self.__proc = psutil.Process(self.process.pid)
+        self.__reaper = utils.ProcessReaper(self.process.pid)
 
         output, _ = await self.process.communicate()
         success = self.process.returncode == 0
         self.process = None
-        self.__proc = None
+        self.__reaper = None
 
         if success:
             apps: set[str] = set()
@@ -78,7 +77,6 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
     async def start(self, hostname: str, host_app: str, cmd_options: Optional[CommandLineOptions] = None):
         # Lazy import to improve CLI performance
         from . import utils
-        import psutil
         
         assert self.process is None, "Another instance of Moonlight has been started already!"
         exec, args = self.__get_exec_with_args()
@@ -128,32 +126,31 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
 
         logger.info(f"Executing: {exec} {' '.join(args)}")
         self.process = await utils.create_subprocess_exec(exec, *args)
-        self.__proc = psutil.Process(self.process.pid)
+        self.__reaper = utils.ProcessReaper(self.process.pid)
 
     async def terminate(self):
         # Lazy import to improve CLI performance
         import asyncio
-        from .utils import ps_signal
 
         if self.process is None:
             return
 
-        assert self.__proc is not None
+        assert self.__reaper is not None
         try:
             logger.info("Trying to gracefully terminate Moonlight...")
-            ps_signal(self.__proc, kill=False)
+            self.__reaper.send_terminate()
             try:
                 await asyncio.wait_for(self.process.wait(), timeout=5.0)
                 logger.info("Moonlight terminated gracefully.")
             except asyncio.TimeoutError:
                 logger.info("Moonlight did not terminate in time - killing it!")
-                ps_signal(self.__proc, kill=True)
+                self.__reaper.send_kill()
                 await self.process.wait()
         except ProcessLookupError:
             pass
         finally:
             self.process = None
-            self.__proc = None
+            self.__reaper = None
 
     async def wait(self):
         # Lazy import to improve CLI performance
@@ -245,5 +242,5 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
     @staticmethod
     async def __kill_any_moonlight_app():
         # Lazy import to improve CLI performance
-        from .utils import pkill
-        await pkill("moonlight")
+        from .utils import ProcessReaper
+        ProcessReaper("moonlight").send_terminate()
