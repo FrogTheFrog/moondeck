@@ -3,6 +3,7 @@
 import { AppSyncState } from "../lib/appsyncstate";
 import { ConnectivityManager } from "../lib/connectivitymanager";
 import { ExternalAppShortcuts } from "../lib/externalappshortcuts";
+import { LinkedAppShortcuts } from "../lib/linkedappshortcuts";
 import { MoonDeckAppLauncher } from "../lib/moondeckapplauncher";
 import { MoonDeckAppShortcuts } from "../lib/moondeckappshortcuts";
 import { SettingsManager } from "../lib/settingsmanager";
@@ -11,6 +12,7 @@ import { createContext } from "react";
 export interface MoonDeckContextType {
   appSyncState: AppSyncState;
   moonDeckAppShortcuts: MoonDeckAppShortcuts;
+  linkedAppShortcuts: LinkedAppShortcuts;
   externalAppShortcuts: ExternalAppShortcuts;
   settingsManager: SettingsManager;
   connectivityManager: ConnectivityManager;
@@ -27,10 +29,11 @@ export function getDefaultContext(makeNew = false): MoonDeckContextType {
   if (makeNew) {
     context.appSyncState = new AppSyncState();
     context.moonDeckAppShortcuts = new MoonDeckAppShortcuts(context.appSyncState);
+    context.linkedAppShortcuts = new LinkedAppShortcuts();
     context.settingsManager = new SettingsManager();
     context.connectivityManager = new ConnectivityManager(context.settingsManager);
     context.externalAppShortcuts = new ExternalAppShortcuts(context.appSyncState, context.connectivityManager.buddyProxy, context.settingsManager);
-    context.moonDeckAppLauncher = new MoonDeckAppLauncher(context.appSyncState, context.settingsManager, context.moonDeckAppShortcuts, context.externalAppShortcuts, context.connectivityManager.commandProxy);
+    context.moonDeckAppLauncher = new MoonDeckAppLauncher(context.appSyncState, context.settingsManager, context.moonDeckAppShortcuts, context.linkedAppShortcuts, context.externalAppShortcuts, context.connectivityManager.commandProxy);
   }
   return context;
 }
