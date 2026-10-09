@@ -108,7 +108,7 @@ class MoonDeckAppLauncher:
                     app_was_updating = True
 
                     # No timeout while the app is updating
-                    notifications.timeout = launch_timeout
+                    notifications.timeout = None
                     notifications.repeat_timeout = None
                 elif state == AppState.Running:
                     # If it was updating, but is now running, there's no need to launch it again
