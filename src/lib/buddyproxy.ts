@@ -7,7 +7,6 @@ import { getCurrentUserSteamId } from "../steam-utils";
 import { logger } from "./logger";
 
 export type BuddyStatus = "VersionMismatch" | "Restarting" | "ShuttingDown" | "Suspending" | "Hibernating" | "NotPaired" | "Pairing" | "SslVerificationFailed" | "Exception" | "Offline" | "Online";
-export type GameStreamAppNames = string[] | null;
 export type NonSteamAppData = Array<{ app_id: string; app_name: string }> | null;
 
 interface ClientInfo {
@@ -34,16 +33,6 @@ async function getBuddyInfo(info: ClientInfo, timeout: number): Promise<BuddyInf
   }
 
   return { status: "Offline", info: null };
-}
-
-async function getGameStreamAppNames(info: ClientInfo, timeout: number): Promise<GameStreamAppNames> {
-  try {
-    return await call<[string, number, string, number], GameStreamAppNames>("get_game_stream_app_names", info.address, info.buddyPort, info.clientId, timeout);
-  } catch (message) {
-    logger.critical("Error while fetching gamestream apps: ", message);
-  }
-
-  return null;
 }
 
 async function getNonSteamAppData(info: ClientInfo, userId: string, buddyTimeout: number, readyTimeout: number): Promise<NonSteamAppData> {
@@ -122,15 +111,6 @@ export class BuddyProxy {
       this.refreshingSubject.next(false);
       release();
     }
-  }
-
-  async getGameStreamAppNames(): Promise<GameStreamAppNames> {
-    const clientInfo = this.getClientInfo();
-    if (clientInfo === null) {
-      return null;
-    }
-
-    return await getGameStreamAppNames(clientInfo, 5);
   }
 
   async getNonSteamAppData(): Promise<NonSteamAppData> {

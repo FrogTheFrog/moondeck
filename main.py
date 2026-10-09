@@ -311,13 +311,17 @@ class Plugin:
             logger.exception("Unhandled exception")
 
     @utils.async_scope_log(logger.info)
-    async def get_game_stream_app_names(self, address: str, buddy_port: int, client_id: str, timeout: float):
+    async def get_game_stream_app_names(self, host_name: str, moonlight_exec_path: str | None, timeout: float):
         try:
-            async with BuddyClient(address, buddy_port, client_id, timeout) as client:
-                return await client.get_game_stream_app_names()
+            async with asyncio.timeout(timeout):
+                async with MoonlightProxy(moonlight_exec_path) as client:
+                    apps = await client.get_apps(host_name)
+                    if apps is None:
+                        logger.error("Failed to get Moonlight apps!")
+                    return apps
 
-        except BuddyException:
-            logger.exception("While retrieving GameStream app names")
+        except asyncio.TimeoutError:
+            logger.error("Failed to get Moonlight apps (timeout)!")
             return None
 
         except Exception:

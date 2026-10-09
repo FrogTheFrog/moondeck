@@ -1,9 +1,9 @@
+import { AppType, logger } from "../../lib";
 import { ConfirmModal, DialogButton, showModal } from "@decky/ui";
 import { FC, useContext } from "react";
+import { useAppSyncState, useServerStatus } from "../../hooks";
 import { ExternalAppType } from "../../lib/externalappshortcuts";
 import { MoonDeckContext } from "../../contexts";
-import { logger } from "../../lib";
-import { useAppSyncState } from "../../hooks";
 
 interface Props {
   text: string;
@@ -14,9 +14,16 @@ interface Props {
 export const ExternalAppsSyncButton: FC<Props> = ({ text, appType, noConfirmationDialog }) => {
   const { externalAppShortcuts } = useContext(MoonDeckContext);
   const syncState = useAppSyncState();
+  const [serverStatus] = useServerStatus();
 
   const handleClick = (): void => {
     const onOk = (): void => {
+      if (serverStatus === "Offline" && appType === AppType.GameStream) {
+        // Querying for gamestream apps may wake up host (as opposed to querying Buddy). Let's avoid that...
+        logger.toast("GameStream server is offline!", { output: "error" });
+        return;
+      }
+
       externalAppShortcuts.syncShortcuts(appType).catch((e) => logger.critical(e));
     };
 

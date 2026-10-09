@@ -13,6 +13,7 @@ export const ChangelogView: FC = () => {
               <div>&bull; Added an option to automatically try and close a Steam app on host.</div>
               <div>&bull; MoonDeck Runner will no longer render in the background while unfocused, fixing VRR issues.</div>
               <div>&bull; MoonDeck Runner will no longer time out while the game is updating on host.</div>
+              <div>&bull; Moonlight executable is now used to retrieve GameStream app list. Make sure Moonlight is updated to v6.2.0 or newer!</div>
             </>
           }
           focusable={true}

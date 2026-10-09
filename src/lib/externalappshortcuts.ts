@@ -1,11 +1,12 @@
 import { AppType, EnvVars, addAppsToCollection, addShortcut, checkExecPathMatch, getAppDetailsForAppIds, getAppStoreEx, getMoonDeckRunPath, getOrCreateCollection, isMoonDeckShortcut, removeAppsFromCollection, removeShortcut, restartSteamClient, setAppLaunchOptions } from "./steamutils";
-import { HostSettings, SettingsManager } from "./settingsmanager";
+import { HostSettings, SettingsManager, UserSettings } from "./settingsmanager";
 import { getEnvKeyValueString, makeEnvKeyValue } from "./envutils";
 import { AppDetails } from "@decky/ui/dist/globals/steam-client/App";
 import { AppSyncState } from "./appsyncstate";
 import { BehaviorSubject } from "rxjs";
 import { BuddyProxy } from "./buddyproxy";
 import { ReadonlySubject } from "./readonlysubject";
+import { call } from "@decky/api";
 import { logger } from "./logger";
 
 export interface GameStreamAppInfo {
@@ -46,10 +47,21 @@ interface NonSteamHostData {
 }
 
 type HostData = GameStreamHostData | NonSteamHostData;
+type GameStreamAppNames = string[] | null;
 
-async function getHostData(appType: ExternalAppType, buddyProxy: BuddyProxy, hostSettings: HostSettings): Promise<HostData[] | null> {
+async function getGameStreamAppNames(hostName: string, moonlightExecPath: string | null, timeout: number): Promise<GameStreamAppNames> {
+  try {
+    return await call<[string, string | null, number], GameStreamAppNames>("get_game_stream_app_names", hostName, moonlightExecPath, timeout);
+  } catch (message) {
+    logger.critical("Error while fetching gamestream apps: ", message);
+  }
+
+  return null;
+}
+
+async function getHostData(appType: ExternalAppType, buddyProxy: BuddyProxy, settings: UserSettings, hostSettings: HostSettings): Promise<HostData[] | null> {
   if (appType === AppType.GameStream) {
-    let gameStreamApps = await buddyProxy.getGameStreamAppNames();
+    let gameStreamApps = await getGameStreamAppNames(hostSettings.hostName, settings.useMoonlightExec ? settings.moonlightExecPath : null, 15);
     if (gameStreamApps === null) {
       logger.toast("Failed to get GameStream app list!", { output: "error" });
       return null;
@@ -90,8 +102,8 @@ async function updateLaunchOptions(appId: number, data: HostData): Promise<boole
   return true;
 }
 
-async function addExternalShortcut(appName: string, moonlightExecPath: string): Promise<number | null> {
-  const appId = await addShortcut(appName, moonlightExecPath);
+async function addExternalShortcut(appName: string, moonDeckExecPath: string): Promise<number | null> {
+  const appId = await addShortcut(appName, moonDeckExecPath);
   if (appId == null) {
     logger.error(`Failed to add ${appName} shortcut!`);
     return null;
@@ -232,6 +244,12 @@ export class ExternalAppShortcuts {
     try {
       this.appSyncState.setState(false, appType);
 
+      const settings = this.settingsManager.settings.value;
+      if (settings === null) {
+        logger.toast("Settings are not available!", { output: "error" });
+        return;
+      }
+
       const hostSettings = this.settingsManager.hostSettings;
       if (hostSettings === null) {
         logger.toast("Host is not selected!", { output: "error" });
@@ -244,7 +262,7 @@ export class ExternalAppShortcuts {
         return;
       }
 
-      const hostData = await getHostData(appType, this.buddyProxy, hostSettings);
+      const hostData = await getHostData(appType, this.buddyProxy, settings, hostSettings);
       if (hostData === null) {
         // Error already logged
         return;

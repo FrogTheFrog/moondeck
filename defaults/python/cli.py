@@ -140,16 +140,6 @@ def add_cmd_app(main_subparsers: _SubParsersAction[ArgumentParserWithRedirect]):
         "list", help="get app lists from Buddy")
     list_subparsers = list_parser.add_subparsers(
         dest="cmd3", help="command to execute")
-    
-    # -------- Setup `game-stream` command
-    game_stream_parser = list_subparsers.add_parser(
-        "game-stream", help="print the list of GameStream apps on the host")
-    game_stream_parser.add_argument(
-        "--host", type=str, help=DESC_HOST)
-    game_stream_parser.add_argument(
-        "--json", action="store_true", help=DESC_JSON)
-    game_stream_parser.add_argument(
-        "--buddy-timeout", type=TYPE_TIMEOUT, default=DEF_TIMEOUT, help=DESC_BUDDY_TIMEOUT)
 
     # -------- Setup `non-steam` command
     non_steam_parser = list_subparsers.add_parser(
@@ -494,7 +484,6 @@ async def main():
                 "launch",
                 {
                     "list": [
-                        "game-stream",
                         "non-steam"
                     ]
                 },
