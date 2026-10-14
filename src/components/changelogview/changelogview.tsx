@@ -15,6 +15,7 @@ export const ChangelogView: FC = () => {
               <div>&bull; MoonDeck Runner will no longer time out while the game is updating on host.</div>
               <div>&bull; Moonlight executable is now used to retrieve GameStream app list. Make sure Moonlight is updated to v6.2.0 or newer!</div>
               <div>&bull; Fixed fallback resolution rounding errors with different display pixel ratios.</div>
+              <div>&bull; MoonDeck no longer forces the x86_64 architecture when launching the Moonlight flatpak - flatpak's default (current) installation is used instead.</div>
             </>
           }
           focusable={true}

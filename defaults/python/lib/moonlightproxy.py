@@ -214,7 +214,7 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
     def __get_exec_with_args(self):
         if self.exec_path is None:
             exec = self.__get_flatpak_exec()
-            args = ["run", "--arch=x86_64", "--command=moonlight", self.flatpak_moonlight]
+            args = ["run", self.flatpak_moonlight]
 
             if exec is None:
                 raise Exception("Moonlight is not installed!")
