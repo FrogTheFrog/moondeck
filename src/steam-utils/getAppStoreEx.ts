@@ -1,6 +1,7 @@
 import { IInterceptor, IMapDidChange, IMapWillChange, Lambda, ObservableMap } from "mobx";
 
 export interface AppStoreOverview {
+  BIsShortcut(): boolean;
   display_name: string;
   gameid: string;
   appid: number;

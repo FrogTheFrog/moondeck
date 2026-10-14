@@ -17,11 +17,11 @@ export interface Collection {
 }
 
 export interface CollectionStore {
-  deckDesktopApps?: Collection;
   userCollections: Collection[];
   BIsHidden: (appId: number) => boolean;
   SetAppsAsHidden: (appIds: number[], hide: boolean) => void;
   GetCollection: (collectionId: string) => Collection | undefined;
+  GetCollectionForAppType: (appType: number) => Collection | undefined;
   GetCollectionIDByUserTag: (tag: string) => string | null;
   NewUnsavedCollection: (tag: string, filter: unknown | undefined, overviews: AppStoreOverview[]) => Collection | undefined;
 }
