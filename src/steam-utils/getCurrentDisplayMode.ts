@@ -31,23 +31,26 @@ export async function getCurrentDisplayMode(): Promise<DisplayMode | null> {
     }
 
     const currentDisplay = primaryDisplay ?? enabledDisplays[0];
-    if (currentDisplay.is_internal) {
-      const renderWindow = findSP();
-      if (!renderWindow) {
-        logger.error("Failed to get current display mode - render window not available!");
-        return null;
-      }
-
-      return {
-        width: Math.round(renderWindow.screen.width * renderWindow.devicePixelRatio),
-        height: Math.round(renderWindow.screen.height * renderWindow.devicePixelRatio),
-        id: -1,
-        refresh_hz: -1
-      };
-    }
-
     const currentMode = currentDisplay.modes.find((mode) => mode.id === currentDisplay.current_mode_id);
     if (!currentMode) {
+      if (currentDisplay.is_internal) {
+        const renderWindow = findSP();
+        if (!renderWindow) {
+          logger.error("Failed to get current display mode - render window not available!");
+          return null;
+        }
+
+        // Screen size in CSS pixels is floored (get it ;)?), so the physical size is at least `css * dpr`.
+        // This thingy rounds size up to the next even number, ignoring scaling errors (thus 0.01 is needed).
+        const toPhysical = (css: number) => 2 * Math.ceil((css * renderWindow.devicePixelRatio - 0.01) / 2);
+        return {
+          width: toPhysical(renderWindow.screen.width),
+          height: toPhysical(renderWindow.screen.height),
+          id: -1,
+          refresh_hz: -1
+        };
+      }
+
       logger.error("Failed to get current display mode - no mode matching the id!");
       return null;
     }
