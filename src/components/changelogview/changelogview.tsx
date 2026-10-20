@@ -9,6 +9,7 @@ export const ChangelogView: FC = () => {
           label="1.13.0"
           description={
             <>
+              <div>&bull; Bumped external dependency 'pyglet' to 2.1.16 so that MoonDeck does not crash on SteamOS 3.9.1.</div>
               <div>&bull; Bumped MoonDeckBuddy minimum version to v1.11.0.</div>
               <div>&bull; Added an option to automatically try and close a Steam app on host.</div>
               <div>&bull; MoonDeck Runner will no longer render in the background while unfocused, fixing VRR issues.</div>
@@ -18,11 +19,6 @@ export const ChangelogView: FC = () => {
               <div>&bull; MoonDeck no longer forces the x86_64 architecture when launching the Moonlight flatpak - flatpak's default (current) installation is used instead.</div>
             </>
           }
-          focusable={true}
-        />
-        <Field
-          label="1.12.2"
-          description="Bumped external dependency 'pyglet' to 2.1.16 so that MoonDeck does not crash on SteamOS 3.9.1"
           focusable={true}
         />
         <Field
