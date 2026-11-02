@@ -1,4 +1,4 @@
-# MoonDeck ![Status](https://github.com/FrogTheFrog/moondeck/actions/workflows/build.yaml/badge.svg) [![Chat](https://img.shields.io/badge/Chat-on%20discord-7289da.svg)](https://discord.com/invite/U88fbeHyzt)
+# MoonDeck ![Status](https://github.com/MoonDeckTeam/moondeck/actions/workflows/build.yaml/badge.svg) [![Chat](https://img.shields.io/badge/Chat-on%20discord-7289da.svg)](https://discord.com/invite/U88fbeHyzt)
 
 A plugin that lets you play any of your Steam games via Moonlight without needing to add them to Sunshine first, providing a similar experience to GeForce GameStream or Steam Remote Play.
 
@@ -8,7 +8,7 @@ A plugin that lets you play any of your Steam games via Moonlight without needin
 
 MoonDeck is an automation tool that will simplify launching your Steam games via the Moonlight client for streaming.
 
-It requires an additional lightweight app to be installed on the host PC - [MoonDeck Buddy](https://github.com/FrogTheFrog/moondeck-buddy). Additional one-time setup instructions can be found within the settings page of the plugin itself.
+It requires an additional lightweight app to be installed on the host PC - [MoonDeck Buddy](https://github.com/MoonDeckTeam/moondeck-buddy). Additional one-time setup instructions can be found within the settings page of the plugin itself.
 
 ## Building
 

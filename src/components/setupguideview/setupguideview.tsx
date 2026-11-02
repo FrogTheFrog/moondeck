@@ -4,8 +4,8 @@ import { FC } from "react";
 import { MoonDeckLaunchButtonShell } from "../moondecklaunchbutton";
 import { useCurrentSettings } from "../../hooks";
 
-const moondeckBuddyLink = "https://github.com/FrogTheFrog/moondeck-buddy";
-const moondeckWikiLink = "https://github.com/FrogTheFrog/moondeck/wiki";
+const moondeckBuddyLink = "https://github.com/MoonDeckTeam/moondeck-buddy";
+const moondeckWikiLink = "https://github.com/MoonDeckTeam/moondeck/wiki";
 
 export const SetupGuideView: FC = () => {
   const settings = useCurrentSettings();

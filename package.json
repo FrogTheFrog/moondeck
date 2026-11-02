@@ -22,7 +22,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/FrogTheFrog/moondeck"
+    "url": "git+https://github.com/MoonDeckTeam/moondeck"
   },
   "keywords": [
     "decky",
@@ -34,9 +34,9 @@
   "author": "FrogTheFrog",
   "license": "GNU GPLv3",
   "bugs": {
-    "url": "https://github.com/FrogTheFrog/moondeck/issues"
+    "url": "https://github.com/MoonDeckTeam/moondeck/issues"
   },
-  "homepage": "https://github.com/FrogTheFrog/moondeck#readme",
+  "homepage": "https://github.com/MoonDeckTeam/moondeck#readme",
   "devDependencies": {
     "@decky/rollup": "^1.0.2",
     "@decky/ui": "^4.11.1",
