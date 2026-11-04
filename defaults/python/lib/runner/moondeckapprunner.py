@@ -95,8 +95,10 @@ class MoonDeckAppLauncher:
     @staticmethod
     async def wait_for_app_to_be_launched(client: BuddyClient, app_id: str, stability_timeout: int, launch_timeout: int):
         logger.info(f"Waiting for app {app_id} to be launched in Steam")
+        # Until Steam reports the app as running, a timeout means Steam never started it (slow
+        # launchers, big games or a busy host), which a longer "appLaunch" timeout can fix.
         pooler = TimedPooler(timeout=launch_timeout,
-                             exception_on_timeout=RunnerError(Result.AppLaunchFailed))
+                             exception_on_timeout=RunnerError(Result.AppDidNotStart))
 
         async with pooler(await client.notify_on_changes(AppDataResponse)) as notifications:
             app_was_updating = False
@@ -115,6 +117,9 @@ class MoonDeckAppLauncher:
                 elif state == AppState.Running:
                     # If it was updating, but is now running, there's no need to launch it again
                     app_was_updating = False
+
+                    # The app did start, so from now on a timeout means it did not stay running
+                    notifications.exception_on_timeout = RunnerError(Result.AppLaunchFailed)
 
                     # Reset the retry counter to the initial value for even more stability...
                     notifications.timeout = launch_timeout
