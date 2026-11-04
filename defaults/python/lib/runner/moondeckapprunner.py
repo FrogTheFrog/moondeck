@@ -286,8 +286,7 @@ class MoonDeckAppRunner:
 
                 if state == StreamState.StreamEnding:
                     notifications.exception_on_timeout = RunnerError(Result.StreamDidNotEnd)
-                    if leftover_stream_ending:
-                        continue
+                    continue
 
                 if state == StreamState.Streaming:
                     if data is None:
