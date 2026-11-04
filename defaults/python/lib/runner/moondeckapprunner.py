@@ -277,6 +277,7 @@ class MoonDeckAppRunner:
                              exception_on_timeout=RunnerError(Result.BuddyDidNotRespond))
 
         async with pooler(await client.notify_on_changes(StreamStateResponse, AppDataResponse, CurrentUserResponse)) as notifications:
+            leftover_stream_ending = False
             async for n1, n2, n3 in notifications:
                 state = n1["state"]
                 data = n2["data"]
@@ -285,11 +286,23 @@ class MoonDeckAppRunner:
 
                 if state == StreamState.StreamEnding:
                     notifications.exception_on_timeout = RunnerError(Result.StreamDidNotEnd)
+                    if leftover_stream_ending:
+                        continue
 
                 if state == StreamState.Streaming:
                     if data is None:
-                        # Stream is active, but the app was not started for some reason
-                        break
+                        # Stream is active, but no app is running in it (usually a leftover from a
+                        # previous attempt that failed). Reusing it would make the "stream is ready"
+                        # check pass before Moonlight has even connected, so the app would be launched
+                        # while the host is still applying the display settings for the new session.
+                        # End it and wait for a clean start instead.
+                        if not leftover_stream_ending:
+                            logger.info("Ending a leftover stream that has no app running")
+                            await client.end_stream()
+                            leftover_stream_ending = True
+
+                        notifications.exception_on_timeout = RunnerError(Result.StreamDidNotEnd)
+                        continue
                     
                     if data["app_id"] == app_id and (user_id is None or current_user_id == user_id):
                         # Already streaming this very app via the same account
