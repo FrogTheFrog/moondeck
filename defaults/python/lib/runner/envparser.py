@@ -76,7 +76,7 @@ def get_user_id() -> Optional[str]:
 
 
 def get_username() -> Optional[str]:
-    return os.environ.get("SteamUser")
+    return os.environ.get("SteamUser") or os.environ.get("SteamAppUser")
 
 
 def get_runner_type() -> Optional[RunnerType]:

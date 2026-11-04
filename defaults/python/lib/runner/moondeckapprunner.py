@@ -68,6 +68,8 @@ class MoonDeckAppLauncher:
                     # Any logged-in user will do, but it must be logged-in
                     if current_user_id is None:
                         continue
+                elif current_user is None:
+                    continue
                 elif current_user:
                     if current_user_id is None:
                         now = notifications.yield_time
