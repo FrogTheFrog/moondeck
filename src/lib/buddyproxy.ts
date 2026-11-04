@@ -1,6 +1,5 @@
 import { OsType, RunnerTimeouts, SettingsManager } from "./settingsmanager";
 import { BehaviorSubject } from "rxjs";
-import { Mutex } from "async-mutex";
 import { ReadonlySubject } from "./readonlysubject";
 import { call } from "@decky/api";
 import { getCurrentUserSteamId } from "../steam-utils";
@@ -48,7 +47,6 @@ async function getNonSteamAppData(info: ClientInfo, userId: string, buddyTimeout
 export class BuddyProxy {
   private readonly settingsManager: SettingsManager;
 
-  private readonly mutex = new Mutex();
   private readonly statusSubject = new BehaviorSubject<BuddyStatus>("Offline");
   private readonly refreshingSubject = new BehaviorSubject<boolean>(false);
 
@@ -88,12 +86,6 @@ export class BuddyProxy {
   }
 
   async refreshStatus(): Promise<void> {
-    if (this.mutex.isLocked()) {
-      await this.mutex.waitForUnlock();
-      return;
-    }
-
-    const release = await this.mutex.acquire();
     try {
       this.refreshingSubject.next(true);
 
@@ -109,7 +101,6 @@ export class BuddyProxy {
       }
     } finally {
       this.refreshingSubject.next(false);
-      release();
     }
   }
 

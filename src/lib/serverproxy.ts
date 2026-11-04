@@ -157,12 +157,6 @@ export class ServerProxy {
   }
 
   async refreshStatus(): Promise<void> {
-    if (this.mutex.isLocked()) {
-      await this.mutex.waitForUnlock();
-      return;
-    }
-
-    const release = await this.mutex.acquire();
     try {
       this.refreshingSubject.next(true);
 
@@ -190,7 +184,6 @@ export class ServerProxy {
       }
     } finally {
       this.refreshingSubject.next(false);
-      release();
     }
   }
 
