@@ -25,6 +25,7 @@ class Result(Enum):
     StreamDidNotEnd = "Stream did not end in time!"
     BuddyDidNotRespond = "Buddy did not respond in time!"
     AppLaunchAborted = "App launch was aborted!"
+    AppDidNotStart = "Steam did not start the app in time! Raising the \"appLaunch\" timeout may help."
     AppLaunchFailed = "Failed to launch app in time!"
     MoonlightClosed = "Moonlight has been closed!"
     MoonlightIsNotInstalled = "Moonlight executable/flatpak not found!"
