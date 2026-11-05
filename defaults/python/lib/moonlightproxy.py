@@ -30,6 +30,7 @@ class CommandLineOptions(TypedDict):
 class MoonlightProxy(contextlib.AbstractAsyncContextManager):
 
     flatpak_moonlight = "com.moonlight_stream.Moonlight"
+    flatpak_command_timeout = 15
 
     def __init__(self, exec_path: Optional[str]) -> None:
         # Lazy import to improve CLI performance
@@ -191,8 +192,13 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
                 logger.error("flatpak is not installed!")
                 return False
 
-            list_proc = await utils.create_subprocess_exec(flatpak_exec, "list", stderr_to_devnull=True)
-            output, _ = await list_proc.communicate()
+            list_proc = await utils.create_subprocess_exec(flatpak_exec, "list", stderr_to_devnull=True, without_steam_overlay=True)
+            output = await utils.communicate_with_timeout(list_proc, MoonlightProxy.flatpak_command_timeout)
+            if output is None:
+                # Saying "not installed" here would be misleading, so let the actual start decide
+                logger.warning("flatpak list did not finish in time, assuming Moonlight is installed")
+                return True
+
             if output:
                 return output.decode().find(MoonlightProxy.flatpak_moonlight) != -1
         else:
@@ -233,9 +239,11 @@ class MoonlightProxy(contextlib.AbstractAsyncContextManager):
         if flatpak_exec is None:
             return
 
-        kill_proc = await utils.create_subprocess_exec(flatpak_exec, "kill", MoonlightProxy.flatpak_moonlight)
-        output, _ = await kill_proc.communicate()
-        if output:
+        kill_proc = await utils.create_subprocess_exec(flatpak_exec, "kill", MoonlightProxy.flatpak_moonlight, without_steam_overlay=True)
+        output = await utils.communicate_with_timeout(kill_proc, MoonlightProxy.flatpak_command_timeout)
+        if output is None:
+            logger.warning("flatpak kill did not finish in time")
+        elif output:
             newline = "\n"
             logger.info(f"flatpak kill output: {newline}{output.decode().strip(newline)}")
 

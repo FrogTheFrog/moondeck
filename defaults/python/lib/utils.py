@@ -1,3 +1,4 @@
+import contextlib
 from enum import Enum
 from typing import Any, AsyncGenerator, Generic, List, Literal, Optional, Type, TypedDict, Union, TypeVar, get_args, get_origin, is_typeddict, cast
 
@@ -334,7 +335,7 @@ async def create_subprocess_shell(program: str, stderr_to_devnull = False):
                                                  env=env)
 
 
-async def create_subprocess_exec(program: str, *args: str, stderr_to_devnull = False):
+async def create_subprocess_exec(program: str, *args: str, stderr_to_devnull = False, without_steam_overlay = False):
     # Lazy import to improve CLI performance
     import asyncio
     import os
@@ -343,10 +344,31 @@ async def create_subprocess_exec(program: str, *args: str, stderr_to_devnull = F
     env = os.environ.copy()
     env.pop("LD_LIBRARY_PATH", None)
 
+    # The runner is started by Steam, which preloads its overlay into every child process. Short
+    # helper commands (flatpak list/kill) have no use for it, and with it loaded they have been seen
+    # hanging on a lock inside the overlay until the launch was abandoned.
+    if without_steam_overlay:
+        env.pop("LD_PRELOAD", None)
+
     return await asyncio.create_subprocess_exec(program, *args,
                                                 stdout=asyncio.subprocess.PIPE,
                                                 stderr=asyncio.subprocess.DEVNULL if stderr_to_devnull else asyncio.subprocess.STDOUT,
                                                 env=env)
+
+
+async def communicate_with_timeout(process: "asyncio.subprocess.Process", timeout: float) -> bytes | None:
+    """Returns the stdout of the process, or None if it did not finish in time (it is killed then)."""
+    # Lazy import to improve CLI performance
+    import asyncio
+
+    try:
+        output, _ = await asyncio.wait_for(process.communicate(), timeout)
+        return output
+    except asyncio.TimeoutError:
+        with contextlib.suppress(ProcessLookupError):
+            process.kill()
+        await process.wait()
+        return None
 
 
 class TimedPooler:
