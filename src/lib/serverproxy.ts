@@ -176,6 +176,7 @@ export class ServerProxy {
 
       if (this.settingsManager.settings.value?.currentHostId === hostId) {
         const newStatus = result?.uniqueId === hostId ? "Online" : "Offline";
+        this.buddyProxy.verifiedHostId = newStatus === "Online" ? hostId : null;
         this.updateStatus(newStatus);
       }
 

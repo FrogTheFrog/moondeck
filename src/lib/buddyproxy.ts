@@ -52,6 +52,7 @@ export class BuddyProxy {
 
   readonly status = new ReadonlySubject(this.statusSubject);
   readonly refreshing = new ReadonlySubject(this.refreshingSubject);
+  verifiedHostId: string | null = null;
 
   private updateInfo(buddyInfo: BuddyInfo): void {
     const info = buddyInfo.info;
@@ -97,7 +98,9 @@ export class BuddyProxy {
 
       const result = await getBuddyInfo(clientInfo, 1);
       if (this.settingsManager.settings.value?.currentHostId === clientInfo.hostId) {
-        this.updateInfo(result);
+        const os = this.settingsManager.hostSettings?.os ?? "Other";
+        const otherHost = result.info !== null && os !== "Other" && result.info.os !== os && this.verifiedHostId !== clientInfo.hostId;
+        this.updateInfo(otherHost ? { status: "Offline", info: null } : result);
       }
     } finally {
       this.refreshingSubject.next(false);
