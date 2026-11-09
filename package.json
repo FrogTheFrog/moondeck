@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "setup": "pnpm i && ([ -f ./cli/decky ] || pnpm run setup:cli) && (which docker >/dev/null || echo 'Docker not found, you will need it for backend development.')",
-    "setup:cli": "mkdir -p cli && case \"$(uname -s)-$(uname -m)\" in 'Linux-x86_64') url=decky-linux-x86_64 ;; 'Darwin-x86_64') url=decky-macOS-x86_64 ;; 'Darwin-arm64') url=decky-macOS-aarch64 ;; *) echo \"Unsupported system: $(uname -s)-$(uname -m)\"; exit 1 ;; esac && curl -L \"https://github.com/SteamDeckHomebrew/cli/releases/latest/download/$url\" -o ./cli/decky && chmod +x ./cli/decky",
+    "setup:cli": "mkdir -p cli && case \"$(uname -s)-$(uname -m)\" in 'Linux-x86_64') url=decky-linux-x86_64 ;; 'Linux-aarch64') url=decky-linux-aarch64 ;; 'Darwin-x86_64') url=decky-macOS-x86_64 ;; 'Darwin-arm64') url=decky-macOS-aarch64 ;; *) echo \"Unsupported system: $(uname -s)-$(uname -m)\"; exit 1 ;; esac && curl -L \"https://github.com/SteamDeckHomebrew/cli/releases/latest/download/$url\" -o ./cli/decky && chmod +x ./cli/decky",
     "build": "rollup -c",
     "build:plugin": "./cli/decky plugin build -s directory",
     "build:deploy": "pnpm run build:plugin && pnpm run deploy",
