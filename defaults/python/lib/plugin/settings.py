@@ -173,7 +173,8 @@ class UserSettingsManager(SettingsManager[UserSettings]):
             "runnerDebugLogs": False,
             "useMoonlightExec": False,
             "moonlightExecPath": "",
-            "pythonExecPath": ""
+            "pythonExecPath": "",
+            "setupCommand": ""
         })
 
     def _migrate_settings(self, data: dict):
