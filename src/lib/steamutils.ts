@@ -14,7 +14,8 @@ export enum EnvVars {
   SteamAppId = "MOONDECK_STEAM_APP_ID",
   SteamUserId = "MOONDECK_STEAM_USER_ID",
   AppName = "MOONDECK_APP_NAME",
-  Python = "MOONDECK_PYTHON"
+  Python = "MOONDECK_PYTHON",
+  SetupCommand = "MOONDECK_SETUP_COMMAND"
 }
 
 export enum AppType {

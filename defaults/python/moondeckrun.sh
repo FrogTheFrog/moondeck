@@ -4,4 +4,8 @@
 CURRENT_DIR=`dirname "$(readlink -f "$0")"`
 cd "$CURRENT_DIR";
 
+if [ -n "$MOONDECK_SETUP_COMMAND" ]; then
+  exec $MOONDECK_SETUP_COMMAND
+fi
+
 exec ${MOONDECK_PYTHON:-/usr/bin/python} ./moondeckrun.py
