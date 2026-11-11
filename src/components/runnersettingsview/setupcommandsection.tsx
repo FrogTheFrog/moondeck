@@ -33,7 +33,7 @@ export const SetupCommandSection: FC = () => {
       .then((result) => {
         if (result !== null) {
           settingsManager.update((userSettings) => {
-            userSettings.setupCommand = result.realpath;
+            userSettings.setupCommand = `'${result.realpath.replace(/'/g, "'\\''")}'`;
           });
         }
       })
