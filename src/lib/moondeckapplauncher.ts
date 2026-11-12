@@ -114,7 +114,7 @@ function getLaunchOptionsString(currentValue: string, appId: number, appType: Ap
   }
 
   if (setupCommand.length > 0) {
-    launchOptions.push(makeEnvKeyValue(EnvVars.SetupCommand, setupCommand));
+    launchOptions.push(makeEnvKeyValue(EnvVars.SetupCommand, setupCommand, true));
   }
 
   launchOptions.push("%command%");

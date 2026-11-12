@@ -1,11 +1,11 @@
 import { logger } from "./logger";
 
-export function makeEnvKeyValue(key: string, value: string | number): string {
+export function makeEnvKeyValue(key: string, value: string | number, forceQuote = false): string {
   if (typeof value !== "string") {
     value = `${value}`;
   }
 
-  if (/[' ]/.test(value)) {
+  if (forceQuote || /[' ]/.test(value)) {
     value = `'${value.replace(/'/g, "'\\''")}'`;
   }
 
