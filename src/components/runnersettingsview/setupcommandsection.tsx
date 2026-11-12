@@ -43,7 +43,7 @@ export const SetupCommandSection: FC = () => {
   return (
     <Field
       label="Setup command"
-      description="Command, script or program run before WOL and starting stream"
+      description="Command, script or program run before WOL and starting stream. The runner waits for it to finish and aborts if it fails."
       childrenContainerWidth="max"
       childrenLayout="below"
     >
