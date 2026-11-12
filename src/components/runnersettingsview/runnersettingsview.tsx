@@ -6,6 +6,7 @@ import { useCurrentHostSettings, useCurrentSettings } from "../../hooks";
 import { HostOff } from "../icons";
 import { MoonDeckContext } from "../../contexts";
 import { PythonExecutableSection } from "./pythonexecutablesection";
+import { SetupCommandSection } from "./setupcommandsection";
 
 export const RunnerSettingsView: FC = () => {
   const { settingsManager } = useContext(MoonDeckContext);
@@ -34,6 +35,7 @@ export const RunnerSettingsView: FC = () => {
           value={userSettings.runnerDebugLogs}
           setValue={(value) => settingsManager.update((userSettings) => { userSettings.runnerDebugLogs = value; })}
         />
+        <SetupCommandSection />
         <PythonExecutableSection />
       </DialogControlsSection>
       <DialogControlsSection>

@@ -168,6 +168,7 @@ export interface UserSettings {
   useMoonlightExec: boolean;
   moonlightExecPath: string;
   pythonExecPath: string;
+  setupCommand: string;
 }
 
 export function stringifyDimension(value: Dimension): string {

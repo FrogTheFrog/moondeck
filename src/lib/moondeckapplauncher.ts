@@ -63,7 +63,7 @@ function getSelectedAppResolution(mode: string | null, display: string | null, h
   }
 }
 
-function getLaunchOptionsString(currentValue: string, appId: number, appType: AppType, displayMode: string | null, autoResolution: boolean, currentAudioDevice: string | null, currentDisplay: string | null, pythonExecPath: string): string | null {
+function getLaunchOptionsString(currentValue: string, appId: number, appType: AppType, displayMode: string | null, autoResolution: boolean, currentAudioDevice: string | null, currentDisplay: string | null, pythonExecPath: string, setupCommand: string): string | null {
   const launchOptions: string[] = [];
   launchOptions.push(makeEnvKeyValue(EnvVars.AppType, appType));
 
@@ -111,6 +111,10 @@ function getLaunchOptionsString(currentValue: string, appId: number, appType: Ap
 
   if (pythonExecPath.length > 0) {
     launchOptions.push(makeEnvKeyValue(EnvVars.Python, pythonExecPath));
+  }
+
+  if (setupCommand.length > 0) {
+    launchOptions.push(makeEnvKeyValue(EnvVars.SetupCommand, setupCommand, true));
   }
 
   launchOptions.push("%command%");
@@ -397,7 +401,7 @@ export class MoonDeckAppLauncher {
         return;
       }
 
-      const launchOptions = getLaunchOptionsString(details.strLaunchOptions, appId, appType, mode, hostSettings.resolution.automatic, currentAudioDevice, currentDisplay, settings.pythonExecPath);
+      const launchOptions = getLaunchOptionsString(details.strLaunchOptions, appId, appType, mode, hostSettings.resolution.automatic, currentAudioDevice, currentDisplay, settings.pythonExecPath, settings.setupCommand);
       if (launchOptions === null || !await setAppLaunchOptions(details.unAppID, launchOptions)) {
         logger.toast("Failed to update shortcut launch options (needs restart?)!", { output: "error" });
         return;

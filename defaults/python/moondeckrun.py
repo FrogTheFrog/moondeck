@@ -17,6 +17,8 @@ import asyncio
 import contextlib
 import signal
 import logging
+import os
+import tempfile
 
 from lib.buddyrequests import BuddyException
 from lib.runner.moondeckapprunner import MoonDeckAppRunner
@@ -33,6 +35,26 @@ import lib.runnerresult as runnerresult
 
 
 set_logger_settings(logger, constants.RUNNER_LOG_FILE, rotate=False)
+
+
+async def run_setup_command():
+    command = os.environ.get("MOONDECK_SETUP_COMMAND")
+    if not command:
+        return
+
+    logger.info("Running setup command")
+    with tempfile.TemporaryFile() as output:
+        process = await asyncio.create_subprocess_shell(command, stdout=output, stderr=asyncio.subprocess.STDOUT)
+        returncode = await process.wait()
+
+        output.seek(0)
+        text = output.read().decode(errors="replace").strip()
+        if text:
+            logger.info(f"Setup command output:\n{text}")
+
+    if returncode != 0:
+        logger.error(f"Setup command exited with code {returncode}")
+        raise runnerresult.RunnerError(runnerresult.Result.SetupCommandFailed)
 
 
 async def run_runner(settings: MoonDeckAppRunnerSettings | MoonlightOnlyRunnerSettings, overlay_stack: OverlayStack):
@@ -114,6 +136,7 @@ async def main():
             if settings["debug_logs"]:
                 logger.setLevel(logging.DEBUG)
 
+            await run_setup_command()
             await run_with_suspend_resume(settings)
             runnerresult.set_result(None)
 

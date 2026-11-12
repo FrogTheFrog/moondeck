@@ -124,7 +124,7 @@ class ButtonStyleSettings(TypedDict):
 
 
 class UserSettings(TypedDict):
-    version: Literal[43]
+    version: Literal[44]
     clientId: str
     currentHostId: Optional[str]
     gameSession: GameSessionSettings
@@ -137,6 +137,7 @@ class UserSettings(TypedDict):
     useMoonlightExec: bool
     moonlightExecPath: str
     pythonExecPath: str
+    setupCommand: str
 
 
 class UserSettingsManager(SettingsManager[UserSettings]):
@@ -173,7 +174,8 @@ class UserSettingsManager(SettingsManager[UserSettings]):
             "runnerDebugLogs": False,
             "useMoonlightExec": False,
             "moonlightExecPath": "",
-            "pythonExecPath": ""
+            "pythonExecPath": "",
+            "setupCommand": ""
         })
 
     def _migrate_settings(self, data: dict):
@@ -404,3 +406,6 @@ class UserSettingsManager(SettingsManager[UserSettings]):
         if data["version"] == 42:
             data["version"] = 43
             data["gameSession"]["closeHostAppOnExit"] = False
+        if data["version"] == 43:
+            data["version"] = 44
+            data["setupCommand"] = ""
